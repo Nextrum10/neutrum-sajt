@@ -2924,7 +2924,11 @@ window.NXStudie = (function () {
      försvinner — historiken är kvitto på vad som betalats och
      får inte gå att tappa bort, bara att lägga undan.
 
-     opts: { host, bokningar, rad(b), tomtKommande, tomtAllt }
+     opts: { host, bokningar, rad(b), tomtKommande, tomtAllt, extra, extraRad(x) }
+
+     extra (2026-10-27): rader som inte är pass men hör till de kommande,
+     som barnets förslag i studievyn. De har wanted_date och wanted_time,
+     står bland de kommande i datumordning och ritas av extraRad.
      ============================================================ */
   var PASS_SYNLIGA = 3;
 
@@ -2945,8 +2949,10 @@ window.NXStudie = (function () {
 
     function nyckel(b) { return String(b.wanted_date || '') + String(b.wanted_time || ''); }
 
-    var kommande = alla.filter(ärKommande)
+    var extra = (o.extra || []).filter(function (x) { return String(x.wanted_date || '') >= idag; });
+    var kommande = alla.filter(ärKommande).concat(extra)
       .sort(function (a, c) { return nyckel(a).localeCompare(nyckel(c)); });
+    function rad(x) { return extra.indexOf(x) !== -1 && o.extraRad ? o.extraRad(x) : o.rad(x); }
     var tidigare = alla.filter(function (b) { return !ärKommande(b); })
       .sort(function (a, c) { return nyckel(c).localeCompare(nyckel(a)); });
 
@@ -2969,7 +2975,7 @@ window.NXStudie = (function () {
       tidigare = tidigare.filter(function (b) { return b.status !== 'cancelled'; });
     }
 
-    if (!alla.length) {
+    if (!alla.length && !extra.length) {
       host.innerHTML = o.tomtAllt || tomt('Inga pass än', '');
       return;
     }
@@ -2977,7 +2983,7 @@ window.NXStudie = (function () {
     var ut = '';
 
     ut += kommande.length
-      ? '<div class="pl-grupp">' + kommande.map(o.rad).join('') + '</div>'
+      ? '<div class="pl-grupp">' + kommande.map(rad).join('') + '</div>'
       : '<div class="pl-inget">' + esc(o.tomtKommande || 'Inga kommande pass just nu.') + '</div>';
 
     /* Utfällt förblir utfällt när listan ritas om. Förut föll den

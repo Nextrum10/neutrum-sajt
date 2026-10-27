@@ -1,0 +1,488 @@
+{
+ "Språket och samhället": {
+  "mal": [
+   "Placera svenskan och andra språk i rätt språkfamilj och språkgrupp.",
+   "Räkna upp Sveriges fem nationella minoritetsspråk.",
+   "Skilja på dialekt, sociolekt, etnolekt och idiolekt.",
+   "Förklara varför du anpassar språket efter situationen."
+  ],
+  "fakta": [
+   "Svenskan är ett nordgermanskt språk. De germanska språken hör till den indoeuropeiska språkfamiljen, liksom de romanska (franska, italienska) och de slaviska (ryska, tjeckiska).",
+   "Finska, estniska och samiska hör inte till den indoeuropeiska familjen utan till den uraliska.",
+   "Sverige har fem nationella minoritetsspråk: finska, meänkieli, samiska, romani chib och jiddisch.",
+   "Språket varierar med var du bor, vilken grupp du hör till och vem du är. Ingen variant är fel, och standardsvenskan är den gemensamma svenska som uppfattas som neutral.",
+   "Du väljer ord och stil efter mottagare och situation. Talspråk som ”typ” och ”liksom” passar sällan i en formell text."
+  ],
+  "exempel": [
+   [
+    "Hör norska och portugisiska till samma språkfamilj?",
+    "Ja. Norska är germanskt och portugisiska romanskt, men båda grupperna hör till den indoeuropeiska familjen."
+   ]
+  ],
+  "ord": [
+   [
+    "besläktade språk",
+    "språk som har utvecklats ur samma äldre språk"
+   ],
+   [
+    "dialekt",
+    "variant av språket som hör ihop med en plats"
+   ],
+   [
+    "sociolekt",
+    "variant som hör ihop med en social grupp, till exempel ålder eller yrke"
+   ],
+   [
+    "etnolekt",
+    "variant som präglas av en flerspråkig miljö"
+   ],
+   [
+    "idiolekt",
+    "en enskild persons eget sätt att tala och skriva"
+   ],
+   [
+    "kodväxling",
+    "att växla mellan två språk i samma samtal"
+   ]
+  ],
+  "tips": "Skilj på nivåerna: ett språk hör till en grupp, som de germanska, och gruppen till en större familj, som den indoeuropeiska."
+ },
+ "Argumentation": {
+  "mal": [
+   "Hitta tes, argument, underargument, motargument och bemötande i en text.",
+   "Pröva om ett argument är hållbart och relevant.",
+   "Känna igen vanliga argumentationsfel, som personangrepp, halmgubbe och falskt dilemma."
+  ],
+  "fakta": [
+   "Tesen är det skribenten vill övertyga om. Argumenten är skäl för tesen, och ett underargument stöder ett argument.",
+   "Ett motargument talar emot tesen. I ett bemötande visar skribenten varför motargumentet inte räcker.",
+   "Ett argument är hållbart om det är sant eller väl underbyggt, och relevant om det hänger ihop med tesen. Ett sant argument kan ändå vara irrelevant.",
+   "Ett argumentationsfel kan låta övertygande men håller inte när du granskar det. Vem som säger något, eller hur många som tycker likadant, avgör inte om det är sant."
+  ],
+  "exempel": [
+   [
+    "Tes: ”Skolan bör ha längre lunchrast.” Är ”Jag gillar pizza” ett relevant argument?",
+    "Nej. Det kan vara sant, men det säger inget om varför rasten borde vara längre. Ett relevant argument vore att eleverna hinner både äta och vila."
+   ]
+  ],
+  "ord": [
+   [
+    "personangrepp",
+    "att angripa personen i stället för argumentet"
+   ],
+   [
+    "halmgubbe",
+    "att förvränga motståndarens åsikt och angripa den förvrängda versionen"
+   ],
+   [
+    "falskt dilemma",
+    "att framställa det som om det bara fanns två alternativ"
+   ],
+   [
+    "cirkelresonemang",
+    "när skälet bara upprepar påståendet"
+   ],
+   [
+    "förhastad generalisering",
+    "en allmän slutsats dragen av ett eller några få fall"
+   ],
+   [
+    "hänvisning till majoriteten",
+    "att något sägs vara rätt för att många gör eller tycker så"
+   ]
+  ],
+  "tips": "Fråga dig om ett svar angriper argumentet eller personen: bara det första är sakligt."
+ },
+ "Källor": {
+  "mal": [
+   "Skilja på primärkällor och sekundärkällor.",
+   "Känna igen tendens och beroende i en källa.",
+   "Skilja på referat, citat och plagiat, och veta när du ska ange källan."
+  ],
+  "fakta": [
+   "En primärkälla kommer direkt från händelsen, som ett originaldokument eller ett vittne. En sekundärkälla återger vad andra källor sagt, som en lärobok eller en uppslagsbok.",
+   "En källa har tendens när avsändaren har ett intresse av att vinkla. Den kan ändå vara användbar, om du vet om tendensen.",
+   "En källa är beroende när den bygger på vad någon annan sagt. Kontrollera en uppgift hos flera oberoende källor, och kom ihåg att ny inte betyder sann.",
+   "Ett referat återger innehållet med egna ord, ett citat återger exakta ord inom citattecken. Ange källan i båda fallen: annars är det plagiat.",
+   "Källförteckningen ger det läsaren behöver för att hitta källan, som författare, titel och år."
+  ],
+  "exempel": [
+   [
+    "Är ett brev som en strejkande arbetare skrev 1909 en primär- eller sekundärkälla om strejken?",
+    "En primärkälla: brevet kommer direkt från en person som var med. Det kan ändå ha en tendens."
+   ]
+  ],
+  "ord": [
+   [
+    "referentgranskning",
+    "när andra forskare granskar en vetenskaplig artikel innan den publiceras"
+   ],
+   [
+    "referatmarkör",
+    "ord som visar vems tankar det är, som enligt, menar och skriver"
+   ]
+  ],
+  "tips": "Fråga dig vem som står bakom en källa och vad hen vill uppnå: då ser du tendensen."
+ },
+ "Grammatik": {
+  "mal": [
+   "Skilja på konjunktion, subjunktion och infinitivmärke.",
+   "Känna igen presens particip.",
+   "Känna igen relativa bisatser, att-satser och adverbiella bisatser, och säga vilken satsdel de är.",
+   "Placera ”inte” rätt i en bisats."
+  ],
+  "fakta": [
+   "Konjunktioner (och, men, eller, för) binder ihop led av samma slag, till exempel två huvudsatser. Subjunktioner (att, eftersom, när, om, därför att) inleder bisatser.",
+   "”Att” framför ett verb i infinitiv är ett infinitivmärke: Hon älskar att läsa. ”Att” som inleder en bisats är en subjunktion: Hon sa att det regnade.",
+   "Presens particip slutar på -ande eller -ende och används ofta som adjektiv: en skrattande flicka.",
+   "En relativ bisats beskriver ett ord före sig och inleds ofta med som, där eller vars. En att-sats är ofta objekt, och en adverbiell bisats säger när, varför eller hur och är adverbial.",
+   "I en bisats står ”inte” och andra satsadverbial före det finita verbet: … att han inte kommer. I en huvudsats står det efter: Han kommer inte."
+  ],
+  "exempel": [
+   [
+    "Vilken satsdel är bisatsen i ”Hon berättade att hon hade flyttat.”?",
+    "Fråga: Vad berättade hon? Att hon hade flyttat. Bisatsen svarar på vad, så den är objekt."
+   ]
+  ],
+  "ord": [
+   [
+    "finit verb",
+    "verbet som är böjt i tempus, som springer eller sprang"
+   ],
+   [
+    "satsadverbial",
+    "ord som inte, aldrig och kanske, som säger något om hela satsen"
+   ]
+  ],
+  "tips": "Kom ihåg BIFF: i Bisatser står Inte Före det Finita verbet."
+ },
+ "Litteratur": {
+  "mal": [
+   "Känna igen liknelse, metafor, personifikation och allitteration.",
+   "Skilja på tema och motiv, och förklara vad det betyder att gestalta.",
+   "Avgöra vem som berättar och vad berättaren kan veta.",
+   "Läsa en krönika och hitta huvudtanken och det som står mellan raderna."
+  ],
+  "fakta": [
+   "En liknelse jämför med ”som”: kall som is. En metafor säger att något är något annat. En personifikation ger en sak mänskliga egenskaper. Allitteration är ord i rad med samma första ljud.",
+   "Temat är det övergripande texten handlar om, till exempel svek eller vänskap. Ett motiv är en återkommande situation i litteraturen, som hämnden eller hemkomsten.",
+   "Att gestalta är att visa känslor genom handlingar och detaljer i stället för att säga dem rakt ut.",
+   "En allvetande berättare vet vad alla personer tänker och känner. En jagberättare är en person i texten och inte samma sak som författaren.",
+   "En krönika är en personlig text, ofta med ett jag, där en vardaglig händelse leder fram till en större tanke."
+  ],
+  "exempel": [
+   [
+    "Vad gestaltar meningen ”Han stod länge i dörren och vågade inte knacka.”?",
+    "Tvekan eller nervositet. Känslan sägs inte, men handlingen visar den."
+   ]
+  ],
+  "ord": [
+   [
+    "novell",
+    "kort berättelse med få personer, ofta med en vändpunkt"
+   ],
+   [
+    "huvudtanke",
+    "det viktigaste skribenten vill säga med hela texten"
+   ]
+  ],
+  "tips": "Läs krönikans slut extra noga: där brukar den större tanken bli tydlig."
+ },
+ "NP-träning: argumentera och referera": {
+  "mal": [
+   "Känna igen ethos, pathos och logos och förklara vad som gör ett tal övertygande.",
+   "Skriva en tes och bygga argument med belägg och hänvisningar till källor.",
+   "Återge ett motargument rättvist och bemöta det sakligt.",
+   "Skriva ett neutralt referat med referatmarkörer."
+  ],
+  "fakta": [
+   "Ethos bygger på talarens trovärdighet, pathos på känslor och logos på fakta och logik. Ett tal kan använda alla tre, och det formas efter mottagare, syfte och situation.",
+   "Tesen är det du vill övertyga om, argumenten är skäl för den och belägg är fakta, statistik eller exempel som stöder ett argument.",
+   "Återge ett motargument rättvist innan du bemöter det. Avsluta med tesen i nya ord och de viktigaste argumenten, utan ny information.",
+   "Ett referat skrivs i presens och utan egna värderingar, med referatmarkörer som menar, skriver och konstaterar. Ange källan i löptexten, till exempel med författare, titel och år.",
+   "Hänvisa alltid till de källor du använder, och utveckla och värdera det de säger i stället för att bara återge det."
+  ],
+  "exempel": [
+   [
+    "Gör om till ett neutralt referat: ”Lindqvist skriver klokt att unga läser för lite.”",
+    "Stryk värderingen ”klokt”: ”Lindqvist skriver att unga läser för lite.”"
+   ]
+  ],
+  "ord": [
+   [
+    "belägg",
+    "fakta, statistik eller exempel som stöder ett argument"
+   ],
+   [
+    "bindeord",
+    "ord som visar hur tankarna hänger ihop, som alltså, dessutom och å andra sidan"
+   ]
+  ],
+  "tips": "Skriv ”enligt” eller ”menar” när du återger en källa och ”jag anser” när du tycker själv, så att läsaren ser skillnaden."
+ },
+ "Läsa: NP-träning": {
+  "mal": [
+   "Analysera ett tal med ethos, pathos och logos, mottagare och syfte.",
+   "Hitta innehåll, syfte och olika synsätt i en sakprosatext.",
+   "Tolka berättarperspektiv, symboler och tema i en berättelse.",
+   "Skilja på referat, citat och egen åsikt när du återger en artikel."
+  ],
+  "fakta": [
+   "Läs hela texten först. Gå sedan tillbaka till rätt stycke för varje fråga, och svara utifrån det som står där.",
+   "Skilj på det som står i texten och det du kan dra slutsatser om. Ett påstående är sant bara om texten stöder det.",
+   "Fråga dig vad texten vill: informera, övertyga eller berätta. En informerande text kan beskriva flera synsätt utan att själv ta ställning.",
+   "I ett tal är tesen det talaren vill att publiken ska tycka, mottagaren de talet riktar sig till och syftet det talaren vill uppnå. Ethos, pathos och logos är tre sätt att övertyga.",
+   "I en berättelse kan en sak eller en plats symbolisera något större, som en känsla eller en del av livet. Temat är det hela berättelsen handlar om."
+  ],
+  "ord": [
+   [
+    "symbol",
+    "något konkret som står för något abstrakt"
+   ],
+   [
+    "tredjepersonsberättare",
+    "berättar om personerna som hon, han eller med namn"
+   ],
+   [
+    "referatmarkör",
+    "ord som enligt, menar och skriver, som visar vems tankar det är"
+   ],
+   [
+    "citat",
+    "någons exakta ord inom citattecken"
+   ]
+  ],
+  "tips": "Stöd varje tolkning på något som faktiskt står i texten, till exempel en detalj eller en mening."
+ },
+ "Skriva rätt": {
+  "mal": [
+   "Sätta komma i uppräkningar, före ”men” och runt extra information.",
+   "Använda kolon, citattecken och stor bokstav rätt.",
+   "Välja rätt mellan fler och flera, var och vart, sin och hans, de och dem, många och mycket.",
+   "Skriva ihop sammansatta ord."
+  ],
+  "fakta": [
+   "I en uppräkning skiljs leden åt med komma, men före ”och” vid sista ledet sätter du normalt inget. Binder ”men” ihop två huvudsatser sätter du komma före.",
+   "En bisats som bara ger extra information, och går att stryka, står mellan kommatecken. Kolon kan inleda en uppräkning efter en hel sats, och citattecken visar ord som återges ordagrant.",
+   "Namn på personer, platser och länder har stor bokstav. Språk, veckodagar och månader har liten: tyska, fredag, mars.",
+   "Fler står vid jämförelse med ”än”, flera betyder ett antal. Vart gäller riktning, var gäller plats. Vid likhet heter det lika … som. Många om det som går att räkna, mycket om resten.",
+   "Sin syftar tillbaka på subjektet, hans och hennes på någon annan. De är subjekt och dem objekt. Sammansatta ord skrivs ihop: särskrivning är ett fel."
+  ],
+  "exempel": [
+   [
+    "Sätt in komma: ”Hon ville åka men bussen var redan full.”",
+    "”Hon ville åka, men bussen var redan full.” Båda delarna kan stå som egna meningar."
+   ],
+   [
+    "Välj ord: ”___ ligger nyckeln?”",
+    "Var: frågan gäller platsen där nyckeln finns, inte en riktning."
+   ]
+  ],
+  "ord": [
+   [
+    "direkt anföring",
+    "ord som återges ordagrant, inom citattecken"
+   ]
+  ],
+  "tips": "Osäker på de eller dem? Byt mot vi eller oss: passar ”oss” ska det vara ”dem”."
+ },
+ "Språket förändras": {
+  "mal": [
+   "Hitta huvudtanken i en krönika om hur språket förändras.",
+   "Förklara hur nya ord kommer in i språket.",
+   "Dra slutsatser om vad skribenten menar och se hur texten är byggd."
+  ],
+  "fakta": [
+   "Språket förändras hela tiden: nya ord skapas, gamla ord får nya betydelser och ord lånas från andra språk. Vissa ord blir kvar, andra försvinner.",
+   "Ett lånord kommer från ett annat språk och anpassas ofta till svensk stavning och böjning.",
+   "Ord kan också visa vilken grupp man hör till, till exempel bland unga.",
+   "En krönika är personlig och utgår ofta från något vardagligt, som en egen upplevelse.",
+   "Huvudtanken är det skribenten vill säga med hela texten, inte en enskild detalj. Jämför början och slutet för att hitta den."
+  ],
+  "exempel": [
+   [
+    "Ordet ”dejt” kommer från engelskans ”date”. Vad har hänt med det i svenskan?",
+    "Det har fått svensk stavning och böjs som ett svenskt ord: en dejt, flera dejter."
+   ]
+  ],
+  "ord": [
+   [
+    "lånord",
+    "ord som har tagits in från ett annat språk"
+   ],
+   [
+    "nyord",
+    "ett nytt ord, eller en ny betydelse, som börjar användas"
+   ],
+   [
+    "krönika",
+    "personlig text som utgår från något vardagligt och leder till en tanke"
+   ]
+  ],
+  "tips": "När en fråga säger ”enligt texten” ska svaret stå i texten, inte vara din egen åsikt."
+ },
+ "Nordiska grannspråk": {
+  "mal": [
+   "Känna igen de skandinaviska språken och hur de hänger ihop med svenskan.",
+   "Förklara skillnaden mellan norskans bokmål och nynorska.",
+   "Förstå vanliga ord och korta meningar på norska och danska.",
+   "Upptäcka falska vänner, ord som ser svenska ut men betyder något annat."
+  ],
+  "fakta": [
+   "Danska, norska och svenska är nordgermanska språk och så lika att talarna ofta förstår varandra. Isländska och färöiska är också nordgermanska men ligger längre från svenskan.",
+   "Finska och samiska talas i Norden men hör till en annan språkfamilj, den uraliska.",
+   "Norskan har två skriftspråk: bokmål, som växte fram ur den danska skriften i Norge, och nynorska, som bygger på norska dialekter.",
+   "Danska och norska skriver æ och ø där svenskan har ä och ö. Skriven danska är ofta lättare än talad, för uttalet ligger längre från svenskan än stavningen.",
+   "En falsk vän liknar ett svenskt ord men betyder något annat. Rolig betyder till exempel lugn på danska och norska."
+  ],
+  "exempel": [
+   [
+    "Vad betyder den norska meningen ”Hun bor i et gult hus.”?",
+    "Hon bor i ett gult hus. Hun är hon och et är ett. Resten är nästan som på svenska."
+   ]
+  ],
+  "ord": [
+   [
+    "grannspråk",
+    "ett närbesläktat språk i ett grannland, som danska och norska för svenskan"
+   ],
+   [
+    "bokmål",
+    "det vanligaste norska skriftspråket, med rötter i danskan"
+   ],
+   [
+    "nynorska",
+    "norskt skriftspråk som bygger på norska dialekter"
+   ],
+   [
+    "falsk vän",
+    "ett ord som liknar ett ord i ett annat språk men betyder något annat"
+   ]
+  ],
+  "tips": "Se upp med ord som ser bekanta ut: det är där grannspråken lurar dig."
+ },
+ "Muntlig framställning": {
+  "mal": [
+   "Planera en presentation efter syfte, mottagare och situation.",
+   "Bygga upp ett tal med inledning, huvuddel och avslutning.",
+   "Känna igen retorikens arbetsgång från stoff till framförande.",
+   "Analysera hur en talare fångar publiken och hjälper den att följa med."
+  ],
+  "fakta": [
+   "Börja med tre frågor: varför talar jag, för vem och i vilken situation? Svaren styr ord, exempel och längd.",
+   "Retorikens arbetsgång: inventio (samla stoff), dispositio (ordna), elocutio (formulera), memoria (öva in) och actio (framföra).",
+   "En lyssnare kan inte läsa om. Säg vad du ska ta upp, använd signalord som för det första och till sist, och sammanfatta.",
+   "Inledningen ska väcka intresse. Avslutningen kan knyta an till inledningen eller uppmana publiken att göra något.",
+   "Stödord på en lapp hjälper dig att tala fritt och se på publiken i stället för att läsa innantill."
+  ],
+  "exempel": [
+   [
+    "Hur kan du börja en presentation om sömn för din klass?",
+    "Med en fråga, till exempel: ”Hur många timmar sov du i natt?” Den får lyssnarna att tänka på sig själva och vilja höra mer."
+   ]
+  ],
+  "ord": [
+   [
+    "disposition",
+    "planen över vad talet tar upp och i vilken ordning"
+   ],
+   [
+    "stödord",
+    "korta ord som påminner dig om vad du ska säga"
+   ],
+   [
+    "signalord",
+    "ord som visar var i talet du är, som för det första och till sist"
+   ],
+   [
+    "mottagare",
+    "de som lyssnar på eller läser det du säger"
+   ]
+  ],
+  "tips": "Öva högt och ta tid: att säga ett manus tar längre tid än att läsa det tyst."
+ },
+ "Meningsbyggnad": {
+  "mal": [
+   "Välja mellan att och och i skrift.",
+   "Böja adjektiv rätt och hålla samma tempus genom en text.",
+   "Undvika dubbelsupinum, oklar syftning och meningar som saknar huvudsats.",
+   "Skriva tydligt och visa vem som gör något."
+  ],
+  "fakta": [
+   "Följer ett verb i infinitiv ska det vara att, inte och: Det är kul att dansa. Och binder ihop ord i samma form: Vi sjöng och dansade.",
+   "Adjektivet böjs efter ordet det beskriver: Bilen är ny. Huset är nytt. Husen är nya.",
+   "Efter ett hjälpverb i supinum står infinitiv: hade velat komma, inte hade velat kommit.",
+   "Ett pronomen som han, hon eller den ska bara kunna syfta på ett ord. Vilket kan syfta på en hel sats.",
+   "Klarspråk: skriv med verb i stället för tunga substantiv, och visa vem som gör något med aktiv form."
+  ],
+  "exempel": [
+   [
+    "Rätta meningen: ”Jag skulle ha velat sett filmen.”",
+    "Jag skulle ha velat se filmen. Efter velat, som är supinum, står infinitivet se."
+   ]
+  ],
+  "ord": [
+   [
+    "kongruens",
+    "att ord böjs efter varandra, som adjektivet efter substantivet"
+   ],
+   [
+    "dubbelsupinum",
+    "två verb i supinum efter varandra, som hade kunnat kommit"
+   ],
+   [
+    "syftningsfel",
+    "när det är oklart vem eller vad ett pronomen syftar på"
+   ],
+   [
+    "klarspråk",
+    "ett vårdat, enkelt och begripligt språk"
+   ],
+   [
+    "passiv form",
+    "verbform där den som gör något inte behöver synas: Huset byggdes."
+   ]
+  ],
+  "tips": "Läs texten högt: där du tvekar finns ofta en oklar syftning eller en för lång mening."
+ },
+ "NP-träning: utredande text": {
+  "mal": [
+   "Förklara vad en utredande text ska göra och hur den skiljer sig från en argumenterande.",
+   "Formulera en frågeställning och göra en disposition.",
+   "Skriva stycken med kärnmeningar i en saklig ton.",
+   "Redovisa olika perspektiv med källor och avsluta med en källförteckning."
+  ],
+  "fakta": [
+   "En utredande text reder ut en fråga och ger läsaren förståelse. Den driver ingen tes, utan väger olika perspektiv mot varandra.",
+   "Frågeställningen står i inledningen och ska gå att besvara med hjälp av källor. Avslutningen knyter an till den.",
+   "Gör en disposition innan du skriver: vilka delar och aspekter ska med, och i vilken ordning? Varje stycke börjar gärna med en kärnmening som säger vad stycket handlar om.",
+   "Skriv sakligt: välj neutrala ord i stället för värdeord och talspråk, och förklara svåra ord för läsaren.",
+   "Ange vilken källa som säger vad, och visa när källorna är oense. Sist står källförteckningen med upphovsperson, titel och år."
+  ],
+  "exempel": [
+   [
+    "Gör meningen saklig: ”Det är helt galet hur många som slutar idrotta.”",
+    "”Många slutar idrotta.” Värderingen ”helt galet” är borta, och påståendet står kvar."
+   ]
+  ],
+  "ord": [
+   [
+    "frågeställning",
+    "den fråga texten ska besvara"
+   ],
+   [
+    "aspekt",
+    "en sida av frågan som tas upp"
+   ],
+   [
+    "disposition",
+    "planen för textens delar och ordning"
+   ],
+   [
+    "värdeord",
+    "ord som visar vad någon tycker, som ”katastrof”"
+   ]
+  ],
+  "tips": "Ställ frågeställningen som en hur- eller varför-fråga: då får du flera perspektiv att utreda."
+ }
+}

@@ -1,0 +1,162 @@
+{
+ "Pengar och arbete": {
+  "mal": [
+   "Räkna ut vad saker kostar och hur mycket du får tillbaka.",
+   "Jämföra priser och skilja på det du behöver och det du önskar.",
+   "Förklara vad lön, skatt, att spara och att låna betyder."
+  ],
+  "fakta": [
+   "Pengarna i Sverige heter kronor. Du kan betala med mynt, sedlar eller kort.",
+   "Växel är pengarna du får tillbaka: det du betalar med − priset.",
+   "Behov är sådant alla måste ha, som mat och vatten. Önskningar är sådant som är roligt att ha.",
+   "De flesta vuxna arbetar för att få lön, men allt arbete ger inte lön. En del av lönen blir skatt, som betalar skolor, vård och vägar.",
+   "Sparar du kan du köpa något senare. Lånar du pengar måste du betala tillbaka dem."
+  ],
+  "exempel": [
+   [
+    "En bok kostar 35 kronor. Du betalar med 50 kronor. Hur mycket får du tillbaka?",
+    "50 − 35 = 15. Du får 15 kronor tillbaka."
+   ],
+   [
+    "Ett suddgummi kostar 6 kronor. Vad kostar 4 suddgummin?",
+    "4 · 6 = 24. Fyra suddgummin kostar 24 kronor."
+   ]
+  ],
+  "ord": [
+   [
+    "pris",
+    "vad något kostar"
+   ],
+   [
+    "kvitto",
+    "en lapp som visar vad du har köpt och betalat"
+   ],
+   [
+    "lön",
+    "pengar man får för sitt arbete"
+   ],
+   [
+    "skatt",
+    "pengar alla betalar till sådant som alla behöver"
+   ]
+  ],
+  "tips": "Kontrollera växeln baklänges: växeln + priset ska bli det du betalade med."
+ },
+ "Kartan och väderstrecken": {
+  "mal": [
+   "Förklara vad en karta är och läsa karttecken med teckenförklaringen.",
+   "Använda skalan för att räkna ut hur långt det är i verkligheten.",
+   "Hitta väderstrecken på kartan, med kompassen och med solen."
+  ],
+  "fakta": [
+   "En karta visar en plats sedd uppifrån. Den är mycket mindre än det område den visar.",
+   "Teckenförklaringen säger vad kartans tecken och färger betyder. Blått är oftast vatten.",
+   "Skalan visar hur mycket kartan är förminskad, till exempel att 1 cm på kartan är 200 meter i verkligheten.",
+   "På de flesta kartor är norr uppåt, söder nedåt, öster till höger och väster till vänster.",
+   "Kompassens nål pekar mot norr. Solen går upp ungefär i öster och står i söder mitt på dagen."
+  ],
+  "exempel": [
+   [
+    "På kartan är 1 cm lika långt som 200 meter. Hur långt är 4 cm i verkligheten?",
+    "4 · 200 = 800. Det är 800 meter."
+   ],
+   [
+    "Du tittar mot öster. Vilket väderstreck har du bakom dig?",
+    "Väster ligger mitt emot öster, så väster är bakom dig."
+   ]
+  ],
+  "ord": [
+   [
+    "väderstreck",
+    "norr, söder, öster och väster"
+   ],
+   [
+    "mellanväderstreck",
+    "hållet mitt emellan två väderstreck, som nordost mellan norr och öster"
+   ],
+   [
+    "karttecken",
+    "en liten bild på kartan som betyder något"
+   ],
+   [
+    "kompass",
+    "ett verktyg med en nål som pekar mot norr"
+   ]
+  ],
+  "tips": "Kom ihåg ordningen medsols med ramsan Nu Äter Små Vargar: norr, öster, söder, väster."
+ },
+ "Jorden och världsdelarna": {
+  "mal": [
+   "Förklara vad jordgloben, ekvatorn och polerna är.",
+   "Berätta varför årstiderna är olika i Sverige och långt söderut.",
+   "Nämna världsdelarna och de stora haven, och visa var Sverige ligger."
+  ],
+  "fakta": [
+   "Jorden är rund som ett klot. En jordglob är en rund modell av jorden. En platt världskarta blir alltid lite fel någonstans.",
+   "Ekvatorn är en tänkt linje runt jordens mitt. Längst i norr och söder finns polerna, där det är kallast.",
+   "Sverige ligger på norra halvan av jorden. När vi har sommar är det vinter på södra halvan.",
+   "Världsdelarna är Europa, Asien, Afrika, Nordamerika, Sydamerika, Oceanien och Antarktis. Asien är störst.",
+   "Det finns mer hav än land på jorden. Stilla havet är störst, och Atlanten ligger mellan Europa och Nordamerika."
+  ],
+  "exempel": [
+   [
+    "I vilken världsdel ligger Kina?",
+    "Kina ligger i Asien, den största världsdelen."
+   ]
+  ],
+  "ord": [
+   [
+    "ekvatorn",
+    "en tänkt linje runt jordens mitt"
+   ],
+   [
+    "pol",
+    "jordens nordligaste eller sydligaste punkt"
+   ],
+   [
+    "världsdel",
+    "ett mycket stort område med land, ofta med många länder"
+   ],
+   [
+    "midnattssol",
+    "när solen syns mitt i natten på sommaren, långt norrut"
+   ]
+  ],
+  "tips": "Blanda inte ihop land och världsdel: en världsdel har ofta många länder."
+ },
+ "Religioner och berättelser": {
+  "mal": [
+   "Återberätta några berättelser ur Bibeln, som skapelsen, Noa och påsken.",
+   "Berätta vad några av berättelserna vill lära oss.",
+   "Para ihop religionerna med sina heliga böcker och berätta om Mose, Abraham och Muhammed."
+  ],
+  "fakta": [
+   "Bibeln är kristendomens heliga bok. Gamla testamentet kommer först, och Nya testamentet berättar om Jesus.",
+   "I skapelseberättelsen skapar Gud världen på sex dagar och vilar på den sjunde.",
+   "Jesus berättade liknelser, korta berättelser som lär ut något, som den om den barmhärtige samariern.",
+   "Toran är judendomens heliga skrift och Koranen islams. Koranen är skriven på arabiska.",
+   "Abraham är viktig i judendom, kristendom och islam. Enligt berättelsen ledde Mose folket ut ur Egypten. Muhammed föddes i Mecka, islams heligaste stad."
+  ],
+  "exempel": [
+   [
+    "Vad vill berättelsen om den förlorade sonen lära oss?",
+    "En son slösar bort sina pengar men kommer hem igen, och pappan förlåter honom. Den lär att man kan bli förlåten och välkommen tillbaka."
+   ]
+  ],
+  "ord": [
+   [
+    "liknelse",
+    "en kort berättelse som ska lära ut något"
+   ],
+   [
+    "profet",
+    "en person som enligt religionen får budskap från Gud"
+   ],
+   [
+    "Davidsstjärnan",
+    "en stjärna med sex uddar, judendomens symbol"
+   ]
+  ],
+  "tips": "Ordna en berättelse genom att fråga: vad måste hända först för att nästa sak ska kunna hända?"
+ }
+}

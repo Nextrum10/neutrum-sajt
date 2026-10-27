@@ -1,0 +1,295 @@
+{
+ "Multiplikation": {
+  "mal": [
+   "Räkna med multiplikationstabellerna 6 till 9.",
+   "Hitta talet som saknas i en multiplikation.",
+   "Multiplicera med hela tiotal, som 3 · 80.",
+   "Multiplicera ett tvåsiffrigt tal genom att dela upp det i tiotal och ental."
+  ],
+  "fakta": [
+   "Ordningen spelar ingen roll: 7 · 9 = 9 · 7. Kan du det ena kan du det andra.",
+   "9 gånger ett tal är 10 gånger talet minus talet: 9 · 7 = 70 − 7 = 63.",
+   "I 9:ans tabell, från 9 · 1 till 9 · 10, blir siffrorna i svaret alltid 9 tillsammans: 63 har 6 + 3 = 9.",
+   "Gånger ett helt tiotal: 3 · 80 är 3 · 8 tiotal = 24 tiotal = 240.",
+   "Dela upp ett större tal: 6 · 23 = 6 · 20 + 6 · 3 = 120 + 18 = 138."
+  ],
+  "exempel": [
+   [
+    "Vad är 4 · 46?",
+    "Dela upp 46 i 40 och 6. 4 · 40 = 160 och 4 · 6 = 24. 160 + 24 = 184."
+   ]
+  ],
+  "ord": [
+   [
+    "multiplikation",
+    "räkna lika stora grupper, tecknet ·"
+   ],
+   [
+    "uttryck",
+    "en räkning utan likhetstecken, som 7 · 16"
+   ]
+  ],
+  "tips": "Glömt ett svar? Gå från ett du kan: 6 · 6 är 6 · 5 = 30 och en sexa till, alltså 36."
+ },
+ "Division": {
+  "mal": [
+   "Dela tal som inte går jämnt ut och säga vad resten blir.",
+   "Tänka efter vad resten betyder i en räknehistoria.",
+   "Dela tvåsiffriga och tresiffriga tal med tabellerna som hjälp."
+  ],
+  "fakta": [
+   "Går en division inte jämnt ut blir det en rest: 19 / 4 = 4 rest 3, för 4 · 4 = 16 och 19 − 16 = 3.",
+   "Resten är alltid mindre än talet du delar med. Delar du med 6 kan resten bara vara 0, 1, 2, 3, 4 eller 5.",
+   "Vad resten betyder beror på frågan: ska alla få plats behövs en grupp till, men räknar du hela grupper räknas resten inte.",
+   "Dela upp ett större tal: 69 / 3 = 60 / 3 + 9 / 3 = 20 + 3 = 23.",
+   "Hela tiotal: 240 / 6 är 24 tiotal / 6 = 4 tiotal, alltså 40."
+  ],
+  "exempel": [
+   [
+    "27 elever ska sitta vid bord med 4 platser. Hur många bord behövs?",
+    "27 / 4 = 6 rest 3. Sex bord räcker till 24 elever, och 3 elever blir kvar. Därför behövs 7 bord."
+   ],
+   [
+    "Vad är 91 / 7?",
+    "Dela upp 91 i 70 och 21. 70 / 7 = 10 och 21 / 7 = 3. 10 + 3 = 13."
+   ]
+  ],
+  "ord": [
+   [
+    "rest",
+    "det som blir över när en division inte går jämnt ut"
+   ],
+   [
+    "går jämnt ut",
+    "divisionen har ingen rest"
+   ]
+  ],
+  "tips": "Kontrollera: svaret gånger talet du delar med, plus resten, ska bli talet du började med."
+ },
+ "Decimaltal": {
+  "mal": [
+   "Skriva tiondelar som decimaltal, som 0,4.",
+   "Jämföra decimaltal och placera dem på tallinjen.",
+   "Addera och subtrahera tiondelar.",
+   "Byta mellan meter och centimeter och mellan liter och deciliter med decimaltal."
+  ],
+  "fakta": [
+   "Siffran efter decimalkommat är tiondelar: 0,4 är fyra tiondelar, och 2,6 är 2 hela och 6 tiondelar.",
+   "Tio tiondelar är en hel. Därför är 2,6 lika mycket som 26 tiondelar.",
+   "Jämför de hela först och sedan tiondelarna: 3,2 är större än 2,8.",
+   "Räkna tiondelar som hela tal: 0,8 + 0,4 är 8 + 4 = 12 tiondelar, alltså 1,2.",
+   "1 m = 100 cm, så 0,1 m = 10 cm. 1 l = 10 dl, så 0,1 l = 1 dl."
+  ],
+  "exempel": [
+   [
+    "Hur många centimeter är 1,6 m?",
+    "1 m är 100 cm och 0,6 m är 60 cm. 1,6 m = 160 cm."
+   ],
+   [
+    "En kanna har 2 liter saft. Du häller upp 0,3 liter. Hur mycket är kvar?",
+    "2 liter är 20 tiondelar. 20 − 3 = 17 tiondelar, alltså 1,7 liter."
+   ]
+  ],
+  "ord": [
+   [
+    "decimaltal",
+    "ett tal med decimalkomma, som 3,5"
+   ],
+   [
+    "tiondel",
+    "en av tio lika stora delar, 0,1"
+   ],
+   [
+    "decimalkomma",
+    "kommat mellan de hela och tiondelarna"
+   ]
+  ],
+  "tips": "Fällan: 2,5 m är inte 2 m och 5 cm, för femman står för tiondelar, alltså 50 cm."
+ },
+ "Geometri": {
+  "mal": [
+   "Räkna ut omkretsen av rektanglar och kvadrater.",
+   "Räkna ut arean av rektanglar och kvadrater.",
+   "Räkna baklänges, från omkretsen eller arean till en sida.",
+   "Räkna area och omkrets för figurer som består av flera rektanglar."
+  ],
+  "fakta": [
+   "Omkretsen är sträckan runt hela figuren: lägg ihop alla sidor.",
+   "Arean är hur stor yta figuren täcker. En rektangels area är längden · bredden.",
+   "Area mäts i kvadratcentimeter (cm²) eller kvadratmeter (m²). 1 cm² är en ruta som är 1 cm på varje sida.",
+   "En kvadrat har fyra lika långa sidor: omkretsen är 4 · sidan och arean är sidan · sidan.",
+   "Baklänges: är arean 30 cm² och ena sidan 5 cm, är den andra sidan 30 / 5 = 6 cm."
+  ],
+  "exempel": [
+   [
+    "En rektangel är 11 cm lång och 4 cm bred. Hur stor är omkretsen och arean?",
+    "Omkrets: 11 + 4 + 11 + 4 = 30 cm. Area: 11 · 4 = 44 cm²."
+   ],
+   [
+    "Har rektanglarna 2 cm · 9 cm och 3 cm · 6 cm samma area? Samma omkrets?",
+    "Area: 2 · 9 = 18 cm² och 3 · 6 = 18 cm², alltså samma. Omkrets: 2 + 9 + 2 + 9 = 22 cm och 3 + 6 + 3 + 6 = 18 cm, alltså olika."
+   ]
+  ],
+  "ord": [
+   [
+    "omkrets",
+    "sträckan runt en figur"
+   ],
+   [
+    "area",
+    "hur stor yta en figur täcker"
+   ],
+   [
+    "kvadratcentimeter",
+    "cm², en ruta som är 1 cm lång och 1 cm bred"
+   ]
+  ],
+  "tips": "Omkretsen är en längd i cm och arean en yta i cm², så blanda inte ihop dem."
+ },
+ "Tid": {
+  "mal": [
+   "Räkna ut hur lång tid något tar, också när tiden går över en hel timme.",
+   "Räkna ut vad klockan blir efter en stund.",
+   "Byta mellan sekunder, minuter, timmar, dygn och veckor."
+  ],
+  "fakta": [
+   "1 minut = 60 sekunder, 1 timme = 60 minuter, 1 dygn = 24 timmar och 1 vecka = 7 dagar.",
+   "Hur lång tid: räkna först fram till nästa hela timme, sedan hela timmar och sist minuterna som är kvar.",
+   "Två och en halv timme är 60 + 60 + 30 = 150 minuter.",
+   "Över midnatt: räkna fram till 24.00 och fortsätt sedan från 0.00.",
+   "Från större till mindre enhet multiplicerar du: 5 minuter = 5 · 60 = 300 sekunder."
+  ],
+  "exempel": [
+   [
+    "Ett tåg går 13.50 och kommer fram 15.05. Hur lång är resan?",
+    "13.50 till 14.00 är 10 minuter, 14.00 till 15.00 är 60 minuter och 15.00 till 15.05 är 5 minuter. 10 + 60 + 5 = 75 minuter, alltså 1 timme och 15 minuter."
+   ],
+   [
+    "Hur många sekunder är 4 minuter och 10 sekunder?",
+    "4 · 60 = 240 sekunder. 240 + 10 = 250 sekunder."
+   ]
+  ],
+  "ord": [
+   [
+    "sekund",
+    "en sextiondel av en minut"
+   ],
+   [
+    "dygn",
+    "24 timmar"
+   ]
+  ],
+  "tips": "En timme har 60 minuter och inte 100, så från 9.50 till 10.10 är det 20 minuter."
+ },
+ "Tabeller och tiondelar": {
+  "mal": [
+   "Räkna med multiplikationstabellerna 3 till 9.",
+   "Räkna division som multiplikation baklänges.",
+   "Skriva tiondelar som decimaltal och bråk och jämföra dem.",
+   "Addera och subtrahera decimaltal med tiondelar."
+  ],
+  "fakta": [
+   "Division är multiplikation baklänges: 7 · 4 = 28, så 28 : 7 = 4 och 28 : 4 = 7.",
+   "Talet som saknas i en multiplikation hittar du med division: ? · 4 = 28 ger 28 : 4 = 7.",
+   "Ett bråk med nämnaren 10 är tiondelar: 2/10 och 0,2 är samma tal, två tiondelar.",
+   "Räkna tiondelar för sig och hela för sig: 2,3 + 1,4 = 3,7. Blir tiondelarna 10 eller fler växlar du till en hel.",
+   "1 m = 10 dm, så 1,7 m = 17 dm."
+  ],
+  "exempel": [
+   [
+    "Räkna: 2,6 + 1,8",
+    "Tiondelar: 6 + 8 = 14 tiondelar, alltså 1 hel och 4 tiondelar. Hela: 2 + 1 + 1 = 4. Svaret är 4,4."
+   ],
+   [
+    "Räkna: 5,0 − 2,3",
+    "5,0 är 50 tiondelar och 2,3 är 23 tiondelar. 50 − 23 = 27 tiondelar, alltså 2,7."
+   ]
+  ],
+  "ord": [
+   [
+    "tiondel",
+    "en av tio lika stora delar: 1/10 = 0,1"
+   ],
+   [
+    "decimaltal",
+    "ett tal med decimalkomma, som 2,7"
+   ]
+  ],
+  "tips": "Ställ kommat under kommat när du räknar decimaltal med uppställning."
+ },
+ "Bråk i vardagen": {
+  "mal": [
+   "Räkna ut en eller flera delar av ett antal.",
+   "Räkna ut hur stor del ett antal är av det hela.",
+   "Räkna ut vad som blir kvar när en del tas bort.",
+   "Jämföra delar och se när två bråk är lika mycket."
+  ],
+  "fakta": [
+   "Nämnaren, talet under strecket, säger hur många lika delar det hela delas i. Täljaren, talet över strecket, säger hur många delar du tar.",
+   "En del av ett antal: dela med nämnaren. 1/5 av 40 är 40 / 5 = 8.",
+   "Flera delar: räkna först ut en del och multiplicera sedan med täljaren. 3/5 av 40 är 3 · 8 = 24.",
+   "Hur stor del: skriv delen över det hela. 4 av 12 är 4/12, och det är lika mycket som 1/3.",
+   "Det som blir kvar är det hela minus delen. Tar du bort 1/4 är 3/4 kvar."
+  ],
+  "exempel": [
+   [
+    "En klass har 28 elever. 3/7 av dem har syskon. Hur många har syskon?",
+    "1/7 av 28 är 28 / 7 = 4. 3/7 är 3 · 4 = 12 elever."
+   ],
+   [
+    "1/3 av ett tal är 5. Vilket är talet?",
+    "En tredjedel är 5, så tre tredjedelar är 3 · 5 = 15. Talet är 15."
+   ]
+  ],
+  "ord": [
+   [
+    "täljare",
+    "talet över bråkstrecket: hur många delar du tar"
+   ],
+   [
+    "nämnare",
+    "talet under bråkstrecket: hur många delar det hela är delat i"
+   ]
+  ],
+  "tips": "Läs om frågan gäller delen eller det som är kvar, som i hur många som inte är röda."
+ },
+ "Avrunda och överslag": {
+  "mal": [
+   "Avrunda till närmaste tiotal, hundratal och tusental.",
+   "Göra ett överslag genom att avrunda talen innan du räknar.",
+   "Bedöma om ett svar är rimligt."
+  ],
+  "fakta": [
+   "Avrunda: titta på siffran direkt till höger om den plats du avrundar till. Är den 0–4 avrundar du nedåt, och är den 5–9 avrundar du uppåt.",
+   "1 482 avrundat till närmaste hundratal är 1 500, för tiotalssiffran är 8.",
+   "När du avrundar uppåt kan flera siffror ändras: 3 970 blir 4 000 till närmaste hundratal.",
+   "Ett överslag är en snabb räkning med avrundade tal: 47 + 31 är ungefär 50 + 30 = 80.",
+   "Ett svar är rimligt om det ligger nära överslaget."
+  ],
+  "exempel": [
+   [
+    "Ungefär hur mycket kostar 4 tröjor för 249 kr styck?",
+    "Avrunda 249 till 250. 4 · 250 = 1 000. Det kostar ungefär 1 000 kr."
+   ],
+   [
+    "Vilket är det största hela tal som blir 80 när du avrundar till närmaste tiotal?",
+    "84 avrundas nedåt till 80, men 85 avrundas uppåt till 90. Det största är 84."
+   ]
+  ],
+  "ord": [
+   [
+    "avrunda",
+    "byta ett tal mot det närmaste hela tiotalet, hundratalet eller tusentalet"
+   ],
+   [
+    "överslag",
+    "en snabb räkning med avrundade tal"
+   ],
+   [
+    "rimligt",
+    "ett svar som kan stämma"
+   ]
+  ],
+  "tips": "Avrunda direkt från siffran till höger och aldrig i flera steg: 3 448 blir 3 400 till närmaste hundratal, inte 3 500."
+ }
+}

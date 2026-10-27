@@ -1,0 +1,517 @@
+{
+ "Andragradsekvationer": {
+  "mal": [
+   "Lösa andragradsekvationer med pq-formeln och avgöra hur många reella lösningar de har.",
+   "Utveckla och faktorisera med kvadreringsreglerna och konjugatregeln.",
+   "Lösa ekvationer utan konstantterm genom att bryta ut x.",
+   "Ställa upp och lösa andragradsekvationer ur problem."
+  ],
+  "fakta": [
+   "pq-formeln: x² + px + q = 0 har lösningarna x = −p/2 ± √((p/2)² − q). Står ett tal framför x² delar du först alla termer med det.",
+   "Är (p/2)² − q större än 0 finns två lösningar, är det 0 finns en, och är det negativt finns inga reella lösningar.",
+   "Kvadreringsreglerna: (a + b)² = a² + 2ab + b² och (a − b)² = a² − 2ab + b². Konjugatregeln: (a + b)(a − b) = a² − b².",
+   "Nollproduktmetoden: är en produkt 0 är någon av faktorerna 0. x(x − 7) = 0 ger x = 0 eller x = 7.",
+   "Parabelns symmetrilinje ligger mitt emellan nollställena, där x = −p/2."
+  ],
+  "exempel": [
+   [
+    "Lös x² + 6x − 16 = 0.",
+    "p = 6 och q = −16. x = −3 ± √(9 + 16) = −3 ± 5, så x = 2 eller x = −8."
+   ],
+   [
+    "Lös x² − 25 = 0 genom att faktorisera.",
+    "Konjugatregeln: (x + 5)(x − 5) = 0, så x = 5 eller x = −5."
+   ]
+  ],
+  "ord": [
+   [
+    "reell lösning",
+    "en lösning som är ett vanligt tal på tallinjen"
+   ],
+   [
+    "faktorisera",
+    "skriva ett uttryck som en produkt"
+   ],
+   [
+    "nollställe",
+    "ett x-värde där uttrycket eller funktionen blir 0"
+   ]
+  ],
+  "tips": "Skriv ekvationen på formen x² + px + q = 0 innan du sätter in, och ta med tecknen på p och q."
+ },
+ "Ekvationssystem": {
+  "mal": [
+   "Lösa linjära ekvationssystem med substitutionsmetoden och additionsmetoden.",
+   "Tolka lösningen grafiskt som skärningspunkten mellan två linjer.",
+   "Avgöra om ett system har en, ingen eller oändligt många lösningar.",
+   "Ställa upp ett ekvationssystem ur en textuppgift."
+  ],
+  "fakta": [
+   "Substitutionsmetoden: lös ut en variabel ur den ena ekvationen och sätt in uttrycket i den andra.",
+   "Additionsmetoden: lägg ihop eller dra ifrån ekvationerna så att en variabel försvinner. Multiplicera först en ekvation med ett tal om det behövs.",
+   "Lösningen är punkten där linjerna skär varandra. Parallella linjer, samma k och olika m, ger ingen lösning, och samma linje ger oändligt många.",
+   "Textuppgift: välj en variabel för varje okänd storhet, skriv en ekvation för varje upplysning och pröva svaret mot texten."
+  ],
+  "exempel": [
+   [
+    "Lös y = 3x och x + y = 20.",
+    "Sätt in y = 3x: x + 3x = 20, så 4x = 20 och x = 5. Då är y = 15."
+   ],
+   [
+    "Lös 2x + y = 13 och 3x − y = 17.",
+    "Addera ekvationerna: 5x = 30, så x = 6. Sätt in: 12 + y = 13, så y = 1."
+   ]
+  ],
+  "ord": [
+   [
+    "ekvationssystem",
+    "två eller flera ekvationer som ska gälla samtidigt"
+   ],
+   [
+    "substitution",
+    "att byta ut en variabel mot ett uttryck som är lika med den"
+   ]
+  ],
+  "tips": "Sätt in svaret i båda ekvationerna: stämmer det bara i den ena har du räknat fel."
+ },
+ "Logaritmer och exponentialfunktioner": {
+  "mal": [
+   "Förklara vad lg x betyder och räkna ut logaritmer av tiopotenser.",
+   "Lösa exponentialekvationer som aˣ = b med logaritmer.",
+   "Räkna på exponentiell tillväxt och minskning."
+  ],
+  "fakta": [
+   "lg x är det tal som 10 ska upphöjas till för att bli x: lg x = y betyder 10ʸ = x. Till exempel är lg 100 000 = 5 och lg 0,0001 = −4.",
+   "lg x finns bara för x > 0, och lg 1 = 0 eftersom 10⁰ = 1.",
+   "Logaritmlagarna: lg(a · b) = lg a + lg b, lg(a / b) = lg a − lg b och lg aˣ = x · lg a.",
+   "aˣ = b löses med x = lg b / lg a. Går b att skriva som en potens av a går det utan räknare: 3ˣ = 81 = 3⁴ ger x = 4.",
+   "I y = C · aˣ ger en ökning med p % per steg a = 1 + p/100, och a mellan 0 och 1 betyder att y minskar."
+  ],
+  "exempel": [
+   [
+    "Lös 6 · 2ˣ = 96.",
+    "Dela med 6: 2ˣ = 16 = 2⁴, så x = 4."
+   ],
+   [
+    "En stad har 5 000 invånare och växer med 3 % per år. När har den 8 000 invånare?",
+    "5 000 · 1,03ˣ = 8 000 ger 1,03ˣ = 1,6 och x = lg 1,6 / lg 1,03 ≈ 15,9. Efter knappt 16 år."
+   ]
+  ],
+  "ord": [
+   [
+    "tiologaritm",
+    "lg x, exponenten som 10 ska upphöjas till för att bli x"
+   ],
+   [
+    "exponentialekvation",
+    "en ekvation där x står i exponenten"
+   ]
+  ],
+  "tips": "Frågar uppgiften efter första hela året då en gräns passeras avrundar du x uppåt till närmaste heltal."
+ },
+ "Statistik och normalfördelning": {
+  "mal": [
+   "Förklara vad standardavvikelsen mäter och jämföra spridningen i olika datamängder.",
+   "Avgöra hur medelvärdet och standardavvikelsen ändras när värdena ändras.",
+   "Använda tumregeln för normalfördelningen för att uppskatta andelar."
+  ],
+  "fakta": [
+   "Standardavvikelsen mäter hur mycket värdena sprider sig kring medelvärdet. Ligger värdena tätt är den liten, och är alla lika är den 0.",
+   "Läggs samma tal till varje värde flyttas medelvärdet lika mycket, men standardavvikelsen ändras inte.",
+   "Medelvärdet är summan delad med antalet: ändras ett värde ändras summan lika mycket, och medelvärdet med ändringen delad med antalet värden.",
+   "En normalfördelning är klockformad och symmetrisk kring medelvärdet μ. Ungefär 68 % ligger inom μ ± σ, 95 % inom μ ± 2σ och 99,7 % inom μ ± 3σ.",
+   "Symmetrin ger resten: hälften av värdena ligger över μ, och mellan μ och μ + σ ligger hälften av 68 %, alltså 34 %."
+  ],
+  "exempel": [
+   [
+    "Längder är normalfördelade med μ = 180 cm och σ = 6 cm. Ungefär hur många procent är kortare än 162 cm?",
+    "162 = 180 − 3 · 6 = μ − 3σ. Inom μ ± 3σ ligger 99,7 %, så 0,3 % ligger utanför, hälften på varje sida: ungefär 0,15 %."
+   ]
+  ],
+  "ord": [
+   [
+    "standardavvikelse",
+    "ett mått på hur långt från medelvärdet värdena brukar ligga"
+   ],
+   [
+    "normalfördelning",
+    "en symmetrisk, klockformad fördelning kring medelvärdet"
+   ],
+   [
+    "μ och σ",
+    "medelvärdet och standardavvikelsen i en normalfördelning"
+   ]
+  ],
+  "tips": "Rita klockan och skriv 34 %, 13,5 % och 2,5 % på varje sida om medelvärdet: då lägger du ihop de bitar frågan gäller."
+ },
+ "Geometriska satser": {
+  "mal": [
+   "Använda randvinkelsatsen och räkna med vertikalvinklar, sidovinklar och vinkelsumman i månghörningar.",
+   "Avgöra när trianglar är likformiga eller kongruenta.",
+   "Räkna ut sträckor med topptriangelsatsen, transversalsatsen och bisektrissatsen."
+  ],
+  "fakta": [
+   "Randvinkelsatsen: en randvinkel är hälften så stor som medelpunktsvinkeln på samma båge. Randvinklar på samma båge är lika stora, och en randvinkel på en diameter är 90°.",
+   "Vertikalvinklar är lika stora, och sidovinklar är tillsammans 180°. Vinkelsumman i en månghörning med n hörn är (n − 2) · 180°.",
+   "Trianglar är likformiga om motsvarande vinklar är lika stora, och då har motsvarande sidor samma förhållande. Kongruenta figurer har samma form och samma storlek.",
+   "Är DE parallell med BC i triangeln ABC gäller topptriangelsatsen AD/AB = AE/AC = DE/BC och transversalsatsen AD/DB = AE/EC.",
+   "Bisektrissatsen: bisektrisen till vinkel A delar BC så att BD/DC = AB/AC."
+  ],
+  "exempel": [
+   [
+    "En medelpunktsvinkel är 124°. Hur stor är en randvinkel på samma båge?",
+    "124° / 2 = 62°."
+   ],
+   [
+    "I triangeln ABC är DE parallell med BC, AD = 2, AB = 8 och BC = 12. Hur lång är DE?",
+    "Triangeln ADE är likformig med ABC: DE / 12 = 2 / 8, så DE = 3."
+   ]
+  ],
+  "ord": [
+   [
+    "randvinkel",
+    "en vinkel med spetsen på cirkeln och benen till cirkelns båge"
+   ],
+   [
+    "medelpunktsvinkel",
+    "en vinkel med spetsen i cirkelns medelpunkt"
+   ],
+   [
+    "bisektris",
+    "en linje som delar en vinkel i två lika stora delar"
+   ],
+   [
+    "kongruent",
+    "lika i både form och storlek"
+   ]
+  ],
+  "tips": "Markera i figuren vilka vinklar och sidor som hör ihop innan du ställer upp förhållandet."
+ },
+ "Andragradsekvationer och tillväxt": {
+  "mal": [
+   "Lösa andragradsekvationer med kvadratrötter, pq-formeln och nollproduktmetoden.",
+   "Ställa upp en andragradsekvation ur ett problem med area.",
+   "Räkna med potenser och tiologaritmer och lösa exponentialekvationer.",
+   "Räkna på exponentiell tillväxt, halvering och värdeminskning."
+  ],
+  "fakta": [
+   "x² = a med a > 0 har två lösningar: x = √a och x = −√a.",
+   "pq-formeln för x² + px + q = 0: x = −p/2 ± √((p/2)² − q). Är talet under roten negativt finns inga reella lösningar.",
+   "Nollproduktmetoden: x(x − a) = 0 ger x = 0 eller x = a.",
+   "aˣ = b löses med x = lg b / lg a, och lg 10ⁿ = n.",
+   "I y = C · aˣ är C startvärdet och a förändringsfaktorn. Halveras något var T:e år finns (1/2)ⁿ kvar efter n halveringar."
+  ],
+  "exempel": [
+   [
+    "En rektangel har sidorna x cm och x + 4 cm och arean 60 cm². Hur lång är den kortare sidan?",
+    "x(x + 4) = 60 ger x² + 4x − 60 = 0. x = −2 ± √(4 + 60) = −2 ± 8, så x = 6 eller x = −10. En längd är positiv: 6 cm."
+   ],
+   [
+    "Ett ämne halveras var 3:e timme. Hur stor andel finns kvar efter 12 timmar?",
+    "12 timmar är 4 halveringar: (1/2)⁴ = 1/16."
+   ]
+  ],
+  "ord": [
+   [
+    "nollproduktmetoden",
+    "att lösa en ekvation där en produkt är 0 genom att sätta varje faktor till 0"
+   ],
+   [
+    "halveringstid",
+    "tiden det tar för en mängd att bli hälften så stor"
+   ]
+  ],
+  "tips": "En negativ lösning är ingen längd: pröva alltid att svaret passar i problemet."
+ },
+ "Trigonometri": {
+  "mal": [
+   "Räkna ut sidor och vinklar i rätvinkliga trianglar med sinus, cosinus och tangens.",
+   "Använda sinussatsen och cosinussatsen i trianglar som inte är rätvinkliga.",
+   "Räkna ut en triangels area med areasatsen."
+  ],
+  "fakta": [
+   "I en rätvinklig triangel är sin v = motstående / hypotenusan, cos v = närliggande / hypotenusan och tan v = motstående / närliggande.",
+   "En vinkel ur en kvot får du med inversen på räknaren: tan v = 0,5 ger v = tan⁻¹ 0,5 ≈ 26,6°.",
+   "Sinussatsen gäller i alla trianglar: a / sin A = b / sin B = c / sin C. Använd den när du känner en sida och vinkeln mitt emot den.",
+   "Cosinussatsen: a² = b² + c² − 2bc · cos A. Använd den när du känner två sidor och vinkeln mellan dem, eller alla tre sidorna.",
+   "Areasatsen: T = b · c · sin A / 2, där A är vinkeln mellan sidorna b och c."
+  ],
+  "exempel": [
+   [
+    "En ramp är 5,0 m lång och lutar 12° mot marken. Hur högt upp når den?",
+    "Höjden är kateten mitt emot 12°, och rampen är hypotenusan: 5,0 · sin 12° ≈ 1,0 m."
+   ],
+   [
+    "En triangel har b = 6 cm, c = 10 cm och vinkeln A = 40° mellan dem. Hur lång är a?",
+    "a² = 6² + 10² − 2 · 6 · 10 · cos 40° ≈ 44,07, så a ≈ 6,6 cm."
+   ]
+  ],
+  "ord": [
+   [
+    "hypotenusa",
+    "den längsta sidan i en rätvinklig triangel, mitt emot den räta vinkeln"
+   ],
+   [
+    "motstående katet",
+    "kateten mitt emot vinkeln v"
+   ],
+   [
+    "närliggande katet",
+    "kateten som ligger intill vinkeln v"
+   ]
+  ],
+  "tips": "Se till att räknaren står i grader och inte i radianer."
+ },
+ "Sannolikhet och kombinatorik": {
+  "mal": [
+   "Räkna sannolikheter vid dragningar med och utan återläggning med träddiagram.",
+   "Använda komplementhändelsen för att räkna ut sannolikheten för minst en.",
+   "Räkna antal sätt med multiplikationsprincipen, fakultet och val av k av n."
+  ],
+  "fakta": [
+   "I ett träddiagram multiplicerar du sannolikheterna längs en gren och adderar de grenar som ger det du söker.",
+   "Utan återläggning minskar både antalet kvar i påsen och antalet av den sort du drog.",
+   "P(minst en) = 1 − P(ingen).",
+   "n! (n-fakultet) = n · (n − 1) · … · 2 · 1 är antalet sätt att ordna n saker i en rad.",
+   "Välja k av n när ordningen inte spelar roll: räkna som om ordningen spelade roll och dela med k!. Två av sju: 7 · 6 / 2 = 21."
+  ],
+  "exempel": [
+   [
+    "En påse har 2 röda och 4 vita kulor. Du drar två utan återläggning. Hur stor är sannolikheten att få en av varje färg?",
+    "Röd sedan vit: 2/6 · 4/5 = 8/30. Vit sedan röd: 4/6 · 2/5 = 8/30. Tillsammans 16/30 = 8/15."
+   ],
+   [
+    "Hur många tresiffriga koder med siffrorna 0–9 finns om ingen siffra får upprepas?",
+    "10 · 9 · 8 = 720."
+   ]
+  ],
+  "ord": [
+   [
+    "fakultet",
+    "n! = n · (n − 1) · … · 2 · 1"
+   ],
+   [
+    "komplementhändelse",
+    "att händelsen inte inträffar; P = 1 − P(händelsen)"
+   ],
+   [
+    "kombination",
+    "ett urval där ordningen inte spelar roll"
+   ]
+  ],
+  "tips": "Fråga dig om ordningen spelar roll: i en kod gör den det, i en grupp människor gör den det inte."
+ },
+ "NP-träning": {
+  "mal": [
+   "Lösa blandade uppgifter om algebra, andragradsekvationer, ekvationssystem, logaritmer och statistik.",
+   "Räkna utan räknare med kvadreringsreglerna, pq-formeln och lg.",
+   "Använda andragradsmodeller för att hitta största värde, nollställen och de bästa måtten.",
+   "Resonera om samband, korrelation och orsak, och förklara varför en regel gäller."
+  ],
+  "fakta": [
+   "Läs uppgiften två gånger och stryk under vad som efterfrågas, i vilken enhet och med hur många decimaler.",
+   "En parabels största eller minsta värde ligger på symmetrilinjen, mitt emellan nollställena när det finns två: räkna ut x där och sätt in det i funktionen.",
+   "En lösning som inte passar i verkligheten, som en negativ tid eller längd, förkastas, och då skriver du varför.",
+   "Korrelation betyder att två variabler följs åt. Det visar inte att den ena orsakar den andra.",
+   "Visa hur du tänker i varje steg, och kontrollera svaret genom att sätta in det i uppgiften."
+  ],
+  "exempel": [
+   [
+    "Visa att (n + 2)² − n² är delbart med 4 för alla heltal n.",
+    "(n + 2)² − n² = n² + 4n + 4 − n² = 4n + 4 = 4(n + 1). Det är 4 gånger ett heltal, alltså delbart med 4."
+   ],
+   [
+    "För vilka k har x² + 10x + k = 0 två reella lösningar?",
+    "Talet under roten, (p/2)² − q = 25 − k, ska vara större än 0. Alltså k < 25."
+   ]
+  ],
+  "ord": [
+   [
+    "korrelation",
+    "ett samband där två variabler ökar eller minskar tillsammans"
+   ],
+   [
+    "förkasta",
+    "stryka en lösning som inte passar i problemet"
+   ],
+   [
+    "stickprov",
+    "en del av en grupp som man undersöker för att säga något om hela gruppen"
+   ]
+  ],
+  "tips": "Börja med uppgifterna du känner igen, och kom tillbaka till dem du fastnar på."
+ },
+ "Genomgång inför provet": {
+  "mal": [
+   "Repetera pq-formeln, nollproduktmetoden, kvadreringsreglerna och konjugatregeln.",
+   "Repetera parabler, logaritmlagarna, standardavvikelse och normalfördelning.",
+   "Hitta rätt regel i en sammanfattande text och använda den på en uppgift."
+  ],
+  "fakta": [
+   "Nivån bygger på en text som sammanfattar kursen. Läs frågan först, leta upp rubriken den hör till och läs sedan det stycket noga.",
+   "pq-formeln: x = −p/2 ± √((p/2)² − q). Nollproduktmetoden: x(x − a) = 0 ger x = 0 eller x = a.",
+   "y = ax² + bx + c har en minimipunkt om a > 0 och en maximipunkt om a < 0. För y = x² + px + q är symmetrilinjen x = −p/2.",
+   "lg(ab) = lg a + lg b, lg(a/b) = lg a − lg b och lg aⁿ = n · lg a.",
+   "Standardavvikelsen mäter spridningen kring medelvärdet. I en normalfördelning ligger ungefär 68 % inom en standardavvikelse och 95 % inom två."
+  ],
+  "exempel": [
+   [
+    "Utveckla (3x + 2)².",
+    "(3x)² + 2 · 3x · 2 + 2² = 9x² + 12x + 4."
+   ],
+   [
+    "Beräkna lg 200 + lg 5 utan räknare.",
+    "lg(200 · 5) = lg 1 000 = 3."
+   ]
+  ],
+  "ord": [
+   [
+    "symmetrilinje",
+    "den lodräta linje som delar parabeln i två spegelbilder"
+   ],
+   [
+    "utveckla",
+    "multiplicera ut parenteserna"
+   ],
+   [
+    "faktorisera",
+    "skriva ett uttryck som en produkt"
+   ]
+  ],
+  "tips": "Läs frågans verb noga: utveckla betyder att ta bort parenteserna, faktorisera att skriva som en produkt."
+ },
+ "Andragradsfunktioner": {
+  "mal": [
+   "Avgöra om en parabel har ett största eller minsta värde och hitta symmetrilinjen och nollställena.",
+   "Ta fram extrempunkten, också genom kvadratkomplettering.",
+   "Lösa problem om kastbanor, areor, produkter och vinst med andragradsfunktioner."
+  ],
+  "fakta": [
+   "y = ax² + bx + c: med a > 0 öppnar sig parabeln uppåt och har ett minsta värde, med a < 0 öppnar den sig nedåt och har ett största värde.",
+   "Symmetrilinjen är x = −b/(2a) och ligger mitt emellan nollställena, om det finns två. Det största eller minsta värdet får du genom att sätta in det x-värdet.",
+   "Kvadratkomplettering: x² + px + q = (x + p/2)² − (p/2)² + q. På formen (x − h)² + k är extrempunkten (h, k).",
+   "Parabeln skär y-axeln i f(0), alltså i c. Den kan ha två, ett eller inga nollställen.",
+   "I ett problem ställer du upp funktionen, hittar symmetrilinjen och tänker på vilka x som är möjliga, till exempel att en tid inte kan vara negativ."
+  ],
+  "exempel": [
+   [
+    "Vilket är det minsta värdet för y = x² + 12x + 41?",
+    "Kvadratkomplettera: (x + 6)² − 36 + 41 = (x + 6)² + 5. Minsta värdet är 5, när x = −6."
+   ],
+   [
+    "En boll har höjden h = −5t² + 10t + 2 meter efter t sekunder. Hur högt når den?",
+    "Symmetrilinjen: t = −10 / (2 · (−5)) = 1. h(1) = −5 + 10 + 2 = 7 m."
+   ]
+  ],
+  "ord": [
+   [
+    "parabel",
+    "grafen till en andragradsfunktion"
+   ],
+   [
+    "symmetrilinje",
+    "den lodräta linje som delar parabeln i två spegelbilder"
+   ],
+   [
+    "extrempunkt",
+    "parabelns högsta eller lägsta punkt"
+   ],
+   [
+    "kvadratkomplettering",
+    "att skriva om x² + px + q som en kvadrat plus ett tal"
+   ]
+  ],
+  "tips": "Hitta symmetrilinjen först: nästan alla frågor om en parabel blir enkla därifrån."
+ },
+ "Räta linjens ekvation": {
+  "mal": [
+   "Växla mellan k-form, enpunktsform och allmän form.",
+   "Läsa av lutningen och var linjen skär axlarna.",
+   "Känna igen och ta fram parallella och vinkelräta linjer."
+  ],
+  "fakta": [
+   "k-form: y = kx + m, där k är lutningen och m är y-värdet där linjen skär y-axeln.",
+   "Enpunktsform: y − y₁ = k(x − x₁) är linjen med lutningen k genom punkten (x₁, y₁).",
+   "Allmän form: ax + by + c = 0. Lös ut y för att få k och m.",
+   "Parallella linjer har samma lutning. Vinkelräta linjer har k₁ · k₂ = −1.",
+   "En lodrät linje x = a har ingen lutning och kan inte skrivas på k-form."
+  ],
+  "exempel": [
+   [
+    "Ta fram linjen genom (1, 4) som är vinkelrät mot 2x + 3y − 6 = 0.",
+    "Den givna linjen är y = −2x/3 + 2, med k₁ = −2/3. Då är k₂ = 3/2, för (−2/3) · (3/2) = −1. Enpunktsformen ger y − 4 = 1,5(x − 1), alltså y = 1,5x + 2,5."
+   ]
+  ],
+  "ord": [
+   [
+    "lutning",
+    "hur mycket y ändras när x ökar med 1"
+   ],
+   [
+    "vinkelräta",
+    "linjer som möts i rät vinkel, 90°"
+   ]
+  ],
+  "tips": "Den vinkelräta lutningen får du genom att vända bråket och byta tecken: 2/3 blir −3/2."
+ },
+ "Rotekvationer": {
+  "mal": [
+   "Lösa rotekvationer genom att få roten ensam och kvadrera båda leden.",
+   "Pröva lösningarna och stryka falska rötter.",
+   "Lösa rotekvationer som leder till andragradsekvationer."
+  ],
+  "fakta": [
+   "√x är det tal som inte är negativt och som blir x i kvadrat. Därför saknar √x = −2 lösning.",
+   "Få roten ensam i ena ledet och kvadrera sedan båda leden: (√(x + 1))² = x + 1.",
+   "Kvadrering kan ge falska rötter: lösningar som inte stämmer i den ursprungliga ekvationen.",
+   "Pröva därför alltid varje lösning i den ursprungliga ekvationen."
+  ],
+  "exempel": [
+   [
+    "Lös ekvationen √(x + 10) = x − 2.",
+    "Kvadrera: x + 10 = x² − 4x + 4, så x² − 5x − 6 = 0 och x = 6 eller x = −1. Pröva: √16 = 4 = 6 − 2 stämmer. √9 = 3 men −1 − 2 = −3, så x = −1 är falsk. Svaret är x = 6."
+   ]
+  ],
+  "ord": [
+   [
+    "falsk rot",
+    "en lösning som kvadreringen gav men som inte stämmer i den ursprungliga ekvationen"
+   ]
+  ],
+  "tips": "Kvadrera aldrig ett led med flera termer innan roten står ensam: (√x + 3)² är inte x + 9."
+ },
+ "Logik och bevis": {
+  "mal": [
+   "Använda implikation (⇒) och ekvivalens (⇔) mellan påståenden.",
+   "Visa att ett påstående är falskt med ett motexempel.",
+   "Följa och skriva enkla bevis med jämna och udda tal."
+  ],
+  "fakta": [
+   "p ⇒ q betyder att q är sant när p är sant. p ⇔ q betyder att det gäller åt båda hållen.",
+   "Omvändningen till ”om p, så q” är ”om q, så p”. Den kan vara falsk fast påståendet är sant.",
+   "Ett motexempel räcker för att visa att ett påstående om alla tal är falskt. Exempel räcker aldrig som bevis för att något gäller för alla tal.",
+   "Med ett heltal n är 2n ett jämnt tal och 2n + 1 ett udda tal."
+  ],
+  "exempel": [
+   [
+    "Visa att summan av ett jämnt och ett udda tal är udda.",
+    "Skriv talen 2m och 2n + 1, där m och n är heltal. Summan är 2m + 2n + 1 = 2(m + n) + 1. Det är 2 gånger ett heltal plus 1, alltså ett udda tal."
+   ]
+  ],
+  "ord": [
+   [
+    "implikation",
+    "ett ”om … så”-samband, med pilen ⇒"
+   ],
+   [
+    "ekvivalens",
+    "ett samband som gäller åt båda hållen, med pilen ⇔"
+   ],
+   [
+    "motexempel",
+    "ett exempel som visar att ett påstående inte alltid gäller"
+   ]
+  ],
+  "tips": "Fråga dig om pilen också gäller baklänges. Gör den inte det är det en implikation, inte en ekvivalens."
+ }
+}

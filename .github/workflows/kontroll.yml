@@ -55,6 +55,12 @@ jobs:
       - name: Uppgiftsbanken är prövad och har sin migration
         run: python3 verktyg/bygg-uppgifter.py --kolla
 
+      # Ett faktablad per område i banken (2026-10-27), och filerna i
+      # nexlax-fakta/ är de verktyget skriver nu: ett nytt område utan
+      # blad, eller ett ändrat blad utan --skriv, syns här.
+      - name: Faktabladen täcker banken och är byggda
+        run: python3 verktyg/bygg-faktablad.py --kolla
+
       # /admin, /larare, /foralder och /barn har skarp CSP (vercel.json).
       # Inline-kod där fungerar inte i produktion.
       - name: Vyerna tål den skarpa CSP:n

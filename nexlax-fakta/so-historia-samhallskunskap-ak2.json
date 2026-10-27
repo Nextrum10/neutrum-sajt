@@ -1,0 +1,111 @@
+{
+ "Regler och rättigheter": {
+  "mal": [
+   "Förklara varför vi har regler, i skolan och på andra platser.",
+   "Berätta hur en omröstning går till och vad det betyder att majoriteten bestämmer.",
+   "Nämna några av rättigheterna i barnkonventionen."
+  ],
+  "fakta": [
+   "Regler finns för att alla ska må bra och vara säkra. De finns i skolan, hemma och i hela samhället.",
+   "När man röstar har alla en röst var. Det förslag som får flest röster vinner. Då bestämmer majoriteten.",
+   "Barnkonventionen är en överenskommelse mellan länderna i FN. Den säger vilka rättigheter alla barn har, var de än bor.",
+   "Alla under 18 år är barn. Barn har rätt att gå i skolan, få vård, leka och vila och säga vad de tycker.",
+   "I Sverige får ingen slå ett barn. Behandlar någon dig illa kan du prata med en vuxen du litar på."
+  ],
+  "exempel": [
+   [
+    "Klassen röstar om fredagens film. 8 vill se en djurfilm och 17 vill se en tecknad film. Vilken blir det?",
+    "Den tecknade filmen fick flest röster, 17 mot 8. Majoriteten bestämmer, så det blir den tecknade filmen."
+   ]
+  ],
+  "ord": [
+   [
+    "regel",
+    "något som säger hur man ska göra"
+   ],
+   [
+    "majoritet",
+    "de flesta"
+   ],
+   [
+    "klassråd",
+    "ett möte där klassen pratar och tar beslut"
+   ],
+   [
+    "demokrati",
+    "att alla får vara med och bestämma, till exempel genom att rösta"
+   ]
+  ],
+  "tips": "Räkna rösterna för varje förslag. Det med flest röster vinner."
+ },
+ "Högtider": {
+  "mal": [
+   "Berätta vad kristna firar på jul, advent och påsk.",
+   "Berätta om judendomens sabbat och pesach.",
+   "Berätta om islams ramadan och id al-fitr."
+  ],
+  "fakta": [
+   "På julen firar kristna att Jesus föddes. Julafton är den 24 december.",
+   "Advent är de fyra söndagarna före jul. På påsken minns kristna att Jesus dog och uppstod. Påsken har inte samma datum varje år.",
+   "Sabbat är judendomens vilodag, från fredag kväll till lördag kväll. På pesach minns judar uttåget ur Egypten.",
+   "Ramadan är islams fastemånad. Många muslimer äter och dricker inte när det är ljust ute. När ramadan är slut firas id al-fitr."
+  ],
+  "exempel": [
+   [
+    "Vilket datum är juldagen?",
+    "Julafton är den 24 december. Juldagen är dagen efter, den 25 december."
+   ]
+  ],
+  "ord": [
+   [
+    "högtid",
+    "en viktig fest- eller minnesdag som kommer tillbaka varje år"
+   ],
+   [
+    "fasta",
+    "att låta bli att äta under en tid"
+   ],
+   [
+    "vilodag",
+    "en dag då man vilar och inte arbetar"
+   ]
+  ],
+  "tips": "Pesach och påsk låter nästan lika, men de hör till olika religioner. Läs noga."
+ },
+ "Förr och nu": {
+  "mal": [
+   "Ordna händelser på en tidslinje, från förr till nu.",
+   "Räkna ut hur många år som har gått.",
+   "Använda tidsord som i förrgår, i går och i morgon.",
+   "Berätta hur barn levde på 1800-talet."
+  ],
+  "fakta": [
+   "En tidslinje visar när saker hände. Det som hände först står oftast längst till vänster.",
+   "Det som har hänt är förr. Framtiden är det som inte har hänt än. Ett århundrade är 100 år.",
+   "Räkna år så här: det senare året − det tidigare året.",
+   "På 1800-talet hade de flesta hem ingen el. Man lyste med ljus och oljelampor och hämtade vatten i en brunn.",
+   "Barnen gick färre år i skolan än i dag, och många hjälpte till med arbetet på gården. Det fanns ingen tv."
+  ],
+  "exempel": [
+   [
+    "Ella föddes år 2017. Hur många år fyller hon år 2025?",
+    "2025 − 2017 = 8. Hon fyller 8 år."
+   ]
+  ],
+  "ord": [
+   [
+    "griffeltavla",
+    "en liten svart tavla av sten som barnen skrev på förr"
+   ],
+   [
+    "brunn",
+    "ett djupt hål i marken där man hämtar vatten"
+   ],
+   [
+    "utedass",
+    "en toalett i ett litet hus ute på gården"
+   ]
+  ],
+  "tips": "Förr- och över- betyder två dagar: i förrgår är två dagar bakåt och i övermorgon två dagar framåt."
+ }
+}

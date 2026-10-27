@@ -1,0 +1,78 @@
+{
+ "Biologi": {
+  "mal": [
+   "Säga vad hjärtat, lungorna, hjärnan, njurarna och skelettet gör.",
+   "Ordna matens väg genom kroppen.",
+   "Förklara fotosyntesen och vad producenter, konsumenter och nedbrytare är.",
+   "Ordna en näringskedja och förklara vad ett ekosystem är."
+  ],
+  "fakta": [
+   "Hjärtat pumpar runt blodet, i lungorna kommer syret in i blodet, njurarna silar blodet och gör urin, och hjärnan styr kroppen genom nerverna.",
+   "Maten går från munnen genom matstrupen till magsäcken och sedan till tunntarmen och tjocktarmen. Skelettet håller upp kroppen och skyddar organen.",
+   "Växter gör fotosyntes: med solljus, vatten och koldioxid gör de näring och släpper ut syre. Det gröna klorofyllet fångar ljuset.",
+   "En näringskedja börjar med en växt, producenten. Sedan kommer konsumenterna: växtätare, rovdjur och allätare, som äter både växter och djur.",
+   "Nedbrytare, som svampar och bakterier, bryter ner döda växter och djur. Ett ekosystem är alla organismer i ett område och miljön de lever i."
+  ],
+  "exempel": [
+   [
+    "Ordna näringskedjan: räv, gräs, kanin.",
+    "Gräs → kanin → räv. Gräset är producent, kaninen äter gräset och räven äter kaninen."
+   ]
+  ],
+  "ord": [
+   [
+    "organ",
+    "en del av kroppen med en egen uppgift, som hjärtat"
+   ],
+   [
+    "fotosyntes",
+    "när växter gör näring av solljus, vatten och koldioxid"
+   ],
+   [
+    "koldioxid",
+    "en gas i luften som växterna tar upp och som vi andas ut"
+   ],
+   [
+    "konsument",
+    "en organism som äter andra organismer"
+   ]
+  ],
+  "tips": "I en näringskedja pekar pilen dit energin går: från den som blir uppäten till den som äter."
+ },
+ "Kemi": {
+  "mal": [
+   "Säga vattnets tre former och när vatten fryser och kokar.",
+   "Förklara avdunstning, kondensation och vattnets kretslopp.",
+   "Förklara vad en lösning är och vad som händer med det som löser sig.",
+   "Välja ett sätt att dela upp en blandning: filtrering, avdunstning eller magnet."
+  ],
+  "fakta": [
+   "Vatten kan vara fast (is), flytande eller gas (vattenånga). Rent vatten fryser vid 0 °C och kokar vid 100 °C vid normalt lufttryck.",
+   "När is smälter rör sig partiklarna mer och kan glida förbi varandra. I en gas rör de sig fritt och snabbt.",
+   "Avdunstning är när vatten blir gas utan att koka. Kondensation är när ånga kyls av och blir droppar. Så går vattnet runt mellan hav, moln och land.",
+   "Socker och salt löser sig i vatten och blir en lösning. Ämnet finns kvar, men i så små delar att det inte syns. Olja löser sig inte i vatten.",
+   "En blandning kan delas upp: ett filter tar bort det som inte har löst sig, avdunstning ger tillbaka det lösta och en magnet plockar ut järn."
+  ],
+  "exempel": [
+   [
+    "Du har torkade ärtor och mjöl blandat i en skål. Hur skiljer du dem åt?",
+    "Sikta blandningen: mjölet går igenom silen, men ärtorna fastnar."
+   ]
+  ],
+  "ord": [
+   [
+    "partikel",
+    "en mycket liten del som ett ämne består av"
+   ],
+   [
+    "blandning",
+    "två eller flera ämnen som är blandade utan att bli ett nytt ämne"
+   ],
+   [
+    "filtrera",
+    "hälla genom ett filter, så att det som inte har löst sig fastnar"
+   ]
+  ],
+  "tips": "Fråga dig om ämnet har löst sig: det lösta går igenom filtret, och då behöver du avdunstning."
+ }
+}

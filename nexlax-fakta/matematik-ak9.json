@@ -1,0 +1,573 @@
+{
+ "Funktioner": {
+  "mal": [
+   "Läsa av k och m i y = kx + m.",
+   "Räkna ut y för ett givet x i en linjär funktion.",
+   "Avgöra om en linje lutar uppåt eller nedåt, och om ett samband är proportionellt.",
+   "Ställa upp och tolka en linjär funktion ur en text eller tabell."
+  ],
+  "fakta": [
+   "I y = kx + m är k lutningen och m det värde där linjen skär y-axeln, i punkten (0, m).",
+   "k säger hur mycket y ändras när x ökar med 1. Är k positivt lutar linjen uppåt åt höger, och är k negativt lutar den nedåt.",
+   "Ett samband är proportionellt när m = 0, alltså y = kx. Grafen går då genom origo.",
+   "I en tabell är k hur mycket y ökar när x ökar med 1, och m är y när x = 0.",
+   "I vardagen är m ofta en startavgift och k ett pris per styck, timme eller besök."
+  ],
+  "exempel": [
+   [
+    "y = −3x + 10. Vad är y när x = 4?",
+    "y = −3 · 4 + 10 = −12 + 10 = −2."
+   ],
+   [
+    "I en tabell är y = 6 när x = 0, y = 10 när x = 1 och y = 14 när x = 2. Vilken formel passar?",
+    "y ökar med 4 per steg, så k = 4. När x = 0 är y = 6, så m = 6. Formeln är y = 4x + 6."
+   ]
+  ],
+  "ord": [
+   [
+    "funktion",
+    "en regel som ger ett y-värde för varje x-värde"
+   ],
+   [
+    "lutning",
+    "hur brant linjen är, talet k"
+   ],
+   [
+    "proportionell",
+    "y är alltid samma tal gånger x, och grafen går genom origo"
+   ]
+  ],
+  "tips": "Kontrollera formeln genom att sätta in ett par värden ur tabellen eller texten."
+ },
+ "Ekvationer": {
+  "mal": [
+   "Lösa ekvationer av typen x² = a, som ofta har två lösningar.",
+   "Lösa ekvationer som (x − a)(x + b) = 0 med nollproduktmetoden.",
+   "Lösa andragradsekvationer genom att bryta ut x.",
+   "Lösa ekvationer som (x − a)² = b genom att dra roten ur båda sidor."
+  ],
+  "fakta": [
+   "x² = a har två lösningar när a är positivt: x = √a och x = −√a. x² = 36 ger x = 6 eller x = −6.",
+   "Kvadraten av ett reellt tal är aldrig negativ, så en ekvation som x² = −4 saknar reell lösning.",
+   "Nollproduktmetoden: är en produkt 0 måste någon av faktorerna vara 0. (x − 4)(x + 1) = 0 ger x = 4 eller x = −1.",
+   "Bryt ut x: x² + 3x = 0 blir x(x + 3) = 0, så x = 0 eller x = −3."
+  ],
+  "exempel": [
+   [
+    "Lös ekvationen 4x² + 1 = 401.",
+    "Dra bort 1: 4x² = 400. Dela med 4: x² = 100. Alltså x = 10 eller x = −10."
+   ],
+   [
+    "Lös ekvationen (x − 5)² = 4.",
+    "x − 5 = 2 eller x − 5 = −2, så x = 7 eller x = 3. Kontroll: (7 − 5)² = 4 och (3 − 5)² = 4."
+   ]
+  ],
+  "ord": [
+   [
+    "andragradsekvation",
+    "en ekvation där x står i kvadrat, x²"
+   ],
+   [
+    "nollproduktmetoden",
+    "om a · b = 0 är a = 0 eller b = 0"
+   ],
+   [
+    "bryta ut",
+    "skriva en gemensam faktor utanför en parentes"
+   ],
+   [
+    "reellt tal",
+    "ett vanligt tal på tallinjen"
+   ]
+  ],
+  "tips": "Dela aldrig båda sidor med x, för då tappar du lösningen x = 0."
+ },
+ "Potenser": {
+  "mal": [
+   "Skriva stora och små tal i grundpotensform och tillbaka.",
+   "Förklara vad negativa exponenter som 10⁻³ betyder.",
+   "Multiplicera och dividera tal i grundpotensform.",
+   "Jämföra och ordna tal i grundpotensform."
+  ],
+  "fakta": [
+   "Grundpotensform är a · 10ⁿ, där a är minst 1 och mindre än 10. 52 000 = 5,2 · 10⁴.",
+   "Positiv exponent: flytta decimaltecknet så många steg åt höger. Negativ exponent: så många steg åt vänster. 4 · 10⁻⁴ = 0,0004.",
+   "10⁻ⁿ betyder 1 delat med 10ⁿ: 10⁻² = 1/100 = 0,01.",
+   "Gånger: multiplicera talen och lägg ihop exponenterna. (2 · 10⁴) · (4 · 10³) = 8 · 10⁷.",
+   "Delat: dela talen och dra bort exponenterna. (9 · 10⁶) / (3 · 10²) = 3 · 10⁴."
+  ],
+  "exempel": [
+   [
+    "Skriv 0,000 45 i grundpotensform.",
+    "Flytta decimaltecknet 4 steg åt höger till 4,5. Talet var mindre än 1, så exponenten blir −4: 4,5 · 10⁻⁴."
+   ],
+   [
+    "Räkna ut (5 · 10³) · (4 · 10²).",
+    "5 · 4 = 20 och 10³ · 10² = 10⁵, alltså 20 · 10⁵. 20 = 2 · 10¹, så svaret i grundpotensform är 2 · 10⁶."
+   ]
+  ],
+  "ord": [
+   [
+    "grundpotensform",
+    "ett tal skrivet som a · 10ⁿ, där a är minst 1 och mindre än 10"
+   ],
+   [
+    "exponent",
+    "talet uppe till höger: 10³ är 10 · 10 · 10, och 10⁻³ är 1 delat med 10³"
+   ],
+   [
+    "tiopotens",
+    "en potens med basen 10"
+   ]
+  ],
+  "tips": "Jämför först exponenterna: i grundpotensform är talet med störst exponent alltid störst, också när exponenterna är negativa."
+ },
+ "Geometri": {
+  "mal": [
+   "Räkna med skala på kartor, ritningar och modeller, både förminskning och förstoring.",
+   "Räkna ut okända sidor i likformiga figurer.",
+   "Räkna ut hur omkrets, area och volym ändras när en figur förstoras eller förminskas."
+  ],
+  "fakta": [
+   "Skala 1 : 2 000 är en förminskning: 1 cm på kartan är 2 000 cm i verkligheten. Skala 3 : 1 är en förstoring: bilden är 3 gånger så stor.",
+   "Likformiga figurer har lika stora vinklar, och alla sidor är förstorade eller förminskade med samma skalfaktor.",
+   "Blir alla längder k gånger så långa blir omkretsen k gånger, arean k² gånger och volymen k³ gånger så stor.",
+   "Byt enhet efteråt: 100 000 cm = 1 km och 1 m² = 10 000 cm²."
+  ],
+  "exempel": [
+   [
+    "Två likformiga rektanglar: den lilla är 3 cm bred och 7 cm lång. Den stora är 12 cm bred. Hur lång är den?",
+    "Skalfaktorn är 12 / 3 = 4. Längden blir 7 · 4 = 28 cm."
+   ],
+   [
+    "En modell i skala 1 : 5 har volymen 2 liter. Hur stor volym har originalet?",
+    "Alla längder är 5 gånger så stora, så volymen blir 5³ = 125 gånger så stor: 2 · 125 = 250 liter."
+   ]
+  ],
+  "ord": [
+   [
+    "likformig",
+    "samma form men inte nödvändigtvis samma storlek"
+   ],
+   [
+    "skalfaktor",
+    "hur många gånger större eller mindre en figur är"
+   ],
+   [
+    "förminskning",
+    "skala där första talet är minst, som 1 : 100"
+   ],
+   [
+    "förstoring",
+    "skala där första talet är störst, som 10 : 1"
+   ]
+  ],
+  "tips": "Para ihop motsvarande sidor, kortast med kortast och längst med längst, innan du räknar ut skalfaktorn."
+ },
+ "Statistik": {
+  "mal": [
+   "Räkna ut och jämföra medelvärde, median och typvärde.",
+   "Förklara vilket lägesmått som påverkas mest av ett extremt värde.",
+   "Räkna ut variationsbredd och jämföra spridning.",
+   "Räkna mellan procent och grader i ett cirkeldiagram."
+  ],
+  "fakta": [
+   "Medelvärde = summan / antalet. Median = mittersta värdet i storleksordning, eller medelvärdet av de två mittersta.",
+   "Typvärde är det vanligaste värdet. Ett värde som är mycket större eller mindre än de andra drar med sig medelvärdet mer än medianen.",
+   "Variationsbredd = största värdet − minsta värdet. Den visar hur utspridda värdena är.",
+   "Ett cirkeldiagram är 360° för hela. 1 % av helheten är 3,6°, så andelen i procent gånger 3,6 ger sektorns grader.",
+   "Saknas ett värde: medelvärdet · antalet ger summan. Dra bort de kända värdena från summan."
+  ],
+  "exempel": [
+   [
+    "Vad är medelvärdet, medianen och typvärdet för 1, 4, 4, 6, 10?",
+    "Summan är 25, och 25 / 5 = 5, så medelvärdet är 5. Medianen är det mittersta talet, 4. Typvärdet är 4, som finns två gånger."
+   ],
+   [
+    "En sektor i ett cirkeldiagram visar 15 %. Hur många grader är den?",
+    "15 · 3,6 = 54°."
+   ]
+  ],
+  "ord": [
+   [
+    "lägesmått",
+    "medelvärde, median och typvärde: tal som visar var värdena ligger"
+   ],
+   [
+    "spridning",
+    "hur mycket värdena skiljer sig från varandra"
+   ],
+   [
+    "sektor",
+    "en tårtbit av ett cirkeldiagram"
+   ]
+  ],
+  "tips": "Ställ alltid talen i ordning innan du letar median och variationsbredd."
+ },
+ "Räta linjen och ekvationssystem": {
+  "mal": [
+   "Läsa av k och m och räkna ut y-värden i y = kx + m.",
+   "Räkna ut lutningen och ekvationen för en linje genom två punkter.",
+   "Lösa ekvationssystem med additionsmetoden och substitutionsmetoden.",
+   "Tolka ett ekvationssystem med grafer: linjer som skär varandra, är parallella eller är samma linje."
+  ],
+  "fakta": [
+   "Lutningen mellan två punkter är skillnaden i y delat med skillnaden i x.",
+   "Sätt in en punkt i y = kx + m för att få m. Skär linjen y-axeln i (0, 4) är m = 4.",
+   "Additionsmetoden: lägg ihop eller dra ifrån ekvationerna så att en av variablerna försvinner.",
+   "Substitutionsmetoden: lös ut en variabel ur den ena ekvationen och sätt in uttrycket i den andra.",
+   "Lösningen är punkten där linjerna skär varandra. Parallella linjer, med samma k och olika m, ger ingen lösning, och samma linje ger oändligt många."
+  ],
+  "exempel": [
+   [
+    "Vilken ekvation har linjen genom (0, 5) och (2, −1)?",
+    "k = (−1 − 5) / (2 − 0) = −6 / 2 = −3. Linjen skär y-axeln i (0, 5), så m = 5 och y = −3x + 5."
+   ],
+   [
+    "Lös ekvationssystemet x + y = 13 och x − y = 5.",
+    "Lägg ihop ekvationerna: 2x = 18, så x = 9. Sätt in: 9 + y = 13, så y = 4. Kontroll: 9 − 4 = 5."
+   ]
+  ],
+  "ord": [
+   [
+    "ekvationssystem",
+    "två ekvationer med två obekanta som ska stämma samtidigt"
+   ],
+   [
+    "lutning",
+    "hur mycket y ändras när x ökar med 1, talet k"
+   ],
+   [
+    "parallella linjer",
+    "linjer med samma lutning, som aldrig skär varandra"
+   ]
+  ],
+  "tips": "Pröva alltid lösningen i båda ekvationerna, inte bara i den ena."
+ },
+ "Förändringsfaktor och ränta": {
+  "mal": [
+   "Skriva förändringsfaktorn för en ökning eller minskning i procent.",
+   "Räkna ut nytt värde och procentuell förändring med förändringsfaktor.",
+   "Räkna med upprepade förändringar med förändringsfaktorn upphöjd till antalet gånger.",
+   "Räkna ut ränta på ränta på ett sparkonto."
+  ],
+  "fakta": [
+   "Förändringsfaktorn vid en ökning med p % är 1 + p/100 och vid en minskning 1 − p/100. +12 % ger 1,12 och −35 % ger 0,65.",
+   "Nytt värde = gamla värdet · förändringsfaktorn. Förändringsfaktorn = nya värdet / gamla värdet.",
+   "Samma förändring n gånger: multiplicera med förändringsfaktorn upphöjd till n. Nytt värde = startvärdet · faktorⁿ.",
+   "Ränta på ränta: räntan läggs till varje år och ger själv ränta året efter. Med 5 % per år växer pengarna med faktorn 1,05 varje år.",
+   "Olika förändringar efter varandra: multiplicera förändringsfaktorerna med varandra."
+  ],
+  "exempel": [
+   [
+    "Du sätter in 2 000 kr med 5 % ränta per år. Hur mycket finns efter 2 år?",
+    "2 000 · 1,05² = 2 000 · 1,1025 = 2 205 kr."
+   ],
+   [
+    "En mobil kostar 8 000 kr och tappar 20 % i värde varje år. Vad är den värd efter 3 år?",
+    "8 000 · 0,8³ = 8 000 · 0,512 = 4 096 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "förändringsfaktor",
+    "talet du multiplicerar med för att få det nya värdet"
+   ],
+   [
+    "ränta på ränta",
+    "att räntan själv ger ränta när den står kvar på kontot"
+   ],
+   [
+    "procentuell förändring",
+    "hur många procent något ökat eller minskat jämfört med från början"
+   ]
+  ],
+  "tips": "Avrunda först i sista steget, annars kan svaret bli fel med några kronor."
+ },
+ "NP-träning": {
+  "mal": [
+   "Räkna med tal, bråk, potenser och procent utan miniräknare, och uppskatta svar.",
+   "Lösa problem med procent, Pythagoras sats, sannolikhet och upprepad förändring med miniräknare.",
+   "Förenkla, faktorisera, lösa ekvationer och tolka räta linjer.",
+   "Räkna med area, volym, likformighet och lägesmått, och granska slutsatser ur en undersökning."
+  ],
+  "fakta": [
+   "Läs frågan noga och stryk under det som efterfrågas, till exempel antal decimaler eller vilken enhet svaret ska ha.",
+   "Visa hur du tänker: skriv uträkningen i steg. I ett resonemang ska stegen visa att något alltid gäller, inte bara i ett exempel.",
+   "Uppskatta före och kontrollera efter: avrunda talen för att se ungefär vad svaret blir, och sätt in ditt svar i frågan.",
+   "Räkna med alla decimaler och avrunda först i sista steget, så som frågan säger.",
+   "Granska en undersökning: vilka blev tillfrågade, hur många var de, och liknar de gruppen som slutsatsen gäller?"
+  ],
+  "exempel": [
+   [
+    "Visa att summan av två udda tal alltid är jämn.",
+    "Två udda tal kan skrivas 2a + 1 och 2b + 1, där a och b är heltal. Summan är 2a + 2b + 2 = 2(a + b + 1), som är 2 gånger ett heltal och alltså jämn."
+   ],
+   [
+    "Uppskatta 61,3 · 4,9 utan miniräknare.",
+    "61,3 är ungefär 60 och 4,9 ungefär 5, så svaret är ungefär 60 · 5 = 300. Exakt är det 300,37."
+   ]
+  ],
+  "ord": [
+   [
+    "uppskatta",
+    "räkna ungefär med avrundade tal"
+   ],
+   [
+    "faktorisera",
+    "skriva som en produkt, till exempel 4x + 8 = 4(x + 2)"
+   ],
+   [
+    "urval",
+    "de som är med i en undersökning"
+   ],
+   [
+    "oberoende händelser",
+    "händelser som inte påverkar varandra"
+   ]
+  ],
+  "tips": "Fastnar du på en uppgift, gå vidare och kom tillbaka till den när du gjort resten."
+ },
+ "Läsa: genomgångar inför NP": {
+  "mal": [
+   "Läsa en genomgång i matematik och hitta det som frågan gäller.",
+   "Använda det du läst om ekvationer, räta linjens ekvation och proportionalitet.",
+   "Använda formler för area, volym, Pythagoras sats och skala ur en genomgång."
+  ],
+  "fakta": [
+   "Läs texten en gång först. Rubrikerna visar sedan var i texten svaret på en fråga står.",
+   "Står det ”enligt texten” ska du svara med det som står där, inte med det du minns från annat håll.",
+   "Skilj på det texten säger rakt ut och det du räknar ut själv med hjälp av den.",
+   "Formlerna i en genomgång är verktyg: skriv upp formeln, sätt in talen och räkna sedan.",
+   "Volymen av ett prisma eller en cylinder är basytan gånger höjden. Basytan är arean av botten, för en cylinder π · r²."
+  ],
+  "exempel": [
+   [
+    "En cylinder har radien 3 cm och höjden 6 cm. Hur stor är volymen? Räkna med π ≈ 3,14.",
+    "Basytan är 3,14 · 3² = 28,26 cm². Volymen är 28,26 · 6 = 169,56 cm³."
+   ],
+   [
+    "Lös ekvationen 7x − 3 = 4x + 12.",
+    "Samla x på vänster sida: 3x − 3 = 12. Lägg till 3: 3x = 15. Dela med 3: x = 5. Kontroll: 32 = 32."
+   ]
+  ],
+  "ord": [
+   [
+    "genomgång",
+    "en kort text som förklarar ett område, med regler och exempel"
+   ],
+   [
+    "nyckelord",
+    "ett ord i frågan som visar vad du ska leta efter i texten"
+   ],
+   [
+    "basyta",
+    "arean av bottnen på en kropp"
+   ]
+  ],
+  "tips": "Markera rubriken som hör till frågan och läs bara det stycket igen, i stället för hela texten."
+ },
+ "Formler och omskrivning": {
+  "mal": [
+   "Sätta in värden i en formel och räkna ut resultatet.",
+   "Lösa ut en variabel ur en formel genom att göra samma sak på båda sidor.",
+   "Lösa ut variabler i formler med flera steg, också med kvadrater och rötter.",
+   "Använda formler för att lösa problem om pris, hastighet och geometri."
+  ],
+  "fakta": [
+   "En formel är ett samband skrivet med bokstäver. Att lösa ut en variabel är att få den ensam på ena sidan.",
+   "Gör motsatt räknesätt på båda sidor: plus blir minus, gånger blir delat och kvadrat blir kvadratrot.",
+   "Ta bort det som står längst från variabeln först. I P = 4a + 2 drar du först bort 2 och delar sedan med 4: a = (P − 2) / 4.",
+   "Ska du bara räkna ut ett tal går det ofta lättare att sätta in värdena först och lösa ekvationen sedan.",
+   "Kontrollera en omskrivning genom att sätta in enkla tal i både den gamla och den nya formeln."
+  ],
+  "exempel": [
+   [
+    "Lös ut a ur formeln P = 2a + 2b.",
+    "Dra bort 2b från båda led: P − 2b = 2a. Dela båda led med 2: a = (P − 2b) / 2."
+   ],
+   [
+    "Formeln F = 1,8C + 32 räknar om grader Celsius till Fahrenheit. Vad är C när F = 50?",
+    "50 = 1,8C + 32. Dra bort 32: 18 = 1,8C. Dela med 1,8: C = 10."
+   ]
+  ],
+  "ord": [
+   [
+    "formel",
+    "ett samband skrivet med bokstäver, som A = b · h"
+   ],
+   [
+    "lösa ut",
+    "skriva om en formel så att en bokstav står ensam"
+   ],
+   [
+    "led",
+    "ena sidan av likhetstecknet"
+   ]
+  ],
+  "tips": "Skriv om ett steg i taget, och skriv hela formeln på en ny rad varje gång."
+ },
+ "Sannolikhet i flera steg": {
+  "mal": [
+   "Rita och använda träddiagram för händelser i flera steg.",
+   "Räkna ut sannolikheten att två oberoende händelser båda inträffar.",
+   "Räkna ut sannolikheten för minst en gång med hjälp av motsatt händelse.",
+   "Räkna ut sannolikheter när du drar utan återläggning."
+  ],
+  "fakta": [
+   "I ett träddiagram multiplicerar du sannolikheterna längs en väg. Leder flera vägar till det du söker lägger du ihop deras sannolikheter.",
+   "Oberoende händelser påverkar inte varandra, som två kast med en tärning. Sannolikheten för båda är produkten av sannolikheterna.",
+   "Minst en gång: räkna ut sannolikheten att det inte händer någon gång, och ta 1 minus den.",
+   "Utan återläggning ändras bråken: efter första dragningen finns en sak mindre kvar, och kanske en mindre av den sorten.",
+   "Sannolikheterna för alla slutliga utfall i ett träddiagram är tillsammans 1."
+  ],
+  "exempel": [
+   [
+    "En påse har 4 röda och 3 gröna kulor. Du drar två utan återläggning. Hur stor är sannolikheten att båda är röda?",
+    "Första röd: 4/7. Sedan finns 3 röda av 6 kvar: 3/6. Båda: 4/7 · 3/6 = 12/42 = 2/7."
+   ],
+   [
+    "Du kastar en tärning två gånger. Hur stor är sannolikheten att få minst en sexa?",
+    "Ingen sexa: 5/6 · 5/6 = 25/36. Minst en sexa: 1 − 25/36 = 11/36."
+   ]
+  ],
+  "ord": [
+   [
+    "träddiagram",
+    "en bild med grenar som visar alla utfall steg för steg"
+   ],
+   [
+    "oberoende",
+    "händelser som inte påverkar varandra"
+   ],
+   [
+    "återläggning",
+    "att lägga tillbaka det du dragit innan nästa dragning"
+   ],
+   [
+    "motsatt händelse",
+    "att det du söker inte händer; de två sannolikheterna blir tillsammans 1"
+   ]
+  ],
+  "tips": "Skriv bråket vid varje gren, och ändra både täljare och nämnare när du inte lägger tillbaka."
+ },
+ "Volym och begränsningsarea": {
+  "mal": [
+   "Räkna ut volymen av rätblock, prismor och cylindrar.",
+   "Räkna ut volymen av pyramider, koner och klot.",
+   "Räkna ut begränsningsarean av kuber, rätblock och cylindrar.",
+   "Byta mellan kubikenheter och liter."
+  ],
+  "fakta": [
+   "Prisma och cylinder: V = B · h, där B är basytans area och h höjden. Cylinderns basyta är π · r².",
+   "Pyramid och kon: V = B · h / 3, en tredjedel av ett prisma eller en cylinder med samma bas och höjd.",
+   "Klot: V = 4 · π · r³ / 3.",
+   "Begränsningsarean är arean av alla ytor runt kroppen. En cylinders mantelyta är 2 · π · r · h.",
+   "1 dm³ = 1 liter, 1 cm³ = 1 milliliter och 1 m³ = 1 000 liter."
+  ],
+  "exempel": [
+   [
+    "En cylinder har radien 4 cm och höjden 5 cm. Hur stor är volymen? Räkna med π ≈ 3,14.",
+    "V = π · r² · h = 3,14 · 16 · 5 = 251,2 cm³."
+   ],
+   [
+    "En kon har radien 4 cm och höjden 6 cm. Hur stor är volymen? Räkna med π ≈ 3,14.",
+    "V = π · r² · h / 3 = 3,14 · 16 · 6 / 3 = 100,48 cm³. Konen rymmer en tredjedel av en cylinder med samma bas och höjd."
+   ]
+  ],
+  "ord": [
+   [
+    "basyta",
+    "bottenytan; i ett prisma och en cylinder är varje tvärsnitt lika stort som den"
+   ],
+   [
+    "mantelyta",
+    "den böjda sidoytan på en cylinder eller en kon"
+   ],
+   [
+    "begränsningsarea",
+    "arean av alla ytor runt en kropp"
+   ],
+   [
+    "klot",
+    "en kropp som en boll, där varje punkt på ytan ligger lika långt från mitten"
+   ]
+  ],
+  "tips": "Räkna med samma längdenhet överallt, och byt till liter sist: 1 000 cm³ är 1 liter."
+ },
+ "Kombinatorik": {
+  "mal": [
+   "Räkna ut antalet kombinationer med multiplikationsprincipen.",
+   "Räkna ut på hur många sätt saker kan ordnas i en rad.",
+   "Räkna ut antalet grupper när ordningen inte spelar någon roll.",
+   "Använda kombinatorik för att räkna ut en sannolikhet."
+  ],
+  "fakta": [
+   "Multiplikationsprincipen: kan något väljas på a sätt och något annat på b sätt, finns det a · b kombinationer.",
+   "n olika saker kan ordnas i en rad på n · (n − 1) · … · 2 · 1 sätt. Sex saker: 6 · 5 · 4 · 3 · 2 · 1 = 720 sätt.",
+   "Väljer du 2 av n och ordningen inte spelar någon roll blir det n · (n − 1) / 2, för annars räknas varje par två gånger.",
+   "Spelar ordningen roll, som med guld och silver, finns det fler möjligheter än när den inte gör det."
+  ],
+  "exempel": [
+   [
+    "På hur många sätt kan en vinnare och en tvåa väljas bland 9 deltagare?",
+    "Vinnaren kan väljas på 9 sätt och tvåan sedan på 8: 9 · 8 = 72 sätt."
+   ],
+   [
+    "Hur många matcher spelas när 10 lag möter varandra en gång var?",
+    "Varje lag spelar mot 9 andra: 10 · 9 = 90. Då räknas varje match två gånger, så det blir 90 / 2 = 45 matcher."
+   ]
+  ],
+  "ord": [
+   [
+    "kombinatorik",
+    "att räkna ut hur många möjligheter det finns"
+   ],
+   [
+    "multiplikationsprincipen",
+    "antalet val i varje steg multipliceras med varandra"
+   ]
+  ],
+  "tips": "Fråga dig först om ordningen spelar roll. Gör den inte det, dela med antalet sätt som samma grupp kan ordnas på."
+ },
+ "Statistiska undersökningar": {
+  "mal": [
+   "Skilja på population, stickprov och bortfall.",
+   "Välja ett urval som ger en rättvis bild av hela gruppen.",
+   "Uppskatta hur många i en hel grupp som har en egenskap, utifrån ett stickprov.",
+   "Granska diagram och slutsatser: axlar som inte börjar på 0, andelar och samband."
+  ],
+  "fakta": [
+   "Populationen är hela gruppen du vill veta något om. Stickprovet är de du faktiskt frågar.",
+   "I ett slumpmässigt urval har alla i populationen samma chans att komma med, och då brukar stickprovet likna populationen.",
+   "Uppskatta med andelen: har 30 % i stickprovet en egenskap, räkna med att ungefär 30 % av populationen har den.",
+   "Jämför grupper av olika storlek med andelar, inte med antal.",
+   "Att två saker ökar samtidigt betyder inte att den ena orsakar den andra."
+  ],
+  "exempel": [
+   [
+    "I ett slumpmässigt stickprov på 50 elever spelar 15 i ett lag. Skolan har 700 elever. Ungefär hur många spelar i ett lag?",
+    "Andelen i stickprovet är 15 / 50 = 0,3. Uppskattningen är 0,3 · 700 = 210 elever."
+   ]
+  ],
+  "ord": [
+   [
+    "population",
+    "hela gruppen som undersökningen gäller"
+   ],
+   [
+    "stickprov",
+    "de som väljs ut och tillfrågas"
+   ],
+   [
+    "bortfall",
+    "de utvalda som inte svarar"
+   ],
+   [
+    "ledande fråga",
+    "en fråga som är skriven så att den antyder vilket svar som väntas"
+   ]
+  ],
+  "tips": "Titta alltid på var den lodräta axeln börjar. Börjar den inte på 0 ser skillnaderna mellan staplarna större ut än de är."
+ }
+}

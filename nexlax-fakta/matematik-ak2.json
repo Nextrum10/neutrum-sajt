@@ -1,0 +1,230 @@
+{
+ "Taluppfattning": {
+  "mal": [
+   "Dela upp tal upp till 100 i tiotal och ental.",
+   "Jämföra och ordna tal upp till 100.",
+   "Räkna i steg framåt och bakåt, som femsteg och tiosteg.",
+   "Avgöra om ett tal är jämnt eller udda och vilket tiotal det ligger närmast."
+  ],
+  "fakta": [
+   "I ett tal med två siffror står tiotalen först och entalen sist: 74 är 7 tiotal och 4 ental.",
+   "10 mer är ett tiotal till: 74 + 10 = 84. Entalen ändras inte.",
+   "Jämför tal genom att titta på tiotalen först. Är de lika, titta på entalen.",
+   "Jämna tal slutar på 0, 2, 4, 6 eller 8. Udda tal slutar på 1, 3, 5, 7 eller 9.",
+   "Närmaste tiotal: 84 ligger närmare 80 än 90, för från 84 är det 4 steg till 80 men 6 steg till 90."
+  ],
+  "exempel": [
+   [
+    "Vilket tal är 10 mindre än 75?",
+    "Ta bort ett tiotal: 7 tiotal blir 6 tiotal, och entalen är kvar. Svaret är 65."
+   ],
+   [
+    "Räkna i femsteg: 40, 45, 50. Vilket tal kommer sedan?",
+    "Lägg till 5: 50 + 5 = 55."
+   ]
+  ],
+  "ord": [
+   [
+    "tiotal",
+    "tio ental tillsammans"
+   ],
+   [
+    "ental",
+    "den sista siffran i ett tal med två siffror"
+   ],
+   [
+    "jämnt tal",
+    "ett tal som går att dela i två lika delar, som 6"
+   ],
+   [
+    "udda tal",
+    "ett tal där en blir över när du delar i två, som 7"
+   ]
+  ],
+  "tips": "Det är bara den sista siffran som avgör om ett tal är jämnt eller udda, hur stort talet än är."
+ },
+ "Addition och subtraktion": {
+  "mal": [
+   "Räkna plus och minus med tiotal och ental upp till 100.",
+   "Räkna plus och minus som går förbi ett helt tiotal.",
+   "Lösa räknehistorier i flera steg.",
+   "Hitta talet som fattas i en uträkning."
+  ],
+  "fakta": [
+   "Räkna tiotal för sig och ental för sig: 52 + 36 är 50 + 30 = 80 och 2 + 6 = 8, alltså 88.",
+   "Går du förbi ett tiotal, gå först till det hela tiotalet: 57 + 6 = 57 + 3 + 3 = 63.",
+   "Samma sak med minus: 61 − 5 = 61 − 1 − 4 = 56.",
+   "Kontrollera minus med plus: 61 − 5 = 56, för 56 + 5 = 61.",
+   "Talet som fattas i 40 + ? = 100 hittar du med minus: 100 − 40 = 60."
+  ],
+  "exempel": [
+   [
+    "Vad är 82 − 26?",
+    "Ta först bort 20: 82 − 20 = 62. Ta sedan bort 6: 62 − 2 − 4 = 56."
+   ],
+   [
+    "I ett träd sitter 35 fåglar. 12 flyger iväg och 8 kommer tillbaka. Hur många sitter i trädet nu?",
+    "Ett steg i taget: 35 − 12 = 23 och 23 + 8 = 31. Det sitter 31 fåglar i trädet."
+   ]
+  ],
+  "ord": [
+   [
+    "tiotalsövergång",
+    "när plus eller minus går förbi ett helt tiotal"
+   ]
+  ],
+  "tips": "I en historia i flera steg räknar du ett steg i taget och skriver ner svaret efter varje steg."
+ },
+ "Tid": {
+  "mal": [
+   "Läsa klockan vid hel och halv timme.",
+   "Säga tiden med ord och skriva den med siffror.",
+   "Veta hur lång en timme, ett dygn, en vecka och ett år är.",
+   "Räkna framåt och bakåt med veckodagar och månader."
+  ],
+  "fakta": [
+   "En timme är 60 minuter, och en halvtimme är 30 minuter.",
+   "Halv betyder en halvtimme före nästa hela timme: 7.30, som också skrivs 7:30, är halv åtta.",
+   "Ett dygn är 24 timmar, en vecka är 7 dagar och ett år är 12 månader.",
+   "Veckodagarna: måndag, tisdag, onsdag, torsdag, fredag, lördag, söndag. Efter söndag börjar veckan om med måndag.",
+   "Månaderna: januari, februari, mars, april, maj, juni, juli, augusti, september, oktober, november, december."
+  ],
+  "exempel": [
+   [
+    "Klockan är halv tre. Vad är klockan en halvtimme senare?",
+    "Halv tre är 2.30. En halvtimme senare är det 3.00, klockan tre."
+   ],
+   [
+    "I dag är det onsdag. Vilken dag är det om tre dagar?",
+    "Räkna tre dagar framåt: torsdag, fredag, lördag. Det är lördag."
+   ]
+  ],
+  "ord": [
+   [
+    "halvtimme",
+    "30 minuter"
+   ],
+   [
+    "dygn",
+    "en dag och en natt, 24 timmar"
+   ]
+  ],
+  "tips": "Säg halv och timmen som kommer: 9.30 är halv tio, inte halv nio."
+ },
+ "Mätning": {
+  "mal": [
+   "Räkna med kronor och räkna ut hur mycket du får tillbaka.",
+   "Jämföra längder i centimeter och meter.",
+   "Välja en enhet för längd, vikt och volym.",
+   "Jämföra vikt och volym med kilogram, liter och deciliter."
+  ],
+  "fakta": [
+   "1 meter är 100 centimeter: 1 m = 100 cm.",
+   "Längd mäts i centimeter och meter, vikt i kilogram och volym i liter och deciliter.",
+   "1 liter är 10 deciliter: 1 l = 10 dl.",
+   "Mynten är 1, 2, 5 och 10 kronor. Den minsta sedeln är 20 kronor.",
+   "Det du får tillbaka är det du betalar med minus det saken kostar."
+  ],
+  "exempel": [
+   [
+    "En ballong kostar 4 kronor. Du betalar med en tia. Hur mycket får du tillbaka?",
+    "10 − 4 = 6. Du får 6 kronor tillbaka."
+   ],
+   [
+    "Ett snöre är 1 m långt. Du klipper av 40 cm. Hur långt är det som är kvar?",
+    "1 m är 100 cm. 100 − 40 = 60. Det är 60 cm kvar."
+   ]
+  ],
+  "ord": [
+   [
+    "centimeter",
+    "kort längd, skrivs cm"
+   ],
+   [
+    "meter",
+    "längre längd, skrivs m"
+   ],
+   [
+    "kilogram",
+    "vikt, skrivs kg"
+   ],
+   [
+    "liter",
+    "volym, skrivs l"
+   ],
+   [
+    "deciliter",
+    "en tiondel av en liter, skrivs dl"
+   ]
+  ],
+  "tips": "Gör om till samma enhet innan du jämför: 1 m är 100 cm, och det är längre än 90 cm."
+ },
+ "Tiotal, klockan och pengar": {
+  "mal": [
+   "Dela upp tal upp till 100 i tiotal och ental.",
+   "Läsa och ställa klockan på hel och halv timme.",
+   "Räkna ihop mynt och sedlar och räkna ut växel."
+  ],
+  "fakta": [
+   "71 är 7 tiotal och 1 ental, och 71 = 70 + 1.",
+   "På en klocka med visare visar den korta visaren timmen och den långa visaren minuterna.",
+   "Hel timme: den långa visaren pekar på 12. Halv timme: den långa visaren pekar på 6, och den korta står mitt emellan två tal.",
+   "Räkna pengar med det största först: 20 kr + 10 kr + 2 kr = 32 kr."
+  ],
+  "exempel": [
+   [
+    "Den långa visaren pekar på 6 och den korta står mitt emellan 9 och 10. Vad är klockan?",
+    "Den långa visaren på 6 betyder halv. Timmen som kommer är tio, så klockan är halv tio, 9.30."
+   ],
+   [
+    "Du har 2 femkronor och 3 enkronor. Hur många kronor har du?",
+    "5 + 5 = 10 och 10 + 3 = 13. Du har 13 kronor."
+   ]
+  ],
+  "ord": [
+   [
+    "visare",
+    "en av klockans pilar, den korta och den långa"
+   ],
+   [
+    "växel",
+    "pengarna du får tillbaka när du betalat för mycket"
+   ]
+  ],
+  "tips": "När du räknar ut växel kan du räkna uppåt från priset: från 26 kr upp till 30 kr är 4 kr."
+ },
+ "Lika grupper": {
+  "mal": [
+   "Räkna ihop lika stora grupper.",
+   "Skriva lika stora grupper som en addition och med gångertecknet.",
+   "Dela lika och se när något inte går att dela lika."
+  ],
+  "fakta": [
+   "Lika stora grupper kan du räkna med plus: 2 grupper med 7 är 7 + 7 = 14.",
+   "Gångertecknet · visar lika stora grupper: 2 · 7 betyder 2 grupper med 7.",
+   "Dela lika betyder att alla grupper får lika många. Det är motsatsen till gånger: 2 · 7 = 14, så 14 delat lika i 2 grupper blir 7.",
+   "Blir något över går det inte att dela lika."
+  ],
+  "exempel": [
+   [
+    "Det står 3 vaser med 7 blommor i varje vas. Hur många blommor är det?",
+    "3 grupper med 7: 7 + 7 + 7 = 21. Med gångertecknet: 3 · 7 = 21."
+   ],
+   [
+    "Kan man dela 7 bullar lika mellan 2 barn?",
+    "Nej. 3 + 3 = 6 och 4 + 4 = 8, så det går inte jämnt: 1 bulle blir över."
+   ]
+  ],
+  "ord": [
+   [
+    "gånger",
+    "lika stora grupper, tecknet ·"
+   ],
+   [
+    "dela lika",
+    "alla grupper får lika många"
+   ]
+  ],
+  "tips": "Läs ordningen: 4 · 3 är 4 grupper med 3, alltså 3 + 3 + 3 + 3."
+ }
+}

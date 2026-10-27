@@ -1,0 +1,526 @@
+{
+ "Ordklasser": {
+  "mal": [
+   "Känna igen substantiv, verb, adjektiv och pronomen i en mening.",
+   "Hitta prepositioner, räkneord, konjunktioner och interjektioner.",
+   "Para ihop ett ord med rätt ordklass."
+  ],
+  "fakta": [
+   "Substantiv är namn på saker, djur, personer och platser. Du kan sätta en eller ett framför: en stol, ett träd.",
+   "Verb är det man gör eller det som händer: springer, åt, tänker. Du kan sätta att framför grundformen: att springa.",
+   "Adjektiv beskriver hur något är: liten, grön, rolig. Testa om ordet passar i ”en … bil”.",
+   "Pronomen står i stället för ett namn eller ett substantiv: jag, du, han, den, ni, de.",
+   "Preposition visar ofta var eller när: över, bredvid, efter. Räkneord är tal: fem, femte. Konjunktion binder ihop: och, eller. Interjektion är ett utrop: oj, hej."
+  ],
+  "exempel": [
+   [
+    "Vilka ordklasser har orden i ”Vi hittade två små grodor”?",
+    "Vi är pronomen, hittade är verb, två är räkneord, små är adjektiv och grodor är substantiv."
+   ]
+  ],
+  "ord": [
+   [
+    "ordklass",
+    "en grupp av ord som gör samma sorts jobb i en mening"
+   ]
+  ],
+  "tips": "Läs hela meningen innan du svarar: ordklassen beror på hur ordet används just där."
+ },
+ "Stavning": {
+  "mal": [
+   "Avgöra när en konsonant ska dubbleras och när k-ljudet stavas ck.",
+   "Hitta och rätta felstavade ord i en mening.",
+   "Förstå och skriva vanliga förkortningar."
+  ],
+  "fakta": [
+   "Efter en kort vokal följer oftast två konsonanter. Hörs bara ett konsonantljud dubblerar du det: vila – villa, glas – glass.",
+   "När k ska dubbleras efter en kort vokal skrivs det ck, aldrig kk: snäcka, rock.",
+   "Säg ordet långsamt och lyssna på vokalen. Låter den lång blir det oftast bara en konsonant efter.",
+   "En förkortning gör ord kortare. Oftast står en punkt där något är borttaget: dvs. (det vill säga), fr.o.m. (från och med).",
+   "Några förkortningar skrivs utan punkt, till exempel ca (cirka) och nr (nummer)."
+  ],
+  "exempel": [
+   [
+    "Ska det vara ”sola” eller ”solla”, när du ligger i solen?",
+    "O-et är långt när du säger ordet, så det blir bara ett l: sola."
+   ],
+   [
+    "Vad betyder ”dvs.”?",
+    "Det vill säga. Du använder det när du säger samma sak med andra ord."
+   ]
+  ],
+  "ord": [
+   [
+    "vokal",
+    "a, e, i, o, u, y, å, ä och ö"
+   ],
+   [
+    "konsonant",
+    "alla andra bokstäver, som b, k, l och t"
+   ],
+   [
+    "förkortning",
+    "ett kortare sätt att skriva ett eller flera ord"
+   ]
+  ],
+  "tips": "Det finns undantag: små ord som han, man, kan, den och vem har kort vokal men bara en konsonant."
+ },
+ "Ordförråd": {
+  "mal": [
+   "Hitta synonymer, alltså ord som betyder nästan samma sak.",
+   "Hitta motsatsord till adjektiv och verb.",
+   "Förstå vanliga uttryck och talesätt.",
+   "Ordna ord efter hur starka de är."
+  ],
+  "fakta": [
+   "En synonym betyder nästan samma sak som ett annat ord: glad – lycklig, titta – kolla.",
+   "Ett motsatsord betyder det motsatta: varm – kall, öppna – stänga.",
+   "Ett ord kan ha olika motsatser: en gammal man är motsatsen till en ung, men en gammal cykel är motsatsen till en ny.",
+   "Ett talesätt betyder något annat än orden var för sig: ”få kalla fötter” betyder att bli rädd och ångra sig i sista stund.",
+   "Ord kan säga samma sak olika starkt: sval, kall och iskall."
+  ],
+  "exempel": [
+   [
+    "Vad betyder ”att ha många järn i elden”?",
+    "Att hålla på med många saker samtidigt."
+   ],
+   [
+    "Skriv en synonym till ”rolig”.",
+    "Till exempel kul eller skojig."
+   ]
+  ],
+  "ord": [
+   [
+    "synonym",
+    "ett ord som betyder nästan samma sak som ett annat"
+   ],
+   [
+    "motsatsord",
+    "ett ord som betyder det motsatta"
+   ],
+   [
+    "talesätt",
+    "en fast fras som betyder något annat än orden var för sig"
+   ]
+  ],
+  "tips": "Försök inte förstå ett talesätt ord för ord: tänk på när någon brukar säga det."
+ },
+ "Meningsbyggnad": {
+  "mal": [
+   "Bygga påståenden och frågor med rätt ordföljd.",
+   "Hitta bisatsen och ordet som inleder den.",
+   "Välja sambandsord som visar tid, orsak eller motsättning."
+  ],
+  "fakta": [
+   "I ett påstående står verbet på andra plats, efter meningens första del: ”Vi spelar i dag.” ”I dag spelar vi.”",
+   "En fråga som man svarar ja eller nej på börjar med verbet: ”Kommer du i morgon?”",
+   "En fråga med frågeord börjar med frågeordet och sedan verbet: ”Vad heter hon?”",
+   "En bisats kan inte stå ensam. Den börjar ofta med ett ord som när, eftersom, att eller som.",
+   "Sambandsord visar hur meningar hänger ihop: tid (först, till sist), orsak (därför att), motsättning (men, fast) och val (eller)."
+  ],
+  "exempel": [
+   [
+    "Bygg om ”Vi åker till farmor på lördag” så att meningen börjar med ”På lördag”.",
+    "”På lördag åker vi till farmor.” Verbet åker står kvar på andra plats, och vi flyttar efter det."
+   ],
+   [
+    "Vilken del är bisatsen i ”Hunden skäller när någon ringer på”?",
+    "”när någon ringer på”. Den börjar med när och kan inte stå ensam."
+   ]
+  ],
+  "ord": [
+   [
+    "ordföljd",
+    "i vilken ordning orden står i en mening"
+   ],
+   [
+    "bisats",
+    "en del av en mening som inte kan stå ensam"
+   ],
+   [
+    "sambandsord",
+    "ord som binder ihop meningar och visar hur de hänger ihop"
+   ]
+  ],
+  "tips": "Meningens första del kan vara flera ord, som ”Efter maten”: verbet kommer direkt efter den delen."
+ },
+ "Läsförståelse": {
+  "mal": [
+   "Hitta svar som står direkt i en text.",
+   "Förstå vad ett ord betyder genom att läsa meningen runt det.",
+   "Dra slutsatser om sådant som inte står rakt ut, till exempel vad en person känner.",
+   "Säga vad en text handlar om och vad den vill."
+  ],
+  "fakta": [
+   "Läs texten först. Läs sedan frågan noga, så vet du vad du ska leta efter när du går tillbaka till texten.",
+   "Vissa svar står i texten. Leta efter ett viktigt ord från frågan och läs meningarna runt det.",
+   "Andra svar får du lista ut själv. Vad visar det en person gör eller säger om hur hen känner sig?",
+   "Ett svårt ord kan du ofta förstå om du läser hela meningen och meningen före.",
+   "En saklig text vill informera, och en berättelse vill underhålla. Fråga dig varför texten är skriven."
+  ],
+  "exempel": [
+   [
+    "”Lova drog upp axlarna och tittade ner i golvet när läraren sa hennes namn.” Hur känner sig Lova?",
+    "Troligen blyg eller generad. Det står inte, men det hon gör visar det."
+   ]
+  ],
+  "ord": [
+   [
+    "syfte",
+    "varför texten är skriven"
+   ],
+   [
+    "nyckelord",
+    "ett viktigt ord som hjälper dig att hitta svaret"
+   ],
+   [
+    "slutsats",
+    "något du förstår fast det inte står rakt ut"
+   ]
+  ],
+  "tips": "Står det ”enligt texten” i frågan ska svaret bygga på det som står, inte på det du själv vet."
+ },
+ "Argumenterande text": {
+  "mal": [
+   "Förklara vad tes, argument och motargument är.",
+   "Skilja ett argument för en åsikt från ett motargument.",
+   "Välja bindeord som eftersom, dessutom, men och därför.",
+   "Ordna en kort argumenterande text: tes, argument och avslutning."
+  ],
+  "fakta": [
+   "En argumenterande text vill övertyga läsaren. Tesen är det du tycker, och den står i början.",
+   "Ett argument är ett skäl för tesen. Ett motargument är ett skäl som någon kan ha emot den.",
+   "En kort text har ofta två eller tre argument. I avslutningen upprepar du din åsikt och knyter ihop texten.",
+   "Bindeord visar hur tankarna hänger ihop: eftersom ger ett skäl, dessutom lägger till något, men visar något emot och därför visar en följd."
+  ],
+  "exempel": [
+   [
+    "Tesen är ”Skolan borde ha en egen odling.” Ge ett argument och ett motargument.",
+    "Argument: eleverna lär sig hur växter växer. Motargument: det tar tid att sköta odlingen."
+   ]
+  ],
+  "ord": [
+   [
+    "bindeord",
+    "ord som binder ihop meningar, som eftersom och därför"
+   ],
+   [
+    "övertyga",
+    "få någon att tycka som du"
+   ]
+  ],
+  "tips": "Ett argument svarar på frågan ”varför?”: läs tesen, fråga varför och se om skälet svarar på det."
+ },
+ "NP-träning: skriva": {
+  "mal": [
+   "Planera en berättelse med ett problem, en höjdpunkt och ett slut.",
+   "Bygga en faktatext med rubrik, inledning, stycken och avslutning.",
+   "Skilja på berättande språk och sakligt språk.",
+   "Skriva repliker med talstreck och byta stycke på rätt ställe."
+  ],
+  "fakta": [
+   "Läs skrivuppgiften noga: vad ska du skriva, och för vem? Gör en kort plan med stödord innan du börjar.",
+   "En berättelse drivs av ett problem eller en händelse. Den bygger upp till en höjdpunkt, där det är som mest spännande, och får sedan ett slut.",
+   "En faktatext ger kunskap: rubrik, inledning om vad den handlar om, ett stycke per sak och en avslutning. Den har inga påhittade händelser och inga egna åsikter.",
+   "Visa känslor i en berättelse genom det personerna gör: ”Hon studsade fram till dörren” säger mer än ”Hon var glad”.",
+   "Byt stycke när tid, plats, person eller ämne byts. En replik står på egen rad med talstreck: – Vänta! sa Mo."
+  ],
+  "exempel": [
+   [
+    "Vilken mening passar i en faktatext om älgen: ”Älgen är jättecool” eller ”Älgen äter blad, kvistar och gräs”?",
+    "Den andra. Den ger fakta, medan den första är en åsikt."
+   ]
+  ],
+  "ord": [
+   [
+    "höjdpunkt",
+    "stället där berättelsen är som mest spännande"
+   ],
+   [
+    "replik",
+    "det en person säger i en berättelse"
+   ],
+   [
+    "stödord",
+    "korta ord som påminner dig om vad du ska skriva"
+   ],
+   [
+    "saklig",
+    "som bygger på fakta, utan egna åsikter"
+   ]
+  ],
+  "tips": "Läs igenom texten när du är klar och leta efter en sak i taget: först stycken, sedan stor bokstav och punkt, sist stavning."
+ },
+ "Läsa: NP-träning": {
+  "mal": [
+   "Hitta fakta och orsaker i en faktatext.",
+   "Följa händelser och känslor i en berättelse.",
+   "Dra slutsatser om sådant som inte står rakt ut.",
+   "Förklara ord genom att läsa meningen runt dem."
+  ],
+  "fakta": [
+   "Läs hela texten först. Gå sedan tillbaka till texten för varje fråga i stället för att svara ur minnet.",
+   "En del svar står nästan ordagrant i texten. Andra kräver att du lägger ihop flera ställen eller drar en slutsats.",
+   "En faktatext ger fakta och förklarar orsaker. Börjar frågan med varför, leta efter ord som eftersom, därför och för att.",
+   "I en berättelse visar personernas handlingar hur de känner sig, och känslorna kan ändras från början till slut."
+  ],
+  "exempel": [
+   [
+    "Texten säger: ”Igelkotten sover hela vintern, eftersom det då inte finns maskar och skalbaggar att äta.” Varför sover igelkotten på vintern?",
+    "För att den inte hittar mat då. Ordet eftersom visar orsaken."
+   ]
+  ],
+  "ord": [
+   [
+    "faktatext",
+    "en text som ger fakta och förklarar"
+   ],
+   [
+    "berättelse",
+    "en text med personer och händelser"
+   ],
+   [
+    "slutsats",
+    "det du förstår fast det inte står rakt ut"
+   ]
+  ],
+  "tips": "Kontrollera svaret mot frågan: står det ”svara i mil” eller ”med en siffra” ska svaret se ut så."
+ },
+ "Bildspråk": {
+  "mal": [
+   "Känna igen metaforer och förklara vad de betyder.",
+   "Skilja på metafor, liknelse, personifikation och överdrift.",
+   "Förklara vad en författare vill säga med en bild."
+  ],
+  "fakta": [
+   "En liknelse jämför två saker med ett ord som som eller likt: ”snabb som en vessla”.",
+   "En metafor säger att något är något annat, utan som: ”Han är en stjärna på att rita.”",
+   "Personifikation betyder att något som inte är en människa gör som en människa: ”Solen log mot oss.”",
+   "En överdrift gör något mycket större än det är: ”Jag har väntat i hundra år.”",
+   "Bildspråk gör texten levande, så att läsaren kan se och känna det som beskrivs."
+  ],
+  "exempel": [
+   [
+    "Vad betyder metaforen ”Min lillebror är en tornado”?",
+    "Att lillebror är vild och stökar till överallt. Han är inte en riktig storm."
+   ],
+   [
+    "Är ”Hon sjöng som en näktergal” en metafor eller en liknelse?",
+    "En liknelse, för ordet som jämför henne med fågeln."
+   ]
+  ],
+  "ord": [
+   [
+    "bildspråk",
+    "ord som målar en bild i stället för att säga saken rakt ut"
+   ]
+  ],
+  "tips": "Står det som eller likt i jämförelsen är det en liknelse, och sägs något vara något annat utan som är det en metafor."
+ },
+ "Läsa fakta och instruktioner": {
+  "mal": [
+   "Hitta uppgifter och ord i en faktatext.",
+   "Följa stegen i en instruktion i rätt ordning.",
+   "Skilja på det som står i texten och det du kan förstå av den."
+  ],
+  "fakta": [
+   "En faktatext har ofta en rubrik och stycken som handlar om en sak var. Första meningen säger ofta vad stycket handlar om.",
+   "En instruktion förklarar hur man gör. Den har ofta en lista med vad du behöver och numrerade steg.",
+   "I en instruktion är ordningen viktig. Siffror eller ord som först, sedan och till sist visar ordningen.",
+   "Står det ”skriv ordet ur texten” ska du skriva just det ordet, rätt stavat."
+  ],
+  "exempel": [
+   [
+    "Ett recept säger: ”Knäck äggen i skålen. Vispa sedan i mjölken. Till sist häller du i mjölet.” Vad gör du direkt efter äggen?",
+    "Vispar i mjölken. Ordet sedan visar att det kommer efter äggen."
+   ]
+  ],
+  "ord": [
+   [
+    "instruktion",
+    "en text som förklarar hur man gör något"
+   ],
+   [
+    "faktatext",
+    "en text som ger kunskap om något"
+   ],
+   [
+    "steg",
+    "en del av det man ska göra, i tur och ordning"
+   ]
+  ],
+  "tips": "Frågar uppgiften hur mycket eller hur många, leta efter siffror i texten och kontrollera vad de räknar."
+ },
+ "Böjning av ord": {
+  "mal": [
+   "Böja substantiv i singular och plural, i obestämd och bestämd form.",
+   "Avgöra om ett substantiv är ett en-ord eller ett ett-ord.",
+   "Jämföra adjektiv i positiv, komparativ och superlativ.",
+   "Välja rätt form av adjektivet till substantivet."
+  ],
+  "fakta": [
+   "Ett substantiv har fyra former: obestämd singular (en båt), bestämd singular (båten), obestämd plural (båtar) och bestämd plural (båtarna).",
+   "Sätt en eller ett framför ordet: en stol är ett en-ord och ett bord är ett ett-ord. Många ett-ord som slutar på konsonant har ingen ändelse i obestämd plural: ett hus, två hus.",
+   "Adjektiv jämförs i tre steg: positiv (varm), komparativ (varmare) och superlativ (varmast). Några är oregelbundna och byter form eller vokal: tung, tyngre, tyngst.",
+   "Adjektiv på -isk jämförs med mer och mest: praktisk, mer praktisk, mest praktisk.",
+   "Adjektivet böjs efter substantivet: en röd båt, ett rött tak, röda båtar och den röda båten."
+  ],
+  "exempel": [
+   [
+    "Skriv ”en fågel” i alla fyra former.",
+    "En fågel, fågeln, fåglar, fåglarna. Obestämd och bestämd singular först, sedan obestämd och bestämd plural."
+   ],
+   [
+    "Jämför adjektivet ”hög”.",
+    "Hög, högre, högst: positiv, komparativ och superlativ."
+   ]
+  ],
+  "ord": [
+   [
+    "singular",
+    "en enda: en sko"
+   ],
+   [
+    "plural",
+    "fler än en: skor"
+   ],
+   [
+    "bestämd form",
+    "formen när vi vet vilken det gäller: skon"
+   ],
+   [
+    "komparativ",
+    "formen som jämför två: nyare"
+   ],
+   [
+    "superlativ",
+    "den högsta graden: nyast"
+   ]
+  ],
+  "tips": "Osäker på en eller ett? Säg ”den här” eller ”det här” framför ordet: den här stolen, det här bordet."
+ },
+ "Skiljetecken och stor bokstav": {
+  "mal": [
+   "Avsluta en mening med punkt, frågetecken eller utropstecken.",
+   "Känna igen en indirekt fråga, som slutar med punkt.",
+   "Sätta kolon före en uppräkning eller en förklaring.",
+   "Veta när ett ord skrivs med stor eller liten bokstav."
+  ],
+  "fakta": [
+   "En direkt fråga slutar med frågetecken: Var bor du? En indirekt fråga berättar att någon frågade och slutar med punkt: Hon undrade var jag bor.",
+   "Utropstecken visar ett utrop eller något som sägs med kraft: Aj! Vilken tur!",
+   "Kolon står före en uppräkning eller en förklaring: Två saker behövs: tid och tålamod.",
+   "Stor bokstav har första ordet i en mening och namn på personer, platser och länder.",
+   "Liten bokstav har veckodagar, månader, högtider, språk och ord för folk från ett land, som tisdag, april, påsk, tyska och dansk."
+  ],
+  "exempel": [
+   [
+    "Ska meningen ”Jag undrar om du kan komma” sluta med frågetecken?",
+    "Nej. Meningen berättar om en fråga, så den är en indirekt fråga och slutar med punkt: Jag undrar om du kan komma."
+   ],
+   [
+    "Vilka ord ska ha stor bokstav i ”på torsdag flyger vi till rom.”?",
+    "På, som börjar meningen, och Rom, som är namnet på en stad. Torsdag skrivs med liten bokstav."
+   ]
+  ],
+  "ord": [
+   [
+    "direkt fråga",
+    "en fråga som ställs rakt till någon: Kommer du?"
+   ],
+   [
+    "indirekt fråga",
+    "en mening som berättar om en fråga: Hon undrade om jag kommer."
+   ],
+   [
+    "kolon",
+    "tecknet : före en uppräkning eller en förklaring"
+   ],
+   [
+    "utropstecken",
+    "tecknet ! efter ett utrop"
+   ]
+  ],
+  "tips": "Fråga dig om meningen själv frågar något eller bara berättar att någon frågade. Bara den som frågar själv får frågetecken."
+ },
+ "Språk i Norden": {
+  "mal": [
+   "Berätta vilka språk som talas i Norden.",
+   "Skilja de språk som är släkt med svenskan från dem som inte är det.",
+   "Känna igen några skillnader mellan svenska, norska och danska.",
+   "Förklara vad falska vänner är och varför de kan ställa till det."
+  ],
+  "fakta": [
+   "Svenska, norska och danska är nära släkt och går ofta att förstå för varandra. Isländska och färöiska hör till samma familj, men är svårare för en svensk att förstå.",
+   "Finska och samiska hör till en annan språkfamilj och är inte släkt med svenskan.",
+   "Finland har två nationalspråk, finska och svenska. Norska har två skriftspråk, bokmål och nynorsk.",
+   "Danska och norska skriver æ och ø där svenskan skriver ä och ö.",
+   "Sveriges fem nationella minoritetsspråk är finska, meänkieli, samiska, romani chib och jiddisch."
+  ],
+  "exempel": [
+   [
+    "Vad tror du att det norska ordet ”kjøleskap” betyder?",
+    "Kylskåp. Kjøle liknar kyla, och skap liknar skåp. Många norska ord går att lista ut om du jämför dem med svenska."
+   ]
+  ],
+  "ord": [
+   [
+    "Norden",
+    "Sverige, Norge, Danmark, Finland och Island, och Färöarna, Grönland och Åland"
+   ],
+   [
+    "grannspråk",
+    "ett språk i ett grannland som liknar ens eget, som norska och danska för en svensk"
+   ],
+   [
+    "falska vänner",
+    "ord som ser likadana ut i två språk men betyder olika saker"
+   ],
+   [
+    "nationellt minoritetsspråk",
+    "ett språk som en minoritet har talat länge i landet och som lagen skyddar"
+   ]
+  ],
+  "tips": "Danska är ofta lättare att läsa än att höra. Läs långsamt, så känner du igen många ord."
+ },
+ "NP-träning: språket": {
+  "mal": [
+   "Välja mellan att och och.",
+   "Sätta punkt, stor bokstav och rätt skiljetecken.",
+   "Välja ord som gör texten tydlig och varierad.",
+   "Använda sambandsord som visar tid, villkor, syfte och motsättning."
+  ],
+  "fakta": [
+   "Att står framför ett verb i grundform: att simma, att äta. Och binder ihop ord eller meningar: bröd och smör. Tänk på engelskan: to swim, bread and butter.",
+   "En mening slutar med punkt, frågetecken eller utropstecken, och nästa mening börjar med stor bokstav.",
+   "Namn på personer, platser och länder har stor bokstav. Veckodagar, månader och språk har liten: fredag, juni, svenska.",
+   "I en uppräkning står komma mellan orden, men inte före och: äpplen, päron och plommon.",
+   "Sambandsord visar hur tankarna hänger ihop: när visar tid, ifall visar ett villkor, så att visar ett syfte och trots att visar en motsättning."
+  ],
+  "exempel": [
+   [
+    "Att eller och? ”Vi brukar bada … fiska på sommaren.”",
+    "Och, för ordet binder ihop två saker vi gör: bada och fiska."
+   ],
+   [
+    "Var ska det vara stor bokstav? ”i juli åkte vi till grekland.”",
+    "I, som börjar meningen, och Grekland, som är ett land. Juli har liten bokstav."
+   ]
+  ],
+  "ord": [
+   [
+    "grundform",
+    "verbets form efter att: att läsa, att gå"
+   ],
+   [
+    "uppräkning",
+    "flera saker i rad, med komma emellan"
+   ],
+   [
+    "synonym",
+    "ett ord som betyder nästan samma sak"
+   ]
+  ],
+  "tips": "Variera med synonymer: skriv inte sa i varje replik, utan också ropade, viskade eller frågade."
+ }
+}

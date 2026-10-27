@@ -1,0 +1,72 @@
+{
+ "Växtens delar": {
+  "mal": [
+   "Säga vad roten, stjälken, bladet och blomman gör.",
+   "Berätta vad en växt behöver för att växa.",
+   "Förklara vad som händer med en växt utan vatten eller ljus."
+  ],
+  "fakta": [
+   "Roten sitter under jorden. Den håller fast växten och tar upp vatten och näring.",
+   "Stjälken bär upp växten. Den leder vattnet från roten upp till bladen.",
+   "Bladen är oftast gröna. De fångar solens ljus och gör mat åt växten.",
+   "Blomman gör frön, så att det kan bli nya växter.",
+   "En växt behöver vatten, ljus, luft och värme. Utan vatten vissnar den, och i mörker kan den inte göra mat."
+  ],
+  "exempel": [
+   [
+    "Ett träd har en stam. Vilken del av en blomma liknar stammen?",
+    "Stjälken. Både stammen och stjälken bär upp växten och leder vattnet uppåt."
+   ]
+  ],
+  "ord": [
+   [
+    "näring",
+    "det som en växt eller ett djur behöver för att leva och växa"
+   ],
+   [
+    "vissna",
+    "när en växt blir slak och torr"
+   ],
+   [
+    "syre",
+    "en gas i luften som vi behöver för att andas"
+   ]
+  ],
+  "tips": "Tänk på växten nerifrån och upp: roten i jorden, stjälken, bladen och överst blomman."
+ },
+ "Växter och vi": {
+  "mal": [
+   "Ordna hur ett frö blir en ny växt.",
+   "Berätta hur frön sprids och hur bin hjälper blommorna.",
+   "Ge exempel på mat och saker som vi får från växter."
+  ],
+  "fakta": [
+   "Ett frö behöver vatten och värme för att gro. Sedan växer en liten planta.",
+   "När växten blommar flyger bin och humlor mellan blommorna. Då kan blommorna göra nya frön.",
+   "Frön sprids på olika sätt, till exempel med vinden eller med djur.",
+   "Vi äter olika delar av växter: rötter, blad, frukter och frön.",
+   "Från växter får vi också papper av trä, kläder av bomull och syre att andas."
+  ],
+  "exempel": [
+   [
+    "Vilken del av solrosen äter vi när vi äter solrosfrön?",
+    "Fröna. De sitter i mitten av solrosens stora blomma."
+   ]
+  ],
+  "ord": [
+   [
+    "gro",
+    "när ett frö börjar växa"
+   ],
+   [
+    "planta",
+    "en ung, liten växt"
+   ],
+   [
+    "frukt",
+    "den del av växten där fröna sitter"
+   ]
+  ],
+  "tips": "Fråga dig: växer delen under jorden, är den ett blad, eller har den frön i sig?"
+ }
+}

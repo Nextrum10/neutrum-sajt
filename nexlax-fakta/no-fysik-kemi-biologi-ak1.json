@@ -1,0 +1,72 @@
+{
+ "Årstiderna": {
+  "mal": [
+   "Säga årstiderna i rätt ordning.",
+   "Berätta vad som händer i naturen på våren, sommaren, hösten och vintern.",
+   "Säga när dagarna är långa och ljusa och när de är korta och mörka."
+  ],
+  "fakta": [
+   "Ett år har fyra årstider: våren, sommaren, hösten och vintern. De kommer i samma ordning varje år.",
+   "På våren blir det varmare. Träden får nya löv, blommorna kommer upp och fåglarna kommer tillbaka.",
+   "På sommaren är det varmast. Solen går upp tidigt och ner sent, så dagarna är långa och ljusa.",
+   "På hösten blir löven gula och röda och faller av. Många fåglar flyger söderut, och äpplena blir mogna.",
+   "På vintern är det kallt och mörkt länge. Vatten fryser till is, och snö kan ligga på marken."
+  ],
+  "exempel": [
+   [
+    "Vilken årstid kommer efter hösten?",
+    "Vintern. Ordningen är våren, sommaren, hösten och vintern, och sedan börjar det om."
+   ]
+  ],
+  "ord": [
+   [
+    "årstid",
+    "en del av året, som våren eller vintern"
+   ],
+   [
+    "flyttfågel",
+    "en fågel som flyger till ett varmare land på hösten och kommer hem på våren"
+   ],
+   [
+    "ide",
+    "en gömd plats där ett djur sover hela vintern"
+   ]
+  ],
+  "tips": "Titta ut genom fönstret: vilken årstid är det nu, och vilken kommer sedan?"
+ },
+ "Väder och kläder": {
+  "mal": [
+   "Känna igen snö, regn, vind och storm.",
+   "Berätta vad en termometer visar.",
+   "Välja kläder som passar vädret och årstiden."
+  ],
+  "fakta": [
+   "Regn och snö faller från molnen. Moln är massor av små vattendroppar eller små bitar is.",
+   "När det är kallt kan det snöa. När det blir varmt smälter snön och isen.",
+   "En termometer visar hur varmt eller kallt det är.",
+   "En regnbåge kan synas när solen lyser samtidigt som det regnar.",
+   "Klä dig efter vädret: varmt när det är kallt, svalt när det är varmt och regnkläder när det regnar. Flera lager kläder håller värmen."
+  ],
+  "exempel": [
+   [
+    "Termometern visar 25 grader. Är det varmt eller kallt ute?",
+    "Det är varmt. 25 grader är en varm sommardag."
+   ]
+  ],
+  "ord": [
+   [
+    "storm",
+    "när det blåser väldigt hårt"
+   ],
+   [
+    "termometer",
+    "en mätare som visar hur varmt det är"
+   ],
+   [
+    "reflex",
+    "en sak som lyser upp när ljus träffar den, så att bilar ser dig i mörkret"
+   ]
+  ],
+  "tips": "Titta ut innan du klär på dig: vädret avgör vad du behöver."
+ }
+}

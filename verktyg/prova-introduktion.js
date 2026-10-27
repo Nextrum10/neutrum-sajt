@@ -210,9 +210,10 @@ async function genomIntro(page) {
         bak: document.querySelector('[data-intro-bak]').disabled,
         topp: Math.round(k.top), höger: Math.round(k.right), bredd: Math.round(k.width),
         bild: img ? { src: img.getAttribute('src'), alt: img.getAttribute('alt'), w: img.naturalWidth } : null,
-        klar: !document.querySelector('.nx-intro-klar').hidden,
-        klarText: document.querySelector('.nx-intro-klar').textContent,
-        väntar: !document.querySelector('.nx-intro-vantar').hidden
+        typ: document.querySelector('.nx-intro-scen').getAttribute('data-typ'),
+        klar: !!document.querySelector('.nx-intro-klar'),
+        klarText: (document.querySelector('.nx-intro-klar') || {}).textContent || '',
+        väntar: !!document.querySelector('.nx-intro-vantar')
       };
     }));
     /* Bilden laddas innan nästa: naturalWidth säger att filen kom fram. */
@@ -270,28 +271,30 @@ async function provaFamiljenTagenIn(webb) {
   prova('familj: ingen Stäng första gången', (await page.locator('[data-intro-stang]').count()) === 0);
 
   const sett = await genomIntro(page);
-  prova('familj: sex bilder, 1 av 6 till 6 av 6 (Bekräfta rapport togs bort 2026-10-21)', sett.length === 6 && sett[0].nr === '1 av 6' && sett[5].nr === '6 av 6',
+  /* Sedan 2026-10-27: välkomstkartan först, och Betalning & planer som en del.
+     Hemskärmens steg bara på en telefon (pekskärm), så inte här. */
+  prova('familj: åtta steg, 1 av 8 till 8 av 8', sett.length === 8 && sett[0].nr === '1 av 8' && sett[7].nr === '8 av 8',
     sett.map(s => s.nr).join(', '));
-  prova('familj: rubrikerna följer menyn', JSON.stringify(sett.map(s => s.rubrik)) === JSON.stringify(
-    ['Översikt', 'Boka pass', 'Mina lektioner', 'NexLäx', 'Meddelanden', 'Profil & inställningar']),
+  prova('familj: kartan först, sedan delarna i menyns ordning', JSON.stringify(sett.map(s => s.rubrik)) === JSON.stringify(
+    ['Så fungerar studievyn', 'Översikt', 'Boka pass', 'Mina lektioner', 'Betalning & planer', 'NexLäx', 'Meddelanden', 'Profil & inställningar']),
     sett.map(s => s.rubrik).join(', '));
-  prova('familj: första bilden hälsar välkommen, de andra inte', sett[0].klar && sett.slice(1).every(s => !s.klar));
+  prova('familj: kartan hälsar välkommen, delarna inte', sett[0].typ === 'valkommen' && sett[0].klar && sett.slice(1).every(s => !s.klar && s.typ === 'del'));
   /* Lösenordet sparades flera steg tidigare (villkoren, och för en studiehjälpare
      provet, kommer emellan), så raden säger inte längre det (2026-10-21). */
   prova('familj: välkomstraden säger inget om lösenordet',
-    sett[0].klarText === 'Välkommen till Nextrum! Så här fungerar det.', sett[0].klarText);
+    sett[0].klarText === 'Välkommen till Nextrum!', sett[0].klarText);
   prova('familj: Tillbaka går inte på första bilden', sett[0].bak && sett.slice(1).every(s => !s.bak));
-  prova('familj: Nästa, och Fortsätt sist', sett.slice(0, 5).every(s => s.knapp === 'Nästa') && sett[5].knapp === 'Fortsätt',
+  prova('familj: Nästa, och Fortsätt sist', sett.slice(0, 7).every(s => s.knapp === 'Nästa') && sett[7].knapp === 'Fortsätt',
     sett.map(s => s.knapp).join(', '));
-  prova('familj: varje bild kom fram och har en alt-text', sett.every(s => s.bild && s.bild.w === 780 && s.bild.alt.length > 30),
+  prova('familj: varje del har en bild som kom fram, med alt-text', sett.slice(1).every(s => s.bild && s.bild.w === 780 && s.bild.alt.length > 30),
     JSON.stringify(sett.map(s => s.bild && [s.bild.src, s.bild.w])));
   prova('familj: knappen står still mellan bilderna, också när den blir Fortsätt (dator)',
     new Set(sett.map(s => s.topp + ':' + s.höger + ':' + s.bredd)).size === 1,
     sett.map(s => s.topp + '/' + s.höger + '/' + s.bredd).join(', '));
-  prova('familj: sista bilden säger att vi matchar dem först', sett[5].väntar && sett.slice(0, 5).every(s => !s.väntar));
-  prova('familj: sista bilden säger var familjen och barnet loggar in nästa gång',
-    /Logga in på nextrum\.se/.test(sett[5].text) && /barnet på samma ställe med sitt användarnamn/.test(sett[5].text),
-    sett[5].text);
+  prova('familj: sista steget säger att vi matchar dem först', sett[7].väntar && sett.slice(0, 7).every(s => !s.väntar));
+  prova('familj: sista steget säger var familjen och barnet loggar in nästa gång',
+    /Logga in på nextrum\.se/.test(sett[7].text) && /barnet på samma ställe med sitt användarnamn/.test(sett[7].text),
+    sett[7].text);
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 6000 }).catch(() => {});
   /* Före matchningen är vyn öppen (2026-10-07): inget väntläge, men
      bokningen och köpen väntar på studiehjälparen. */
@@ -353,7 +356,7 @@ async function provaUtanLänken(webb) {
     await page.waitForSelector('.nx-intro.open', { timeout: 8000 }).catch(() => {});
     prova('intro kvar: ingen lösenordsruta', !(await synlig(page, '#nylos-t')));
     const sett = await genomIntro(page);
-    prova('intro kvar: introduktionen, utan välkomstraden', sett.length === 6 && !sett[0].klar);
+    prova('intro kvar: introduktionen, utan välkomstraden', sett.length === 8 && !sett[0].klar);
     prova('intro kvar: en matchad familj får ingen rad om matchningen', sett.every(s => !s.väntar));
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
     prova('intro kvar: Fortsätt leder in i vyn', await synlig(page, '#view-app'));
@@ -373,12 +376,14 @@ async function provaUtanLänken(webb) {
     await vänta(400);
     await page.click('[data-intro="foralder"]');
     await page.waitForSelector('.nx-intro.open', { timeout: 4000 }).catch(() => {});
-    prova('Profil: Visa introduktionen öppnar den', (await text(page, '.nx-intro-nr')) === '1 av 6');
+    prova('Profil: Visa introduktionen öppnar den', (await text(page, '.nx-intro-nr')) === '1 av 8');
     prova('Profil: öppnad igen har den Stäng', await synlig(page, '[data-intro-stang]'));
     await page.keyboard.press('ArrowRight');
-    prova('Profil: pilen åt höger går framåt', (await text(page, '.nx-intro-nr')) === '2 av 6', await text(page, '.nx-intro-nr'));
+    prova('Profil: pilen åt höger går framåt', (await text(page, '.nx-intro-nr')) === '2 av 8', await text(page, '.nx-intro-nr'));
     await page.keyboard.press('ArrowLeft');
-    prova('Profil: pilen åt vänster går tillbaka', (await text(page, '.nx-intro-nr')) === '1 av 6', await text(page, '.nx-intro-nr'));
+    prova('Profil: pilen åt vänster går tillbaka', (await text(page, '.nx-intro-nr')) === '1 av 8', await text(page, '.nx-intro-nr'));
+    await page.click('[data-intro-ga="4"]');
+    prova('Profil: ett tryck på en del i kartan går till den', (await text(page, '#nx-intro-t')) === 'Betalning & planer', await text(page, '#nx-intro-t'));
     await page.keyboard.press('Escape');
     await vänta(150);
     prova('Profil: Escape stänger den', !(await synlig(page, '.nx-intro')));
@@ -402,6 +407,7 @@ async function provaUtanLänken(webb) {
       metadata: { valkommen: 'intro' }, utanBilder: true });
     await page.goto(BAS + '/foralder');
     await page.waitForSelector('.nx-intro.open', { timeout: 8000 }).catch(() => {});
+    await page.click('[data-intro-fram]');
     prova('utan bildregistret: texten står, utan bild', !(await synlig(page, '.nx-intro-bild'))
       && (await text(page, '#nx-intro-t')) === 'Översikt');
     prova('utan bildregistret: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
@@ -424,13 +430,13 @@ async function provaStudiehjälparen(webb) {
     await page.waitForSelector('.nx-intro.open', { timeout: 6000 }).catch(() => {});
     if (godkand) await bild(page, 'studiehjalpare-intro-1');
     const sett = await genomIntro(page);
-    prova(v + ': åtta bilder', sett.length === 8 && sett[7].nr === '8 av 8', sett.map(s => s.nr).join(', '));
-    prova(v + ': rubrikerna följer menyn', JSON.stringify(sett.map(s => s.rubrik)) === JSON.stringify(
-      ['Översikt', 'Föreslagna tider', 'Lektioner & elever', 'Skriv rapport', 'Uppgifter & material', 'Meddelanden',
+    prova(v + ': nio steg', sett.length === 9 && sett[8].nr === '9 av 9', sett.map(s => s.nr).join(', '));
+    prova(v + ': kartan först, sedan delarna i menyns ordning', JSON.stringify(sett.map(s => s.rubrik)) === JSON.stringify(
+      ['Så fungerar studiehjälparvyn', 'Översikt', 'Föreslagna tider', 'Lektioner & elever', 'Skriv rapport', 'Uppgifter & material', 'Meddelanden',
        'Statistik & ersättning', 'Profil & inställningar']), sett.map(s => s.rubrik).join(', '));
-    prova(v + ': varje bild kom fram', sett.every(s => s.bild && s.bild.w === 780), JSON.stringify(sett.map(s => s.bild && s.bild.w)));
-    prova(v + ': sista bilden säger att profilen väntar bara när den gör det', sett[7].väntar === !godkand);
-    prova(v + ': sista bilden säger var du loggar in nästa gång', /Logga in på nextrum\.se/.test(sett[7].text), sett[7].text);
+    prova(v + ': varje del har en bild som kom fram', sett.slice(1).every(s => s.bild && s.bild.w === 780), JSON.stringify(sett.map(s => s.bild && s.bild.w)));
+    prova(v + ': sista steget säger att profilen väntar bara när den gör det', sett[8].väntar === !godkand);
+    prova(v + ': sista steget säger var du loggar in nästa gång', /Logga in på nextrum\.se/.test(sett[8].text), sett[8].text);
     const vy = godkand ? '#view-app' : '#view-pending';
     await page.waitForSelector(vy + ':not([hidden])', { timeout: 8000 }).catch(() => {});
     prova(v + ': Fortsätt leder in i vyn', await synlig(page, vy));
@@ -458,13 +464,16 @@ async function provaTelefonen(webb) {
       /* Rutan glider in med transform: bredderna mäts i layouten, inte på skärmen. */
       const st = getComputedStyle(boxEl);
       const inne = boxEl.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight);
+      document.querySelector('[data-intro-fram]').click();
       const fig = { width: document.querySelector('.nx-intro-bild').offsetWidth };
       const kn = [...document.querySelectorAll('.nx-intro-knappar .btn')].map(b => b.getBoundingClientRect().height);
       return { vänster: box.left, höger: box.right, bredd: innerWidth, fig: fig.width, inne, kn,
                rullar: document.documentElement.scrollWidth > innerWidth };
     });
     prova(namn + ': rutan ryms i bredden', mått.vänster >= 0 && mått.höger <= mått.bredd && !mått.rullar, JSON.stringify(mått));
-    prova(namn + ': bilden fyller rutans bredd', mått.fig >= mått.inne - 1 && mått.fig > 280, mått.fig + ' av ' + mått.inne);
+    /* Bilden har sina proportioner och en högsta höjd (46 % av skärmen), så
+       på en låg telefon är den smalare än rutan; den ska ändå vara stor nog att läsa. */
+    prova(namn + ': bilden är stor nog att läsa', mått.fig > 260 && mått.fig <= mått.inne + 1, mått.fig + ' av ' + mått.inne);
     prova(namn + ': knapparna är minst 44 px', mått.kn.every(h => h >= 44), mått.kn.join(', '));
     await bild(page, namn.replace(/ /g, '-') + '-intro');
     if (!mörkt) {

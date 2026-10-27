@@ -425,7 +425,13 @@ window.NXKontakt = (function () {
 
     return '<div class="pass' + (o.href ? ' pass-klickbar' : '') + '"'
       + (o.href ? ' data-href="' + esc(o.href) + '"' : '') + '>'
-      + '<span class="pass-nar' + (o.nu ? ' ar-nu' : '') + '"><small>' + esc(veckodag) + '</small><b>' + esc(dag) + '</b><small>' + esc(mån) + '</small></span>'
+      /* o.dag färgar datumrutan (2026-10-27, Leo: "Lektioner som ej är
+         betalda ska vara röda ... betalda ... gröna och önskade tider gula,
+         ljusa toner"): 'rod', 'gron', 'gul' (er önskan), 'forslag' (en tid
+         studiehjälparen föreslår) eller 'barn' (barnets förslag). Färgen
+         säger aldrig ensam vad som gäller: märket bredvid säger det i ord. */
+      + '<span class="pass-nar' + (o.nu ? ' ar-nu' : '') + (o.dag ? ' dag-' + esc(o.dag) : '') + '"><small>' + esc(veckodag) + '</small><b>' + esc(dag) + '</b><small>' + esc(mån) + '</small>'
+      + (o.dag === 'forslag' || o.dag === 'barn' ? '<i class="pass-nar-bubbla" aria-hidden="true"></i>' : '') + '</span>'
       + '<span class="pass-vad">' + titel
       + (meta.length ? '<span class="pass-meta">' + meta.join('') + '</span>' : '')
       + (o.not ? '<span class="pass-not">”' + esc(o.not) + '”</span>' : '')

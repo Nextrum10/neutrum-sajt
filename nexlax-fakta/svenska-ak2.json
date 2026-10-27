@@ -1,0 +1,232 @@
+{
+ "Ljud och bokstäver": {
+  "mal": [
+   "Höra första och sista ljudet i ett ord.",
+   "Hitta ord som rimmar och räkna bokstäverna i ett ord.",
+   "Dela ett ord i stavelser genom att klappa det."
+  ],
+  "fakta": [
+   "Säg ordet långsamt. Det du hör först är första ljudet, och det du hör sist är sista ljudet.",
+   "Ord som rimmar slutar likadant, som sand och hand.",
+   "En stavelse är en del av ett ord som du klappar en gång. Ka-nin har två stavelser.",
+   "I varje stavelse finns en vokal: i ka-nin är det a och i.",
+   "Vokalerna är a, o, u, å, e, i, y, ä och ö. De andra bokstäverna är konsonanter."
+  ],
+  "exempel": [
+   [
+    "Hur många stavelser har ordet ”potatis”?",
+    "Tre: po-ta-tis. Du klappar tre gånger."
+   ],
+   [
+    "Hur många bokstäver har ordet ”pappa”?",
+    "Fem: p, a, p, p, a. Räkna varje bokstav, också när samma bokstav kommer flera gånger."
+   ]
+  ],
+  "ord": [
+   [
+    "stavelse",
+    "en del av ett ord som du klappar en gång"
+   ],
+   [
+    "vokal",
+    "a, o, u, å, e, i, y, ä och ö"
+   ],
+   [
+    "konsonant",
+    "alla andra bokstäver, som b, m och s"
+   ],
+   [
+    "rim",
+    "ord som slutar likadant"
+   ]
+  ],
+  "tips": "Lägg handen under hakan när du säger ordet. Hakan går ner en gång för varje stavelse."
+ },
+ "Meningar": {
+  "mal": [
+   "Säga vad en mening är och räkna orden i den.",
+   "Börja en mening med stor bokstav och sluta med punkt.",
+   "Skilja på en fråga och en mening som berättar.",
+   "Bygga korta meningar och frågor i rätt ordning."
+  ],
+  "fakta": [
+   "En mening är flera ord som hör ihop och berättar eller frågar något.",
+   "En mening börjar med stor bokstav. Namn har också stor bokstav.",
+   "En mening som berättar slutar med punkt (.).",
+   "En fråga slutar med frågetecken (?). Den börjar ofta med ett frågeord: vem, vad, var, när, hur eller varför."
+  ],
+  "exempel": [
+   [
+    "Ska det stå punkt eller frågetecken? ”När kommer bussen”",
+    "Frågetecken. Meningen frågar något och börjar med frågeordet ”när”."
+   ],
+   [
+    "Hur många ord är det i ”Min bror spelar fotboll.”?",
+    "Fyra: Min, bror, spelar, fotboll."
+   ]
+  ],
+  "ord": [
+   [
+    "mening",
+    "ord som hör ihop och säger något"
+   ],
+   [
+    "punkt",
+    "tecknet (.) sist i en mening som berättar"
+   ],
+   [
+    "frågetecken",
+    "tecknet (?) sist i en fråga"
+   ],
+   [
+    "frågeord",
+    "ord som börjar en fråga, som vem, var och hur"
+   ]
+  ],
+  "tips": "Frågar meningen något som någon kan svara på? Då ska det stå frågetecken."
+ },
+ "Ordförråd": {
+  "mal": [
+   "Hitta ordet som betyder tvärtom, motsatsen.",
+   "Sätta ihop två ord till ett sammansatt ord.",
+   "Förstå vad ett sammansatt ord betyder genom dess delar."
+  ],
+  "fakta": [
+   "En motsats är ett ord som betyder tvärtom: tjock och smal, mörk och ljus.",
+   "Ett sammansatt ord är byggt av två ord: sko + snöre = skosnöre.",
+   "Det sista ordet säger vad det är. Ett skosnöre är ett snöre, till en sko.",
+   "Ibland ändras det första ordet lite när orden sätts ihop: skola + gård blir skolgård."
+  ],
+  "exempel": [
+   [
+    "Vad är motsatsen till ”tung”?",
+    "Lätt. En tung väska är svår att bära, en lätt väska är enkel att bära."
+   ],
+   [
+    "Sätt ihop ”lek” och ”park” till ett ord. Vad betyder det?",
+    "Lekpark. Det är en park där man leker."
+   ]
+  ],
+  "ord": [
+   [
+    "motsats",
+    "ett ord som betyder tvärtom"
+   ],
+   [
+    "sammansatt ord",
+    "ett ord som är byggt av två ord"
+   ]
+  ],
+  "tips": "Dela ett långt ord i två delar, så förstår du ofta vad det betyder."
+ },
+ "Läsförståelse": {
+  "mal": [
+   "Läsa en berättelse och en faktatext och svara på frågor om dem.",
+   "Hitta svar som står i texten: vem, vad, när och var.",
+   "Förstå hur någon känner sig, fast det inte står rakt ut.",
+   "Säga om en text är en berättelse eller en faktatext."
+  ],
+  "fakta": [
+   "Läs texten en gång. Läs sedan frågan, och gå tillbaka till texten och leta efter svaret.",
+   "En berättelse handlar om personer och något som händer. En faktatext berättar hur något är på riktigt.",
+   "Frågeordet visar vad du ska leta efter: vem är en person, var är en plats och när är en tid.",
+   "Hur någon känner sig står inte alltid i texten. Titta på vad personen gör och säger."
+  ],
+  "exempel": [
+   [
+    "Läs: ”Sam tappade sin glass på marken. Han började gråta.” Hur kände sig Sam?",
+    "Ledsen. Ordet ledsen står inte i texten, men Sam gråter, och det gör man ofta när man är ledsen."
+   ]
+  ],
+  "ord": [
+   [
+    "berättelse",
+    "en text om personer och något som händer"
+   ],
+   [
+    "faktatext",
+    "en text som berättar hur något är på riktigt"
+   ],
+   [
+    "frågeord",
+    "vem, vad, var, när, hur och varför"
+   ]
+  ],
+  "tips": "Vid sant eller falskt: leta upp meningen i texten och jämför ord för ord."
+ },
+ "Ord och skrivregler": {
+  "mal": [
+   "Skriva stor bokstav först i meningen och i namn på personer, djur och platser.",
+   "Skriva veckodagar och månader med liten bokstav.",
+   "Skilja på substantiv och verb.",
+   "Välja ett verb som passar i en mening."
+  ],
+  "fakta": [
+   "Den första bokstaven i en mening är stor. Sist står punkt.",
+   "Namn på personer, djur och platser skrivs med stor bokstav: Leo, Pricken, Umeå.",
+   "Veckodagar och månader skrivs med liten bokstav: tisdag, maj.",
+   "Substantiv är ord för saker, djur och människor. Du kan sätta ”en” eller ”ett” framför: en stol, ett äpple.",
+   "Verb är ord för det man gör: läser, springer, äter."
+  ],
+  "exempel": [
+   [
+    "Vilka ord ska ha stor bokstav? ”på fredag ska nora åka till visby”",
+    "På, Nora och Visby. ”På” börjar meningen, Nora är ett namn och Visby är en plats. Fredag skrivs med liten bokstav."
+   ]
+  ],
+  "ord": [
+   [
+    "substantiv",
+    "ord för saker, djur och människor"
+   ],
+   [
+    "verb",
+    "ord för det man gör"
+   ],
+   [
+    "namn",
+    "det en person, ett djur eller en plats heter"
+   ]
+  ],
+  "tips": "Kan du säga ”jag” framför ordet, som ”jag läser”? Då är det ett verb."
+ },
+ "Ord och texter": {
+  "mal": [
+   "Stava ord med två konsonanter efter en kort vokal.",
+   "Hitta ord som beskriver hur något är, adjektiv.",
+   "Läsa en berättelse och förstå varför personerna gör som de gör."
+  ],
+  "fakta": [
+   "Är vokalen kort skriver man ofta två konsonanter efter den: buss, sill, hoppa.",
+   "Är vokalen lång kommer oftast bara en konsonant: hus, mat, läsa.",
+   "Lyssna på skillnaden: i ”glas” är a långt, i ”glass” är a kort.",
+   "Adjektiv är ord som berättar hur något är: mjuk, sur, blå, rolig.",
+   "I en berättelse står inte allt. Ibland får du själv tänka ut varför någon gör något."
+  ],
+  "exempel": [
+   [
+    "Ska det stå ”lam” eller ”lamm”? ”Ett … säger bä.”",
+    "Lamm. A:et är kort, och då kommer två m."
+   ],
+   [
+    "Vilket ord beskriver? ”Jag har en blå mössa.”",
+    "Blå. Det berättar hur mössan är."
+   ]
+  ],
+  "ord": [
+   [
+    "vokal",
+    "a, o, u, å, e, i, y, ä och ö"
+   ],
+   [
+    "konsonant",
+    "alla andra bokstäver"
+   ],
+   [
+    "adjektiv",
+    "ord som berättar hur något är"
+   ]
+  ],
+  "tips": "Säg ordet högt: är vokalen kort och snabb, då kommer oftast två konsonanter efter den."
+ }
+}

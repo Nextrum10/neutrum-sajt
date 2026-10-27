@@ -1,0 +1,514 @@
+{
+ "Substantiv": {
+  "mal": [
+   "Skriva plural av vanliga engelska substantiv.",
+   "Välja mellan -s, -es, -ies och -ves när ett ord får plural.",
+   "Känna igen substantiv som har en egen form i plural."
+  ],
+  "fakta": [
+   "De flesta substantiv får -s i plural: one cat, two cats.",
+   "Slutar ordet på -s, -x, -sh eller -ch får det -es: bus → buses, box → boxes, church → churches.",
+   "Konsonant + y blir -ies: city → cities. Vokal + y får bara -s: day → days, toy → toys.",
+   "Många ord på -f eller -fe får -ves: half → halves, wife → wives. Men inte alla: roof → roofs.",
+   "Några ord har en egen form som du lär dig utantill: goose → geese, person → people. Några är likadana i plural: one deer, two deer."
+  ],
+  "exempel": [
+   [
+    "Vad är plural av ”lady” och ”loaf”?",
+    "Lady slutar på konsonant + y, så y blir -ies: ladies. Loaf slutar på -f och får -ves: loaves."
+   ]
+  ],
+  "ord": [
+   [
+    "substantiv",
+    "ord för saker, djur, personer och platser: a box, a girl"
+   ],
+   [
+    "singular",
+    "en av något: one box"
+   ],
+   [
+    "plural",
+    "flera av något: two boxes"
+   ],
+   [
+    "vokal",
+    "bokstäverna a, e, i, o och u"
+   ],
+   [
+    "konsonant",
+    "de andra bokstäverna, som b, k och t"
+   ]
+  ],
+  "tips": "Titta på bokstaven före y: en vokal behåller y (days), en konsonant gör y till -ies (cities)."
+ },
+ "Verb": {
+  "mal": [
+   "Böja verb i presens efter he, she och it.",
+   "Ställa frågor och säga nej i presens med do, does och doesn't.",
+   "Skriva regelbundna verb i preteritum med rätt stavning."
+  ],
+  "fakta": [
+   "Efter he, she och it får verbet -s i presens: she reads. Efter I, you, we och they får det inget -s: they read.",
+   "Verb på -o, -s, -sh, -ch och -x får -es: do → does, wash → washes. Have blir has efter he, she och it.",
+   "Frågor och nekanden i presens byggs med do eller does. Efter does och doesn't står verbet utan -s: Does he swim? He doesn't swim.",
+   "Preteritum är det som har hänt. Regelbundna verb får -ed: jump → jumped. Slutar verbet på -e läggs bara -d till: smile → smiled.",
+   "Konsonant + y blir -ied (cry → cried), vokal + y behåller y (stay → stayed), och korta verb som slutar på en enda vokal + konsonant dubblar konsonanten (plan → planned, men rain → rained)."
+  ],
+  "exempel": [
+   [
+    "Fyll i ”fix” i presens: My mum ___ old bikes.",
+    "My mum kan bytas mot she, och fix slutar på -x: My mum fixes old bikes."
+   ],
+   [
+    "Skriv ”hurry” och ”shop” i preteritum.",
+    "Hurry har en konsonant före y: hurried. Shop är kort, med en vokal och en konsonant: shopped."
+   ]
+  ],
+  "ord": [
+   [
+    "presens",
+    "det som händer nu eller brukar hända: I jump"
+   ],
+   [
+    "preteritum",
+    "det som har hänt, past simple: I jumped"
+   ],
+   [
+    "regelbundet verb",
+    "ett verb som får -ed i preteritum"
+   ],
+   [
+    "nekande",
+    "en mening som säger nej eller inte: I don't know"
+   ]
+  ],
+  "tips": "Kan du byta ut ordet mot he, she eller it? Då får verbet -s i presens: My cat (= it) sleeps."
+ },
+ "Frågeord": {
+  "mal": [
+   "Välja rätt frågeord efter vad svaret handlar om.",
+   "Använda how many, how much, how often, which och whose.",
+   "Bygga frågor med do och does i rätt ordning."
+  ],
+  "fakta": [
+   "Who betyder vem, what vad, where var, when när, why varför och how hur.",
+   "How many (hur många) frågar efter sådant som går att räkna, how much (hur mycket) efter sådant som inte går att räkna.",
+   "How often betyder hur ofta. Which betyder vilken när man väljer bland några, och whose betyder vems.",
+   "Finns det ett annat verb kommer do eller does efter frågeordet: Where do you work? What does he eat?",
+   "Med is och are behövs inget do: Where is the station? How old are they?"
+  ],
+  "exempel": [
+   [
+    "Vilket frågeord passar? ___ is the concert? – On Friday.",
+    "Svaret är en tid, en dag. Då frågar man med when: When is the concert?"
+   ],
+   [
+    "Bygg frågan: Hur många kusiner har du?",
+    "Kusiner går att räkna, så det blir how many, och sedan do you: How many cousins do you have?"
+   ]
+  ],
+  "ord": [
+   [
+    "frågeord",
+    "ordet som börjar en fråga: who, what, where"
+   ],
+   [
+    "räknebar",
+    "går att räkna styck för styck: two apples, three cars"
+   ]
+  ],
+  "tips": "Blanda inte ihop where (var) och when (när): where har ordet here (här) i sig."
+ },
+ "Läsförståelse": {
+  "mal": [
+   "Hitta detaljer i en text, som namn, tal och dagar.",
+   "Avgöra om ett påstående stämmer med det som står i texten.",
+   "Förklara varför något händer och varför någon skriver."
+  ],
+  "fakta": [
+   "Läs hela texten en gång först. Under frågorna kan du öppna den igen och leta efter det frågan gäller.",
+   "Leta efter nyckelord: frågar de om ett djur, ett tal eller en dag, sök efter just det i texten och läs meningen runt det.",
+   "Ett tal kan stå med bokstäver i texten: twelve är 12 och thirty är 30.",
+   "Because visar ett skäl och so en följd. Svaret på en varför-fråga står ofta nära de orden.",
+   "Sant eller falskt: kolla vem som gör vad. Ett påstående kan ha rätt ord men handla om fel person."
+  ],
+  "ord": [
+   [
+    "first, then",
+    "först, sedan: visar i vilken ordning saker händer"
+   ],
+   [
+    "because",
+    "eftersom: visar ett skäl"
+   ],
+   [
+    "so",
+    "så, därför: visar vad något leder till"
+   ]
+  ],
+  "tips": "I ett brev visar början och slutet ofta varför personen skriver: för att svara, fråga eller berätta."
+ },
+ "Övningsblad: grammatik": {
+  "mal": [
+   "Skriva regelbundna verb i past simple med -ed, -d och -ied.",
+   "Välja mellan present simple och present continuous.",
+   "Känna igen några vanliga oregelbundna verb i past simple.",
+   "Använda vanliga frågeord."
+  ],
+  "fakta": [
+   "Past simple (dåtid) av regelbundna verb: -ed (jump → jumped), bara -d efter -e (bake → baked) och -ied efter konsonant + y (cry → cried).",
+   "Present simple för vanor: she swims every Sunday (-s efter he, she och it). Present continuous för det som pågår nu: am, is eller are + -ing: she is reading.",
+   "Frågeorden: what vad, who vem, where var, when när, why varför och how many hur många.",
+   "Oregelbundna verb får inte -ed utan en egen form som du lär dig utantill: come → came, get → got, eat → ate.",
+   "Signalord hjälper: yesterday och last week visar dåtid, every day visar en vana och now att något pågår."
+  ],
+  "exempel": [
+   [
+    "Skriv ”hope” och ”copy” i past simple.",
+    "Hope slutar på -e och får bara -d: hoped. Copy har en konsonant före y: copied."
+   ],
+   [
+    "Fyll i ”write” i rätt form: Shh! Dad ___ an email right now.",
+    "Right now visar att det pågår, och dad är en han: Dad is writing an email right now."
+   ]
+  ],
+  "ord": [
+   [
+    "past simple",
+    "dåtid, det som hände vid en tid som är slut: I walked"
+   ],
+   [
+    "present simple",
+    "presens för vanor: I walk every day"
+   ],
+   [
+    "present continuous",
+    "pågående form, det som händer just nu: I am walking"
+   ]
+  ],
+  "tips": "Står det now, right now eller Look! är det oftast pågående form: am, is eller are + -ing."
+ },
+ "NP-träning: skriva": {
+  "mal": [
+   "Planera ett mejl till en brevvän med början, innehåll och avslutning.",
+   "Binda ihop meningar med and, but och because.",
+   "Utveckla en text med skäl, så att den blir intressantare att läsa."
+  ],
+  "fakta": [
+   "Läs uppgiften noga och ta med allt den ber om, till exempel dig själv, din familj, din fritid och din skola.",
+   "Till en kompis skriver du vardagligt: en kort hälsning i början, och en vänlig hälsning och ditt namn sist. Formella fraser passar inte där.",
+   "And lägger till (och), but visar en motsats (men) och because ger ett skäl (eftersom).",
+   "Ett skäl gör texten mer utvecklad: I love swimming because the water makes me calm.",
+   "Det viktigaste är att läsaren förstår vad du menar. Läs igenom texten efteråt och rätta det du hittar."
+  ],
+  "exempel": [
+   [
+    "Fyll i and, but eller because: I wanted to go out, ___ it was too cold.",
+    "Det andra går emot det första, så det blir but: I wanted to go out, but it was too cold."
+   ],
+   [
+    "Gör meningen mer utvecklad: I like my school.",
+    "Lägg till ett skäl med because: I like my school because the teachers are kind."
+   ]
+  ],
+  "ord": [
+   [
+    "pen friend",
+    "brevvän, någon man skriver till"
+   ],
+   [
+    "reason",
+    "skäl, det som svarar på frågan varför"
+   ]
+  ],
+  "tips": "Avsluta gärna med en fråga till brevvännen, så att hen får något att svara på."
+ },
+ "Läsa: NP-träning": {
+  "mal": [
+   "Läsa ett brev och korta vardagstexter, som en skylt, ett sms och en annons.",
+   "Svara på frågor på engelska om detaljer i texten.",
+   "Hitta ett ord i texten när du får veta vad det betyder.",
+   "Dra slutsatser av det som står, med stöd i texten."
+  ],
+  "fakta": [
+   "Frågorna står på engelska. Läs dem först och leta upp nyckelorden, till exempel when, why, who och how much.",
+   "Titta på vilken sorts text det är: en annons säljer något, en skylt ger information och ett sms är ett kort meddelande.",
+   "Ska du hitta ett ord som betyder något: leta i den del av texten som handlar om det, och prova att byta ordet mot förklaringen.",
+   "Skilj på det som står och det du kan dra slutsatser om. En slutsats måste ha stöd i texten, ett ord eller en mening.",
+   "Kontrollera svaret: gå tillbaka till texten och hitta meningen som visar att du har rätt."
+  ],
+  "exempel": [
+   [
+    "Texten: ”Ask Mr Lee in room 12 after his lesson.” Är Mr Lee en elev eller en lärare?",
+    "Troligen en lärare: han har ett rum och håller en lektion. Det står inte rakt ut, men texten ger stöd för det."
+   ]
+  ],
+  "ord": [
+   [
+    "according to the text",
+    "enligt texten"
+   ],
+   [
+    "find a word that means",
+    "hitta ett ord som betyder"
+   ],
+   [
+    "reason",
+    "skäl"
+   ]
+  ],
+  "tips": "Ett svar som låter bra kan ändå vara fel: välj det som texten faktiskt säger."
+ },
+ "Jämförelser": {
+  "mal": [
+   "Jämföra två saker med -er och than.",
+   "Säga vem eller vad som är mest i en grupp med the och -est.",
+   "Använda more och most framför långa adjektiv, och as … as.",
+   "Använda de oregelbundna formerna av good och bad."
+  ],
+  "fakta": [
+   "Korta adjektiv får -er när du jämför två, och sedan than (än): small → smaller. A mouse is smaller than a cat.",
+   "Stavningen: -e får bara -r (wide → wider), konsonant + y blir -ier (busy → busier) och kort vokal + konsonant dubblas (thin → thinner).",
+   "Superlativ, när du jämför med alla i en grupp: the + -est. Tim is the oldest in the family.",
+   "Långa adjektiv får more och most i stället: more difficult, the most difficult.",
+   "Good, better, best och bad, worse, worst är oregelbundna. As … as betyder lika … som: as old as."
+  ],
+  "exempel": [
+   [
+    "Fyll i ”cheap”: This shirt is ___ than that one.",
+    "Cheap är kort och får -er, och sedan than: This shirt is cheaper than that one."
+   ],
+   [
+    "Fyll i ”beautiful”: It is the ___ beach in the country.",
+    "Beautiful är långt, och stranden jämförs med alla: the most beautiful beach."
+   ]
+  ],
+  "ord": [
+   [
+    "adjektiv",
+    "ord som beskriver hur något är: small, nice"
+   ],
+   [
+    "komparativ",
+    "formen när du jämför två: smaller, more difficult"
+   ],
+   [
+    "superlativ",
+    "formen när du jämför med alla: the smallest, the most difficult"
+   ],
+   [
+    "than",
+    "än, efter komparativ"
+   ]
+  ],
+  "tips": "Använd aldrig både more och -er: det heter colder, inte more colder."
+ },
+ "Läsa och förstå": {
+  "mal": [
+   "Förstå en berättelse på engelska och hitta detaljer i den.",
+   "Sätta händelserna i en berättelse i rätt ordning.",
+   "Lista ut vad ett ord betyder och hur någon känner sig."
+  ],
+  "fakta": [
+   "Läs hela texten en gång först. Läs sedan varje fråga noga och leta i texten efter det den gäller.",
+   "Ord som first, then, after that, later och in the end visar i vilken ordning saker händer.",
+   "Hur någon känner sig står inte alltid rakt ut: titta på vad personen gör och säger, till exempel om hen skrattar, gråter eller suckar.",
+   "Ett okänt ord kan du ofta förstå av meningen runt det. Ord som liknar svenska, som winter och finger, är lätta att gissa.",
+   "Svara med det som står i texten. Ett svar kan innehålla rätt ord men handla om fel person."
+  ],
+  "ord": [
+   [
+    "first",
+    "först"
+   ],
+   [
+    "then",
+    "sedan"
+   ],
+   [
+    "later",
+    "senare"
+   ],
+   [
+    "in the end",
+    "till slut"
+   ]
+  ],
+  "tips": "När du ska ordna händelser: hitta först det som hände allra först och allra sist."
+ },
+ "Datum och klockan": {
+  "mal": [
+   "Säga och stava räkneord och ordningstal, som thirty, first och twelfth.",
+   "Säga ett datum på engelska, som the fifth of May.",
+   "Säga vad klockan är med past och to, och förstå a.m. och p.m."
+  ],
+  "fakta": [
+   "-teen är talen 13–19 (thirteen) och -ty är tiotalen 20–90 (thirty). Fyrtio stavas forty, utan u.",
+   "Ordningstal: first, second och third är oregelbundna, de andra får -th: fourth, fifth, twelfth. I ett sammansatt tal blir bara sista delen ordningstal: twenty-first.",
+   "Datum säger man med ordningstal: the third of June. Månader och veckodagar har stor bokstav.",
+   "Past betyder över och to betyder i: quarter past four är 4.15 och twenty to four är 3.40. Half past four är 4.30, halv fem på svenska.",
+   "A.m. är tiden från midnatt till tolv på dagen och p.m. från tolv till midnatt. Före ett klockslag står at, före dagar och datum on."
+  ],
+  "exempel": [
+   [
+    "Hur säger man datumet 22/9 på engelska?",
+    "Dagen blir ett ordningstal, och bara sista delen ändras: the twenty-second of September."
+   ],
+   [
+    "Vad är klockan när den är 'twenty-five past six'?",
+    "Past betyder över: tjugofem minuter över sex, alltså 6.25."
+   ]
+  ],
+  "ord": [
+   [
+    "quarter",
+    "en kvart"
+   ],
+   [
+    "past",
+    "över (om klockan)"
+   ],
+   [
+    "to",
+    "i, före hela timmen (om klockan)"
+   ],
+   [
+    "o'clock",
+    "prick, hel timme: five o'clock"
+   ],
+   [
+    "a.m. / p.m.",
+    "före / efter klockan tolv mitt på dagen"
+   ]
+  ],
+  "tips": "Engelskan räknar halvtimmen från timmen som har varit: half past seven är 7.30, fast vi säger halv åtta."
+ },
+ "Ägande och genitiv": {
+  "mal": [
+   "Välja rätt ägandeord: my, your, his, her, its, our och their.",
+   "Säga sin på engelska, där ordet beror på vem som äger.",
+   "Skriva genitiv med apostrof: Tom's, the girls' och the children's.",
+   "Skilja its från it's och whose från who's."
+  ],
+  "fakta": [
+   "My = min, your = din, his = hans, her = hennes, its = dess (om djur och saker), our = vår och their = deras.",
+   "Engelskan har inget ord för sin. Du väljer efter ägaren: Tom takes his bag, Anna takes her bag, they take their bags.",
+   "En ägare får apostrof och s: the dog's ball. Ett ord i plural som slutar på s får bara en apostrof: the dogs' balls.",
+   "Plural som inte slutar på s får apostrof och s: the children's toys, the men's room.",
+   "Its och whose har ingen apostrof. It's betyder it is och who's betyder who is."
+  ],
+  "exempel": [
+   [
+    "Hur säger man katternas mat, när det är flera katter?",
+    "Cats slutar på s, så det får bara en apostrof efter: the cats' food."
+   ],
+   [
+    "Hur säger man Lisa och Ali går till sin skola?",
+    "Ägarna är två personer, så sin blir their: Lisa and Ali go to their school."
+   ]
+  ],
+  "ord": [
+   [
+    "whose",
+    "vems"
+   ],
+   [
+    "its",
+    "dess, sin (om djur och saker)"
+   ],
+   [
+    "their",
+    "deras, sin (om flera)"
+   ],
+   [
+    "apostrophe",
+    "apostrof, tecknet '"
+   ]
+  ],
+  "tips": "Fråga dig: en ägare eller flera? En ägare: 's (the girl's). Flera, och ordet slutar på s: s' (the girls')."
+ },
+ "Handla och hitta vägen": {
+  "mal": [
+   "Be om något artigt i en affär eller på ett kafé.",
+   "Fråga vad något kostar och förstå svaret.",
+   "Förstå och ge en vägbeskrivning med left, right, straight on och opposite.",
+   "Hitta vägen och priset i en text med en vägbeskrivning."
+  ],
+  "fakta": [
+   "Artigt: Can I have ..., please? eller I'd like ..., please. Tack heter thank you eller thanks.",
+   "Priset: How much is it? eller How much does it cost? Here you are betyder varsågod, när man räcker fram något.",
+   "Vägen: turn left (sväng vänster), turn right (sväng höger), go straight on (gå rakt fram) och go past (gå förbi).",
+   "Platser: next to (bredvid), opposite (mitt emot), between (mellan) och on the corner (på hörnet)."
+  ],
+  "exempel": [
+   [
+    "Hur frågar du artigt var toaletten är på ett kafé?",
+    "Excuse me, where is the toilet, please? På amerikansk engelska säger man oftare restroom eller bathroom."
+   ]
+  ],
+  "ord": [
+   [
+    "change",
+    "växel, pengarna man får tillbaka"
+   ],
+   [
+    "receipt",
+    "kvitto"
+   ],
+   [
+    "traffic lights",
+    "trafikljus"
+   ],
+   [
+    "crossroads",
+    "korsning"
+   ],
+   [
+    "opposite",
+    "mitt emot"
+   ]
+  ],
+  "tips": "Börja en fråga till någon du inte känner med Excuse me. Det låter artigt och får folk att lyssna."
+ },
+ "NP-träning: ord och grammatik": {
+  "mal": [
+   "Använda vardagsord om skolan, butiker och fritiden.",
+   "Säga vad klockan är och välja in, on eller at.",
+   "Ge korta svar och ställa frågor med do och does.",
+   "Välja mellan presens och dåtid och böja vanliga oregelbundna verb."
+  ],
+  "fakta": [
+   "Klockan: half past three är halv fyra (3:30), a quarter past three kvart över tre (3:15) och a quarter to three kvart i tre (2:45).",
+   "Tid: in före månader, årstider och år (in May), on före dagar (on Monday) och at före klockslag (at six). Plats: in inne i något, on på en yta, at vid en punkt.",
+   "Korta svar upprepar do eller does: Do you play chess? – Yes, I do. / No, I don't.",
+   "Med I, you, we och they (my parents) blir det do, med he, she och it (my sister) does. Efter does står verbet utan -s.",
+   "Yesterday, last night och last summer visar dåtid. Oregelbundna verb har egna former: come → came, run → ran, buy → bought."
+  ],
+  "exempel": [
+   [
+    "Vad är klockan när det är ”half past seven”?",
+    "Half past seven är halv åtta, alltså 7:30."
+   ],
+   [
+    "Svara kort: Does your dad cook? – Yes, he ___.",
+    "Frågan börjar med does, och svaret upprepar det: Yes, he does."
+   ]
+  ],
+  "ord": [
+   [
+    "a quarter",
+    "en kvart, 15 minuter"
+   ],
+   [
+    "past",
+    "över, när du säger vad klockan är"
+   ],
+   [
+    "to",
+    "i, när du säger vad klockan är: a quarter to six"
+   ]
+  ],
+  "tips": "Läs hela meningen innan du väljer: ett ord som yesterday eller every day avgör vilken verbform som passar."
+ }
+}

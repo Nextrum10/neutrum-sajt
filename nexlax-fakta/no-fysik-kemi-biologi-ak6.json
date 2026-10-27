@@ -1,0 +1,232 @@
+{
+ "Kroppens organ": {
+  "mal": [
+   "Säga vad blodets delar gör och skilja på artärer, vener och kapillärer.",
+   "Räkna ut pulsen per minut och ordna luftens väg när du andas in.",
+   "Förklara hur hjärnan, nerverna och reflexerna styr kroppen.",
+   "Beskriva hur ögat, örat och huden tar emot signaler."
+  ],
+  "fakta": [
+   "Röda blodkroppar bär syre, vita blodkroppar försvarar kroppen, blodplättar hjälper blodet att levra sig och plasman är den flytande delen.",
+   "Hjärtat är en muskel. Artärer leder blodet från hjärtat, vener tillbaka, och i de tunna kapillärerna går syre och näring över till cellerna.",
+   "När du andas in drar mellangärdet ihop sig. Luften går genom luftstrupen och luftrören till lungblåsorna, där syret tas upp och koldioxid lämnas.",
+   "Hjärnan och ryggmärgen är det centrala nervsystemet, och nerverna leder signaler till och från dem. En reflex sker innan du hunnit tänka.",
+   "I ögat släpper pupillen in ljuset, linsen gör bilden skarp och näthinnan fångar den. I örat börjar trumhinnan vibrera av ljudet."
+  ],
+  "exempel": [
+   [
+    "Du räknar 20 pulsslag på 15 sekunder. Hur hög är pulsen per minut?",
+    "En minut är 4 · 15 sekunder, så pulsen är 4 · 20 = 80 slag per minut."
+   ]
+  ],
+  "ord": [
+   [
+    "puls",
+    "hur många gånger hjärtat slår på en minut"
+   ],
+   [
+    "ryggmärgen",
+    "en tjock nervsträng inne i ryggraden"
+   ],
+   [
+    "lungblåsor",
+    "små blåsor längst in i lungorna, där syret går över till blodet"
+   ],
+   [
+    "näthinnan",
+    "det tunna lagret längst bak i ögat som fångar bilden"
+   ]
+  ],
+  "tips": "Pulsen per minut: räkna slagen i 15 sekunder och multiplicera med 4."
+ },
+ "Elektricitet och magnetism": {
+  "mal": [
+   "Förklara vad en sluten krets är och vad batteriet, strömbrytaren, lampan och sladden gör.",
+   "Skilja på ledare och isolatorer.",
+   "Förklara skillnaden mellan serie- och parallellkoppling och vad en kortslutning är.",
+   "Förklara magnetpoler, kompassen och elektromagneten."
+  ],
+  "fakta": [
+   "En lampa lyser bara i en sluten krets, där strömmen kan gå hela vägen från batteriets ena pol till den andra. En strömbrytare öppnar och sluter kretsen.",
+   "Metaller leder ström och kallas ledare. Plast och gummi leder inte ström och kallas isolatorer. Strömmen i ett eluttag kan döda.",
+   "I en seriekoppling går strömmen genom lamporna efter varandra, och går en sönder slocknar alla. I en parallellkoppling har varje lampa en egen väg, som i ett hus.",
+   "Lika poler stöter bort varandra och olika poler dras till varandra. Delar du en magnet får du två magneter. Jorden är som en stor magnet, så en kompass pekar ungefär mot norr.",
+   "En elektromagnet är en spole med ström, ofta runt en järnkärna. Den är magnetisk bara när strömmen går, och fler varv tråd gör den starkare."
+  ],
+  "exempel": [
+   [
+    "Tre lampor sitter i serie, och en av dem går sönder. Hur många lyser?",
+    "Ingen. I en seriekoppling bryts hela kretsen när en lampa går sönder."
+   ]
+  ],
+  "ord": [
+   [
+    "sluten krets",
+    "en obruten väg för strömmen, från pol till pol"
+   ],
+   [
+    "isolator",
+    "ett material som inte leder ström"
+   ],
+   [
+    "kortslutning",
+    "när strömmen tar en genväg förbi lampan, så att sladden kan bli het"
+   ],
+   [
+    "spole",
+    "en tråd som är lindad i många varv"
+   ]
+  ],
+  "tips": "Följ strömmen med fingret från batteriets ena pol: kommer du till den andra polen utan avbrott är kretsen sluten."
+ },
+ "Materiens byggnad": {
+  "mal": [
+   "Beskriva hur partiklarna beter sig i fast form, flytande form och gasform.",
+   "Förklara vad som händer med partiklarna när ett ämne värms eller kyls.",
+   "Förklara diffusion och sublimering.",
+   "Känna igen grundämnen, kemiska tecken och tecken på en kemisk reaktion."
+  ],
+  "fakta": [
+   "Allt består av partiklar. I fast form sitter de tätt och vibrerar, i flytande form glider de förbi varandra, och i gasform rör de sig fritt långt ifrån varandra.",
+   "Värme får partiklarna att röra sig snabbare, och kyla får dem att röra sig långsammare. De står aldrig helt stilla.",
+   "Diffusion är när partiklar sprider sig av sig själva. Sublimering är när ett ämne går direkt från fast form till gas.",
+   "Ett grundämne består av bara ett slags atomer. Alla grundämnen står i periodiska systemet, med kemiska tecken som O för syre, H för väte, C för kol och Fe för järn.",
+   "Vid en kemisk reaktion bildas nya ämnen, som när en tändsticka brinner eller järn rostar. Atomerna försvinner inte, de sätts ihop på nya sätt."
+  ],
+  "exempel": [
+   [
+    "Hur många atomer finns i en ammoniakmolekyl, NH₃?",
+    "Fyra: en kväveatom (N) och tre väteatomer (H₃). Den lilla siffran säger hur många av atomen före den."
+   ]
+  ],
+  "ord": [
+   [
+    "partikel",
+    "en mycket liten del som ett ämne består av"
+   ],
+   [
+    "atom",
+    "den minsta delen av ett grundämne"
+   ],
+   [
+    "molekyl",
+    "två eller flera atomer som sitter ihop"
+   ]
+  ],
+  "tips": "Fråga dig om ett nytt ämne har bildats: då är det en kemisk reaktion. Har ämnet bara bytt form, som is som smälter, är det ingen."
+ },
+ "Ekosystem": {
+  "mal": [
+   "Ordna en näringskedja och förklara producent, konsument och nedbrytare.",
+   "Räkna ut hur mycket energi som går vidare i en näringskedja.",
+   "Förklara kretslopp, fotosyntes och biologisk mångfald.",
+   "Förklara ord som art, population och konkurrens."
+  ],
+  "fakta": [
+   "Nästan all energi i ett ekosystem kommer från solen. Producenterna, växter och alger, fångar den. Konsumenterna äter andra organismer.",
+   "I varje led går bara en liten del av energin vidare, ofta räknar man med en tiondel. Resten används upp, och därför finns det färre rovdjur än växtätare.",
+   "Flera näringskedjor som hänger ihop bildar en näringsväv. Nedbrytarna bryter ner döda växter och djur till näring som växterna kan ta upp.",
+   "Växter gör fotosyntes: av koldioxid och vatten gör de socker och syre med hjälp av solljus. Både växter och djur släpper ut koldioxid när de andas.",
+   "En art är individer som kan få ungar som också kan få ungar. En population är alla individer av en art i ett område. Biologisk mångfald är många olika arter och miljöer."
+  ],
+  "exempel": [
+   [
+    "Gräset på en äng fångar 8 000 kJ. En tiondel går vidare i varje led. Hur mycket når harar som äter gräset, och rävar som äter hararna?",
+    "Hararna: 8 000 / 10 = 800 kJ. Rävarna: 800 / 10 = 80 kJ."
+   ]
+  ],
+  "ord": [
+   [
+    "kJ",
+    "kilojoule, en enhet för energi"
+   ],
+   [
+    "konkurrens",
+    "när arter eller individer tävlar om samma mat eller plats"
+   ],
+   [
+    "nedbrytare",
+    "svampar, bakterier och smådjur som bryter ner döda växter och djur"
+   ],
+   [
+    "pollinera",
+    "flytta pollen mellan blommor, så att det kan bli frukt och frön"
+   ]
+  ],
+  "tips": "En tiondel betyder att du delar med 10, ett led i taget."
+ },
+ "Krafter i vardagen": {
+  "mal": [
+   "Känna igen gravitation, friktion och luftmotstånd.",
+   "Säga när friktionen hjälper och när den är besvärlig.",
+   "Räkna ut ungefär hur stor tyngdkraften är på en sak, i newton.",
+   "Förklara att krafter kan ta ut varandra."
+  ],
+  "fakta": [
+   "En kraft kan få en sak att börja röra sig, stanna, byta riktning eller ändra form. Krafter mäts i newton (N) med en kraftmätare.",
+   "Gravitationen drar allt nedåt, mot jorden. På jorden dras varje kilogram ned med ungefär 10 N.",
+   "Friktion bromsar när två ytor glider mot varandra, och den verkar mot rörelsen. Stor friktion ger fäste, liten friktion gör att det glider.",
+   "Luftmotstånd är en kraft från luften som bromsar det som rör sig genom den. En fallskärm bromsar med luftmotstånd.",
+   "När en sak står stilla tar krafterna ut varandra: golvet trycker uppåt lika mycket som gravitationen drar nedåt."
+  ],
+  "exempel": [
+   [
+    "Ungefär hur många newton drar gravitationen i en hund på 12 kg?",
+    "12 · 10 = 120 N."
+   ]
+  ],
+  "ord": [
+   [
+    "newton",
+    "enheten för kraft, N"
+   ],
+   [
+    "friktion",
+    "kraften som bromsar när ytor glider mot varandra"
+   ],
+   [
+    "kraftmätare",
+    "ett verktyg med en fjäder som visar kraften i newton"
+   ]
+  ],
+  "tips": "Fråga dig vad som drar och vad som bromsar: gravitationen drar nedåt, friktion och luftmotstånd bromsar."
+ },
+ "Läsa: djur på vintern": {
+  "mal": [
+   "Hitta svaret på en fråga i en faktatext om ett djur.",
+   "Förstå ord i texten, som att gå i ide.",
+   "Förklara varför något händer, utifrån det som står i texten."
+  ],
+  "fakta": [
+   "Läs hela texten först. Sedan kan du öppna den igen och leta efter svaret på varje fråga.",
+   "Leta efter nyckelord från frågan, till exempel ett namn, en månad eller en plats.",
+   "Skilj på det som står i texten och det du kan räkna ut själv. Svaret på en varför-fråga står ofta efter \"för att\", \"så att\" eller \"därför\".",
+   "På vintern finns det lite mat. Djur klarar det på olika sätt: vissa flyttar, andra sparar energi genom att sova hela vintern."
+  ],
+  "exempel": [
+   [
+    "Texten säger: \"Ekorren gömmer nötter på hösten, så att den har mat på vintern.\" Varför gömmer ekorren nötter?",
+    "För att ha mat på vintern. Svaret står efter \"så att\" i meningen."
+   ]
+  ],
+  "ord": [
+   [
+    "ide",
+    "en gömd plats där ett djur sover hela vintern"
+   ],
+   [
+    "sparlåga",
+    "när något går långsamt och gör av med lite energi"
+   ],
+   [
+    "kompost",
+    "en hög där matrester och löv bryts ner till jord"
+   ],
+   [
+    "energi",
+    "det kroppen behöver för att orka, och som den får ur maten"
+   ]
+  ],
+  "tips": "Gå tillbaka till texten för varje fråga, och svara inte bara ur minnet."
+ }
+}

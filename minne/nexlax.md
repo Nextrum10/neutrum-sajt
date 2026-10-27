@@ -811,3 +811,62 @@ Reglerna:
      inte banken: september stängdes i bokföringen 2026-10-03, och
      provets pass ligger i en stängd månad. `rls-test.sql` öppnar sedan
      dess stängda månader överst, i sin egen transaktion.
+
+## Fas 25: fler frågor från åk 6, faktabladen och ledet (2026-10-27)
+
+Leo: "Nexläx där ska vi lägga in flera uppgifter, i matte svenska och engelska
+årkurs 6 och uppåt. Inför varje nytt område man gör på nexläx ska de finnas ett
+kort strukturerat fakta blad ... lite som faktabladen innan man genomför ett nytt
+område på matteboken. På sektionerna där de exempelvis står 0/3 eller 0/2 sätt
+ihop alla de uppgifterna på sektionen i ledet av uppgifter så man ser hur mycket
+man har kvar av uppgifter på varje sektion som duolingo har."
+
+1. **Banken.** Nio nya filer, `verktyg/uppgiftsbanken/fortsattning_<ämne>_<åk>.py`
+   (matematik, svenska och engelska i åk 6–7, åk 8–9 och gymnasiet), alla som
+   `TILLAGG`: nya områden sist i banor som används, ingen fråga som fanns ändrad.
+   126 vanliga nivåer, 51 Mästarprov och repetitioner och 1 247 frågor; banken har
+   sedan 68 banor, 989 vanliga nivåer och 8 762 frågor. Migrationen är
+   `20261027120000_uppgiftsbanken_fortsattning.sql` (ur `bygg-uppgifter.py --sql`)
+   och körs **efter merge**, som de förra bankerna; vyerna tål att den saknas, och
+   faktabladen för de nya områdena ligger då oanvända. **Ordningen i NP-spåret**:
+   verktyget läser filerna i namnordning, så `fortsattning_*` kommer före `np_*`, och
+   26 nivåer i NP-spåret i nio banor fick ordningstalet höjt med 8–9. Varje nivå där
+   är öppen, så inget låses (samma sak hände med `fler_*` i Fas 23.5).
+2. **Granskningen.** Nio granskare, en per fil, löste varje fråga själva innan de
+   läste facit: **inget facit var fel**. De rättade ett femtiotal formuleringar (en
+   förklaring som pekade på "den andra meningen" fast alternativen blandas, ett
+   sant-påstående som inte gällde alltid, ett fel alternativ som gick att försvara)
+   och vidgade godtagna svar (enheter, "x = −2", "f′(2) = −1/4", "alla husen",
+   "hubris", räknarens π med två decimaler). Gränsfallen de lät stå, som en lärare
+   bör läsa, står i deras rapporter i PR:en: bland annat kombinatorik och algebra i
+   åk 6 som ligger över Lgr22 4–6, talföljder som bara ges med sina första tal,
+   epokgränser i litteraturhistorien, och "vers" om en strof.
+3. **Facitprovet, lokalt före merge** (2026-10-27): en databas byggd ur alla 227
+   migrationer, och `intern.niva_ratta` rättade facit rätt på alla 8 762 aktiva
+   frågor; för varje valfråga godtogs exakt ett alternativ, omvänd ordning, bytta
+   par och nonsens nekades, och `intern.niva_fraga_ut` lämnade ut frågorna utan
+   facit. 0 fel. Docker Hub och ECR svarade 429 och "Data limit exceeded"; bilden
+   gick att hämta från Googles spegel, `BILD=mirror.gcr.io/supabase/postgres:15.8.1.085
+   verktyg/lokal-databas.sh bygg` (`minne/genererat-och-ci.md`).
+4. **Faktabladen.** Ett blad per område i hela banken, 470 av 470, i
+   `verktyg/faktablad/*.py` med `blad(ämne, årskurs, område, mal, fakta, exempel,
+   ord, tips)` ur `fakta.py`: vad man lär sig (2–4 rader), vad man behöver veta
+   (2–5), högst två uträknade exempel, högst sex ord och ett tips, med längdgränser
+   så att bladet går att läsa på en telefon före första frågan. `verktyg/bygg-faktablad.py`
+   prövar att varje område har ett blad och varje blad ett område och skriver
+   `nexlax-fakta/<ämne>-<årskurs>.json` (`--skriv`); `--kolla` står i CI, och
+   `--saknas`, `--omraden` och `--omrade` hjälper den som skriver. **En fil i sajten
+   och ingen tabell**: ett område är text på nivån, bladet är inte hemligt, och
+   barnets roll når inga tabeller. NexLäx hämtar banans fil när banan visas
+   (`laddaFakta`), visar bladet en gång när ett nytt område börjar
+   (`nyttOmråde`, före första frågan, med Börja) och under lampan i områdets
+   huvud. Bladen skrevs med AI och granskades mot områdets frågor: inga sakfel som
+   motsade facit, men ett åttiotal för breda regler ("alltid" där det finns
+   undantag), exempel som lämnade ut en fråga ordagrant och "Läs frågorna först",
+   som inte går att följa: NexLäx visar texten först och frågorna efter (alla
+   ställen omskrivna, 26 rader).
+5. **Ledet.** Varje område har ett band med ett streck per nivå, och strecken fylls
+   med frågorna som är klara (`ledHtml`, `områdetsUppgifter`), så man ser hur mycket
+   som är kvar av området; noden på vägen har en ring som fylls på samma sätt.
+   Ingenting sparas för det: det räknas ur försöken, som stjärnorna.
+6. Allt är skrivet med AI och har inte lästs av någon som undervisar i ämnet.

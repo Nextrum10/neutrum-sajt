@@ -1,0 +1,449 @@
+{
+ "Ordklasser": {
+  "mal": [
+   "Känna igen adverb och prepositioner i en mening.",
+   "Skilja adverb från adjektiv.",
+   "Böja verb i infinitiv, presens, preteritum, supinum och imperativ.",
+   "Skilja starka verb från svaga."
+  ],
+  "fakta": [
+   "Ett adverb beskriver hur, var eller när något händer: försiktigt, hemma, snart. Det kan också förstärka ett adjektiv: väldigt trött.",
+   "Ett adjektiv beskriver ett substantiv: en glad flicka. Ett adverb beskriver ett verb: hon sjöng glatt. Adverb som bildas av adjektiv får ofta -t.",
+   "En preposition visar ofta läge, riktning eller tid och står före ett substantiv eller pronomen: på bordet, till mig, efter maten.",
+   "Verbets former: att läsa (infinitiv), läser (presens), läste (preteritum), har läst (supinum med har) och Läs! (imperativ).",
+   "Svaga verb får en ändelse i preteritum: köpa – köpte. Starka verb byter vokal: bita – bet – bitit."
+  ],
+  "exempel": [
+   [
+    "Böj ”dricka” i preteritum och supinum.",
+    "Preteritum: drack. Supinum: har druckit. Vokalen byts, så dricka är ett starkt verb."
+   ],
+   [
+    "Är ”tyst” adjektiv eller adverb i ”Katten smög tyst förbi”?",
+    "Adverb, för ordet beskriver hur katten smög, alltså verbet."
+   ]
+  ],
+  "ord": [
+   [
+    "perfekt",
+    "har + supinum: har sovit"
+   ],
+   [
+    "starkt verb",
+    "byter vokal i preteritum: bära – bar"
+   ],
+   [
+    "svagt verb",
+    "får en ändelse i preteritum: prata – pratade"
+   ]
+  ],
+  "tips": "Är du osäker på adjektiv eller adverb, fråga vad ordet beskriver: en sak (adjektiv) eller hur något görs (adverb)."
+ },
+ "Meningsbyggnad": {
+  "mal": [
+   "Hitta bisatser och ordet som inleder dem.",
+   "Placera inte och aldrig rätt i en bisats.",
+   "Upptäcka och rätta skarvkomma.",
+   "Välja sambandsord som visar tid, orsak, följd, motsättning och tillägg."
+  ],
+  "fakta": [
+   "En huvudsats kan stå ensam som en mening. En bisats kan inte det och börjar ofta med att, när, eftersom, om eller som.",
+   "I en bisats står inte och aldrig före verbet: ”…att hon inte kommer”. I en huvudsats står de efter verbet: ”Hon kommer inte.”",
+   "Står bisatsen först kommer huvudsatsens verb direkt efter den: ”När det blev mörkt tände vi lampan.”",
+   "Skarvkomma är ett komma mellan två huvudsatser. Rätta med punkt eller ett sambandsord: ”Bussen var full, så vi fick stå.”",
+   "Sambandsord visar hur meningar hänger ihop, till exempel tid (sedan), orsak (eftersom), följd (alltså), motsättning (ändå) och tillägg (även)."
+  ],
+  "exempel": [
+   [
+    "Rätta skarvkommat: ”Jag tappade nyckeln, jag kom inte in.”",
+    "”Jag tappade nyckeln. Jag kom inte in.” Eller med ett sambandsord: ”Jag tappade nyckeln, så jag kom inte in.”"
+   ],
+   [
+    "Sätt in aldrig i ”Jag vet att han fuskar.”",
+    "”Jag vet att han aldrig fuskar.” I en bisats står aldrig före verbet."
+   ]
+  ],
+  "ord": [
+   [
+    "sats",
+    "en del av en mening med ett eget verb"
+   ],
+   [
+    "huvudsats",
+    "en sats som kan stå ensam"
+   ],
+   [
+    "bisats",
+    "en sats som inte kan stå ensam"
+   ],
+   [
+    "skarvkomma",
+    "ett komma mellan två huvudsatser där det borde stå punkt eller ett sambandsord"
+   ]
+  ],
+  "tips": "Varje sats har ett eget böjt verb, som läser eller gick: räkna dem när du ska räkna satserna."
+ },
+ "Stavning": {
+  "mal": [
+   "Stava ord som många skriver fel, till exempel där g inte hörs.",
+   "Veta när en bokstav ska dubbleras i längre ord.",
+   "Stava lånord som uttalas på ett annat sätt än de skrivs."
+  ],
+  "fakta": [
+   "I en del ord skrivs ett g som inte hörs: någon, något, mig, dig. Lär dig hur ordet ser ut.",
+   "Efter en kort vokal blir det ofta dubbel konsonant, också mitt i långa ord: tillsammans, alldeles.",
+   "I sammansatta ord står delarna oftast kvar hela, också där två likadana bokstäver möts: för + rätt = förrätt.",
+   "Lånord stavas ofta som i språket de kommer från: ch i chef och g i giraff uttalas med sj-ljud, och -tion i station uttalas ”schon”."
+  ],
+  "exempel": [
+   [
+    "Hur stavas ordet för en mindre rubrik under huvudrubriken?",
+    "Underrubrik, med två r: under + rubrik, och båda delarna står kvar hela."
+   ]
+  ],
+  "ord": [
+   [
+    "lånord",
+    "ett ord som svenskan har tagit från ett annat språk"
+   ],
+   [
+    "ordbild",
+    "hur ett ord ser ut när det är skrivet"
+   ],
+   [
+    "sj-ljud",
+    "ljudet i början av sju, som kan stavas sj, sk, skj, stj, sch eller ch"
+   ]
+  ],
+  "tips": "Skriv ordet på två sätt på ett papper och titta: ofta ser du direkt vilket som ser rätt ut."
+ },
+ "Ordförråd": {
+  "mal": [
+   "Förstå vad förstavelser som o- och miss- gör med ett ord.",
+   "Bilda nya ord med ändelser som -het, -lig och -ning.",
+   "Välja formella eller vardagliga ord efter situationen."
+  ],
+  "fakta": [
+   "En förstavelse, prefix, sätts före ordet och ändrar betydelsen: o- betyder inte (otydlig), miss- betyder fel eller dåligt (misslyckas).",
+   "En ändelse, suffix, sätts efter ordet och kan byta ordklass: -het och -ning gör substantiv (ärlig → ärlighet, simma → simning), -lig gör adjektiv (dag → daglig).",
+   "Ändelsen -bar betyder att något går att göra: ätbar, tvättbar.",
+   "Formellt språk passar i brev till myndigheter, ansökningar och sakliga texter. Vardagligt språk passar med kompisar.",
+   "Vardagliga ord har ofta mer neutrala synonymer: kolla – titta, schysst – bra, plugga – studera."
+  ],
+  "exempel": [
+   [
+    "Bilda substantiv av ”säker” med -het och av ”tävla” med -ing.",
+    "Säkerhet och tävling. Ändelserna gör om ett adjektiv och ett verb till substantiv."
+   ],
+   [
+    "Skriv om mer formellt: ”Vi vill kolla om biblioteket har öppet.”",
+    "”Vi skulle vilja veta om biblioteket har öppet.”"
+   ]
+  ],
+  "ord": [
+   [
+    "prefix",
+    "förstavelse, som o- och miss-"
+   ],
+   [
+    "suffix",
+    "ändelse, som -het och -lig"
+   ],
+   [
+    "formell",
+    "stram och korrekt, som i en ansökan"
+   ],
+   [
+    "vardaglig",
+    "som man pratar med vänner"
+   ]
+  ],
+  "tips": "Tänk på vem som ska läsa: en okänd vuxen eller en myndighet ska ha formellt språk, en kompis vardagligt."
+ },
+ "Textsorter och läsförståelse": {
+  "mal": [
+   "Känna igen textsorter och vad de vill: berätta, instruera, argumentera eller beskriva.",
+   "Förklara hur en nyhetsartikel är uppbyggd.",
+   "Hitta fakta och orsaker i en nyhetsartikel."
+  ],
+  "fakta": [
+   "Varje textsort har ett syfte: berättande underhåller, instruerande förklarar hur man gör, argumenterande vill övertyga och beskrivande visar hur något är.",
+   "En nyhetsartikel har det viktigaste först, i rubriken och ingressen, och detaljerna längre ner.",
+   "En nyhet svarar på frågorna vad, vem, var, när, hur och varför.",
+   "Citat i en nyhet låter de som var med berätta med egna ord.",
+   "Insändare och debattartiklar är argumenterande och har en tes. En faktatext bygger på uppgifter som går att kontrollera."
+  ],
+  "exempel": [
+   [
+    "Vilken textsort är en bruksanvisning till en ny mobil?",
+    "Instruerande, för den förklarar hur man gör."
+   ]
+  ],
+  "ord": [
+   [
+    "textsort",
+    "en sorts text med ett visst syfte och en viss form"
+   ],
+   [
+    "ingress",
+    "första stycket i en nyhet, med det viktigaste kort"
+   ],
+   [
+    "citat",
+    "någons egna ord, återgivna exakt"
+   ]
+  ],
+  "tips": "Fråga dig först vad texten vill att du ska göra eller veta, så hittar du textsorten."
+ },
+ "Ordklasser i meningen": {
+  "mal": [
+   "Avgöra ett ords ordklass utifrån hur det används i meningen.",
+   "Byta ut substantiv mot rätt pronomen.",
+   "Skilja konjunktioner från subjunktioner."
+  ],
+  "fakta": [
+   "Ett adjektiv beskriver ett substantiv: en blek måne. Ett adverb beskriver ett verb eller ett adjektiv: lyste starkt, väldigt blek.",
+   "Pronomen ersätter substantiv. Som subjekt: jag, du, han, hon, vi, de. Som objekt: mig, dig, honom, henne, oss, dem.",
+   "Konjunktioner binder ihop likvärdiga led, som två ord eller två huvudsatser: och, men, eller, för, så.",
+   "Subjunktioner inleder en bisats: att, om, medan, innan, därför att.",
+   "Prepositioner visar ofta läge eller tid: på, framför, efter. Räkneord är tal: sju, sjunde."
+  ],
+  "exempel": [
+   [
+    "Byt namnen mot pronomen: ”Lisa ringde Omar.”",
+    "”Hon ringde honom.” Lisa är subjekt och blir hon, Omar är objekt och blir honom."
+   ],
+   [
+    "Konjunktion eller subjunktion: ”medan” i ”Jag läste medan hon sov”?",
+    "Subjunktion, för ”medan hon sov” är en bisats som inte kan stå ensam."
+   ]
+  ],
+  "ord": [
+   [
+    "konjunktion",
+    "binder ihop två likvärdiga led"
+   ],
+   [
+    "subjunktion",
+    "inleder en bisats"
+   ],
+   [
+    "led",
+    "en del av en mening, som ett ord eller en sats"
+   ]
+  ],
+  "tips": "Testa med inte: i en bisats står inte före verbet (”eftersom hon inte kom”), och då är ordet som inleder den en subjunktion."
+ },
+ "Berättande text": {
+  "mal": [
+   "Skilja jag-berättare från tredjepersonsberättare.",
+   "Känna igen miljö och stämning, och känslor som visas genom handlingar.",
+   "Förklara inre och yttre konflikt.",
+   "Ordna en berättelses delar: inledning, problem, höjdpunkt och avslutning."
+  ],
+  "fakta": [
+   "En jag-berättare berättar om sig själv med jag. En tredjepersonsberättare berättar om andra med han, hon eller namn.",
+   "Jag-berättaren är ofta en person som författaren har hittat på. Läsaren kommer nära personens tankar.",
+   "En konflikt är ett problem för huvudpersonen. En inre konflikt finns i personen själv, en yttre är mot något eller någon annan.",
+   "Berättelsens delar kommer oftast i ordningen inledning, problem, höjdpunkt och avslutning.",
+   "Känslor visas ofta genom vad personerna gör, inte genom att de sägs rakt ut."
+  ],
+  "exempel": [
+   [
+    "”Stormen slet loss båten, och Leo kämpade för att ta sig i land.” Vilken sorts konflikt är det?",
+    "En yttre konflikt, mellan Leo och naturen."
+   ],
+   [
+    "Vad visar ”Siri tittade på klockan för tionde gången och trummade med fingrarna” om Siri?",
+    "Att hon är otålig eller nervös. Det sägs inte, men det hon gör visar det."
+   ]
+  ],
+  "ord": [
+   [
+    "miljö",
+    "platsen och tiden där berättelsen utspelar sig"
+   ],
+   [
+    "stämning",
+    "den känsla texten ger läsaren"
+   ],
+   [
+    "huvudperson",
+    "den som berättelsen mest handlar om"
+   ],
+   [
+    "replik",
+    "det en person säger i ett samtal"
+   ]
+  ],
+  "tips": "Titta på pronomenen: berättar den som upplever allt med jag är det en jag-berättare."
+ },
+ "Läsa debatt": {
+  "mal": [
+   "Hitta tesen i en insändare.",
+   "Följa skribentens skäl och förslag.",
+   "Förstå hur ett svar bemöter någon annans förslag.",
+   "Ordna delarna i en debattext."
+  ],
+  "fakta": [
+   "En insändare är en kort åsiktstext från en läsare. Den har en tes, skäl för tesen och ofta ett förslag.",
+   "Tesen står oftast i början eller slutet. Fråga dig vad skribenten vill att någon ska göra eller tycka.",
+   "Ord som för det första och för det andra visar var skälen börjar.",
+   "Ett svar på någon annans debattext återger först förslaget och visar sedan varför skribenten håller med eller inte.",
+   "Allt i en debattext finns där av ett skäl: fråga dig vad skribenten vill visa med ett exempel eller ett förslag."
+  ],
+  "exempel": [
+   [
+    "”Skolan borde ha frukt i matsalen på eftermiddagen. För det första blir många hungriga efter lunch.” Vad är tes och vad är skäl?",
+    "Tes: skolan borde ha frukt på eftermiddagen. Skäl: många blir hungriga efter lunch."
+   ]
+  ],
+  "ord": [
+   [
+    "tes",
+    "skribentens huvudåsikt"
+   ],
+   [
+    "skäl",
+    "det som talar för tesen"
+   ],
+   [
+    "replik",
+    "ett svar på någon annans debattext"
+   ],
+   [
+    "uppmaning",
+    "när texten säger åt någon att göra något"
+   ]
+  ],
+  "tips": "Skribenten kan hålla med om problemet men inte om lösningen: läs noga vad hen säger ja och nej till."
+ },
+ "Satsdelar": {
+  "mal": [
+   "Hitta predikatet, satsens verb.",
+   "Hitta subjektet, också när det står efter predikatet.",
+   "Hitta objektet och adverbial som säger när, var, hur och varför.",
+   "Dela upp en hel mening i satsdelar."
+  ],
+  "fakta": [
+   "Predikatet är verbet i satsen, det som händer eller görs. Börja alltid med att hitta det.",
+   "Subjektet svarar på frågan vem eller vad + predikatet: Vem sjunger? Elin. Det kan stå efter predikatet: I kväll sjunger Elin.",
+   "Objektet svarar på frågan vad eller vem + predikatet + subjektet: Vad köpte Elin? En cykel.",
+   "Adverbial säger när, var, hur eller varför något händer: i går, i skolan, försiktigt, för att hinna.",
+   "En sats har alltid ett predikat, men inte alltid ett objekt: Hon sover."
+  ],
+  "exempel": [
+   [
+    "Dela upp ”Efter lunchen spelade Ali gitarr i musiksalen.”",
+    "Predikat: spelade. Subjekt: Ali. Objekt: gitarr. Adverbial: efter lunchen, som säger när, och i musiksalen, som säger var."
+   ]
+  ],
+  "ord": [
+   [
+    "predikat",
+    "satsens verb"
+   ],
+   [
+    "subjekt",
+    "den eller det som gör något eller är något"
+   ],
+   [
+    "objekt",
+    "den eller det som något görs med"
+   ],
+   [
+    "adverbial",
+    "satsdel som säger när, var, hur eller varför"
+   ]
+  ],
+  "tips": "Hitta predikatet först. Sedan går det lätt att fråga dig fram till subjektet och objektet."
+ },
+ "Ordens nyanser": {
+  "mal": [
+   "Välja det ord som säger exakt det du menar.",
+   "Ordna synonymer efter hur starka de är.",
+   "Känna igen värdeladdade ord, både positiva och negativa.",
+   "Se hur ordvalet kan påverka vad läsaren tycker."
+  ],
+  "fakta": [
+   "Synonymer betyder ungefär samma sak, men de kan vara olika starka: glad, lycklig, överlycklig.",
+   "Ett precist ord ger en tydligare bild. ”Han rusade” säger mer än ”han gick”.",
+   "Ett värdeladdat ord visar vad skribenten tycker: pratglad låter positivt och pratsjuk negativt.",
+   "Neutrala ord passar i sakliga texter, som nyheter. Värdeladdade ord är vanliga i reklam och i texter som vill övertyga.",
+   "En eufemism är ett mildare ord för något obehagligt, som mindre bemedlad i stället för fattig."
+  ],
+  "exempel": [
+   [
+    "Ordna från svagast till starkast: ösregna, dugga, regna.",
+    "Dugga, regna, ösregna. Dugga är lite regn och ösregna är väldigt mycket regn."
+   ]
+  ],
+  "ord": [
+   [
+    "synonym",
+    "ett ord som betyder ungefär samma sak som ett annat"
+   ],
+   [
+    "nyans",
+    "en liten skillnad i betydelse eller känsla"
+   ],
+   [
+    "värdeladdat ord",
+    "ett ord som visar om något är bra eller dåligt"
+   ],
+   [
+    "neutralt ord",
+    "ett ord som inte tar ställning"
+   ],
+   [
+    "eufemism",
+    "ett mildare ord för något obehagligt eller känsligt"
+   ]
+  ],
+  "tips": "Byt ut ordet mot en synonym och läs meningen igen. Låter den snällare eller elakare? Då är orden olika laddade."
+ },
+ "Källkritik": {
+  "mal": [
+   "Ta reda på vem som står bakom en text och varför den är skriven.",
+   "Skilja på faktapåståenden och åsikter.",
+   "Skilja på en förstahandskälla och ett rykte.",
+   "Jämföra två källor och se var de säger emot varandra."
+  ],
+  "fakta": [
+   "Fråga källan: Vem står bakom den? Varför är den skriven? När är den skriven? Hur vet avsändaren det hen påstår?",
+   "Ett faktapåstående går att kontrollera, som ett datum eller ett pris. En åsikt säger vad någon tycker.",
+   "En förstahandskälla har själv varit med eller tagit fram uppgiften. Den som bara återger vad någon annan sagt är en andrahandskälla.",
+   "Står samma sak på flera ställen kan de ha kopierat varandra. Leta efter den som tog fram uppgiften.",
+   "Var extra noga med inlägg som vill göra dig arg eller rädd och som ber dig dela dem."
+  ],
+  "exempel": [
+   [
+    "En webbplats som säljer cyklar skriver att deras cykel vann ett test. Vad bör du fråga dig?",
+    "Vem som gjorde testet och om det står i någon annan källa. Avsändaren vill sälja cykeln, så den har ett eget intresse."
+   ]
+  ],
+  "ord": [
+   [
+    "avsändare",
+    "den som står bakom en text"
+   ],
+   [
+    "syfte",
+    "varför texten är skriven: informera, övertyga, sälja eller underhålla"
+   ],
+   [
+    "förstahandskälla",
+    "någon som själv var med eller tog fram uppgiften"
+   ],
+   [
+    "andrahandskälla",
+    "någon som återger det en annan har sagt eller skrivit"
+   ],
+   [
+    "källkritik",
+    "att pröva hur mycket du kan lita på en källa"
+   ]
+  ],
+  "tips": "Ju mer en text vill få dig att känna något, desto viktigare är det att kontrollera den i en annan källa."
+ }
+}

@@ -1,0 +1,207 @@
+{
+ "Mat och café": {
+  "mal": [
+   "Säga vad du och andra gillar med gustar.",
+   "Välja gusta eller gustan.",
+   "Beställa på ett café och be om notan.",
+   "Böja querer och fråga vad något kostar."
+  ],
+  "fakta": [
+   "Me gusta betyder ordagrant det behagar mig, så det man gillar styr verbet: me gusta el arroz, me gustan las uvas.",
+   "Före gusta står vem som gillar: me (mig), te (dig), le (honom, henne, usted), nos (oss), os (er), les (dem).",
+   "Följs gusta av ett verb blir det gusta: Me gusta nadar.",
+   "Querer (vilja) byter e mot ie: quiero, quieres, quiere, queremos, queréis, quieren.",
+   "Vad kostar? heter ¿Cuánto cuesta …? om en sak och ¿Cuánto cuestan …? om flera."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'Min bror gillar tomater'?",
+    "A mi hermano le gustan los tomates. Tomaterna är flera, så det blir gustan."
+   ],
+   [
+    "Beställ en apelsinjuice på spanska.",
+    "Quiero un zumo de naranja, por favor. I Latinamerika säger man jugo i stället för zumo."
+   ]
+  ],
+  "ord": [
+   [
+    "el camarero",
+    "servitören"
+   ],
+   [
+    "la taza",
+    "koppen"
+   ],
+   [
+    "tener sed",
+    "vara törstig"
+   ]
+  ],
+  "tips": "Fråga dig vad det är man gillar: en sak eller ett verb ger gusta, flera saker ger gustan."
+ },
+ "Vardagen och reflexiva verb": {
+  "mal": [
+   "Böja reflexiva verb i presens med me, te, se, nos och os.",
+   "Berätta om din dag, från du vaknar tills du lägger dig.",
+   "Säga klockslag med a la och a las.",
+   "Böja verb där o blir ue och e blir ie eller i."
+  ],
+  "fakta": [
+   "Ett reflexivt verb har -se i grundformen, som peinarse (kamma sig).",
+   "Pronomenet står före verbet och följer personen: me peino, te peinas, se peina, nos peinamos, os peináis, se peinan.",
+   "Vissa byter vokal i stammen: acostarse ger te acuestas, despertarse te despiertas och vestirse te vistes.",
+   "Klockan: a la una (klockan ett), men a las dos, a las tres och så vidare."
+  ],
+  "exempel": [
+   [
+    "Fyll i acostarse: Nosotros ___ a las once.",
+    "nos acostamos. I vi-formen byts o inte mot ue."
+   ],
+   [
+    "Hur säger du 'Min bror klär på sig kvart över sju'?",
+    "Mi hermano se viste a las siete y cuarto."
+   ]
+  ],
+  "ord": [
+   [
+    "por la mañana",
+    "på morgonen"
+   ],
+   [
+    "por la tarde",
+    "på eftermiddagen"
+   ],
+   [
+    "por la noche",
+    "på kvällen eller natten"
+   ],
+   [
+    "y cuarto",
+    "kvart över"
+   ]
+  ],
+  "tips": "Y media är halv efter timmen: a las siete y media är halv åtta, inte halv sju."
+ },
+ "Staden och vägbeskrivning": {
+  "mal": [
+   "Säga vad platser i staden heter på spanska.",
+   "Välja hay eller está.",
+   "Säga var något ligger, som bredvid eller mittemot.",
+   "Fråga efter vägen och förstå en vägbeskrivning."
+  ],
+  "fakta": [
+   "Hay betyder det finns, både om en sak och om flera: Hay un banco. Hay dos bancos.",
+   "Está säger var en bestämd sak ligger: El museo está en el centro.",
+   "De + el blir del: cerca del hotel. Med la blir det de la: cerca de la plaza.",
+   "Var något ligger: al lado de (bredvid), enfrente de (mittemot), entre (mellan), cerca de (nära), lejos de (långt från).",
+   "Vägen: sigue recto (fortsätt rakt fram), gira a la derecha (sväng till höger), gira a la izquierda (sväng till vänster)."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'Det finns en restaurang nära stationen'?",
+    "Hay un restaurante cerca de la estación."
+   ],
+   [
+    "Vad betyder 'Toma la primera calle a la izquierda'?",
+    "Ta första gatan till vänster."
+   ]
+  ],
+  "ord": [
+   [
+    "la calle",
+    "gatan"
+   ],
+   [
+    "la plaza",
+    "torget"
+   ],
+   [
+    "la biblioteca",
+    "biblioteket"
+   ],
+   [
+    "la esquina",
+    "hörnet"
+   ]
+  ],
+  "tips": "Efter hay står inte el eller la: hay un parque, men el parque está …"
+ },
+ "Framtid med ir a": {
+  "mal": [
+   "Säga vad du ska göra med ir a och ett verb i grundform.",
+   "Böja ir i presens.",
+   "Planera med tidsuttryck för framtiden."
+  ],
+  "fakta": [
+   "Ir (gå, åka) i presens: voy, vas, va, vamos, vais, van.",
+   "Framtid: ir + a + verbet i grundform. Voy a cantar betyder jag ska sjunga.",
+   "Grundformen slutar på -ar, -er eller -ir och böjs inte: vamos a correr, van a bailar.",
+   "Tidsuttryck: mañana (i morgon), el lunes (på måndag), este verano (i sommar), el mes que viene (nästa månad).",
+   "Ett reflexivt verb får pronomenet sist i grundformen, Voy a ducharme, eller före ir: Me voy a duchar."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'På söndag ska vi titta på tv'?",
+    "El domingo vamos a ver la tele."
+   ],
+   [
+    "Fyll i ir: ¿Vosotros ___ a venir a la fiesta?",
+    "vais. Vosotros är ni, och formen är vais."
+   ]
+  ],
+  "ord": [
+   [
+    "que viene",
+    "nästa, om tid: el mes que viene"
+   ],
+   [
+    "el fin de semana",
+    "helgen"
+   ],
+   [
+    "las vacaciones",
+    "lovet, semestern"
+   ]
+  ],
+  "tips": "Ir a kan också betyda att du åker någonstans: Voy a Madrid betyder jag åker till Madrid."
+ },
+ "Dåtid med pretérito indefinido": {
+  "mal": [
+   "Böja regelbundna verb i pretérito indefinido.",
+   "Böja ir, ser och hacer i dåtid.",
+   "Berätta vad som hände med tidsuttryck för dåtid."
+  ],
+  "fakta": [
+   "-ar-verb: canté, cantaste, cantó, cantamos, cantasteis, cantaron.",
+   "-er- och -ir-verb: viví, viviste, vivió, vivimos, vivisteis, vivieron.",
+   "Accenten är viktig: canto är jag sjunger, men cantó är han eller hon sjöng.",
+   "Ir och ser har samma former: fui, fuiste, fue, fuimos, fuisteis, fueron. Hacer: hice, hiciste, hizo, hicimos, hicisteis, hicieron.",
+   "Verb på -gar får -gué i jag-formen, så att g-ljudet står kvar: llegar blir llegué."
+  ],
+  "exempel": [
+   [
+    "Fyll i salir i dåtid: El sábado pasado nosotros ___ con unos amigos.",
+    "salimos."
+   ],
+   [
+    "Hur säger du 'I går gjorde vi läxorna'?",
+    "Ayer hicimos los deberes."
+   ]
+  ],
+  "ord": [
+   [
+    "el mes pasado",
+    "förra månaden"
+   ],
+   [
+    "el lunes pasado",
+    "i måndags"
+   ],
+   [
+    "hace dos días",
+    "för två dagar sedan"
+   ]
+  ],
+  "tips": "Ser du ett tidsuttryck som ayer eller el mes pasado ska verbet stå i dåtid."
+ }
+}

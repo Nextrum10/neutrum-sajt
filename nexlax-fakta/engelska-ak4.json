@@ -1,0 +1,193 @@
+{
+ "Ordförråd": {
+  "mal": [
+   "Säga färger, tal upp till tjugo och djur på engelska.",
+   "Säga veckodagarna och månaderna i rätt ordning.",
+   "Säga vad de i familjen och kroppens delar heter.",
+   "Säga vad mat och dryck heter och använda orden i en mening."
+  ],
+  "fakta": [
+   "Talen 13–19 slutar på -teen, som fourteen och sixteen. 20 heter twenty.",
+   "Månaderna: January, February, March, April, May, June, July, August, September, October, November, December.",
+   "Veckodagar och månader skrivs med stor första bokstav på engelska.",
+   "Några ord byter form i plural: one foot, two feet och one tooth, two teeth."
+  ],
+  "exempel": [
+   [
+    "Vilken månad kommer efter October?",
+    "November."
+   ],
+   [
+    "Hur säger du 'Min pappa har gröna ögon'?",
+    "My dad has green eyes."
+   ]
+  ],
+  "ord": [
+   [
+    "birthday",
+    "födelsedag"
+   ],
+   [
+    "lunch",
+    "lunch, mitt på dagen"
+   ],
+   [
+    "dinner",
+    "middag, på kvällen"
+   ]
+  ],
+  "tips": "Grey och gray är samma färg: grey är brittisk stavning och gray amerikansk."
+ },
+ "Verb": {
+  "mal": [
+   "Välja am, is eller are efter vem det handlar om.",
+   "Välja have eller has.",
+   "Säga vad någon kan med can.",
+   "Ställa frågor med Are you …? och Do you have …?"
+  ],
+  "fakta": [
+   "Be i presens: I am, you are, he is, she is, it is, we are, they are.",
+   "Have i presens: I have, you have, we have, they have, men he has, she has och it has.",
+   "Ett namn eller ord som my brother räknas som he eller she: My brother is tall. My brother has a dog.",
+   "Efter can kommer verbet som det är, och can får aldrig -s: She can run.",
+   "En fråga med be börjar med verbet: Is she at home? En fråga om have börjar ofta med Do: Do you have a sister?"
+  ],
+  "exempel": [
+   [
+    "Fyll i am, is eller are: The dogs ___ hungry.",
+    "are. The dogs är flera, alltså they, och då blir det are."
+   ],
+   [
+    "Fyll i have eller has: Lisa ___ a brown horse.",
+    "has. Lisa är en she, och efter she står has."
+   ]
+  ],
+  "ord": [
+   [
+    "be",
+    "vara; am, is och are är former av be"
+   ],
+   [
+    "has",
+    "har, efter he, she och it"
+   ]
+  ],
+  "tips": "Byt ut namnet mot he, she eller they i huvudet, så ser du vilken form som passar."
+ },
+ "Övningsblad: dagar och människor": {
+  "mal": [
+   "Stava veckodagarna och månaderna rätt, med stor bokstav.",
+   "Säga vilken dag eller månad som kommer före eller efter.",
+   "Beskriva hur någon ser ut med have, has och is."
+  ],
+  "fakta": [
+   "Veckans dagar: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.",
+   "Wednesday har ett d som man inte hör: Wed-nes-day.",
+   "Månaderna skrivs också med stor bokstav: January, March, October.",
+   "Have och has säger vad någon har (She has short hair), och is säger hur någon är (My dad is old).",
+   "Hair räknas som en sak: She has long hair, utan a och utan -s."
+  ],
+  "exempel": [
+   [
+    "Vilken månad kommer efter September?",
+    "October."
+   ],
+   [
+    "Hur säger du 'Min morfar har vitt hår'?",
+    "My grandpa has white hair."
+   ]
+  ],
+  "ord": [
+   [
+    "eyes",
+    "ögon"
+   ],
+   [
+    "glasses",
+    "glasögon"
+   ],
+   [
+    "beard",
+    "skägg"
+   ]
+  ],
+  "tips": "En lång person är tall, men långt hår är long hair."
+ },
+ "Var finns det?": {
+  "mal": [
+   "Säga var något är med in, on och under.",
+   "Säga vad som finns med there is och there are.",
+   "Fråga om något finns med Is there …?"
+  ],
+  "fakta": [
+   "In betyder i, on betyder på och under betyder under.",
+   "Det finns heter there is när det är en sak och there are när det är flera.",
+   "Ordningen är: there is, sedan vad, sedan var: There is a lamp on the desk.",
+   "En fråga börjar med is eller are: Is there a lamp in the kitchen?"
+  ],
+  "exempel": [
+   [
+    "Fyll i is eller are: There ___ three apples in the bag.",
+    "are. Tre äpplen är flera."
+   ],
+   [
+    "Hur säger du 'Skon ligger under stolen'?",
+    "The shoe is under the chair."
+   ]
+  ],
+  "ord": [
+   [
+    "room",
+    "rum"
+   ],
+   [
+    "box",
+    "låda"
+   ]
+  ],
+  "tips": "På svenska ligger, står eller sitter saker, men på engelska räcker ofta is: The cup is on the table."
+ },
+ "Klockan och dagen": {
+  "mal": [
+   "Säga klockan på engelska med o'clock, half past, a quarter past och a quarter to.",
+   "Läsa en kort text om en dag och svara på frågor om den.",
+   "Räkna ut en tid med hjälp av det som står i texten."
+  ],
+  "fakta": [
+   "Hel timme: It is seven o'clock. Klockan är sju.",
+   "Half past är en halvtimme efter: half past seven är 7.30, alltså halv åtta på svenska.",
+   "A quarter past är kvart över: a quarter past seven är 7.15. A quarter to är kvart i: a quarter to seven är 6.45.",
+   "Läs texten först. Leta sedan efter klockslagen och namnen som frågan gäller.",
+   "Vissa svar står inte rakt ut: räkna eller tänk efter med det som står."
+  ],
+  "exempel": [
+   [
+    "Vad är klockan om det är half past eleven?",
+    "11.30. På svenska säger vi halv tolv."
+   ],
+   [
+    "The film starts at six o'clock and is two hours long. När slutar filmen?",
+    "8.00, alltså eight o'clock. 6 + 2 = 8."
+   ]
+  ],
+  "ord": [
+   [
+    "get up",
+    "stiga upp"
+   ],
+   [
+    "go to bed",
+    "gå och lägga sig"
+   ],
+   [
+    "breakfast",
+    "frukost"
+   ],
+   [
+    "in the evening",
+    "på kvällen"
+   ]
+  ],
+  "tips": "Den vanligaste fällan: half past nine är halv tio, inte halv nio."
+ }
+}

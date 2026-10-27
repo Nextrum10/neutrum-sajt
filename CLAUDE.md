@@ -76,7 +76,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   får ingen lön för passet. Ångerrätten går före: en ångrad bokning som inte börjat kostar inget, och villkoren säger
   det.
 - **Omdömen** hittas aldrig på och visas bara ihop med hur de kontrolleras; alla familjer med
-  två rapporter får samma Google-fråga, och `tutor_reviews` blir aldrig publik.
+  två rapporter får samma Google-fråga, och `tutor_reviews` blir aldrig publik. **Trustpilot** (2026-10-27) står under
+  brevet i `#rost` ur `omdomen.json`, avskriven för hand, alla omdömen med och de senaste först, och aldrig Trustpilots
+  skript eller ram: de öppna sidorna laddar inget från andra domäner (`nextrum-socialt.js`, `minne/vyerna.md`, Fas 25).
 - **Om oss** (2026-10-22, `/om-oss`, Leo: "varje påstående måste gå att belägga i koden eller i befintlig sajttext"):
   det som inte går att visa står inte där. Inga antal, omdömen, procent, kronor, namn eller titlar, ingen garanti, inget
   "forskning visar" och inget om bakgrundskontroller; priset står på prissidan. `test/innehall-regler.py` vaktar i CI och
@@ -201,6 +203,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (talen, ämne för ämne, veckorna, uppdragen; inga sidknappar, ingen Rättat), tre ämnen framme och resten bakom Visa fler ämnen, och klockljud i
   `nextrum-ljud.js` som bara låter för det man klarar (rätt svar, nivå, uppdrag, kista, märke, ny rank): knappar
   och flikar ger bara vibration (Leo 2026-10-13). Grupper att tävla i är inte byggda (`minne/nexlax.md`).
+  **Faktabladen** (2026-10-27, Fas 25): ett blad per område (vad man lär sig, vad man behöver veta, exempel, ord),
+  i `verktyg/faktablad/`, byggt till `nexlax-fakta/<ämne>-<årskurs>.json` av `bygg-faktablad.py`, aldrig en tabell, och
+  visat en gång när ett nytt område börjar och under lampan; ett nytt område får sitt blad i samma ändring (CI nekar
+  annars). **Ledet**: varje område har ett streck per nivå som fylls med de klara frågorna, och noden en ring; inget sparas.
   Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
   (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare och en kampanjkod per
@@ -358,7 +364,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   klient; den och koderna raderas aldrig (triggrar), och en kods namn och sort står fast. **Familjens partner**
   (`familjens_partner`) sparas första gången och ändras aldrig, och tas bort när familjen avidentifieras. Statistiken
   (`kod_statistik`, `partner_statistik`, `kodens_anvandningar`) är superadminens och räknar inte testbetalningar utom på
-  begäran. Adminvyn: Koder → Rabattkoder och Partnerkoder. Studievyn: rutan Kod till en plan under Erbjudanden, och ingen ruta i
+  begäran. Adminvyn: Koder → Rabattkoder och Partnerkoder. Studievyn: rutan Kod till en plan under Betalning & planer, och ingen ruta i
   Boka pass. **Hur många gånger** sätts per kod, totalt och per familj (`max_anvandningar`, `max_per_familj`), och ett
   återbetalt köp ger tillbaka sin gång. **En rabattkod gäller en gång per familj, och aldrig den egna** (2026-10-21,
   `koderna_agare_och_en_gang`, Leo: "Man kan inte använda sin egen kod. En familj kan använda samma kod högst en gång"):
@@ -377,7 +383,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   på en familj i familjens panel (Ekonomi) och i Ta in familjen, bara genom `satt_familjerabatt()` (`is_admin()`, en kod per
   familj, null tar bort: raden står kvar utan kod, aldrig ett `delete`). Ingen rabattkod: familjen skriver den aldrig, ser
   aldrig koden och den räknas inte. Familjen får bara beloppet (`min_familjerabatt()`), och vyn visar det bara där familjen
-  betalar: på korten under Erbjudanden (Leo samma kväll: "Visa på korten också"; `medRabatt()`, samma regel som databasen),
+  betalar: på plankorten under Betalning & planer (Leo samma kväll: "Visa på korten också"; `medRabatt()`, samma regel som databasen),
   vid priset i Boka pass, i Köp till timmar och i kassan. Kronorna dras på varje timme familjen betalar med pengar, när priset fryses:
   passets `timpris_ore` (`frys_passets_pris`; `bookings.familjerabatt_ore` säger hur mycket), ett köp ur katalogen per betald
   timme (`intern.klippkort_rabatt`; `klippkort.familjerabatt_ore`, och `timpris_ore` står kvar som katalogens) och timmar
@@ -533,7 +539,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   anropet), och de går ut samma dag som planen (`klippkort_betald`). De får ingen gratis timme, och påminnelsen
   tio dagar innan räknar dem med planen. Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
   och villkoren säger båda, så att namnet aldrig lovar att timmarna står kvar. Utåt heter det aldrig klippkort.
-  Studievyns Erbjudanden visar alltid Er timbank med de tillgängliga timmarna och hänvisar till Profil → Timbanken,
+  Studievyns Betalning & planer (Erbjudanden gick upp i den 2026-10-27, och `#erbjudanden` leder dit) visar alltid Er timbank med de tillgängliga timmarna och hänvisar till Profil → Timbanken,
   där förklaringen och villkoren står (Leo samma kväll). **Batteriet** (2026-10-15, Leo: "som ett batteri bara att
   orange timmar är köpta och gratis är gröna ... 9 av 9 timmar finns kvar") står överst på båda ställena: en ruta per
   timme i det som gäller nu (köp som inte gått ut, med de använda tomma; planens gratis timme efter planen; timmarna för
@@ -585,7 +591,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och gratistimmar (`intern.forsta_timmen_tagen`). Den första planen familjen betalar får en timme till (`klippkort.forsta_timmen`,
   `timmar` och `timmar_pa_kopet` ett steg upp, `intern.planens_forsta_timme` när den blir betald), **också
   med rabattkod**, och sedan ingen (2026-10-15, Leo: "har man en rabattkod får man ändå gratis timmen", "alltså den
-  första"). Till dess står den som Erbjudande överst i studievyns Erbjudanden (`#erb-forsta-box`; Leo: "det ska stå
+  första"). Till dess står den som Erbjudande överst bland planerna under Betalning & planer (`#erb-forsta-box`; Leo: "det ska stå
   som erbjudande i deras erbjudanden"). **Pass för pass ges den inte** (samma dag, Leo: "det ska bara finnas ge gratis
   timmar till timbanken"): vill vi bjuda en familj sätter vi in gratistimmar. Valet (`forsta_timmen_beviljad`, `ge_forsta_timmen()`, då med Fas 19.5:s `startrabatt`)
   står kvar i databasen utan knapp, och villkorens "kan vi, om vi kommit överens" gick med versionen 2026-10-16. Studievyns
@@ -620,8 +626,11 @@ Detaljer: `minne/grunden.md`.
 - Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX,
   NXStudie, NXUppgifter och NXArbete för hälsningen) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
   `-admin-*.js`; `-admin-behorighet.js` avgör vad en admin med behörigheter ser.
-  `nextrum-introduktion.js` (`NXIntro`) är introduktionen i studievyn och studiehjälparvyn; bilderna
-  står i `NEXTRUM_INTRO` och tas med `bygg-introbilder.js`.
+  `nextrum-introduktion.js` (`NXIntro`) är introduktionen i studievyn och studiehjälparvyn, med rörelse sedan
+  2026-10-27 (en karta över delarna, skärmdumpar som zoomar mot en ring, `ring` i `STEG`); bilderna
+  står i `NEXTRUM_INTRO` och tas med `bygg-introbilder.js`. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
+  för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna och sist i introduktionen.
+  `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan.
 - **Loggan** (2026-10-15, Leo: "implementera våran nya logga"): märket och ordet nextrum, spårade i vektor ur Leos
   bild, och källan är `bilder/nextrum-logga.svg`. Sidorna har dem som två inline-svg (`.mark`, `.logo-text`) i samma
   höjd (`--logga-h`); det bruna är `currentColor` (`--logga-brun`, kräm i mörkt läge och på mörka ytor) och det
@@ -709,10 +718,12 @@ knappen stängs med `NXStudie.medan()`.
 Lägets färg säger vems drag det är: lera ert drag eller fel, ockra väntar, mossa klart (tokens i
 cinemas `:root` och båda mörka blocken); som serier skiljs de inte åt av färgblinda, och
 ämnesfärgerna finns bara i NexLäx. Orange (`--orange`) är inget läge: den bär bara knapparna
-som betalar: Betala nu, Betala med timmar och Köp under Erbjudanden (2026-10-21, Leo: "Alla betala knappar ska vara
+som betalar: Betala nu, Betala med timmar och Köp under Betalning & planer (2026-10-21, Leo: "Alla betala knappar ska vara
 oranga"; valen i `.vy-betalval` med `ar-orange`),
 och köpta timmar i timbankens batteri och mätare, där gratis timmar är mossa (2026-10-15, Leo). Ett drag överst, en knapp per listrad, tid och plats genom
-`NXKontakt.passRad`, betalvalen i `.vy-betalval`. Adminvyns månadsväljare är ett fält med en
+`NXKontakt.passRad`, betalvalen i `.vy-betalval`. **Datumrutan** på ett pass bär betalningen (2026-10-27, Leo):
+röd att betala, grön betalt, gul en tid som väntar på svar (`dagTon()`, `--dag-*` i cinema), och ett förslag från
+studiehjälparen eller barnet har en prick och sitt namn ("Sara föreslår"), familjens eget "Ni önskade". Adminvyns månadsväljare är ett fält med en
 ruta för år och månad (2026-10-06), från september 2026 till och med december nästa år; märket
 står i fältet och i rutan, och Lektioner räknar upp andra månader utan rapport under det.
 **Tummen**: tryckytor minst 44 px, och `::after` provas med `elementFromPoint`. Ett fält har
@@ -1083,7 +1094,8 @@ Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessi
 `bygg-introbilder.js` (för hand mot en falsk Supabase, när en del som en bild visar ändras),
 `bygg-delningsbilder.js` (för hand: en delningsbild per sida i kartan, `delning/`, med rubriken och
 priset; körs när en rubrik eller priset ändras, och `kolla-delningsbilder.py` vaktar) och
-`bygg-uppgifter.py --sql` (alltid en ny migration). **`satt-version.py` körs SIST.** Sidorna
+`bygg-uppgifter.py --sql` (alltid en ny migration), `bygg-faktablad.py --skriv` (faktabladen i `nexlax-fakta/`).
+**`satt-version.py` körs SIST.** Sidorna
 säger bara det som är sant: inga antal, betyg, betygshöjningar, okontrollerade skolnamn,
 kursnamn med årtal eller vad familjerna brukar göra (de är för få, 2026-10-06); en guide länkar det den påstår, och dess författare är Nextrum. En adress
 som stått i kartan blir aldrig en 404. Förladda inte typsnittet utan att mäta.
@@ -1102,7 +1114,7 @@ Detaljer: `minne/genererat-och-ci.md`.
 
 ## 9. CI — `.github/workflows/kontroll.yml`
 Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
-`kolla-betalningsvillkor.py`, `kolla-migrationer.py`, `bygg-uppgifter.py --kolla`,
+`kolla-betalningsvillkor.py`, `kolla-migrationer.py`, `bygg-uppgifter.py --kolla`, `bygg-faktablad.py --kolla`,
 `kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `kolla-villkor.py`, `kolla-delningsbilder.py`, `kolla-titlar.py`, `test/innehall-regler.py`, `satt-version.py --kolla`, de genererade filerna
 (`git diff --exit-code`), språkdiffen (också attributnamn), `deno check` och `deno test`.
 - `node --check` ser bara syntax; ett namn som inte hämtats ur `NXAdmin` smäller vid körning.
@@ -1137,6 +1149,15 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Fas 25** (2026-10-27, Leos lista samma morgon: NexLäx från åk 6, faktabladen och ledet, Betalning & planer i
+  en sektion, datumrutans färger, hemskärmen, introduktionen med rörelse, inga hopp, och de öppna sidorna;
+  `minne/nexlax.md` och `minne/vyerna.md`, Fas 25). Merge och Vercel lägger ut sidorna; **migrationen
+  `20261027120000_uppgiftsbanken_fortsattning` är inte körd**: Leo bad om merge, inte migrering, och tills den körs
+  finns de 1 247 nya frågorna bara i repot (facitprovet gick 8 762 av 8 762 lokalt). Kör den som de förra bankerna,
+  hämtad ur merge-commiten, prövad mot sin md5. Ingen edge-funktion och ingen ändring i databasens regler. Frågorna och
+  de 470 faktabladen är skrivna och granskade med AI, inte lästa av någon som undervisar. Trustpilots adress
+  (`se.trustpilot.com/review/nextrum.se`) och TikToks handtag (`@nextrum.ab`) är inte kontrollerade, och fotot på
+  Instagramkortet är vårt eget, inte ur flödet.
 - **Ortssidorna och sökträffarna** (2026-10-26, Leo: "gör rubrikerna bättre, Bilderna mer passande, fixa små felen
   ... Lägg även till landningssidor för varje ort i Stockholm") är i drift sedan natten till 2026-10-27 (Leo: "merge"):
   24 nya ortssidor (30 med de första), navets ortskatalog, footerns regioner, nya titlar och beskrivningar på alla öppna

@@ -1,0 +1,147 @@
+{
+ "Tal och veckodagar": {
+  "mal": [
+   "Räkna från elva till tjugo på engelska.",
+   "Säga veckans sju dagar på engelska, i rätt ordning.",
+   "Säga vilken dag som kommer före och efter en annan dag."
+  ],
+  "fakta": [
+   "Elva heter eleven och tolv heter twelve.",
+   "Talen 13–19 slutar på -teen: thirteen, fourteen och så vidare. 20 heter twenty.",
+   "Veckans dagar: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.",
+   "Veckodagarna skrivs med stor bokstav på engelska: Monday."
+  ],
+  "exempel": [
+   [
+    "Hur mycket är eleven + two? Svara på engelska.",
+    "Thirteen. 11 + 2 = 13."
+   ],
+   [
+    "Vilken dag kommer före Monday?",
+    "Sunday. Efter söndag börjar en ny vecka."
+   ]
+  ],
+  "ord": [
+   [
+    "day",
+    "dag"
+   ],
+   [
+    "week",
+    "vecka"
+   ],
+   [
+    "weekend",
+    "helg: Saturday och Sunday"
+   ]
+  ],
+  "tips": "Thursday och torsdag är båda Tors dag, så de hör ihop."
+ },
+ "Mat och kläder": {
+  "mal": [
+   "Säga vad frukt, mat och dryck heter på engelska.",
+   "Säga vad kläderna heter på engelska.",
+   "Berätta vad du äter och vad du har på dig."
+  ],
+  "fakta": [
+   "Frukt: apple är äpple, banana är banan och lemon är citron.",
+   "Mat och dryck: bread är bröd, meat är kött, milk är mjölk och water är vatten.",
+   "Kläder: jacket är jacka, dress är klänning, skirt är kjol och jumper är tröja.",
+   "Jag äter heter I eat, och jag har heter I have: I have a jacket."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'Jag har en blå klänning'?",
+    "I have a blue dress."
+   ]
+  ],
+  "ord": [
+   [
+    "fruit",
+    "frukt"
+   ],
+   [
+    "food",
+    "mat"
+   ],
+   [
+    "clothes",
+    "kläder"
+   ],
+   [
+    "cold",
+    "kall, kallt"
+   ]
+  ],
+  "tips": "Shoes, socks och gloves står oftast med -s, för de kommer i par."
+ },
+ "Skolan och jag": {
+  "mal": [
+   "Säga vad saker i klassrummet heter på engelska.",
+   "Berätta om dig själv med I am, I like och I have.",
+   "Visa något och säga vad det är med This is.",
+   "Säga hur du känner dig."
+  ],
+  "fakta": [
+   "Skolsaker: pen är penna, book är bok, desk är skolbänk och chair är stol.",
+   "I am betyder jag är, och I have betyder jag har.",
+   "I like betyder jag tycker om eller jag gillar.",
+   "This is betyder det här är: This is my pen."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'Jag har en penna'?",
+    "I have a pen."
+   ],
+   [
+    "Hur säger du 'Det här är min kompis'?",
+    "This is my friend."
+   ]
+  ],
+  "ord": [
+   [
+    "my",
+    "min, mitt eller mina"
+   ],
+   [
+    "friend",
+    "kompis, vän"
+   ]
+  ],
+  "tips": "I, alltså jag, skrivs alltid med stor bokstav på engelska."
+ },
+ "Plats och fritid": {
+  "mal": [
+   "Säga vad platser som skola, hem och park heter på engelska.",
+   "Förstå och följa korta kommandon, som stand up och sit down.",
+   "Berätta vad du gillar att göra på fritiden."
+  ],
+  "fakta": [
+   "Platser: home är hem, house är hus, park är park och library är bibliotek.",
+   "Kommandon börjar med verbet: Stand up! Sit down! Close the book.",
+   "Säger du vad du gillar att göra får verbet ofta -ing: I like running betyder jag gillar att springa.",
+   "Bollspel spelar man med play: I play tennis."
+  ],
+  "exempel": [
+   [
+    "Läraren säger 'Put up your hand!' Vad ska du göra?",
+    "Räcka upp handen."
+   ],
+   [
+    "Hur säger du 'Jag gillar att baka'?",
+    "I like baking."
+   ]
+  ],
+  "ord": [
+   [
+    "play",
+    "spela eller leka"
+   ],
+   [
+    "free time",
+    "fritid"
+   ]
+  ],
+  "tips": "Play säger du om bollspel och lekar, men inte om att simma eller dansa."
+ }
+}

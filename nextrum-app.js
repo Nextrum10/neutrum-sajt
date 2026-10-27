@@ -173,7 +173,12 @@ const NX = (function () {
     /* Märket på en plan med timmar på köpet (2026-10-07). Skrivs av
        initErbjudanden() för pluralens skull: antalet kommer ur databasen. */
     timmePaKopet:    ['1 timme på köpet', '1 hour free'],
-    timmarPaKopet:   ['{n} timmar på köpet', '{n} hours free']
+    timmarPaKopet:   ['{n} timmar på köpet', '{n} hours free'],
+    /* Trustpilot på startsidan (2026-10-27, nextrum-socialt.js). */
+    tpBetyg:         ['{b} av 5', '{b} out of 5'],
+    tpBetygEtikett:  ['Betyg {b} av 5 på Trustpilot', 'Rated {b} out of 5 on Trustpilot'],
+    tpEttOmdome:     ['1 omdöme på Trustpilot', '1 review on Trustpilot'],
+    tpOmdomen:       ['{n} omdömen på Trustpilot', '{n} reviews on Trustpilot']
   };
   /* {oss} fylls alltid, utan att anroparen behöver veta om det. Varje
      mall som slutar i en återvändsgränd ska kunna peka på en adress,

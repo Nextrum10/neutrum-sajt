@@ -1,0 +1,469 @@
+{
+ "Algebra": {
+  "mal": [
+   "Förenkla uttryck med parenteser.",
+   "Lösa ekvationer med parenteser, bråk och x på båda sidor.",
+   "Lösa ut en variabel ur en formel.",
+   "Lösa linjära olikheter och enkla potensekvationer."
+  ],
+  "fakta": [
+   "Ett minustecken framför en parentes byter tecken på allt inuti: −3(x − 5) = −3x + 15.",
+   "En ekvation löser du genom att göra samma sak med båda leden tills x står ensamt. Ett bråk blir du av med genom att multiplicera båda leden med nämnaren.",
+   "Att lösa ut en variabel ur en formel görs som i en ekvation: A = b · h ger h = A / b.",
+   "En olikhet löses som en ekvation, men multiplicerar eller dividerar du med ett negativt tal vänds tecknet: −3x < 12 ger x > −4.",
+   "En potensekvation löser du med roten: x³ = 125 ger x = ∛125 = 5. Är exponenten jämn finns också en negativ lösning, så när x > 0 tar du den positiva roten."
+  ],
+  "exempel": [
+   [
+    "Lös 2(x + 5) = x + 13.",
+    "2x + 10 = x + 13. Dra bort x och 10 från båda leden: x = 3. Kontroll: 2 · 8 = 16 och 3 + 13 = 16."
+   ],
+   [
+    "Lös olikheten 4 − 3x > 10.",
+    "Dra bort 4: −3x > 6. Dela med −3 och vänd tecknet: x < −2."
+   ]
+  ],
+  "ord": [
+   [
+    "olikhet",
+    "ett samband med <, >, ≤ eller ≥ i stället för ="
+   ],
+   [
+    "lösa ut",
+    "skriva om en formel så att en viss variabel står ensam på ena sidan"
+   ]
+  ],
+  "tips": "Pröva svaret genom att sätta in det i den ursprungliga ekvationen: blir båda leden lika är det rätt."
+ },
+ "Procent": {
+  "mal": [
+   "Räkna med förändringsfaktor när något ändras i procent en eller flera gånger, som vid ränta och värdeminskning.",
+   "Skilja på procent och procentenheter och räkna med index.",
+   "Räkna baklänges till värdet före en förändring."
+  ],
+  "fakta": [
+   "Förändringsfaktorn är 1 plus ökningen eller 1 minus minskningen i decimalform: +6 % ger 1,06 och −6 % ger 0,94.",
+   "Ändras något flera gånger multiplicerar du faktorerna. Samma ökning n gånger: nytt värde = startvärde · faktorⁿ, till exempel 1,06ⁿ.",
+   "Förändringsfaktorn = nytt värde / gammalt värde. Baklänges: gammalt värde = nytt värde / förändringsfaktorn.",
+   "Procentenheter är skillnaden mellan två procenttal. Från 10 % till 12 % är 2 procentenheter, men en ökning med 20 procent.",
+   "Ett index jämför med ett basår som har index 100: index 112 betyder 12 % högre än basåret."
+  ],
+  "exempel": [
+   [
+    "Ett pris höjs med 30 % och sänks sedan med 30 %. Hur har priset ändrats?",
+    "1,30 · 0,70 = 0,91. Priset är 9 % lägre än från början."
+   ],
+   [
+    "Efter en höjning med 8 % kostar en vara 540 kr. Vad kostade den innan?",
+    "540 / 1,08 = 500 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "förändringsfaktor",
+    "talet du multiplicerar med för att få det nya värdet"
+   ],
+   [
+    "procentenhet",
+    "skillnaden mellan två procenttal"
+   ],
+   [
+    "index",
+    "ett tal som jämför med ett basår, där basåret har värdet 100"
+   ]
+  ],
+  "tips": "Lägg aldrig ihop procenten: två ökningar med 10 % ger 1,1 · 1,1 = 1,21, alltså 21 %, inte 20 %."
+ },
+ "Funktioner": {
+  "mal": [
+   "Räkna ut lutningen k och ekvationen y = kx + m för en rät linje genom två punkter.",
+   "Skilja på uttryck, ekvation, olikhet och funktion.",
+   "Räkna ut och tolka f(x), och lösa ekvationer som f(x) = 10.",
+   "Känna igen linjära och exponentiella modeller."
+  ],
+  "fakta": [
+   "Lutningen för linjen genom (x₁, y₁) och (x₂, y₂) är k = (y₂ − y₁) / (x₂ − x₁). Sedan får du m genom att sätta in en av punkterna i y = kx + m.",
+   "m är där linjen skär y-axeln, alltså y när x = 0. Parallella linjer har samma k.",
+   "f(3) betyder funktionens värde när x = 3: byt ut x mot 3 och räkna. Punkten (3, f(3)) ligger på grafen.",
+   "Ett uttryck har inget likhetstecken, en ekvation har =, en olikhet har < eller >, och en funktion talar om hur y beror av x.",
+   "En linjär modell ändras med lika många enheter per steg: y = m + kx. En exponentiell ändras med lika många procent per steg: y = C · aˣ."
+  ],
+  "exempel": [
+   [
+    "Bestäm ekvationen för linjen genom (2, 3) och (6, 11).",
+    "k = (11 − 3) / (6 − 2) = 8 / 4 = 2. Sätt in (2, 3): 3 = 2 · 2 + m, så m = −1. Linjen är y = 2x − 1."
+   ],
+   [
+    "f(x) = 4x − 3. Vad är f(2), och för vilket x är f(x) = 25?",
+    "f(2) = 4 · 2 − 3 = 5. 4x − 3 = 25 ger 4x = 28 och x = 7."
+   ]
+  ],
+  "ord": [
+   [
+    "lutning",
+    "hur mycket y ändras när x ökar med 1; talet k i y = kx + m"
+   ],
+   [
+    "funktionsvärde",
+    "det värde f(x) får för ett visst x"
+   ]
+  ],
+  "tips": "Ta punkterna i samma ordning ovanför och under bråkstrecket, annars får k fel tecken."
+ },
+ "Potenser": {
+  "mal": [
+   "Räkna med potenslagarna, också med noll och negativa exponenter.",
+   "Skriva rötter som potenser med bråk i exponenten och räkna ut dem.",
+   "Tolka exponentialfunktioner som y = C · aˣ."
+  ],
+  "fakta": [
+   "aᵐ · aⁿ = aᵐ⁺ⁿ, aᵐ / aⁿ = aᵐ⁻ⁿ och (aᵐ)ⁿ = aᵐⁿ. En produkt upphöjs faktor för faktor: (ab)ⁿ = aⁿ · bⁿ.",
+   "a⁰ = 1 och a⁻ⁿ = 1/aⁿ, till exempel 3⁻² = 1/9.",
+   "a upphöjt till 1/2 är √a och a upphöjt till 1/3 är ∛a. a upphöjt till m/n är n:te roten ur a, upphöjd till m.",
+   "√(a · b) = √a · √b, men √a + √b är inte samma sak som √(a + b).",
+   "I y = C · aˣ är C startvärdet och a förändringsfaktorn: a > 1 betyder ökning och 0 < a < 1 minskning."
+  ],
+  "exempel": [
+   [
+    "Förenkla (3x²)³.",
+    "3³ · (x²)³ = 27x⁶."
+   ],
+   [
+    "Vad är 125 upphöjt till 2/3?",
+    "Tredjeroten ur 125 är 5, och 5² = 25."
+   ]
+  ],
+  "ord": [
+   [
+    "bas",
+    "talet som upphöjs, 2 i 2⁵"
+   ],
+   [
+    "exponent",
+    "talet som säger hur många gånger basen är faktor, 5 i 2⁵"
+   ]
+  ],
+  "tips": "En negativ exponent gör inte talet negativt: 4⁻¹ = 1/4."
+ },
+ "Sannolikhet": {
+  "mal": [
+   "Räkna sannolikheten för händelser i flera steg, med och utan återläggning.",
+   "Använda motsatt händelse, till exempel för att räkna ut sannolikheten för minst en.",
+   "Räkna antalet möjliga utfall med multiplikationsprincipen."
+  ],
+  "fakta": [
+   "Sannolikhet = antal gynnsamma utfall / antal möjliga utfall, när alla utfall är lika troliga. Den är alltid ett tal från 0 till 1.",
+   "Oberoende händelser i följd: multiplicera sannolikheterna, P(A och B) = P(A) · P(B).",
+   "Utan återläggning ändras sannolikheten i nästa drag, för det finns en sak mindre kvar.",
+   "P(inte A) = 1 − P(A). Minst en räknas enklast som 1 − P(ingen).",
+   "Multiplikationsprincipen: kan ett val göras på a sätt och nästa på b sätt finns a · b kombinationer. n saker kan ordnas på n · (n − 1) · … · 1 sätt."
+  ],
+  "exempel": [
+   [
+    "En påse har 5 röda och 3 gula kulor. Du drar två utan återläggning. Hur stor är sannolikheten att båda är gula?",
+    "3/8 · 2/7 = 6/56 = 3/28."
+   ],
+   [
+    "Du slår en tärning två gånger. Hur stor är sannolikheten att få minst en etta?",
+    "P(ingen etta) = (5/6)² = 25/36. P(minst en) = 1 − 25/36 = 11/36."
+   ]
+  ],
+  "ord": [
+   [
+    "oberoende händelser",
+    "händelser där den ena inte påverkar sannolikheten för den andra"
+   ],
+   [
+    "återläggning",
+    "att lägga tillbaka det man dragit innan nästa drag"
+   ]
+  ],
+  "tips": "Rita ett träddiagram när det finns flera steg: multiplicera längs grenarna och addera de grenar du söker."
+ },
+ "Ekvationer och modeller": {
+  "mal": [
+   "Lösa linjära ekvationer, också med parenteser, bråk och x på båda sidor.",
+   "Räkna med potenslagar och skriva tal i grundpotensform.",
+   "Ställa upp linjära modeller y = kx + m och jämföra dem med skärningspunkter och olikheter.",
+   "Räkna ut värdeminskning med förändringsfaktor."
+  ],
+  "fakta": [
+   "Samla x-termerna på ena sidan och talen på den andra. Gör alltid samma sak med båda leden.",
+   "Grundpotensform är a · 10ⁿ med 1 ≤ a < 10: 36 000 = 3,6 · 10⁴ och 0,0036 = 3,6 · 10⁻³.",
+   "Minskar ett värde med p % per år är det startvärde · (1 − p/100)ⁿ efter n år.",
+   "I y = kx + m är m den fasta delen, värdet när x = 0, och k det som tillkommer per enhet. En fast kostnad utan rörlig del blir en vågrät linje.",
+   "Två modeller ger samma värde där linjerna skär varandra: sätt uttrycken lika och lös ekvationen."
+  ],
+  "exempel": [
+   [
+    "Lös 7x − 5 = 3x + 11.",
+    "7x − 3x = 11 + 5, så 4x = 16 och x = 4."
+   ],
+   [
+    "A kostar 30 kr plus 18 kr per GB, och B kostar 150 kr plus 6 kr per GB. När kostar de lika mycket?",
+    "30 + 18x = 150 + 6x ger 12x = 120 och x = 10. Vid 10 GB kostar båda 210 kr, och vid färre GB är A billigast."
+   ]
+  ],
+  "ord": [
+   [
+    "grundpotensform",
+    "ett tal skrivet som a · 10ⁿ, där 1 ≤ a < 10"
+   ],
+   [
+    "skärningspunkt",
+    "punkten där två linjer möts; där har båda samma y"
+   ]
+  ],
+  "tips": "Vid en minskning är förändringsfaktorn mindre än 1: −12 % ger 0,88, och två år i rad ger 0,88²."
+ },
+ "Volym, skala och likformighet": {
+  "mal": [
+   "Räkna ut volymen av rätblock, cylinder, kon och klot.",
+   "Omvandla mellan volymenheter och liter.",
+   "Räkna med kartskala och förstoring.",
+   "Använda area- och volymskala för likformiga figurer."
+  ],
+  "fakta": [
+   "Rätblock: V = l · b · h. Cylinder: V = πr²h. Kon: V = πr²h / 3. Klot: V = 4πr³ / 3.",
+   "1 dm³ = 1 liter = 1 000 cm³, och 1 m³ = 1 000 liter.",
+   "Skala 1 : 20 000 betyder att 1 cm på kartan är 20 000 cm, alltså 200 m, i verkligheten. Skala 5 : 1 är en förstoring.",
+   "Är längdskalan k mellan två likformiga figurer är areaskalan k² och volymskalan k³."
+  ],
+  "exempel": [
+   [
+    "Hur många liter rymmer en cylinder med radien 4 cm och höjden 15 cm?",
+    "V = π · 4² · 15 ≈ 754 cm³, och 754 cm³ ≈ 0,75 liter."
+   ],
+   [
+    "Två likformiga koner har höjderna 3 cm och 6 cm. Den lilla rymmer 0,3 liter. Hur mycket rymmer den stora?",
+    "Längdskalan är 6 / 3 = 2, så volymskalan är 2³ = 8. 0,3 · 8 = 2,4 liter."
+   ]
+  ],
+  "ord": [
+   [
+    "radie",
+    "avståndet från medelpunkten till kanten; halva diametern"
+   ],
+   [
+    "likformiga figurer",
+    "figurer med samma form, där alla längder har samma förhållande"
+   ],
+   [
+    "längdskala",
+    "förhållandet mellan motsvarande längder i två likformiga figurer"
+   ]
+  ],
+  "tips": "Räkna om alla mått till samma enhet innan du räknar, gärna cm eller dm, och kom ihåg att dm³ är liter."
+ },
+ "NP-träning": {
+  "mal": [
+   "Lösa blandade uppgifter om procent, algebra, funktioner, geometri och sannolikhet från hela kursen.",
+   "Räkna utan räknare med decimaltal, potenser och enkla ekvationer.",
+   "Välja metod själv när uppgiften inte säger vilken del av kursen den hör till."
+  ],
+  "fakta": [
+   "Läs hela uppgiften och stryk under vad som efterfrågas, och i vilken enhet eller med hur många decimaler svaret ska anges.",
+   "Skriv upp vad du vet och vilken modell som passar: förändringsfaktor, y = kx + m, en volymformel eller sannolikhet i flera steg.",
+   "Procent och procentenheter är olika saker: från 10 % till 15 % är 5 procentenheter men 50 procent.",
+   "Om två storheter är proportionella är y = k · x, och grafen är en rät linje genom origo.",
+   "Kontrollera svaret: är det rimligt i storlek, och stämmer det om du sätter in det i uppgiften?"
+  ],
+  "exempel": [
+   [
+    "Efter hur många hela år har 1 000 kr med 8 % ränta per år för första gången blivit minst 1 500 kr?",
+    "Pröva med räknaren: 1,08⁵ ≈ 1,469 och 1,08⁶ ≈ 1,587. Efter 5 år finns 1 469 kr och efter 6 år 1 587 kr, så svaret är 6 år."
+   ],
+   [
+    "Ett tal ökas med 50 %. Med hur många procent måste det nya talet minskas för att bli som förut?",
+    "Faktorn tillbaka är 1 / 1,5 ≈ 0,667, alltså en minskning med ungefär 33 %."
+   ]
+  ],
+  "ord": [
+   [
+    "proportionalitet",
+    "när y = k · x; dubbelt så mycket x ger dubbelt så mycket y"
+   ],
+   [
+    "rimlighet",
+    "om ett svar har en storlek som passar i sammanhanget"
+   ]
+  ],
+  "tips": "Fastnar du på en uppgift, gå vidare och kom tillbaka till den sist."
+ },
+ "Genomgång inför provet": {
+  "mal": [
+   "Repetera förändringsfaktor, procentenheter, potenslagar och grundpotensform.",
+   "Repetera linjära funktioner, exponentialfunktioner, trigonometri och sannolikhet.",
+   "Hitta rätt regel i en sammanfattande text och använda den på en uppgift."
+  ],
+  "fakta": [
+   "Nivån bygger på en text som sammanfattar kursen. Läs frågan först, leta upp rubriken den hör till och läs sedan det stycket noga.",
+   "Förändringsfaktor: en ökning med p % ger 1 + p/100 och en minskning 1 − p/100. Nytt värde = gammalt värde · förändringsfaktor.",
+   "Potenser: aᵐ · aⁿ = aᵐ⁺ⁿ, aᵐ / aⁿ = aᵐ⁻ⁿ, a⁰ = 1 och a⁻ⁿ = 1/aⁿ.",
+   "I y = kx + m är k lutningen och m skärningen med y-axeln. I y = C · aˣ är C startvärdet och a förändringsfaktorn.",
+   "I en rätvinklig triangel är sin v = motstående / hypotenusan, cos v = närliggande / hypotenusan och tan v = motstående / närliggande."
+  ],
+  "exempel": [
+   [
+    "Vilken förändringsfaktor hör till en minskning med 4 %?",
+    "1 − 0,04 = 0,96."
+   ],
+   [
+    "Förenkla 2⁵ · 2³ / 2⁶.",
+    "2⁵⁺³⁻⁶ = 2² = 4."
+   ]
+  ],
+  "ord": [
+   [
+    "hypotenusa",
+    "den längsta sidan i en rätvinklig triangel, mitt emot den räta vinkeln"
+   ],
+   [
+    "närliggande katet",
+    "den kateten som ligger intill vinkeln v"
+   ],
+   [
+    "motstående katet",
+    "den kateten som ligger mitt emot vinkeln v"
+   ],
+   [
+    "oberoende händelser",
+    "händelser som inte påverkar varandra; då multipliceras sannolikheterna"
+   ]
+  ],
+  "tips": "Svaret står i texten, men räkna själv också: då vet du att du kan regeln när provet kommer."
+ },
+ "Statistik och lägesmått": {
+  "mal": [
+   "Läsa frekvenstabeller och räkna ut medelvärde, median, typvärde och variationsbredd.",
+   "Ta fram kvartiler och kvartilavstånd och tolka ett lådagram.",
+   "Välja det lägesmått som passar bäst och granska urval och diagram."
+  ],
+  "fakta": [
+   "Medelvärde = summan av värdena / antalet. I en frekvenstabell multiplicerar du varje värde med hur många gånger det finns, adderar och delar med antalet.",
+   "Medianen är det mittersta värdet när värdena står i ordning; vid ett jämnt antal är den medelvärdet av de två mittersta. Typvärdet är det vanligaste värdet.",
+   "Nedre och övre kvartilen är medianerna i den nedre och den övre halvan av de ordnade värdena. Kvartilavstånd = övre − nedre kvartilen.",
+   "Lådan i ett lådagram rymmer de mittersta 50 % av värdena. Ett extremt värde drar iväg medelvärdet men påverkar medianen och kvartilavståndet lite.",
+   "Ett urval ska likna hela gruppen man vill veta något om. En y-axel som inte börjar på 0 får skillnader att se större ut än de är."
+  ],
+  "exempel": [
+   [
+    "Värdena är 3, 8, 5, 12, 7 och 9. Vad är medianen och kvartilerna?",
+    "Ordna: 3, 5, 7, 8, 9, 12. Medianen är (7 + 8) / 2 = 7,5. Den nedre halvan 3, 5, 7 ger nedre kvartilen 5, och den övre 8, 9, 12 ger övre kvartilen 9."
+   ],
+   [
+    "En grupp om 4 har medelvärdet 10 och en grupp om 6 har medelvärdet 20. Vad är medelvärdet för alla 10?",
+    "Summan är 4 · 10 + 6 · 20 = 160, och 160 / 10 = 16."
+   ]
+  ],
+  "ord": [
+   [
+    "variationsbredd",
+    "största värdet minus minsta värdet"
+   ],
+   [
+    "lådagram",
+    "ett diagram som visar minsta värdet, kvartilerna, medianen och största värdet"
+   ],
+   [
+    "representativt urval",
+    "ett urval som liknar hela gruppen man vill undersöka"
+   ]
+  ],
+  "tips": "Ordna alltid värdena från minst till störst innan du letar median och kvartiler."
+ },
+ "Tal i grundpotensform": {
+  "mal": [
+   "Skriva stora och små tal i grundpotensform och tillbaka till vanliga tal.",
+   "Känna igen prefixen från giga till nano.",
+   "Multiplicera och dividera tal i grundpotensform och skriva svaret i grundpotensform."
+  ],
+  "fakta": [
+   "10ⁿ är en etta följd av n nollor, och 10⁻ⁿ = 1/10ⁿ. Till exempel är 10⁻² = 0,01.",
+   "Grundpotensform är a · 10ⁿ, där a är minst 1 och mindre än 10. Till exempel är 3 400 = 3,4 · 10³.",
+   "Vid multiplikation adderas exponenterna: 10ᵐ · 10ⁿ = 10ᵐ⁺ⁿ. Vid division subtraheras de: 10ᵐ / 10ⁿ = 10ᵐ⁻ⁿ.",
+   "Prefix: giga 10⁹, mega 10⁶, kilo 10³, milli 10⁻³, mikro (µ) 10⁻⁶ och nano 10⁻⁹."
+  ],
+  "exempel": [
+   [
+    "Skriv 0,0072 i grundpotensform.",
+    "Kommat flyttas tre steg åt höger till 7,2, och det är att multiplicera med 10³. För att talet ska vara lika stort som förut blir det 7,2 · 10⁻³."
+   ],
+   [
+    "Beräkna (2,5 · 10³) · (4 · 10⁻⁵).",
+    "2,5 · 4 = 10 och 10³ · 10⁻⁵ = 10⁻². Det ger 10 · 10⁻² = 1 · 10⁻¹, alltså 0,1."
+   ]
+  ],
+  "ord": [
+   [
+    "grundpotensform",
+    "ett tal skrivet som a · 10ⁿ, där a är minst 1 och mindre än 10"
+   ],
+   [
+    "exponent",
+    "talet n i 10ⁿ, som säger hur många steg kommat flyttas"
+   ]
+  ],
+  "tips": "Ett tal mellan 0 och 1 får en negativ exponent, och ett tal som är 10 eller större får en positiv."
+ },
+ "Trigonometri i rätvinkliga trianglar": {
+  "mal": [
+   "Ställa upp sinus, cosinus och tangens för en spetsig vinkel i en rätvinklig triangel.",
+   "Räkna ut en okänd sida när du vet en vinkel och en sida.",
+   "Räkna ut en vinkel när du vet två sidor."
+  ],
+  "fakta": [
+   "Hypotenusan står mitt emot den räta vinkeln och är den längsta sidan. Kateterna bildar den räta vinkeln.",
+   "sin v = motstående katet / hypotenusa och cos v = närliggande katet / hypotenusa.",
+   "tan v = motstående katet / närliggande katet.",
+   "Vinkeln får du med räknarens sin⁻¹, cos⁻¹ eller tan⁻¹. Räknaren ska stå i grader."
+  ],
+  "exempel": [
+   [
+    "En rätvinklig triangel har hypotenusan 20 cm och en vinkel v = 50°. Hur lång är kateten intill v?",
+    "cos 50° = x/20, så x = 20 · cos 50° ≈ 20 · 0,643 ≈ 12,9 cm."
+   ]
+  ],
+  "ord": [
+   [
+    "katet",
+    "en av de två sidorna som bildar den räta vinkeln"
+   ],
+   [
+    "hypotenusa",
+    "den längsta sidan, mitt emot den räta vinkeln"
+   ]
+  ],
+  "tips": "Markera först vilka sidor som är motstående, närliggande och hypotenusa, sett från den vinkel du räknar med."
+ },
+ "Vektorer": {
+  "mal": [
+   "Addera och subtrahera vektorer i koordinatform.",
+   "Multiplicera en vektor med ett tal och känna igen parallella vektorer.",
+   "Räkna ut en vektors längd och vektorn mellan två punkter."
+  ],
+  "fakta": [
+   "En vektor har en storlek och en riktning. I koordinatform skrivs den till exempel u = (3, −2).",
+   "Addition och subtraktion görs koordinat för koordinat: (a, b) + (c, d) = (a + c, b + d).",
+   "k · (a, b) = (ka, kb). Två vektorer är parallella om den ena är ett tal gånger den andra.",
+   "Längden är |(a, b)| = √(a² + b²). Vektorn från punkten A till punkten B är B − A."
+  ],
+  "exempel": [
+   [
+    "u = (2, −1) och v = (−3, 5). Beräkna 2u − v och dess längd.",
+    "2u = (4, −2), och 2u − v = (4 − (−3), −2 − 5) = (7, −7). Längden är √(49 + 49) = √98 ≈ 9,9."
+   ]
+  ],
+  "ord": [
+   [
+    "vektor",
+    "en storhet med både storlek och riktning, som ritas som en pil"
+   ],
+   [
+    "skalär",
+    "ett vanligt tal, som en vektor kan multipliceras med"
+   ]
+  ],
+  "tips": "Vektorn från A till B är alltid slutpunkten minus startpunkten, aldrig tvärtom."
+ }
+}

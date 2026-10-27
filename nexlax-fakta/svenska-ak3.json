@@ -1,0 +1,351 @@
+{
+ "Skrivregler": {
+  "mal": [
+   "Börja en mening med stor bokstav och välja rätt tecken sist: punkt, frågetecken eller utropstecken.",
+   "Skriva namn på personer, djur, städer och länder med stor bokstav.",
+   "Räkna hur många meningar en text har."
+  ],
+  "fakta": [
+   "En mening börjar med stor bokstav och slutar med punkt (.), frågetecken (?) eller utropstecken (!).",
+   "Punkt står efter en mening som berättar. Frågetecken står efter en fråga.",
+   "Utropstecken står efter något man ropar, varnar för eller känner starkt: Hjälp! Vad roligt!",
+   "Namn skrivs med stor bokstav: personer (Nils), djur (Sigge), städer (Luleå) och länder (Norge).",
+   "Veckodagar och månader är inga namn. De skrivs med liten bokstav: måndag, oktober."
+  ],
+  "exempel": [
+   [
+    "Vilket tecken ska stå sist? ”Spring, bussen går nu”",
+    "Utropstecken. Någon ropar för att det är bråttom."
+   ],
+   [
+    "Hur många ord ska ha stor bokstav? ”på lördag åker vi till göteborg.”",
+    "Två: ”På”, som börjar meningen, och Göteborg, som är en stad. Lördag får liten bokstav."
+   ]
+  ],
+  "ord": [
+   [
+    "mening",
+    "ord som hör ihop och säger något, från stor bokstav till punkt"
+   ],
+   [
+    "utropstecken",
+    "tecknet ! efter något man ropar eller säger starkt"
+   ]
+  ],
+  "tips": "Räkna meningarna genom att räkna punkter, frågetecken och utropstecken."
+ },
+ "Alfabetet": {
+  "mal": [
+   "Kunna alfabetet i rätt ordning, också å, ä och ö sist.",
+   "Sortera ord i alfabetisk ordning efter första bokstaven.",
+   "Titta på andra och tredje bokstaven när orden börjar likadant.",
+   "Hitta var ett ord står i en ordlista."
+  ],
+  "fakta": [
+   "Alfabetet: a b c d e f g h i j k l m n o p q r s t u v w x y z å ä ö.",
+   "Alfabetisk ordning: sortera efter första bokstaven. Börjar orden likadant, titta på andra bokstaven och sedan på tredje.",
+   "Ett kort ord kommer före ett längre ord som börjar likadant: ”hus” före ”huset”.",
+   "I en ordlista står orden i alfabetisk ordning, så att du hittar dem snabbt."
+  ],
+  "exempel": [
+   [
+    "Ordna i alfabetisk ordning: ros, rak, ren.",
+    "Rak, ren, ros. Alla börjar på r, så titta på andra bokstaven: a kommer före e, och e före o."
+   ],
+   [
+    "Vilken bokstav står mellan m och o?",
+    "N. Alfabetet går … l, m, n, o, p …"
+   ]
+  ],
+  "ord": [
+   [
+    "alfabet",
+    "alla bokstäver i en bestämd ordning"
+   ],
+   [
+    "alfabetisk ordning",
+    "ordningen som bokstäverna har i alfabetet"
+   ],
+   [
+    "ordlista",
+    "en lista eller bok med ord i alfabetisk ordning"
+   ]
+  ],
+  "tips": "Säg alfabetet tyst för dig själv när du letar efter en bokstav."
+ },
+ "Ljud och bokstäver": {
+  "mal": [
+   "Skilja på vokaler och konsonanter.",
+   "Hitta vokalerna i ett ord.",
+   "Höra om en vokal är kort eller lång.",
+   "Stava ord med två konsonanter efter en kort vokal."
+  ],
+  "fakta": [
+   "Vokalerna är a, o, u, å, e, i, y, ä och ö. Alla andra bokstäver är konsonanter.",
+   "En vokal kan vara lång eller kort. I ”hal” är a långt, i ”hall” är a kort.",
+   "Efter en kort vokal kommer oftast två konsonanter: tunn, sitta, rätt.",
+   "Efter en lång vokal kommer oftast bara en konsonant: fin, läsa, mat.",
+   "Två k skrivs ck: sticka, lock."
+  ],
+  "exempel": [
+   [
+    "Är vokalen kort eller lång i ”ful”?",
+    "Lång. U:et låter länge, och efter det kommer bara ett l."
+   ],
+   [
+    "Hur många vokaler finns i ”banan”?",
+    "Två: a och a."
+   ]
+  ],
+  "ord": [
+   [
+    "vokal",
+    "a, o, u, å, e, i, y, ä och ö"
+   ],
+   [
+    "konsonant",
+    "alla andra bokstäver, som b, k och s"
+   ],
+   [
+    "kort vokal",
+    "en vokal som låter snabbt, som a i ”hall”"
+   ],
+   [
+    "lång vokal",
+    "en vokal som låter länge, som a i ”hal”"
+   ]
+  ],
+  "tips": "Säg ordet i vanlig takt och lyssna på vokalen: är den snabb kommer oftast två konsonanter efter."
+ },
+ "Ordklasser": {
+  "mal": [
+   "Känna igen substantiv, ord för saker, djur och människor.",
+   "Känna igen verb, ord för det man gör.",
+   "Känna igen adjektiv, ord som beskriver hur något är.",
+   "Räkna hur många ord av en ordklass det finns i en mening."
+  ],
+  "fakta": [
+   "Substantiv är ord för saker, djur, människor och platser: en stol, ett hus.",
+   "Ett substantiv kan stå i bestämd form, som flickan, bollen och huset. Det är fortfarande ett substantiv.",
+   "Verb säger vad någon gör: läser, springer, sover.",
+   "Adjektiv beskriver hur något är: mjuk, gul, rolig.",
+   "Ett adjektiv kan ändra form: en grön boll, den gröna bollen."
+  ],
+  "exempel": [
+   [
+    "Hitta substantivet, verbet och adjektivet: ”Den gamla katten sover.”",
+    "”Gamla” är ett adjektiv, ”katten” ett substantiv och ”sover” ett verb."
+   ]
+  ],
+  "ord": [
+   [
+    "ordklass",
+    "en grupp ord som fungerar på samma sätt"
+   ],
+   [
+    "substantiv",
+    "ord för saker, djur, människor och platser"
+   ],
+   [
+    "verb",
+    "ord för det man gör"
+   ],
+   [
+    "adjektiv",
+    "ord som beskriver hur något är"
+   ]
+  ],
+  "tips": "Testa ordet: ”en …” för substantiv, ”jag …” för verb och ”den är …” för adjektiv."
+ },
+ "Berättelser": {
+  "mal": [
+   "Berätta vad som står i början, mitten och slutet av en berättelse.",
+   "Planera en berättelse: vem den handlar om, var den händer och vad som händer.",
+   "Använda ord som ”plötsligt” och ”till sist”.",
+   "Välja en rubrik som passar berättelsen."
+  ],
+  "fakta": [
+   "I början får läsaren veta vem berättelsen handlar om och var den händer.",
+   "I mitten händer något spännande, roligt eller svårt. Det ska hänga ihop med början.",
+   "I slutet löser sig det som hände.",
+   "Ord som ”en dag”, ”plötsligt”, ”sedan” och ”till sist” visar läsaren vad som händer och när.",
+   "En bra rubrik säger lite om vad berättelsen handlar om, utan att berätta slutet."
+  ],
+  "exempel": [
+   [
+    "Vilken mening passar som slut? ”En dag tappade Sara sin mössa i parken. Hon letade länge.”",
+    "Till exempel: ”Äntligen hittade hon mössan under en bänk och gick glad hem.” Det som hände löser sig."
+   ]
+  ],
+  "ord": [
+   [
+    "början",
+    "där du får veta vem och var"
+   ],
+   [
+    "mitten",
+    "där något spännande händer"
+   ],
+   [
+    "slutet",
+    "där det löser sig"
+   ],
+   [
+    "rubrik",
+    "berättelsens namn, som står överst"
+   ]
+  ],
+  "tips": "Gör en plan innan du skriver: en rad för början, en för mitten och en för slutet."
+ },
+ "Läsa och förstå": {
+  "mal": [
+   "Läsa en faktatext och en berättelse och svara på frågor om dem.",
+   "Ordna det som händer i en text i rätt ordning.",
+   "Förstå det som inte står rakt ut, till exempel hur någon känner sig.",
+   "Förklara vad ett ord betyder i texten."
+  ],
+  "fakta": [
+   "Läs texten först. Läs sedan frågan noga, så vet du vad du ska leta efter när du går tillbaka till texten.",
+   "Vissa svar står i texten. Andra får du tänka ut själv av det som står.",
+   "Ord som ”först”, ”sedan”, ”efter en stund” och ”till sist” hjälper dig att hitta ordningen.",
+   "En faktatext förklarar hur något är eller fungerar på riktigt. En berättelse handlar om personer och vad de gör."
+  ],
+  "exempel": [
+   [
+    "Läs: ”Nils satte på sig regnjackan och tog paraplyet.” Hur var vädret?",
+    "Det regnade nog. Det står inte i texten, men man tar regnjacka och paraply när det regnar."
+   ]
+  ],
+  "ord": [
+   [
+    "faktatext",
+    "en text som förklarar hur något är på riktigt"
+   ],
+   [
+    "berättelse",
+    "en text om personer och något som händer"
+   ],
+   [
+    "dra en slutsats",
+    "tänka ut något som inte står rakt ut, med hjälp av det som står"
+   ]
+  ],
+  "tips": "Hittar du inte svaret i en mening, läs meningen före och meningen efter också."
+ },
+ "Stavning": {
+  "mal": [
+   "Välja mellan k och ck efter en kort eller en lång vokal.",
+   "Stava sj-ljudet med sj eller sk.",
+   "Stava tj-ljudet med tj eller k.",
+   "Rätta felstavade ord i en mening."
+  ],
+  "fakta": [
+   "Efter en kort vokal skrivs k-ljudet oftast ck: mycket, plocka, rock.",
+   "Efter en lång vokal skrivs det bara k: kaka, rök, ek.",
+   "Sj-ljudet stavas ofta sj: sjal, sjunga. Före e, i, y, ä och ö kan det stavas sk: skepp, skina, skär.",
+   "Tj-ljudet stavas ofta tj: tjuv, tjära. Före e, i, y, ä och ö kan det stavas k: kedja, kex, kär, kök.",
+   "Bokstäverna e, i, y, ä och ö kallas mjuka vokaler."
+  ],
+  "exempel": [
+   [
+    "Ska det stå ”jaka” eller ”jacka”? ”Ta på dig din …”",
+    "”Jacka”. A:et är kort, och då skrivs k-ljudet ck."
+   ],
+   [
+    "Hur stavas ljudet först i ordet för rummet där man lagar mat?",
+    "Med k: kök. Före ö kan tj-ljudet skrivas med k."
+   ]
+  ],
+  "ord": [
+   [
+    "mjuka vokaler",
+    "e, i, y, ä och ö"
+   ],
+   [
+    "sj-ljud",
+    "ljudet först i ”sjal”"
+   ],
+   [
+    "tj-ljud",
+    "ljudet först i ”tjuv”"
+   ]
+  ],
+  "tips": "Titta på bokstaven efter ljudet: är den e, i, y, ä eller ö kan sj-ljudet skrivas sk och tj-ljudet k."
+ },
+ "Läsa: NP-träning": {
+  "mal": [
+   "Läsa en längre berättelse och en faktatext och svara på frågor om dem.",
+   "Hitta svar som står i texten, och svar som du får tänka ut.",
+   "Sätta händelser i den ordning de händer.",
+   "Förklara varför en person gör något eller varför något händer."
+  ],
+  "fakta": [
+   "Läs hela texten i lugn och ro. Läs sedan frågan noga: frågar den vem, var, när, hur eller varför?",
+   "Gå tillbaka till texten och leta. Du behöver inte komma ihåg allt.",
+   "Svaret på en varför-fråga står inte alltid rakt ut. Tänk på vad personen vet, känner och vill.",
+   "När du ordnar händelser: hitta först det som händer först och det som händer sist.",
+   "Läs alla svar du kan välja mellan. Välj det som stämmer med texten, inte bara det som låter bra."
+  ],
+  "exempel": [
+   [
+    "Läs: ”Omar sparade sina pengar i ett halvår. Sedan köpte han en present till sin syster.” Varför sparade Omar?",
+    "För att köpa en present till sin syster. Det står inte ”för att”, men meningarna hänger ihop."
+   ]
+  ],
+  "ord": [
+   [
+    "händelse",
+    "något som händer i en text"
+   ],
+   [
+    "berättelse",
+    "en text om personer och något som händer"
+   ],
+   [
+    "faktatext",
+    "en text som berättar hur något är på riktigt"
+   ]
+  ],
+  "tips": "Kontrollera svaret: leta upp meningen i texten som visar att du har rätt."
+ },
+ "NP-träning: skriva och stava": {
+  "mal": [
+   "Rätta meningar med punkt, frågetecken och stor bokstav.",
+   "Stava ord med ng och nk, med dubbla konsonanter och med sj-ljud.",
+   "Känna igen substantiv, verb och adjektiv i en mening.",
+   "Läsa igenom och rätta en text du har skrivit."
+  ],
+  "fakta": [
+   "Varje mening börjar med stor bokstav och slutar med punkt, frågetecken eller utropstecken. Namn på personer och platser har stor bokstav.",
+   "Ng-ljudet stavas oftast ng: ring, lång. Före k skrivs det bara n: sjunka, tank.",
+   "Efter en kort vokal kommer oftast två konsonanter: rulla, glass. Efter en lång vokal kommer oftast en: hål, läsa.",
+   "Sj-ljudet kan stavas på flera sätt, till exempel sj (sjunga), sk (skepp), stj (stjärna) och sch (schampo).",
+   "Läs alltid igenom texten när du är klar: har varje mening stor bokstav och punkt?"
+  ],
+  "exempel": [
+   [
+    "Var ska punkten stå? ”Det var kallt vi tog på oss mössor.”",
+    "Efter ”kallt”: ”Det var kallt. Vi tog på oss mössor.” Där slutar en tanke och nästa börjar."
+   ],
+   [
+    "Ska det stå ”tängka” eller ”tänka”?",
+    "”Tänka”. Före k skrivs ng-ljudet bara med n."
+   ]
+  ],
+  "ord": [
+   [
+    "ng-ljud",
+    "ljudet sist i ”lång”"
+   ],
+   [
+    "sj-ljud",
+    "ljudet först i ”sjunga”"
+   ],
+   [
+    "ordklass",
+    "en grupp ord, som substantiv, verb och adjektiv"
+   ]
+  ],
+  "tips": "Läs meningen högt för dig själv: där du gör ett tydligt uppehåll behövs ofta en punkt."
+ }
+}

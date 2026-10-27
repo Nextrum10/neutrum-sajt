@@ -2039,3 +2039,87 @@ vill kunna optimera min admin och flytta folk vart jag vill eller ta bort de hel
 - Provat i Chromium mot PostgREST och en lokal databas (ett riktat prov, inte incheckat): 29 av 29, med rutans text i
   alla fall, CV:t före raden, Avbryt som inte gör något, en admin med behörigheten leads utan knappen, och en
   telefon i mörkt läge. `prova-adminvyn.js` går igenom med knapparna på raderna.
+
+## Fas 25 i vyerna och på sajten (2026-10-27)
+
+Leo skrev en lång lista samma morgon och bad oss merga själva i slutet. Det här står i
+vyerna och på de öppna sidorna; NexLäx del står i `minne/nexlax.md` (Fas 25).
+
+**Betalning & planer är en sektion.** Leo: "Betalning och erbjudanden ska struktureras om, de är
+de fulaste sidorna på studievyn ... Erbjudanden kan du integrera med betalning." Sektionen
+Erbjudanden och dess menypost är borta; `section[data-sek="betalning"]` har överst Att betala och
+Betalt, betalsätten (kort, Apple Pay, Google Pay, Klarna; kassan sköts av Stripe), listan Att betala
+med Betala nu, Er timbank och sist planerna (`#bet-planer`), där korten är omgjorda och planen med
+lyftet bär "Vårt förslag" (aldrig "populärast": det kan vi inte visa). Ingen rad med "ni sparar"
+på korten (regeln 2026-10-12 står kvar). `#erbjudanden`, `#erbjudanden/...` och `#timbank` finns i
+gamla mejl och länkar och leder hit (`ALIAS` i `nextrum-studie-vy.js`: `betalning` och `planer`
+eller `timbank`), och `S.landa` lägger planerna eller timbanken överst också när innehållet
+laddar in efter hoppet; ett hjul, en svepning eller en tangent släpper landningen.
+Betalningsmeningen står ordagrant i sektionens ingress (kolla-betalningsvillkor.py räknar den).
+
+**Datumrutan bär passets läge.** Leo: "Lektioner som ej är betalda ska vara röda vid sidan där de
+exempelvis står tor 29 okt ... betalda ... gröna och önskade tider gula, ljusa toner ... önskad tid
+till studiehjälparen och en tid som studiehjälper eller barnet som önskat måste gå att särkilja".
+`dagTon()` ger datumrutan en klass (`dag-rod`, `dag-gron`, `dag-gul`, `dag-forslag`) i
+`NXKontakt.passRad` (`o.dag`), med tokens `--dag-*` i cinemas `:root` och båda mörka blocken.
+Röd: bekräftat och ska betalas med pengar. Grön: betalt, eller betalt med timmarna. Gul: en tid som
+väntar på svar. Ett förslag från studiehjälparen eller barnet har en prick på rutan
+(`.pass-nar-bubbla`) och märket "Sara föreslår" (`förslagsMärke`), familjens eget "Ni önskade";
+ordet Önskad står inte längre ensamt. Barnets förslag står med i passlistan (`passLista` tar
+`extra` och `extraRad`) och under Översikt.
+
+**Studievyn på hemskärmen** (`nextrum-hemskarm.js`, `NXHemskarm`). Leo skickade en skärminspelning
+av hur det görs i Safari (tre punkter, Dela, Lägg till på hemskärmen, Öppna som webbapp) och bad om
+en liten ruta med rörelse som slutar komma när man trycker på krysset, och samma guide under Profil
+& inställningar, i studievyn och studiehjälparvyn. Telefonen är ritad i HTML och CSS, aldrig
+inspelningen (den visade Leos telefon): stegen för iPhone och Android, en slinga som bara går medan
+den syns. Rutan kommer på en telefon efter sex sekunder, väntar tills ingen annan ruta står öppen
+(introduktionen, villkoren, notiserna), visas aldrig när vyn redan öppnats som app
+(`display-mode: standalone`), och krysset sparas i webbläsaren (`nx.hemskarm`, lagring.html på båda
+språken): installationen hör till enheten, inte kontot. Manifesten `studievy.webmanifest` och
+`studiehjalparvy.webmanifest` (start på `/foralder` och `/larare`, ikonerna ur `bilder/`), och
+modulvakten prövar `NXHemskarm.profil`.
+
+**Introduktionen med rörelse** (`nextrum-introduktion.js`). Leo: "tänk dig en introduktion som
+använder motion graphic för att leda kunden genom studievyn". Först en karta: märket och vyns delar
+med menyns egna ikoner, som flyger in och går att trycka på. Sedan en del i taget: skärmdumpen
+zoomar sakta mot det viktigaste (`ring` i `STEG`, procent av bilden), en ring tänds och ett tryck
+syns. Sist, på en telefon som inte redan har vyn som app, telefonen ur NXHemskarm. Ett band överst
+med ett streck per steg, och steget glider in från det håll man går. Rutan har fast höjd, så Nästa
+står still (`prova-introduktion.js`: 85 av 85). Bekräfta rapport-bilden är borta och
+Betalning & planer har en egen (`bygg-introbilder.js` tog om alla bilderna 2026-10-27, så
+datumrutans färger syns i dem). Ändras en del i vyn: ta om bilderna och läs `ring` igen.
+
+**Inga hopp vid tryck.** Leo: "överallt på vyerna när man trycker på knappar ska inget hoppa konstigt
+allt ska vara smooth". Mätt i förhandsvisningen, på en telefon och en dator i båda vyerna: varje knapp,
+flik och chip som inte gör något oåterkalleligt trycktes, och det tryckta elementet, sidans rullning
+och layoutskiftet mättes. Inget tryckt element flyttade sig; det enda som rullade var Granska, som
+med flit leder till bokningsrutan. Spelaren i NexLäx stod också still (frågan, alternativen och
+knappen). Tre kort lyfte sig 1 px vid hovring (`.vy-roll`, `.vy-tid`, `.ev-kort`), vilket på en
+telefon fastnar efter trycket; de har bara kantfärgen nu, och bara med mus. Genomgången av ett
+försök kraschade i förhandsvisningen, som saknar rättningen; den säger nu samma sak som vid ett fel.
+
+**De öppna sidorna.**
+- NexLäx etikett på startsidan och För elever och föräldrar står utan strecket och i NexLäx färger
+  (blå till lila, `.nlx-huvud .nx-et`).
+- `#bli` har färre streck av lera: fotot utan ram, punkterna utan linjer och ringar, och ansökans
+  steg utan kant. Linjen i överkanten och stegens siffror står kvar; Bli studiehjälpare-sidan behåller sina.
+- **Trustpilot** under brevet i `#rost`: betyget, antalet och Skriv ett omdöme, och omdömena på ett
+  band som rullar när de finns. Inte Trustpilots ruta: den är skript och ram från en annan domän, och de
+  öppna sidorna laddar inget sådant och sätter inga cookies utan ja. Siffrorna och omdömena står i
+  `omdomen.json` och skrivs av från Trustpilot för hand (`nextrum-socialt.js` ritar dem); alla
+  omdömen står med, de senaste först, och texten under bandet säger det. Adressen
+  `se.trustpilot.com/review/nextrum.se` är antagen, inte kontrollerad (nätet nådde inte Trustpilot).
+- **Följ oss på Instagram** vid bildväggen: ett kort som poppar fram när väggen syns (i det övre högra
+  hörnet från 1240 px, i flödet under), med ett av våra egna foton, inte ett ur flödet: en bild ur
+  flödet läggs i `bilder/` och byts i markupen. Krysset gäller sidvisningen; inget sparas.
+- **TikTok** stod redan i footern på varje sida (`@nextrum.ab`) när Leo skrev att den inte var länkad;
+  den är inte ändrad, och handtaget är inte kontrollerat.
+- **Vår idé**: priset är Just nus blad (de två priserna ur `erbjudanden_pris`, aldrig i HTML, och
+  det som ingår), och urvalet har tre scener som spelas i tur när raden syns (`.sid-urval`,
+  `nextrum-sidor.css` avsnitt 5c).
+- **Så fungerar Nextrum**: bokningen är reglerna i tre rader och ett pass som bokas, betalas och
+  flyttas med datumrutans färger (`bokscen()` i `nextrum-start.js`, avsnitt 5d). Regeln om 12 timmar
+  och hälften står ordagrant.
+- **Priser**: Varför priset ser ut så här är borttagen. Den sa att hjälpen "ofta" blir mer begriplig,
+  vilket sidan inte kan visa, och "unga hjälper unga" står redan på Vår idé.

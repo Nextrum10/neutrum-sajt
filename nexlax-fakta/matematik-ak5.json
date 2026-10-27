@@ -1,0 +1,317 @@
+{
+ "Bråk": {
+  "mal": [
+   "Skriva en del av en helhet som ett bråk.",
+   "Räkna ut ett bråk av ett antal.",
+   "Hitta bråk som är lika stora genom att förlänga och förkorta.",
+   "Jämföra bråk med varandra och med decimaltal."
+  ],
+  "fakta": [
+   "I bråket 2/7 är 2 täljaren, hur många delar du har, och 7 nämnaren, hur många lika delar det hela är delat i.",
+   "Ett bråk av ett antal: dela med nämnaren och multiplicera med täljaren. 2/5 av 35 är 35 / 5 · 2 = 14.",
+   "Förläng eller förkorta: multiplicera eller dividera täljaren och nämnaren med samma tal, så ändras inte värdet: 1/4 = 2/8 = 3/12.",
+   "Med samma nämnare är bråket med störst täljare störst. Med olika nämnare förlänger du först till samma nämnare.",
+   "Går ett bråk att förlänga till tiondelar blir det ett decimaltal med en decimal: 1/2 = 5/10 = 0,5. Alla går inte: 1/3 = 0,333 …"
+  ],
+  "exempel": [
+   [
+    "Vilket är störst, 3/5 eller 2/3?",
+    "Förläng till femtondelar: 3/5 = 9/15 och 2/3 = 10/15. Alltså är 2/3 störst."
+   ],
+   [
+    "Hur stor del av en timme är 20 minuter?",
+    "En timme är 60 minuter, så delen är 20/60. Dela täljare och nämnare med 20: 20/60 = 1/3."
+   ]
+  ],
+  "ord": [
+   [
+    "täljare",
+    "talet över bråkstrecket"
+   ],
+   [
+    "nämnare",
+    "talet under bråkstrecket"
+   ],
+   [
+    "förlänga",
+    "multiplicera täljare och nämnare med samma tal"
+   ],
+   [
+    "förkorta",
+    "dividera täljare och nämnare med samma tal"
+   ]
+  ],
+  "tips": "Ska du jämföra ett bråk med ett decimaltal är det lättast att först göra om bråket till decimaltal."
+ },
+ "Decimaltal": {
+  "mal": [
+   "Läsa och skriva decimaltal med tiondelar och hundradelar.",
+   "Jämföra och ordna decimaltal.",
+   "Avrunda decimaltal till en decimal och till heltal.",
+   "Räkna plus, minus, gånger och delat med decimaltal."
+  ],
+  "fakta": [
+   "Första siffran efter kommat är tiondelar och den andra hundradelar: 0,46 är 4 tiondelar och 6 hundradelar.",
+   "Jämför siffra för siffra från vänster: 0,6 är större än 0,58, för 6 tiondelar är mer än 5 tiondelar.",
+   "Avrunda till en decimal: titta på hundradelen. Är den 0–4 avrundar du nedåt, och 5–9 uppåt. 2,83 blir 2,8 och 2,86 blir 2,9.",
+   "Plus och minus: ställ kommat under kommat och fyll ut med nollor. 4 − 1,35 = 4,00 − 1,35 = 2,65.",
+   "Gånger 10 flyttar kommat ett steg åt höger, och delat med 10 ett steg åt vänster: 3,6 · 10 = 36 och 3,6 / 10 = 0,36."
+  ],
+  "exempel": [
+   [
+    "Vad är 0,7 · 3?",
+    "7 tiondelar · 3 = 21 tiondelar, alltså 2,1."
+   ],
+   [
+    "Vad kostar två böcker för 24,75 kr styck?",
+    "24,75 + 24,75 = 49,50. De kostar 49,50 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "tiondel",
+    "den första siffran efter kommat, 0,1"
+   ],
+   [
+    "hundradel",
+    "den andra siffran efter kommat, 0,01"
+   ],
+   [
+    "decimal",
+    "en siffra efter decimalkommat"
+   ],
+   [
+    "heltal",
+    "ett tal utan decimaler, som 12"
+   ]
+  ],
+  "tips": "Fler decimaler gör inte talet större: 0,9 är mer än 0,85."
+ },
+ "Statistik": {
+  "mal": [
+   "Räkna ut medelvärdet av några tal.",
+   "Hitta medianen och typvärdet.",
+   "Förklara hur medelvärde, median och typvärde skiljer sig åt.",
+   "Räkna baklänges från ett medelvärde till ett tal som saknas."
+  ],
+  "fakta": [
+   "Medelvärde: lägg ihop alla tal och dela med hur många tal det är.",
+   "Median: ställ talen i storleksordning. Medianen är talet i mitten.",
+   "Finns det ett jämnt antal tal står två tal i mitten. Då är medianen talet mitt emellan dem.",
+   "Typvärde: det värde som finns flest gånger.",
+   "Ett mycket stort eller litet tal drar medelvärdet åt sitt håll, men flyttar knappt medianen."
+  ],
+  "exempel": [
+   [
+    "Vad är medelvärdet av 3, 8, 10 och 15?",
+    "3 + 8 + 10 + 15 = 36, och det är 4 tal. 36 / 4 = 9. Medelvärdet är 9."
+   ],
+   [
+    "Vad är medianen för 12, 4, 8 och 15?",
+    "I storleksordning: 4, 8, 12, 15. De två i mitten är 8 och 12, och mitt emellan dem ligger 10. Medianen är 10."
+   ]
+  ],
+  "ord": [
+   [
+    "medelvärde",
+    "summan av talen delat med antalet tal"
+   ],
+   [
+    "median",
+    "talet i mitten när talen står i storleksordning"
+   ],
+   [
+    "typvärde",
+    "det värde som finns flest gånger"
+   ],
+   [
+    "lägesmått",
+    "ett tal som beskriver en grupp tal: medelvärde, median eller typvärde"
+   ]
+  ],
+  "tips": "Glöm inte att ställa talen i storleksordning innan du letar upp medianen."
+ },
+ "Negativa tal": {
+  "mal": [
+   "Placera negativa tal på tallinjen och jämföra dem.",
+   "Räkna med temperaturer över och under noll.",
+   "Räkna plus och minus när svaret blir mindre än noll.",
+   "Räkna ut skillnaden mellan två tal på var sin sida om noll."
+  ],
+  "fakta": [
+   "Negativa tal är tal under noll. De skrivs med minustecken: −5 betyder 5 under noll.",
+   "På tallinjen är ett tal större ju längre till höger det ligger. Därför är −3 större än −8.",
+   "Plus är steg åt höger på tallinjen och minus steg åt vänster: 1 − 7 = −6.",
+   "Skillnaden mellan ett tal under noll och ett över noll: räkna stegen upp till noll och sedan stegen vidare. Från −2 till 9 är 2 + 9 = 11 steg."
+  ],
+  "exempel": [
+   [
+    "Det är −6 grader. Det blir 10 grader varmare. Hur varmt är det nu?",
+    "Gå 6 steg upp till 0 och sedan 4 steg till. Det är 4 grader."
+   ],
+   [
+    "En hiss står på våning 3. Den åker 7 våningar ned. På vilken våning står den nu?",
+    "3 − 7 = −4. Hissen står på våning −4."
+   ]
+  ],
+  "ord": [
+   [
+    "negativt tal",
+    "ett tal under noll, som −3"
+   ],
+   [
+    "minusgrader",
+    "grader under noll"
+   ],
+   [
+    "tallinje",
+    "en linje med talen i ordning, de negativa till vänster om noll"
+   ]
+  ],
+  "tips": "Fällan: −12 är mindre än −4, fast 12 är större än 4."
+ },
+ "Bråk, area och diagram": {
+  "mal": [
+   "Skriva en del av en helhet som bråk och jämföra bråk.",
+   "Räkna ut en del av ett tal.",
+   "Räkna ut omkrets och area av rektanglar och kvadrater, också baklänges.",
+   "Läsa av ett diagram och räkna ut medelvärde, median och typvärde."
+  ],
+  "fakta": [
+   "Nämnaren säger hur många lika stora delar det hela är delat i, och täljaren hur många av delarna du har.",
+   "Ett bråk av ett tal: dela med nämnaren och multiplicera med täljaren. 2/3 av 15 är 15 / 3 · 2 = 10.",
+   "Omkretsen är alla sidor tillsammans. Arean är längden · bredden och mäts i cm² eller m².",
+   "Baklänges: är arean 42 cm² och ena sidan 7 cm, är den andra 42 / 7 = 6 cm. En kvadrat med arean 64 cm² har sidan 8 cm, för 8 · 8 = 64.",
+   "Medelvärde: summan delat med antalet. Median: talet i mitten i storleksordning, och vid ett jämnt antal mitt emellan de två i mitten. Typvärde: det vanligaste värdet."
+  ],
+  "exempel": [
+   [
+    "Skriv 6/9 på det enklaste sättet.",
+    "Dela både täljaren och nämnaren med 3: 6/9 = 2/3."
+   ],
+   [
+    "En rektangel är 9 cm lång och 2 cm bred. Hur stor är omkretsen och arean?",
+    "Omkrets: 9 + 2 + 9 + 2 = 22 cm. Area: 9 · 2 = 18 cm²."
+   ]
+  ],
+  "ord": [
+   [
+    "täljare",
+    "talet över bråkstrecket"
+   ],
+   [
+    "nämnare",
+    "talet under bråkstrecket"
+   ],
+   [
+    "omkrets",
+    "sträckan runt en figur"
+   ],
+   [
+    "area",
+    "hur stor yta en figur täcker"
+   ],
+   [
+    "median",
+    "talet i mitten när talen står i storleksordning"
+   ],
+   [
+    "typvärde",
+    "det värde som finns flest gånger"
+   ]
+  ],
+  "tips": "Kontrollera ett svar baklänges: dela arean med den sida du vet, så ska du få den andra."
+ },
+ "Sannolikhet": {
+  "mal": [
+   "Beskriva hur troligt något är med ord som omöjligt, möjligt och säkert.",
+   "Skriva en sannolikhet som ett bråk.",
+   "Jämföra chanser, till exempel mellan två påsar med kulor.",
+   "Räkna ut ungefär hur många gånger något kan väntas hända."
+  ],
+  "fakta": [
+   "Sannolikhet = antalet utfall som passar / antalet möjliga utfall, när alla utfall är lika troliga. I en påse med 2 röda och 5 blå kulor är chansen för röd 2/7.",
+   "Omöjligt har sannolikheten 0 och säkert har sannolikheten 1. Allt annat ligger mellan 0 och 1.",
+   "Jämför chanser med bråken, inte med antalet kulor: 4 röda av 10 är en mindre chans än 3 röda av 5.",
+   "Förväntat antal: sannolikheten gånger antalet försök. Med chansen 1/5 och 30 försök väntar du dig ungefär 6 gånger.",
+   "En tärning eller ett mynt minns inte förra kastet: chansen är lika stor varje gång."
+  ],
+  "exempel": [
+   [
+    "En snurra har 10 lika stora fält, och 4 av dem är gula. Hur stor är chansen att den stannar på gult?",
+    "4 av 10 fält passar, så sannolikheten är 4/10, vilket är samma som 2/5."
+   ],
+   [
+    "Du kastar en vanlig tärning. Hur stor är chansen att slå ett tal under 5?",
+    "Talen 1, 2, 3 och 4 passar, alltså 4 av 6 sidor. Sannolikheten är 4/6 = 2/3."
+   ]
+  ],
+  "ord": [
+   [
+    "sannolikhet",
+    "hur stor chansen är att något händer, från 0 till 1"
+   ],
+   [
+    "utfall",
+    "något som kan hända, som att slå en 3:a"
+   ],
+   [
+    "omöjligt",
+    "kan inte hända, sannolikheten 0"
+   ],
+   [
+    "säkert",
+    "händer alltid, sannolikheten 1"
+   ]
+  ],
+  "tips": "Räkna alla utfall, både de som passar och de som inte passar, innan du skriver bråket."
+ },
+ "Faktorer och primtal": {
+  "mal": [
+   "Hitta multiplar av ett tal och gemensamma multiplar till två tal.",
+   "Hitta alla faktorer till ett tal och gemensamma faktorer till två tal.",
+   "Avgöra om ett tal är ett primtal.",
+   "Använda reglerna för när ett tal går att dela med 2, 3 och 5."
+  ],
+  "fakta": [
+   "En multipel av 7 är ett tal i 7:ans tabell: 7, 14, 21, 28 … En gemensam multipel till två tal finns i båda talens tabeller.",
+   "En faktor till ett tal går jämnt upp i talet. Faktorerna till 20 är 1, 2, 4, 5, 10 och 20.",
+   "Ett primtal är ett tal som har exakt två olika faktorer: 1 och talet självt.",
+   "Ett tal går att dela med 2 om det slutar på 0, 2, 4, 6 eller 8, med 5 om det slutar på 0 eller 5, och med 3 om siffersumman går att dela med 3.",
+   "Ett tal större än 1 som inte är ett primtal kan skrivas som primtal gånger varandra: 42 = 2 · 3 · 7."
+  ],
+  "exempel": [
+   [
+    "Går 246 att dela med 3 utan rest?",
+    "Siffersumman är 2 + 4 + 6 = 12, och 12 går att dela med 3. Alltså går 246 också: 246 / 3 = 82."
+   ],
+   [
+    "Vilka är de gemensamma faktorerna till 8 och 20?",
+    "Faktorerna till 8: 1, 2, 4, 8. Faktorerna till 20: 1, 2, 4, 5, 10, 20. Gemensamma är 1, 2 och 4."
+   ]
+  ],
+  "ord": [
+   [
+    "multipel",
+    "ett tal i ett annat tals tabell, som 21 för 7"
+   ],
+   [
+    "faktor",
+    "ett tal som går jämnt upp i ett annat tal"
+   ],
+   [
+    "primtal",
+    "ett tal med exakt två faktorer, 1 och talet självt"
+   ],
+   [
+    "gemensam faktor",
+    "en faktor som två tal har båda"
+   ],
+   [
+    "siffersumma",
+    "siffrorna i ett tal tillsammans: 246 har 2 + 4 + 6 = 12"
+   ]
+  ],
+  "tips": "Leta faktorer i par, som 1 · 20, 2 · 10 och 4 · 5, så missar du ingen."
+ }
+}

@@ -1,0 +1,206 @@
+{
+ "Hälsa och presentera dig": {
+  "mal": [
+   "Hälsa och säga hej då på spanska vid olika tider på dagen.",
+   "Fråga hur någon mår och svara.",
+   "Säga vad du heter, var du kommer ifrån och var du bor.",
+   "Fråga andra samma sak, som till en kompis eller artigt till en vuxen."
+  ],
+  "fakta": [
+   "Buenos días säger du på morgonen och förmiddagen, buenas tardes på eftermiddagen och buenas noches på kvällen och natten.",
+   "En fråga börjar med ett uppochnedvänt frågetecken: ¿Cómo estás? Ett utrop börjar med ¡: ¡Hola!",
+   "Jag heter … är Me llamo …, jag kommer från … är Soy de … och jag bor i … är Vivo en …",
+   "Till en kompis säger du tú, och till en vuxen du vill vara artig mot usted. Verbet ändras: tú estás, usted está.",
+   "Spanska talas i Spanien och i de flesta länder i Latinamerika, men i Brasilien talar man portugisiska."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'Jag heter Elias och jag kommer från Norge'?",
+    "Me llamo Elias y soy de Noruega."
+   ],
+   [
+    "Du går hem från en kompis på kvällen. Vad kan du säga?",
+    "¡Buenas noches, hasta pronto!"
+   ]
+  ],
+  "ord": [
+   [
+    "mucho gusto",
+    "trevligt att träffas"
+   ],
+   [
+    "por favor",
+    "snälla, när du ber om något"
+   ],
+   [
+    "de nada",
+    "varsågod, ingen orsak"
+   ],
+   [
+    "hasta pronto",
+    "vi ses snart"
+   ]
+  ],
+  "tips": "Ll i llamo uttalas ungefär som j i jag."
+ },
+ "Siffror och ålder": {
+  "mal": [
+   "Räkna från noll till tjugo på spanska.",
+   "Säga hur gammal du och andra är.",
+   "Räkna med enkla tal på spanska."
+  ],
+  "fakta": [
+   "0–10: cero, uno, dos, tres, cuatro, cinco, seis, siete, ocho, nueve, diez.",
+   "11–15 är egna ord: once, doce, trece, catorce, quince.",
+   "16–19 byggs av diez y …: dieciséis, diecisiete, dieciocho, diecinueve. 20 är veinte.",
+   "Ålder säger du med tener (ha): Tengo … años betyder ordagrant jag har … år."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'Jag är femton år'?",
+    "Tengo quince años."
+   ],
+   [
+    "Vad är doce + tres? Svara på spanska.",
+    "quince. 12 + 3 = 15."
+   ]
+  ],
+  "ord": [
+   [
+    "el año",
+    "året; años är flera år"
+   ],
+   [
+    "tener",
+    "att ha"
+   ],
+   [
+    "¿cuántos?",
+    "hur många?"
+   ]
+  ],
+  "tips": "Skriv años med ñ: ñ är en egen bokstav, och utan den blir det ett annat ord."
+ },
+ "Familjen och artiklarna": {
+  "mal": [
+   "Säga vad de i familjen heter på spanska.",
+   "Välja el eller la, och un eller una.",
+   "Göra substantiv och adjektiv till plural.",
+   "Böja adjektiv efter substantivet."
+  ],
+  "fakta": [
+   "Varje substantiv är maskulint eller feminint. Maskulina har el och un, feminina la och una: el primo, una silla.",
+   "Ord på -o är oftast maskulina och ord på -a oftast feminina, men det finns undantag: el mapa, la mano.",
+   "Plural: el blir los och la blir las. Ord på vokal får -s och ord på konsonant -es: las mesas, los meses.",
+   "Slutar ordet på -z blir z till c i plural: la voz, las voces.",
+   "Adjektivet står oftast efter och böjs som substantivet: un perro pequeño, una casa pequeña, dos casas pequeñas."
+  ],
+  "exempel": [
+   [
+    "Välj un eller una: ___ mesa (ett bord)",
+    "una. Mesa är feminint."
+   ],
+   [
+    "Gör till plural: el árbol verde",
+    "los árboles verdes. Árbol slutar på konsonant och får -es, och verde får -s."
+   ]
+  ],
+  "ord": [
+   [
+    "el primo, la prima",
+    "kusinen"
+   ],
+   [
+    "maskulint",
+    "ett ord som har el och un"
+   ],
+   [
+    "feminint",
+    "ett ord som har la och una"
+   ]
+  ],
+  "tips": "En blandad grupp får maskulin plural: los abuelos kan betyda farfar och farmor tillsammans."
+ },
+ "Ser, estar och tener": {
+  "mal": [
+   "Böja ser, estar och tener i presens.",
+   "Välja ser eller estar.",
+   "Säga att du är hungrig eller törstig med tener."
+  ],
+  "fakta": [
+   "Ser (vara): soy, eres, es, somos, sois, son.",
+   "Estar (vara): estoy, estás, está, estamos, estáis, están.",
+   "Tener (ha): tengo, tienes, tiene, tenemos, tenéis, tienen.",
+   "Ser används om vem eller vad någon är: yrke, var man kommer ifrån och hur man är som person.",
+   "Estar används om var något är och hur man mår just nu: Estoy bien. Estamos en el parque."
+  ],
+  "exempel": [
+   [
+    "Välj ser eller estar: Mi abuela ___ en el hospital.",
+    "está. Det handlar om var hon är."
+   ],
+   [
+    "Hur säger du 'Vi är törstiga'?",
+    "Tenemos sed. Ordagrant: vi har törst."
+   ]
+  ],
+  "ord": [
+   [
+    "tener sed",
+    "vara törstig, ordagrant ha törst"
+   ],
+   [
+    "tener frío",
+    "frysa, ordagrant ha kyla"
+   ],
+   [
+    "tener calor",
+    "känna sig varm, ordagrant ha värme"
+   ]
+  ],
+  "tips": "Vissa ord byter betydelse: es listo betyder han är smart, men está listo betyder han är klar."
+ },
+ "Skolan och fritiden": {
+  "mal": [
+   "Böja regelbundna -ar-verb i presens.",
+   "Se på ändelsen vem som gör något.",
+   "Prata om skolämnen och fritid.",
+   "Böja jugar, där u blir ue."
+  ],
+  "fakta": [
+   "Ta bort -ar och lägg till ändelsen: cantar blir canto, cantas, canta, cantamos, cantáis, cantan.",
+   "Ändelsen visar vem, så pronomenet behövs ofta inte: -o jag, -as du, -a han, hon eller usted, -amos vi, -áis ni, -an de.",
+   "Jugar byter u mot ue i de flesta former: juego, juegas, juega, jugamos, jugáis, juegan.",
+   "Spela en sport är jugar a: jugar al tenis (a + el blir al). Spela ett instrument är tocar: tocar el piano."
+  ],
+  "exempel": [
+   [
+    "Fyll i cocinar i presens: Mi padre ___ los domingos.",
+    "cocina. Mi padre är han, och han får ändelsen -a."
+   ],
+   [
+    "Vad betyder 'Jugáis al baloncesto'?",
+    "Ni spelar basket."
+   ]
+  ],
+  "ord": [
+   [
+    "la asignatura",
+    "skolämnet"
+   ],
+   [
+    "el deporte",
+    "idrotten, sporten"
+   ],
+   [
+    "los deberes",
+    "läxorna"
+   ],
+   [
+    "el horario",
+    "schemat"
+   ]
+  ],
+  "tips": "Ta bort -ar först, så har du stammen: cocinar ger cocin-, och sedan kommer ändelsen."
+ }
+}

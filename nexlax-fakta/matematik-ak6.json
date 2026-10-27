@@ -1,0 +1,505 @@
+{
+ "Procent": {
+  "mal": [
+   "Räkna ut 50 %, 25 % och 10 % av ett tal, och hur stor en rabatt blir.",
+   "Skriva samma andel som bråk, decimaltal och procent.",
+   "Räkna ut hur många procent en del är av det hela, och jämföra andelar."
+  ],
+  "fakta": [
+   "Procent betyder hundradelar: 1 % = 1/100 = 0,01. Det hela är 100 %.",
+   "50 % är hälften, 25 % är en fjärdedel och 10 % är en tiondel. 10 % av ett tal får du om du delar talet med 10.",
+   "Från decimaltal till procent: flytta decimaltecknet två steg åt höger. 0,9 = 90 %.",
+   "Hur många procent en del är: skriv delen som ett bråk av det hela och förläng till hundradelar. 3 av 20 = 15/100 = 15 %.",
+   "Rabatt är hur mycket billigare något blir. Nya priset är det gamla priset minus rabatten."
+  ],
+  "exempel": [
+   [
+    "Hur mycket är 25 % av 36?",
+    "25 % är en fjärdedel. 36 : 4 = 9."
+   ],
+   [
+    "En boll kostar 120 kr och säljs med 10 % rabatt. Vad kostar den nu?",
+    "10 % av 120 kr är 120 : 10 = 12 kr. Nya priset är 120 − 12 = 108 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "procent",
+    "hundradelar, tecknet %"
+   ],
+   [
+    "andel",
+    "hur stor del något är av det hela"
+   ],
+   [
+    "rabatt",
+    "hur mycket lägre priset blir"
+   ]
+  ],
+  "tips": "Börja med 10 % genom att dela med 10, för då är 20 % dubbelt så mycket och 5 % hälften så mycket."
+ },
+ "Koordinatsystem": {
+  "mal": [
+   "Läsa av och skriva punkter som (x, y) i ett koordinatsystem.",
+   "Flytta punkter åt höger, vänster, uppåt och nedåt.",
+   "Räkna ut sidor och area för rektanglar och kvadrater ur hörnens koordinater.",
+   "Hitta punkten mitt emellan två punkter."
+  ],
+  "fakta": [
+   "En punkt skrivs (x, y). Första talet, x, säger hur många steg åt höger från origo. Andra talet, y, säger hur många steg uppåt.",
+   "Origo är punkten (0, 0), där x-axeln och y-axeln möts.",
+   "Alla punkter på x-axeln har y = 0, och alla punkter på y-axeln har x = 0.",
+   "Går du åt höger eller vänster ändras bara x. Går du uppåt eller nedåt ändras bara y.",
+   "Har två punkter samma y är avståndet mellan dem skillnaden mellan deras x-värden."
+  ],
+  "exempel": [
+   [
+    "Punkten (2, 5) flyttas 3 steg åt höger och 1 steg nedåt. Vilken punkt får du?",
+    "x ökar med 3 och y minskar med 1: (2 + 3, 5 − 1) = (5, 4)."
+   ],
+   [
+    "Vilken punkt ligger mitt emellan (1, 3) och (7, 3)?",
+    "Båda har y = 3. Mitt emellan x = 1 och x = 7 ligger (1 + 7) : 2 = 4. Punkten är (4, 3)."
+   ]
+  ],
+  "ord": [
+   [
+    "x-axeln",
+    "den vågräta axeln"
+   ],
+   [
+    "y-axeln",
+    "den lodräta axeln"
+   ],
+   [
+    "origo",
+    "punkten (0, 0), där axlarna möts"
+   ],
+   [
+    "koordinat",
+    "ett av talen som visar var en punkt ligger"
+   ]
+  ],
+  "tips": "Ordningen spelar roll: (2, 5) och (5, 2) är olika punkter, så gå alltid först åt sidan (x) och sedan upp (y)."
+ },
+ "Geometri": {
+  "mal": [
+   "Känna igen spetsiga, räta, trubbiga och raka vinklar.",
+   "Räkna ut den okända vinkeln i en triangel eller en fyrhörning.",
+   "Räkna ut vinklar på en rak linje och i likbenta och liksidiga trianglar."
+  ],
+  "fakta": [
+   "En rät vinkel är 90°. En spetsig vinkel är mindre än 90°, en trubbig är mellan 90° och 180°, och en rak vinkel är 180°.",
+   "Vinklarna i en triangel är tillsammans 180°. Vinklarna i en fyrhörning är tillsammans 360°, lika mycket som ett helt varv.",
+   "Två vinklar som ligger bredvid varandra på en rak linje är tillsammans 180°.",
+   "I en liksidig triangel är alla tre vinklarna lika stora. I en likbent triangel är de två basvinklarna lika stora."
+  ],
+  "exempel": [
+   [
+    "Två vinklar i en triangel är 45° och 75°. Hur stor är den tredje?",
+    "45° + 75° = 120°. Den tredje vinkeln är 180° − 120° = 60°."
+   ],
+   [
+    "En likbent triangel har toppvinkeln 30°. Hur stora är de två andra vinklarna?",
+    "180° − 30° = 150°. De två basvinklarna är lika stora: 150° : 2 = 75° var."
+   ]
+  ],
+  "ord": [
+   [
+    "grad",
+    "enheten för vinklar, tecknet °"
+   ],
+   [
+    "fyrhörning",
+    "en figur med fyra sidor och fyra hörn"
+   ],
+   [
+    "likbent triangel",
+    "en triangel med två lika långa sidor och två lika stora vinklar"
+   ],
+   [
+    "liksidig triangel",
+    "en triangel där alla sidor och alla vinklar är lika stora"
+   ]
+  ],
+  "tips": "Rita en skiss och skriv in vinklarna du vet; den okända är det som saknas upp till 180° eller 360°."
+ },
+ "Ekvationer": {
+  "mal": [
+   "Hitta det okända talet x i ekvationer med plus, minus, gånger och delat.",
+   "Lösa ekvationer i två steg.",
+   "Skriva en ekvation som passar en berättelse."
+  ],
+  "fakta": [
+   "En ekvation är en likhet där ett tal är okänt. Lösningen är det tal som gör att båda sidor blir lika mycket.",
+   "3x betyder 3 · x, och x/2 betyder x delat med 2.",
+   "Gör motsatsen: står det + 6, dra bort 6 från båda sidor. Står det · 3, dela båda sidor med 3. Står det /5, multiplicera båda sidor med 5.",
+   "I två steg: ta först bort talet som läggs till eller dras bort. Dela sedan med talet framför x, eller multiplicera om x är delat med ett tal.",
+   "Pröva svaret: sätt in det i ekvationen och se att båda sidor blir lika."
+  ],
+  "exempel": [
+   [
+    "Lös ekvationen x − 6 = 9.",
+    "Lägg till 6 på båda sidor: x = 9 + 6 = 15. Kontroll: 15 − 6 = 9."
+   ],
+   [
+    "Lös ekvationen 4x + 2 = 30.",
+    "Dra bort 2 på båda sidor: 4x = 28. Dela med 4: x = 7. Kontroll: 4 · 7 + 2 = 30."
+   ]
+  ],
+  "ord": [
+   [
+    "ekvation",
+    "en likhet med ett okänt tal, ofta x"
+   ],
+   [
+    "lösning",
+    "det tal som gör att ekvationen stämmer"
+   ],
+   [
+    "likhetstecken",
+    "tecknet =, som betyder ”är lika mycket som”"
+   ]
+  ],
+  "tips": "Det du gör på ena sidan av likhetstecknet måste du göra på den andra sidan också."
+ },
+ "Negativa tal och ekvationer": {
+  "mal": [
+   "Placera och jämföra negativa tal på tallinjen.",
+   "Räkna ut hur temperaturen ändras när den stiger eller sjunker under noll.",
+   "Läsa av punkter med negativa koordinater i ett koordinatsystem.",
+   "Lösa ekvationer i ett och två steg och kontrollera lösningen."
+  ],
+  "fakta": [
+   "Negativa tal ligger till vänster om 0 på tallinjen. Ju längre till vänster, desto mindre är talet: −6 är mindre än −2.",
+   "Plus är steg åt höger på tallinjen och minus är steg åt vänster, också när du passerar noll.",
+   "I ett koordinatsystem betyder negativt x till vänster om origo och negativt y nedåt.",
+   "En ekvation löser du genom att göra samma sak på båda sidor tills x står ensamt.",
+   "Kontrollera: sätt in svaret i ekvationen. Blir båda sidor lika är det rätt."
+  ],
+  "exempel": [
+   [
+    "Det är −6 °C och temperaturen stiger 4 grader. Hur varmt är det då?",
+    "Börja på −6 och gå 4 steg åt höger: −6 + 4 = −2. Det är −2 °C."
+   ],
+   [
+    "Lös ekvationen 4x − 3 = 33.",
+    "Lägg till 3 på båda sidor: 4x = 36. Dela med 4: x = 9. Kontroll: 4 · 9 − 3 = 33."
+   ]
+  ],
+  "ord": [
+   [
+    "negativt tal",
+    "ett tal mindre än noll, med minustecken framför"
+   ],
+   [
+    "tallinje",
+    "en linje där talen står i ordning, de minsta till vänster"
+   ],
+   [
+    "origo",
+    "punkten (0, 0) mitt i koordinatsystemet"
+   ]
+  ],
+  "tips": "Tänk på en termometer: −9 °C är kallare än −1 °C, så −9 är det mindre talet."
+ },
+ "NP-träning": {
+  "mal": [
+   "Räkna med heltal, decimaltal, bråk och procent utan miniräknare.",
+   "Lösa problem i flera steg, som att dela lika, räkna ut medelvärde och jämföra priser.",
+   "Räkna ut omkrets, area och volym och använda skala.",
+   "Läsa data, räkna ut median och chans och hitta regeln i ett mönster."
+  ],
+  "fakta": [
+   "Läs frågan noga, två gånger om den är lång. Leta upp vad som frågas efter: ett antal, kronor, centimeter eller en regel.",
+   "Visa hur du tänker: skriv uträkningen i steg på ett papper, så ser du var ett fel kom in.",
+   "Kontrollera svaret: är det rimligt, och stämmer det om du sätter tillbaka det i frågan?",
+   "Medelvärde är summan av värdena delat med hur många de är. Median är det mittersta värdet när du ställt dem i ordning, eller mitt emellan de två mittersta.",
+   "Ökar ett mönster lika mycket varje steg blir regeln ökningen · n plus eller minus ett fast tal. Pröva regeln på de första figurerna."
+  ],
+  "exempel": [
+   [
+    "Fyra kompisar delar på en pizza för 140 kr och en läsk för 20 kr. Hur mycket betalar var och en?",
+    "Allt kostar 140 + 20 = 160 kr. Delat på fyra: 160 : 4 = 40 kr var. Kontroll: 4 · 40 = 160."
+   ],
+   [
+    "Ett mönster har 5, 9, 13, 17, … stickor. Hur många stickor har figur 6?",
+    "Det ökar med 4 varje gång, så regeln är 4 · n + 1. Figur 6: 4 · 6 + 1 = 25. Kontroll: figur 1 ger 4 · 1 + 1 = 5."
+   ]
+  ],
+  "ord": [
+   [
+    "medelvärde",
+    "summan av värdena delat med hur många de är"
+   ],
+   [
+    "median",
+    "det mittersta värdet när värdena står i storleksordning"
+   ],
+   [
+    "omkrets",
+    "sträckan runt en figur"
+   ],
+   [
+    "area",
+    "hur stor yta en figur täcker, till exempel i cm²"
+   ],
+   [
+    "skala",
+    "hur mycket mindre eller större en karta eller ritning är än verkligheten"
+   ]
+  ],
+  "tips": "Rita en bild eller gör en tabell när texten är lång, så blir det lättare att se vad som händer."
+ },
+ "Läsa: genomgång inför NP": {
+  "mal": [
+   "Läsa en genomgång i matematik och hitta det du behöver i texten.",
+   "Använda det du läst om bråk, decimaltal och procent i egna uträkningar.",
+   "Använda det du läst om omkrets, area, volym och enheter."
+  ],
+  "fakta": [
+   "Läs texten en gång först. Läs sedan frågan noga och leta efter rubriken som passar, som Procent eller Volym.",
+   "Skilj på det som står i texten och det du räknar ut själv. Står det ”enligt genomgången” finns svaret i texten.",
+   "Ett bråk blir ett decimaltal när du delar täljaren med nämnaren, och ett decimaltal blir procent när du multiplicerar med 100: 1/5 = 0,2 = 20 %.",
+   "Omkrets är sträckan runt en figur och area är ytan inuti. Volym är hur mycket som får plats, och 1 dm³ = 1 liter.",
+   "Byter du till en mindre enhet blir talet större: 1 km = 1 000 m och 1 m = 100 cm."
+  ],
+  "exempel": [
+   [
+    "Hur många procent är 7/10?",
+    "7/10 = 7 : 10 = 0,7, och 0,7 · 100 = 70. Svaret är 70 %."
+   ],
+   [
+    "Hur många liter rymmer en låda som är 5 dm lång, 4 dm bred och 2 dm hög?",
+    "Volymen är 5 · 4 · 2 = 40 dm³. 1 dm³ = 1 liter, så lådan rymmer 40 liter."
+   ]
+  ],
+  "ord": [
+   [
+    "täljare",
+    "talet över bråkstrecket"
+   ],
+   [
+    "nämnare",
+    "talet under bråkstrecket"
+   ],
+   [
+    "förlänga",
+    "multiplicera täljare och nämnare med samma tal"
+   ],
+   [
+    "förkorta",
+    "dela täljare och nämnare med samma tal"
+   ],
+   [
+    "rätblock",
+    "en kropp som en låda, med sex rektangulära sidor"
+   ]
+  ],
+  "tips": "Markera rubriken som hör till frågan och läs bara det stycket igen, i stället för hela texten."
+ },
+ "Skala och proportionalitet": {
+  "mal": [
+   "Förklara vad en skala som 1:100 betyder.",
+   "Räkna från ritningen till verkligheten och tillbaka.",
+   "Räkna ut priser, recept och sträckor när allt växer lika mycket.",
+   "Jämföra priser genom att räkna ut priset per kilo eller liter."
+  ],
+  "fakta": [
+   "Skala 1:100 betyder att 1 cm på ritningen är 100 cm i verkligheten. Första talet gäller ritningen och andra talet verkligheten.",
+   "Från ritning till verklighet: multiplicera med skalans andra tal. Från verklighet till ritning: dela med det.",
+   "Byt enhet efteråt: 100 cm = 1 m och 100 000 cm = 1 km.",
+   "Proportionellt betyder att dubbelt så mycket kostar dubbelt så mycket. Räkna först ut vad en sak kostar, sedan vad många kostar.",
+   "Pris per kilo: dela priset med antalet kilo. Lägst pris per kilo är billigast."
+  ],
+  "exempel": [
+   [
+    "En ritning har skalan 1:25. En säng är 8 cm lång på ritningen. Hur lång är den i verkligheten?",
+    "8 · 25 = 200 cm, alltså 2 m."
+   ],
+   [
+    "4 äpplen kostar 20 kr. Vad kostar 7 äpplen?",
+    "Ett äpple kostar 20 : 4 = 5 kr. 7 äpplen kostar 7 · 5 = 35 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "skala",
+    "hur mycket mindre eller större en bild är än verkligheten"
+   ],
+   [
+    "förminskning",
+    "bilden är mindre än verkligheten, som i skala 1:100"
+   ],
+   [
+    "proportionellt",
+    "växer lika mycket: dubbelt så mycket ger dubbelt så mycket"
+   ],
+   [
+    "jämförpris",
+    "priset per kilo eller liter, för att kunna jämföra varor"
+   ]
+  ],
+  "tips": "Skriv om till samma enhet innan du jämför: centimeter med centimeter och meter med meter."
+ },
+ "Prioriteringsregler": {
+  "mal": [
+   "Räkna gånger och delat före plus och minus.",
+   "Räkna det som står inom parentes först.",
+   "Sätta ut parenteser så att en uträkning får det värde du vill.",
+   "Skriva och räkna ut ett köp med flera saker."
+  ],
+  "fakta": [
+   "Räkna i den här ordningen: 1. parenteser, 2. gånger och delat, 3. plus och minus.",
+   "Gånger och delat som står bredvid varandra räknar du från vänster till höger. Samma sak gäller plus och minus.",
+   "En parentes ändrar ordningen: det som står inom parentesen räknar du alltid först.",
+   "Läs hela uttrycket innan du börjar, och ringa in det som ska räknas först."
+  ],
+  "exempel": [
+   [
+    "Räkna 7 + 2 · 6.",
+    "Gånger först: 2 · 6 = 12. Sedan plus: 7 + 12 = 19."
+   ],
+   [
+    "Räkna (9 − 3) · 4.",
+    "Parentesen först: 9 − 3 = 6. Sedan gånger: 6 · 4 = 24."
+   ]
+  ],
+  "ord": [
+   [
+    "uttryck",
+    "tal och räknetecken, till exempel 5 − 2 · 2"
+   ],
+   [
+    "parentes",
+    "tecknen ( ), som visar vad som ska räknas först"
+   ],
+   [
+    "prioriteringsregler",
+    "reglerna för i vilken ordning man räknar"
+   ]
+  ],
+  "tips": "En vanlig fälla är att räkna rakt från vänster: i 5 + 3 · 2 ska 3 · 2 räknas först."
+ },
+ "Mönster och talföljder": {
+  "mal": [
+   "Fortsätta en talföljd och säga vilken regel den följer.",
+   "Räkna ut vilket tal som står på en viss plats, utan att skriva alla tal före.",
+   "Skriva en formel med n för ett mönster av figurer, och använda den åt båda hållen."
+  ],
+  "fakta": [
+   "Ökar en talföljd lika mycket varje gång ser du steget om du drar ett tal från talet efter.",
+   "Talet på plats n är första talet + (n − 1) · steget. Från plats 1 till plats 10 är det 9 steg.",
+   "En formel som 3n + 2 betyder 3 · n + 2. Sätt in figurens nummer i stället för n.",
+   "Talet framför n är hur mycket mönstret växer för varje ny figur. Talet som läggs till gör att figur 1 blir rätt.",
+   "Vet du antalet men inte figuren, räkna baklänges: 3n + 2 = 32 ger 3n = 30, och n = 10."
+  ],
+  "exempel": [
+   [
+    "Talföljden börjar 6, 10, 14, 18, … Vilket tal står på plats 20?",
+    "Steget är 4, och från plats 1 till plats 20 är det 19 steg. 6 + 19 · 4 = 6 + 76 = 82."
+   ],
+   [
+    "Figur 1 har 5 stickor, figur 2 har 9 och figur 3 har 13. Vilken formel ger antalet i figur n?",
+    "Mönstret växer med 4 per figur, så formeln börjar med 4n. För figur 1 är 4 · 1 = 4, men det ska vara 5, så lägg till 1: 4n + 1. Pröva figur 3: 4 · 3 + 1 = 13."
+   ]
+  ],
+  "ord": [
+   [
+    "talföljd",
+    "tal i en bestämd ordning som följer en regel"
+   ],
+   [
+    "n",
+    "en bokstav som står för figurens eller platsens nummer"
+   ],
+   [
+    "formel",
+    "ett uttryck som ger svaret när du sätter in ett tal"
+   ]
+  ],
+  "tips": "Pröva formeln på figur 1, 2 och 3 innan du använder den. Stämmer den inte för alla tre är den fel."
+ },
+ "Kombinationer": {
+  "mal": [
+   "Räkna hur många sätt det finns att välja en sak av varje sort.",
+   "Räkna hur många ordningar några personer eller saker kan stå i.",
+   "Skilja på när ordningen spelar roll och när den inte gör det."
+  ],
+  "fakta": [
+   "En sak av varje sort: multiplicera antalen. 3 kepsar och 4 halsdukar ger 3 · 4 = 12 sätt.",
+   "Personer i en kö: första platsen har alla att välja på, nästa en färre, och så vidare. Fem personer kan stå på 5 · 4 · 3 · 2 · 1 = 120 sätt.",
+   "När du väljer två och ordningen inte spelar roll, som i ett lag eller ett handslag, har varje par räknats två gånger om du multiplicerar. Dela då med 2.",
+   "Skriv upp möjligheterna i en ordning, till exempel efter första siffran, så missar du ingen och tar ingen två gånger."
+  ],
+  "exempel": [
+   [
+    "Hur många tvåsiffriga tal kan du bilda med siffrorna 2, 5, 6 och 9, om varje siffra får användas högst en gång?",
+    "Tiotalssiffran kan väljas på 4 sätt och entalssiffran på de 3 som är kvar: 4 · 3 = 12."
+   ],
+   [
+    "Sju personer tar varandra i hand, en gång per par. Hur många handslag blir det?",
+    "Var och en tar 6 i hand: 7 · 6 = 42. Då har varje handslag räknats två gånger, så det blir 42 : 2 = 21."
+   ]
+  ],
+  "ord": [
+   [
+    "kombination",
+    "ett sätt att välja saker"
+   ],
+   [
+    "utfall",
+    "ett av de sätt det kan sluta på, som en sexa när du slår en tärning"
+   ]
+  ],
+  "tips": "När du väljer två: är Ada och Bo samma sak som Bo och Ada? Är det samma sak, dela med 2."
+ },
+ "Längd, massa och volym": {
+  "mal": [
+   "Byta mellan mm, cm, dm, m och km.",
+   "Byta mellan g, hg, kg och ton.",
+   "Byta mellan ml, cl, dl och liter, och räkna ut volymen av ett rätblock.",
+   "Uppskatta om en längd är rimlig."
+  ],
+  "fakta": [
+   "Längd: 1 km = 1 000 m, och 1 m = 10 dm = 100 cm = 1 000 mm.",
+   "Massa: 1 ton = 1 000 kg, 1 kg = 10 hg = 1 000 g, och 1 hg = 100 g.",
+   "Volym: 1 liter = 10 dl = 100 cl = 1 000 ml. 1 dm³ är 1 liter, och 1 cm³ är 1 ml.",
+   "Volymen av ett rätblock är längden · bredden · höjden. Räknar du i cm blir svaret i cm³.",
+   "Till en mindre enhet blir talet större, så du multiplicerar. Till en större enhet blir talet mindre, så du delar."
+  ],
+  "exempel": [
+   [
+    "Hur många gram är 0,35 kg?",
+    "1 kg = 1 000 g, så 0,35 kg är 0,35 · 1 000 = 350 g."
+   ],
+   [
+    "En låda är 30 cm lång, 20 cm bred och 10 cm hög. Hur många liter rymmer den?",
+    "Volymen är 30 · 20 · 10 = 6 000 cm³. 1 liter är 1 000 cm³, så lådan rymmer 6 liter."
+   ]
+  ],
+  "ord": [
+   [
+    "milli",
+    "en tusendel, som i millimeter och milliliter"
+   ],
+   [
+    "centi",
+    "en hundradel, som i centimeter och centiliter"
+   ],
+   [
+    "deci",
+    "en tiondel, som i decimeter och deciliter"
+   ],
+   [
+    "hekto",
+    "hundra: 1 hg är 100 g"
+   ],
+   [
+    "kilo",
+    "tusen, som i kilometer och kilogram"
+   ]
+  ],
+  "tips": "Gör om allt till samma enhet innan du jämför eller räknar."
+ }
+}

@@ -1856,6 +1856,7 @@
         ? (hjälpare ? hjälpare + ' kan inte er tid och föreslår den här' : 'Motförslag från er studiehjälpare')
         : hjälpare ? hjälpare + ' föreslår den här tiden' : 'Föreslaget av er studiehjälpare',
       lage: null,
+      dag: 'forslag',
       atgarder: svarsKnappar(b, true)
     }));
 
@@ -1955,6 +1956,8 @@
           href: '#pass/' + b.id,
           med: medBarn(b),
           nu: b.wanted_date === idag,
+          dag: dagTon(b),
+          lage: förslagsMärke(b),
           märke: passMärke(b)
         })).join('')
       : tomt('Inga kommande pass', S.väntar
@@ -3053,7 +3056,41 @@
     if (!kortBetalar(b)) return null;
     return { text: r.lage === 'reserverad' ? 'Reserverat på kortet' : 'Kort', klass: 'pa' };
   }
-  function passMärke(b) { return kortMärke(b) || NXKontakt.betalMärke(b); }
+  /* Ej betalt står i samma röda ton som datumrutan i studievyn (2026-10-27):
+     för familjen är det ert drag. Studiehjälparvyn har kvar ockran, för
+     där väntar det på någon annan. */
+  function passMärke(b) {
+    const m = kortMärke(b) || NXKontakt.betalMärke(b);
+    return m && m.klass === 'pa' && (b.betalning_status || 'ingen') === 'ingen' ? { text: m.text, klass: 'obetald' } : m;
+  }
+
+  /* Datumrutans färg (2026-10-27, Leo: "Lektioner som ej är betalda ska
+     vara röda vid sidan där de exempelvis står tor 29 okt ... betalda ...
+     gröna och önskade tiderr gula, ljusa toner av dessa färger", och
+     "önskad tid till studiehjälparen och en tid som studiehjälper eller
+     barnet som önskat måste gå att särkiljas"). Ett förslag ni skickat är
+     gult; en tid studiehjälparen föreslår är gul med en prick, och märket
+     säger vem. Betalt är också ett pass som köpta timmar eller sparade
+     minuter betalar, och ett som inte kostar något. Ett pass Nextrum
+     undantagit, och ett avbokat, får ingen färg. */
+  function dagTon(b) {
+    if (b.status === 'requested') return b.created_by && b.created_by !== S.user.id ? 'forslag' : 'gul';
+    if (b.status !== 'confirmed' && b.status !== 'completed') return null;
+    if (b.fakturerbar === false) return null;
+    const läge = b.betalning_status || 'ingen';
+    if (läge === 'betald' || läge === 'tvist' || b.klippkort_id || medBanken(b) || ingetAttBetala(b)) return 'gron';
+    if (läge === 'aterbetald') return null;
+    return 'rod';
+  }
+  function hjälparensFörnamn() { return String((S.tutor && S.tutor.full_name) || '').trim().split(/\s+/)[0] || ''; }
+  /* Märket på ett förslag: vem som önskat tiden, i ord. */
+  function förslagsMärke(b) {
+    if (b.status !== 'requested') return undefined;
+    const h = hjälparensFörnamn();
+    return b.created_by && b.created_by !== S.user.id
+      ? { text: h ? h + ' föreslår' : 'Ny tid föreslagen', klass: 'gor' }
+      : { text: 'Ni önskade', klass: 'onskad' };
+  }
 
   /* Är kortet valt på passet, så att det går att välja bort? Inte när
      passet betalas på annat sätt, och inte medan en reservation släpps. */
@@ -3469,8 +3506,6 @@
        i taget, och kortet säger det med samma ord som prissidan (Leo
        2026-10-08 valde de orden framför "bindning"). */
     const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
-    // En plan gäller 30 dagar från köpet (2026-10-21, Leo: "används 30 dagar framåt").
-    const vad = timmarOrd(Number(e.timmar)) + ' · ' + (e.sort === 'plan' ? PLANENS_DAGAR + ' dagar, obundet' : 'gäller i ' + mån);
     /* Märket säger vad erbjudandet ger: timmen på köpet, eller timpriset
        utan bindning överstruket och planens bredvid, som på prissidan
        (Leo 2026-10-08: "Ta bort -5% ... skriv istället 399 streck över
@@ -3495,15 +3530,31 @@
        och bara när databasen kan säga det. */
     const ft = S.forstaTimmen;
     const första = e.sort === 'plan' && ft && !ft.tagen;
-    return '<div class="erb-kort' + (lyft ? ' ar-framhavd' : '') + '">'
+    /* Kortet säljer (2026-10-27, Leo: planerna "ska säljas in på studievyn
+       bättre"): vad planen räcker till i veckan, priset för hela perioden,
+       tre rader om vad den ger och knappen. Takten räknas ur timmarna och
+       periodens dagar (4 timmar på 30 dagar är ungefär en i veckan), så att
+       den följer katalogen. Ingen rad med "ni sparar" under priset: den
+       togs bort 2026-10-12 (Leo), och märket säger timpriset. */
+    const dagar = e.sort === 'plan' ? PLANENS_DAGAR : Number(e.giltig_manader || 1) * 30;
+    const iVeckan = Math.max(1, Math.round(Number(e.timmar) / (dagar / 7)));
+    const takt = 'Ungefär ' + (iVeckan === 1 ? 'en timme' : (['', '', 'två', 'tre', 'fyra', 'fem'][iVeckan] || iVeckan) + ' timmar') + ' i veckan';
+    const fördelar = [
+      timmarOrd(Number(e.timmar)) + ' att boka när det passar er',
+      'Timmarna betalar passen av sig själva',
+      e.sort === 'plan' ? 'Gäller i ' + PLANENS_DAGAR + ' dagar från köpet, obundet' : 'Gäller i ' + mån
+    ];
+    return '<article class="erb-kort' + (lyft ? ' ar-framhavd' : '') + '">'
+      + (lyft ? '<span class="erb-flagga">Vårt förslag</span>' : '')
       + '<div class="erb-topp"><b class="erb-namn">' + esc(e.namn) + '</b>'
-      + (märken ? '<span class="erb-marken">' + märken + '</span>' : '') + '</div>'
-      + '<span class="erb-vad">' + esc(vad) + '</span>'
-      + (första ? '<span class="erb-forsta">Er första plan: en timme till, gratis</span>' : '')
+      + '<span class="erb-takt">' + esc(takt) + '</span></div>'
       + erbPris(e, spar, fr)
+      + (märken ? '<span class="erb-marken">' + märken + '<span class="erb-marken-et">per timme</span></span>' : '')
       + (timrad ? '<span class="erb-tim">' + timrad + '</span>' : '')
+      + (första ? '<span class="erb-forsta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>En timme till, gratis, på er första plan</span>' : '')
+      + '<ul class="erb-fordelar">' + fördelar.map(f => '<li>' + esc(f) + '</li>').join('') + '</ul>'
       + köpKnapp(e)
-      + '</div>';
+      + '</article>';
   }
 
   /* Kortets pris med familjens rabatt (familjerabatter, Leo 2026-10-15:
@@ -3533,6 +3584,7 @@
     }
     return '<span class="erb-pris">' + (spar > 0 ? '<s>' + esc(kr(e.ordinarie_ore)) + '</s>' : '')
       + '<b>' + esc(kr(fr.pris)) + '</b>'
+      + (e.sort === 'plan' ? '<span class="erb-pris-per">för ' + PLANENS_DAGAR + ' dagar</span>' : '')
       + (fr.av ? '<span class="erb-pris-kod">' + esc(medErRabatt) + '</span>' : '') + '</span>';
   }
 
@@ -3580,9 +3632,22 @@
     }
     /* En plan gäller 30 dagar från köpet (2026-10-21); Den här månaden och
        Nästa månad stod här samma dag och är borta. */
-    return (e.sort === 'plan' ? '<p class="erb-manad-not">Gäller i ' + PLANENS_DAGAR + ' dagar från köpet</p>' : '')
-      + '<button type="button" class="btn btn-orange btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>';
+    /* Kort eller Klarna (2026-10-27, Leo: man betalar "direkt med stripe
+       med kort eller med klarna, på enskilda lektioner samt planer"). */
+    return '<button type="button" class="btn btn-orange erb-kop" data-kop="' + esc(e.kod) + '">Köp ' + esc(e.namn) + '</button>'
+      + '<span class="erb-kop-satt">Kort eller Klarna i nästa steg</span>';
   };
+
+  /* Landa på planerna eller timbanken (#betalning/planer, och #erbjudanden
+     som leder dit). Innehållet ovanför ritas när passen och köpen kommit,
+     och då flyttar sig målet: landningen görs om efter varje omritning i
+     några sekunder, tills man själv rör sidan. */
+  function landa() {
+    const l = S.landa;
+    if (!l || Date.now() > l.till || S.aktivSek !== 'betalning') { S.landa = null; return; }
+    const mål = $(l.mål);
+    if (mål && !mål.hidden) NXStudie.visaÖverst(mål);
+  }
 
   function ritaErbjudanden() {
     const planer = $('#erb-planer');
@@ -3631,6 +3696,7 @@
        på ett förslag eller ett bokat pass är inte tillgängliga: kvar
        räknas i databasen (klippkort_saldo). */
     ritaTillgängliga();
+    requestAnimationFrame(landa);
   }
 
   /* ============================================================
@@ -4001,7 +4067,7 @@
       host.innerHTML = batteri + '<p class="erb-bank-text tb-inga">'
         + (tips ? 'Ni har inga köpta timmar eller gratistimmar.' : 'Ni har inga timmar i timbanken.')
         + (S.erb.aktiv ? ' Köper ni en plan betalar timmarna era pass av sig själva. '
-          + '<a href="#erbjudanden">Se planerna</a>' : '')
+          + '<a href="#betalning/planer">Se planerna</a>' : '')
         + '</p>'
         + tips;
       sättBatterier(host);
@@ -4049,7 +4115,7 @@
       lista = '<p class="erb-bank-text">Rörelserna gick inte att hämta. Ladda om sidan, eller skriv till oss.</p>';
     } else if (!rader.length) {
       lista = '<p class="erb-bank-text">Inga minuter har gått in eller ut än.'
-        + (S.erb.aktiv ? ' Minuterna kommer ur timmar ni köpt i förväg. <a href="#erbjudanden">Se planerna</a>' : '')
+        + (S.erb.aktiv ? ' Minuterna kommer ur timmar ni köpt i förväg. <a href="#betalning/planer">Se planerna</a>' : '')
         + '</p>';
     } else {
       lista = '<ul class="tb-rorelser">' + rader.map(r => {
@@ -4163,6 +4229,7 @@
     byggSchema();
     ritaAttBetala();
     ritaBetalda();
+    requestAnimationFrame(landa);
     // Timbankens rörelser under Profil nämner passen vid namn.
     ritaTimbankProfil();
     // Förslagen som väntar tar av timmarna överst i Boka pass.
@@ -4170,7 +4237,15 @@
     /* Står man på ett pass när listan laddas om — efter ett svar, en
        avbokning, en ny tid — ritas sidan om med det som nu gäller. */
     if (passIdIAdressen()) ritaPassSida();
-    if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Boka en tid under Boka pass, så står passet här.'); return; }
+    ritaPassListan();
+  }
+
+  /* Mina lektioner. Egen funktion sedan 2026-10-27: barnets förslag står
+     i listan och kommer i ett eget svar, som ritar om den. */
+  function ritaPassListan() {
+    const host = $('#pass-lista');
+    if (!host || !S.laddatPass) return;
+    if (!S.bokningar.length && !(S.bf.lista || []).length) { host.innerHTML = tomt('Inga bokade pass än', 'Boka en tid under Boka pass, så står passet här.'); return; }
 
     const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
     $('#pass-antal').textContent = aktiva.length + ' st';
@@ -4213,9 +4288,14 @@
         href: '#pass/' + b.id,
         med: medBarn(b),
         nu: b.wanted_date === isoFor(new Date()) && b.status !== 'cancelled',
-        vem: derasFörslag && ärMotförslag(b) ? 'Motförslag från er studiehjälpare'
-          : derasFörslag && b.status === 'requested' ? 'Föreslaget av er studiehjälpare'
-          : b.status === 'requested' ? 'Väntar på svar från er studiehjälpare'
+        dag: dagTon(b),
+        lage: förslagsMärke(b),
+        vem: derasFörslag && ärMotförslag(b)
+          ? (hjälparensFörnamn() ? hjälparensFörnamn() + ' kan inte er tid och föreslår den här' : 'Motförslag från er studiehjälpare')
+          : derasFörslag && b.status === 'requested'
+          ? (hjälparensFörnamn() ? hjälparensFörnamn() + ' föreslår den här tiden' : 'Föreslaget av er studiehjälpare')
+          : b.status === 'requested'
+          ? 'Väntar på svar från ' + (hjälparensFörnamn() || 'er studiehjälpare')
           : b.status === 'cancelled' ? avbokadText(b) : null,
         /* Studiehjälparens rader, kapade: hela står på passets sida. */
         not: b.svar_meddelande && (b.status === 'cancelled' || ärMotförslag(b))
@@ -4223,6 +4303,21 @@
         märke: passMärke(b),
         atgarder: knappar
       });
+      },
+      /* Barnets förslag (2026-10-27) står bland de kommande passen, i sitt
+         datum, så att alla önskade tider syns på ett ställe och det syns
+         vem som önskat dem. Det är inget pass förrän ni skickat det. */
+      extra: S.väntar ? [] : (S.bf.lista || []).map(f => ({ wanted_date: f.datum, wanted_time: f.tid, bf: f })),
+      extraRad: x => {
+        const f = x.bf, namn = barnetsNamn(f.barn_id);
+        return NXKontakt.passRad({ wanted_date: f.datum, wanted_time: f.tid, duration_min: f.langd_min,
+                                    subject: f.amne, format: f.format, location: f.plats, status: 'requested' }, {
+          href: '#boka/forslag-' + f.id,
+          dag: 'barn',
+          lage: { text: namn + ' önskar', klass: 'gor' },
+          vem: namn + ' föreslår den här tiden. Granska och skicka den till er studiehjälpare, eller låt bli.',
+          atgarder: '<button type="button" class="btn btn-primary btn-sm" data-bf-granska="' + esc(f.id) + '">Granska</button>'
+        });
       }
     });
   }
@@ -4772,6 +4867,7 @@
     ritaBarnforslag();
     ritaÖvGöra();
     ritaNotiser();
+    ritaPassListan();
     if (S.bf.öppna) {
       const id = S.bf.öppna;
       S.bf.öppna = null;
@@ -5030,6 +5126,7 @@
         href: '#pass/' + b.id,
         med: medBarn(b),
         plats: false,
+        dag: 'rod',
         under: [läge, försök].filter(Boolean).join(' · '),
         lage: null,
         atgarder: (belopp ? '<span class="vy-rad-belopp">' + esc(kronor(belopp)) + '</span>' : '')
@@ -5103,6 +5200,7 @@
             med: medBarn(b),
             tid: false,
             plats: false,
+            dag: tillbaka >= betalt && betalt ? null : 'gron',
             under: [b.klippkort_id && !betalt ? (gratis ? 'Gratistimmar' : nGratis ? 'Gratistimmar och köpta timmar' : 'Köpta timmar')
               : medBanken(b) && !betalt ? 'Sparade minuter' : 'Kort',
               'betalt ' + kortDatum(isoFor(new Date(b.betald_at)))].join(' · '),
@@ -5128,9 +5226,9 @@
       : q.has('kort') ? (q.get('kort') === 'avbrutet' ? 'kortAvbrutet' : 'kort')
       : q.get('betalning') === 'avbruten' ? 'avbruten' : null;
     if (svar && window.history && history.replaceState) {
-      // Ett köpt erbjudande (Fas 16.1) öppnar på Erbjudanden, och kortet under Profil.
+      // Ett köpt erbjudande (Fas 16.1) öppnar på timbanken under Betalning, och kortet under Profil.
       history.replaceState(null, '', location.pathname
-        + (svar === 'kopt' ? '#erbjudanden' : svar === 'kort' || svar === 'kortAvbrutet' ? '#profil/kort' : '#betalning'));
+        + (svar === 'kopt' ? '#betalning/timbank' : svar === 'kort' || svar === 'kortAvbrutet' ? '#profil/kort' : '#betalning'));
     }
     return svar;
   }
@@ -6074,7 +6172,11 @@
       installningar: ['profil', 'pris'],
       /* Bekräfta rapport togs bort 2026-10-21. Adressen står i gamla mejl
          och i adminvyns påminnelser; det som var kvar där är att betala. */
-      bekrafta: ['betalning', null]
+      bekrafta: ['betalning', null],
+      /* Erbjudanden blev en del av Betalning & planer 2026-10-27. Adressen
+         står i gamla mejl och i kassans återvändsadress (stripe-checkout),
+         och leder till planerna. */
+      erbjudanden: ['betalning', 'planer']
     };
     function följHash() {
       const [huvud, flik] = String(location.hash || '').replace(/^#/, '').split('/');
@@ -6101,10 +6203,18 @@
       }
       /* Sektionen sköts av NXStudie.sidomeny, som lyssnar på samma
          händelse och läser delen före snedstrecket. Här återstår
-         fliken. */
+         fliken. Betalning har inga flikar men två ställen att landa på
+         (2026-10-27): planerna och timbanken. */
+      if (huvud === 'betalning' && (flik === 'planer' || flik === 'timbank')) {
+        S.landa = { mål: flik === 'planer' ? '#bet-planer' : '#erb-mina-box', till: Date.now() + 5000 };
+        requestAnimationFrame(landa);
+        return;
+      }
       if (flik && S.flikar[huvud]) S.flikar[huvud].visa(flik);
     }
     window.addEventListener('hashchange', följHash);
+    /* Rör man själv sidan släpper landningen (nedan). */
+    ['wheel', 'touchstart', 'keydown'].forEach(h => window.addEventListener(h, () => { S.landa = null; }, { passive: true }));
     följHash();
 
     /* ============ HÄLSNINGEN ============
@@ -6184,6 +6294,13 @@
        ett pass att betala. */
     if (S.trad && S.trad.klar) await S.trad.klar.catch(() => {});
     if (!betalsvar) NXStudie.notisruta({ user: S.user, poster: notisposter(), rubrik: 'Det här väntar på er' });
+    /* Studievyn på hemskärmen (2026-10-27): guiden under Profil, och rutan
+       i hörnet på en telefon tills den stängs med krysset. Rutan väntar
+       själv tills notiserna och introduktionen är stängda. */
+    if (typeof NXHemskarm !== 'undefined') {
+      NXHemskarm.profil($('#hem-profil'), 'foralder');
+      if (!betalsvar) setTimeout(() => NXHemskarm.ruta('foralder'), 6000);
+    }
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');
    }

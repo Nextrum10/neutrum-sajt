@@ -1,0 +1,114 @@
+{
+ "Rimord": {
+  "mal": [
+   "Höra vilka ord som rimmar.",
+   "Hitta ett eget rimord genom att byta den första bokstaven.",
+   "Para ihop ord som rimmar."
+  ],
+  "fakta": [
+   "Två ord rimmar när slutet låter likadant, som mat och fat.",
+   "Början får vara olika. Det är slutet du ska lyssna på.",
+   "Byt den första bokstaven i ett ord, så får du ofta ett nytt rimord: sand blir hand och band."
+  ],
+  "exempel": [
+   [
+    "Vilket ord rimmar på ”ben”: sten eller båt?",
+    "Sten. ”Ben” och ”sten” slutar båda på -en."
+   ],
+   [
+    "Byt den första bokstaven i ”näsa” mot l. Vilket ord blir det?",
+    "Läsa. Näsa och läsa rimmar."
+   ]
+  ],
+  "ord": [
+   [
+    "rim",
+    "två ord som slutar likadant"
+   ],
+   [
+    "ljud",
+    "det du hör när du säger en bokstav"
+   ]
+  ],
+  "tips": "Säg orden högt för dig själv. Låter slutet likadant, då rimmar de."
+ },
+ "Läsa: Mias hund": {
+  "mal": [
+   "Läsa en kort text och svara på frågor om den.",
+   "Hitta svaret i texten, som ett namn, en färg eller en plats.",
+   "Sätta det som händer i rätt ordning.",
+   "Säga varför något händer i texten."
+  ],
+  "fakta": [
+   "Läs hela texten först. Läs sedan frågan noga.",
+   "Svaret står ofta i texten. Leta efter ordet som frågan handlar om.",
+   "Ordet ”sedan” visar vad som händer efter något annat.",
+   "Sant betyder att det stämmer med texten. Falskt betyder att det inte stämmer."
+  ],
+  "exempel": [
+   [
+    "Läs: ”Ali har en katt. Katten heter Misse. Misse är grå.” Vilken färg har Misse?",
+    "Grå. Det står i texten: ”Misse är grå.”"
+   ]
+  ],
+  "ord": [
+   [
+    "sant",
+    "det stämmer"
+   ],
+   [
+    "falskt",
+    "det stämmer inte"
+   ],
+   [
+    "berättelse",
+    "en text om något som händer"
+   ]
+  ],
+  "tips": "Gissa inte. Gå tillbaka till texten och leta."
+ },
+ "Bokstäver och ord": {
+  "mal": [
+   "Höra vilket ljud ett ord börjar och slutar med.",
+   "Dra ihop ljud till ett ord och räkna bokstäverna.",
+   "Börja en mening med stor bokstav och sluta med punkt eller frågetecken.",
+   "Skriva namn med stor bokstav."
+  ],
+  "fakta": [
+   "Varje bokstav har ett ljud. Säg ordet långsamt, så hör du ljuden: l-a-m-p-a.",
+   "Alla bokstäver finns som stora och små: A och a, M och m.",
+   "En mening börjar med stor bokstav och slutar med punkt.",
+   "En fråga slutar med frågetecken (?).",
+   "Namn skrivs alltid med stor bokstav: Sara, Nils."
+  ],
+  "exempel": [
+   [
+    "Dra ihop ljuden: f-a-t. Vilket ord blir det?",
+    "Fat. Säg ljuden fortare och fortare tills de blir ett ord."
+   ],
+   [
+    "Hur många bokstäver har ordet ”lampa”?",
+    "Fem: l, a, m, p, a."
+   ]
+  ],
+  "ord": [
+   [
+    "bokstav",
+    "ett tecken du skriver, som a eller b"
+   ],
+   [
+    "mening",
+    "flera ord som hör ihop och säger något"
+   ],
+   [
+    "punkt",
+    "pricken (.) sist i en mening"
+   ],
+   [
+    "frågetecken",
+    "tecknet (?) sist i en fråga"
+   ]
+  ],
+  "tips": "Peka på en bokstav i taget när du räknar, så missar du ingen."
+ }
+}

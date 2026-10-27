@@ -347,7 +347,7 @@ const BILDERNA = {
       { del: 'oversikt', klar: '#ov-gora .vy-rad, #ov-kommande .vy-rad', ankare: '#ov-gora-grupp' },
       { del: 'boka', klar: 'section[data-sek="boka"] .mv-dag', ankare: 'section[data-sek="boka"] .bk-stegrad' },
       { del: 'lektioner', klar: '#pass-lista a, #pass-lista [data-pass]', ankare: 'section[data-sek="lektioner"] .vy-flikar' },
-      { del: 'bekrafta', klar: 'section[data-sek="bekrafta"] .vy-kort', ankare: 'section[data-sek="bekrafta"] .vy-grupp' },
+      { del: 'betalning', klar: '#bet-att-betala > :not(.loading)', ankare: 'section[data-sek="betalning"] .bet-sam' },
       { del: 'nexlax', klar: '#nl-vag .nl-vag, #nl-vag .nl-steg', ankare: 'section[data-sek="nexlax"] .vy-flikar' },
       { del: 'meddelanden', klar: '#trad .tr-rad', ankare: '#trad' },
       { del: 'profil', adress: 'profil/barn', klar: '#bi-lista .bi-far', ankare: '#bi-lista .bi-far' }

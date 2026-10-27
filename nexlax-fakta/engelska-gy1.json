@@ -1,0 +1,459 @@
+{
+ "Ordförråd": {
+  "mal": [
+   "Använda sambandsord som visar motsats, följd, tillägg och exempel.",
+   "Bilda substantiv och adjektiv med suffix.",
+   "Bilda motsatsord med prefix som un-, im-, ir- och dis-.",
+   "Undvika falska vänner som eventually."
+  ],
+  "fakta": [
+   "Sambandsord visar hur tankar hänger ihop: however och nevertheless visar motsats, therefore och consequently följd, furthermore tillägg och for instance exempel.",
+   "Suffix kan ändra ordklass: -ment, -ness, -tion, -dom och -ship bildar ofta substantiv (agreement, kindness), och -ous och -ful adjektiv (famous, helpful).",
+   "Prefix kan ge motsatsen: un- (unhappy), dis- (dislike), im- ofta före p och m (impatient), ir- före r (irregular) och il- före l (illegal).",
+   "Suffixet -less betyder utan: homeless, hopeless.",
+   "Eventually betyder till slut, inte eventuellt. Eventuellt heter possibly eller perhaps."
+  ],
+  "exempel": [
+   [
+    "Bilda substantivet av adjektivet 'kind' och av verbet 'agree'.",
+    "kindness och agreement."
+   ],
+   [
+    "Vad är motsatsen till 'legal'?",
+    "illegal: il- står före ord som börjar på l."
+   ]
+  ],
+  "ord": [
+   [
+    "on the one hand … on the other hand",
+    "å ena sidan … å andra sidan"
+   ],
+   [
+    "although",
+    "fastän; inleder en bisats"
+   ]
+  ],
+  "tips": "Lär dig ordfamiljer i stället för enstaka ord: succeed, success, successful."
+ },
+ "Verb": {
+  "mal": [
+   "Välja rätt tempus, från present perfect till future perfect.",
+   "Använda for och since, och used to om sådant som var förr.",
+   "Bilda passiv i olika tempus.",
+   "Använda have something done om att låta någon göra något."
+  ],
+  "fakta": [
+   "Present perfect knyter det förflutna till nu: I have lived here since May (sedan en tidpunkt) eller for two years (under en tid). Det heter inte I live here since May.",
+   "Past continuous (was reading) är något som pågick när något annat hände (past simple: called). Past perfect (had finished, had been working) är det som hade hänt före en annan händelse.",
+   "Future continuous (will be travelling) pågår vid en tidpunkt i framtiden. Future perfect (will have finished) är klart före en tidpunkt i framtiden.",
+   "Passiv: be i rätt tempus + perfekt particip: is cleaned, is being cleaned, was cleaned, has been cleaned, will be cleaned. By säger vem som utförde handlingen.",
+   "Have something done betyder att låta någon annan göra något: I had my bike repaired = jag lät laga cykeln."
+  ],
+  "exempel": [
+   [
+    "Skriv i passiv, present perfect: Someone has painted the door.",
+    "The door has been painted."
+   ],
+   [
+    "Fyll i: When we arrived, the film ___ (already/start).",
+    "had already started. Filmen började före vår ankomst, så det blir past perfect."
+   ]
+  ],
+  "ord": [
+   [
+    "used to + verb",
+    "brukade förr, men gör inte längre: I used to live in Malmö"
+   ],
+   [
+    "past participle",
+    "perfekt particip, som cleaned, written och stolen"
+   ]
+  ],
+  "tips": "Fråga dig när något hände och om det fortfarande pågår: svaret väljer tempus åt dig."
+ },
+ "Konditionalis": {
+  "mal": [
+   "Bilda tredje konditionalis om sådant som kunde ha hänt men inte gjorde det.",
+   "Skilja tredje konditionalis från andra, som handlar om nu.",
+   "Uttrycka önskningar med wish och if only.",
+   "Använda unless, provided och as long as i villkor."
+  ],
+  "fakta": [
+   "Tredje konditionalis: If + had + perfekt particip, would have + perfekt particip. If I had seen the sign, I would have stopped. Det handlar om något i det förflutna som inte hände.",
+   "Andra konditionalis handlar om nu eller framtiden, om något som inte är så: If + past simple, would + verb. If I lived closer, I would walk.",
+   "Wish + past simple (med be ofta were) handlar om nu: I wish I knew. Wish + had + perfekt particip handlar om det förflutna: I wish I had gone. Wish + would: du vill att någon ändrar sig.",
+   "If only betyder om bara och följer samma mönster som wish: If only I knew.",
+   "Unless betyder om inte: unless you hurry = if you don't hurry. Provided (that) betyder förutsatt att, och as long as betyder så länge som."
+  ],
+  "exempel": [
+   [
+    "Fyll i: If he ___ (not/forget) his phone, he ___ (call) us.",
+    "If he hadn't forgotten his phone, he would have called us."
+   ]
+  ],
+  "ord": [
+   [
+    "condition",
+    "villkor"
+   ],
+   [
+    "past participle",
+    "perfekt particip, som seen, gone och forgotten"
+   ]
+  ],
+  "tips": "Skriv inte would i if-satsen: det står i den andra delen av meningen."
+ },
+ "Stil och idiom": {
+  "mal": [
+   "Skriva formell engelska i brev, mejl och ansökningar.",
+   "Börja och avsluta ett formellt brev rätt.",
+   "Förstå vanliga idiom och vad de betyder i sammanhanget."
+  ],
+  "fakta": [
+   "Formell engelska har hela former (do not, I am), artiga omskrivningar (Would you be able to …?) och mer formella ord (receive i stället för get).",
+   "Vet du mottagarens namn börjar du med Dear Mr Patel och slutar med Yours sincerely. Vet du inte namnet börjar du med Dear Sir or Madam och slutar med Yours faithfully (brittisk engelska).",
+   "Fasta fraser i formella brev: I am writing to …, I would be grateful if you could …, I look forward to hearing from you.",
+   "Ett idiom betyder något annat än orden var för sig och kan sällan översättas ord för ord. Lär dig idiom i sammanhang, inte i listor."
+  ],
+  "exempel": [
+   [
+    "Vad betyder 'to break the ice'?",
+    "Att få igång ett samtal när stämningen är stel."
+   ],
+   [
+    "Vad betyder 'It's a piece of cake'?",
+    "Att något är mycket lätt."
+   ]
+  ],
+  "ord": [
+   [
+    "idiom",
+    "fast uttryck vars betydelse inte går att räkna ut ur orden"
+   ],
+   [
+    "formal",
+    "formell, artig och opersonlig"
+   ]
+  ],
+  "tips": "Idiom hör oftast hemma i tal och vardaglig text: använd dem sparsamt i en formell ansökan."
+ },
+ "Läsförståelse": {
+  "mal": [
+   "Hitta fakta och siffror i en engelsk artikel.",
+   "Förstå svåra ord utifrån sammanhanget.",
+   "Förklara vad personerna i en text menar.",
+   "Tolka bilder i språket och läsa mellan raderna i en novell."
+  ],
+  "fakta": [
+   "Läs texten först. Siffror, namn och årtal hittar du sedan snabbast om du skummar den efter just dem.",
+   "Ett okänt ord kan du ofta lista ut ur meningen runt det: vad händer, och är ordet positivt eller negativt?",
+   "När en fråga gäller vad någon menar, svarar du med vad orden innebär i sammanhanget, inte vad de betyder ord för ord.",
+   "En liknelse jämför med like eller as: The clouds hung like grey blankets. Fråga dig vad jämförelsen säger om stämningen.",
+   "Ett påstående är sant bara om texten stöder det. Det du gissar eller tycker räknas inte."
+  ],
+  "exempel": [
+   [
+    "'Her voice was shaky and she kept checking the clock.' Hur mår personen?",
+    "Hon är troligen nervös. Texten säger det inte, men detaljerna visar det."
+   ]
+  ],
+  "ord": [
+   [
+    "simile",
+    "liknelse, en jämförelse med like eller as"
+   ],
+   [
+    "read between the lines",
+    "läsa mellan raderna, förstå det som antyds"
+   ]
+  ],
+  "tips": "Leta upp stället i texten för varje svar: en detaljfråga besvaras nästan alltid av en eller två meningar."
+ },
+ "Skriva: stil och struktur": {
+  "mal": [
+   "Skriva ett formellt mejl med rätt hälsning, ordning och avslutning.",
+   "Bygga en argumenterande text med inledning, topic sentences, en annan synvinkel och avslutning.",
+   "Skilja på formell och informell stil och välja bindeord.",
+   "Undvika vanliga fel, som fel tempus med since."
+  ],
+  "fakta": [
+   "Ett formellt mejl: hälsning, varför du skriver, detaljer, artig avslutning och namn. Använd hela former (I am, do not) och artiga frågor (Could you please …?).",
+   "Efter Dear + namn slutar du med Yours sincerely, efter Dear Sir or Madam med Yours faithfully (brittisk engelska). Efter look forward to kommer -ing: I look forward to meeting you.",
+   "En argumenterande text: inledning med ämne och åsikt, stycken med skäl och exempel, en annan synvinkel och en avslutning. Varje stycke börjar med en topic sentence.",
+   "Bindeord: in addition lägger till, however visar motsats, as a result visar följd och for example ger exempel.",
+   "Since + tidpunkt kräver present perfect: I have worked here since June. Information får inget -s, och månader och veckodagar skrivs med stor bokstav."
+  ],
+  "exempel": [
+   [
+    "Gör formellt: 'Sorry I'm late with the form, there was a problem.'",
+    "I apologise for the delay in returning the form. Unfortunately, there was a problem."
+   ]
+  ],
+  "ord": [
+   [
+    "topic sentence",
+    "meningen som säger vad stycket handlar om"
+   ],
+   [
+    "contraction",
+    "kortform, som I'm och don't"
+   ]
+  ],
+  "tips": "Kortformer som I'm och don't är fel i ett formellt mejl men helt rätt i ett meddelande till en vän."
+ },
+ "Läsa: NP-träning": {
+  "mal": [
+   "Hitta huvudtanken och viktiga detaljer i en engelsk artikel.",
+   "Avgöra skribentens attityd till ämnet.",
+   "Hitta ord i texten som betyder det frågan beskriver.",
+   "Tolka personer, detaljer och tema i en kort berättelse."
+  ],
+  "fakta": [
+   "Läs texten först. Se sedan vad varje fråga frågar efter: en siffra, ett namn, en orsak eller en åsikt.",
+   "Find a word that means …: leta i rätt stycke efter ett ord av samma ordklass som förklaringen.",
+   "Skribentens attityd syns i ordvalen och i hur kritik bemöts. En text kan vara positiv och ändå ta upp svagheter.",
+   "I en berättelse säger detaljer, som kläder och kroppsspråk, mycket om en person. Temat är det berättelsen säger om livet, inte bara vad som händer.",
+   "Ett uttryck som 'my heart sank' ska förstås i bild, inte ord för ord: fråga dig vilken känsla det beskriver."
+  ],
+  "ord": [
+   [
+    "main idea",
+    "huvudtanke"
+   ],
+   [
+    "attitude",
+    "inställning, vad skribenten tycker om ämnet"
+   ],
+   [
+    "theme",
+    "tema, det berättelsen säger om livet"
+   ]
+  ],
+  "tips": "Ett svar på vad som hände ska gå att stödja på en mening du kan peka på i texten."
+ },
+ "Modala verb och återgivet tal": {
+  "mal": [
+   "Använda must have, can't have, might have och should have om det förflutna.",
+   "Återge vad någon har sagt med tidsförskjutning.",
+   "Använda rapporterande verb som promise, warn, suggest, admit och deny med rätt form efter."
+  ],
+  "fakta": [
+   "Modalt verb + have + perfekt particip handlar om det förflutna: must have (nästan säkert), can't have (omöjligt), might have eller could have (kanske), should have (borde ha, men gjorde inte).",
+   "I återgivet tal flyttas verbet ofta ett steg bakåt: is blir was, has seen blir had seen, will blir would, can blir could och must blir ofta had to.",
+   "Pronomen och tidsord ändras också: I blir he eller she, och tomorrow blir the next day.",
+   "Promise, agree och refuse följs av to + verb. Warn someone (not) to + verb. Suggest, admit och deny följs av -ing eller en that-sats: She denied lying."
+  ],
+  "exempel": [
+   [
+    "Gör om till indirekt tal: 'I can't find my phone,' Sam said.",
+    "Sam said that he couldn't find his phone."
+   ],
+   [
+    "Fyll i: The window is open. Someone ___ (forget) to close it.",
+    "must have forgotten. Du är nästan säker på vad som har hänt."
+   ]
+  ],
+  "ord": [
+   [
+    "reported speech",
+    "återgivet tal, indirekt anföring"
+   ],
+   [
+    "backshift",
+    "tidsförskjutning: verbet flyttas ett steg bakåt"
+   ]
+  ],
+  "tips": "Skriv aldrig suggest to go: det heter suggest going eller suggest that we go."
+ },
+ "Läsa en nyhet": {
+  "mal": [
+   "Hitta huvudbudskapet i en engelsk nyhetsartikel.",
+   "Hitta detaljer, siffror och orsaker i texten.",
+   "Förstå vanliga ord i nyhetstexter.",
+   "Dra slutsatser om vad som kan hända härnäst."
+  ],
+  "fakta": [
+   "En nyhetsartikel börjar med det viktigaste: rubriken och första stycket säger vad som har hänt och vem det gäller. Detaljer och bakgrund kommer längre ned.",
+   "Citat visar vad personerna själva säger. En talesperson (spokesperson) talar för en organisation, till exempel en kommun.",
+   "Siffror och villkor står ofta mitt i texten: läs dem noga och se vad de gäller.",
+   "En slutsats om framtiden ska bygga på det texten säger, till exempel ett villkor eller ett försök som pågår.",
+   "Ordningsfrågor: leta efter tidsord som at first, then, after och finally. Texten berättar inte alltid i den ordning det hände."
+  ],
+  "ord": [
+   [
+    "headline",
+    "rubrik"
+   ],
+   [
+    "council",
+    "kommunen, som styr en stad eller ort i Storbritannien"
+   ],
+   [
+    "trial",
+    "försök, ett test under en viss tid"
+   ]
+  ],
+  "tips": "Rubriker saknar ofta småord: 'School to close early' betyder 'The school is going to close early'."
+ },
+ "Relativsatser": {
+  "mal": [
+   "Välja mellan who, which, that, whose, where och what i en relativsats.",
+   "Avgöra när en relativsats ska stå mellan kommatecken och när den inte ska det.",
+   "Skriva formella relativsatser med preposition före whom och which, som most of whom och in which."
+  ],
+  "fakta": [
+   "Who används om personer och which om saker och djur. That går om båda, men bara i satser utan kommatecken.",
+   "En sats utan kommatecken pekar ut vem eller vad det gäller: the bus that goes to the airport. En sats mellan kommatecken ger bara extra information: My mother, who is a nurse, …",
+   "Är relativpronomenet objekt i en sats utan kommatecken kan det strykas: the film (that) we saw.",
+   "Which efter kommatecken kan syfta på hela satsen före: He missed the bus, which made him late.",
+   "Efter en preposition heter det whom och which: the person to whom I wrote, ten books, most of which …"
+  ],
+  "exempel": [
+   [
+    "Behövs kommatecken? Lisbon which is the capital of Portugal is built on hills.",
+    "Ja. Det finns bara ett Lisbon, så satsen ger extra information: Lisbon, which is the capital of Portugal, is built on hills. Då måste det också vara which, inte that."
+   ]
+  ],
+  "ord": [
+   [
+    "defining clause",
+    "relativsats som pekar ut vem eller vad det gäller, utan kommatecken"
+   ],
+   [
+    "non-defining clause",
+    "relativsats som ger extra information, mellan kommatecken"
+   ],
+   [
+    "whom",
+    "vem eller vilka efter en preposition, i formell engelska"
+   ],
+   [
+    "whose",
+    "vars, om både personer och saker"
+   ]
+  ],
+  "tips": "Fråga dig: vet läsaren vem eller vad det gäller också utan satsen? Då är den extra information och ska stå mellan kommatecken."
+ },
+ "Artiklar och substantiv": {
+  "mal": [
+   "Veta när engelskan inte har the fast svenskan har bestämd form, som i society och life.",
+   "Använda a och an före yrken och i uttryck som three times a week.",
+   "Känna igen oräknebara ord som advice, research och furniture, och ord som news och police."
+  ],
+  "fakta": [
+   "Talar du allmänt om något abstrakt står det utan the: Society is changing. Life is short. Nature needs protection.",
+   "Plural i allmänhet står också utan the: Dogs are loyal. The dogs betyder vissa hundar som redan nämnts.",
+   "Yrken får a eller an: She is a doctor, he works as an engineer. De flesta heter most people.",
+   "Advice, information, research, evidence, furniture, luggage och progress får inget -s. De flesta räknas med a piece of: two pieces of advice.",
+   "News och ämnen på -ics, som mathematics, är singular: The news is good. Police och people är plural: The police are here."
+  ],
+  "exempel": [
+   [
+    "Rätta meningen: The knowledge is power, and the informations are everywhere.",
+    "Knowledge is power, and information is everywhere. Knowledge står allmänt utan the, och information har ingen plural."
+   ]
+  ],
+  "ord": [
+   [
+    "uncountable noun",
+    "oräknebart substantiv, utan plural och utan a"
+   ],
+   [
+    "a piece of",
+    "ett sätt att räkna oräknebara ord: a piece of advice"
+   ],
+   [
+    "the rich",
+    "de rika, en grupp, med verbet i plural"
+   ],
+   [
+    "progress",
+    "framsteg, oräknebart på engelska"
+   ]
+  ],
+  "tips": "Är det svenska ordet i bestämd form för att det handlar om allt i allmänhet? Då stryker du oftast the på engelska."
+ },
+ "Källkritik": {
+  "mal": [
+   "Skilja mellan fakta som går att kontrollera och åsikter.",
+   "Känna igen när en källa har ett eget intresse eller är partisk.",
+   "Granska en engelsk text: vem som står bakom, vilka belägg som finns och vad som saknas."
+  ],
+  "fakta": [
+   "Ett faktapåstående går att kontrollera, till exempel ett årtal eller en siffra. En åsikt är en värdering, som best, terrible eller should.",
+   "Fråga vem som står bakom texten och vad avsändaren vinner på den. Ett företag som skriver om sin egen produkt är inte oberoende.",
+   "Sponsored, ad och paid partnership betyder att någon har betalat. Det är reklam, även när det ser ut som en artikel.",
+   "En liten studie utan jämförelsegrupp, eller som ingen annan forskare har granskat, säger mindre än rubriken antyder.",
+   "En personlig berättelse kan vara sann för den som berättar, men den visar inte vad som gäller för de flesta."
+  ],
+  "exempel": [
+   [
+    "En rubrik lyder: Scientists say chocolate makes you thinner. Vad bör du kontrollera först?",
+    "Vem som gjorde studien och vem som betalade den, hur många som deltog, om det fanns en jämförelsegrupp och om studien har publicerats så att andra forskare har kunnat granska den."
+   ]
+  ],
+  "ord": [
+   [
+    "reliable",
+    "tillförlitlig"
+   ],
+   [
+    "biased",
+    "partisk, drar åt ett håll"
+   ],
+   [
+    "evidence",
+    "belägg, bevis"
+   ],
+   [
+    "source",
+    "källa"
+   ],
+   [
+    "peer review",
+    "granskning av andra forskare innan en studie publiceras"
+   ],
+   [
+    "control group",
+    "jämförelsegrupp som inte får det som prövas"
+   ]
+  ],
+  "tips": "Ju mer en rubrik lovar, desto viktigare är det att ta reda på vad studien faktiskt visade."
+ },
+ "NP-träning: skriva": {
+  "mal": [
+   "Börja en argumenterande och en berättande text så att läsaren fångas.",
+   "Bygga en berättelse med början, problem, höjdpunkt och lösning.",
+   "Visa känslor i stället för att bara säga dem, och hålla dig till ett tempus.",
+   "Välja formell stil och undvika vanliga fel."
+  ],
+  "fakta": [
+   "En argumenterande text kan börja med en fråga eller ett påstående som väcker intresse, och slutar med din åsikt och de viktigaste skälen. Ta också upp den andra sidans argument.",
+   "En berättelse presenterar personer och miljö, sedan kommer ett problem som når en höjdpunkt och till sist löses. Börja nytt stycke när tid, plats eller den som talar byts.",
+   "Visa känslor genom handlingar och detaljer. Håll berättelsen i past tense, och lär dig de oregelbundna verben: swim – swam – swum, ring – rang – rung.",
+   "I formell stil byter du ofta ett phrasal verb mot ett enda ord: find out blir discover, go up blir increase.",
+   "Vanliga fel: discuss utan about, explain something to someone, a lot i två ord, och their (deras), there (där) och they're (they are)."
+  ],
+  "exempel": [
+   [
+    "Visa i stället för att säga: 'She was happy.'",
+    "Till exempel: 'She laughed and spun around in the rain.' Läsaren förstår känslan av det hon gör."
+   ]
+  ],
+  "ord": [
+   [
+    "narrative",
+    "berättande text"
+   ],
+   [
+    "argumentative",
+    "argumenterande"
+   ],
+   [
+    "phrasal verb",
+    "verb med partikel, som find out och go up"
+   ]
+  ],
+  "tips": "Läs igenom texten en gång bara för småfel: tempus, stavning och stor bokstav, som i Swedish och Monday."
+ }
+}

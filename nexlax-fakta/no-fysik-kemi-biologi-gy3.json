@@ -1,0 +1,82 @@
+{
+ "Biologi: DNA och basparning": {
+  "mal": [
+   "Skriva den komplementära DNA-strängen till en given sträng.",
+   "Räkna ut andelen av varje bas i ett DNA-prov.",
+   "Skriva mRNA vid transkription och räkna kodon och baser.",
+   "Förklara var transkription och translation sker."
+  ],
+  "fakta": [
+   "DNA har fyra baser: adenin (A), tymin (T), cytosin (C) och guanin (G). A parar med T och C med G, och vätebindningar mellan baserna håller ihop strängarna.",
+   "Eftersom baserna parar är andelen A lika stor som andelen T, och C lika stor som G. Alla fyra blir 100 % tillsammans.",
+   "Vid transkription skrivs en gen av till mRNA i cellkärnan. RNA har uracil (U) i stället för T, så A i templatsträngen ger U i mRNA.",
+   "Ett kodon är tre baser i mRNA. Translationen, där proteinet byggs, sker i ribosomerna ute i cytoplasman.",
+   "Antal kodon = antal baser / 3. Ett protein med n aminosyror behöver 3 · n baser, stoppkodonet oräknat."
+  ],
+  "exempel": [
+   [
+    "I ett DNA-prov är 18 % av baserna cytosin. Hur många procent är adenin?",
+    "G = C = 18 %, tillsammans 36 %. A + T = 100 − 36 = 64 %, så A = 32 %."
+   ],
+   [
+    "Templatsträngen är CAGTTA. Vilket mRNA bildas?",
+    "C → G, A → U, G → C, T → A, T → A och A → U: GUCAAU."
+   ]
+  ],
+  "ord": [
+   [
+    "komplementär",
+    "den sträng som passar mot en annan enligt basparningen"
+   ],
+   [
+    "templatsträng",
+    "den DNA-sträng som läses av när mRNA bildas"
+   ],
+   [
+    "mRNA",
+    "budbärar-RNA, kopian av genen som går till ribosomerna"
+   ]
+  ],
+  "tips": "Ta en bas i taget, och räkna efteråt att den nya strängen är lika lång som den gamla."
+ },
+ "Biologi: proteinsyntes och mutationer": {
+  "mal": [
+   "Läsa mRNA kodon för kodon, från startkodonet till stoppkodonet.",
+   "Förklara vad tRNA, antikodon och ribosomer gör vid translationen.",
+   "Förklara varför flera kodon kan koda för samma aminosyra.",
+   "Förklara olika mutationer och deras följder, och varför olika celler uttrycker olika gener."
+  ],
+  "fakta": [
+   "Translationen börjar vid startkodonet AUG och slutar vid ett stoppkodon, UAA, UAG eller UGA, som inte ger någon aminosyra.",
+   "Fyra baser tre i taget ger 4 · 4 · 4 kodon, men proteinerna byggs av omkring 20 aminosyror. Därför kan flera kodon koda för samma aminosyra.",
+   "tRNA för aminosyror till ribosomen. Dess antikodon, tre baser, parar med kodonet i mRNA, och ribosomen fogar ihop aminosyrorna.",
+   "En mutation är en förändring i DNA:s bassekvens. Ett utbyte av en bas kan ge en annan aminosyra, ett stoppkodon eller ingen ändring. En extra bas förskjuter läsramen.",
+   "Bara mutationer i könsceller kan ärvas. Nästan alla celler har samma DNA, men olika gener är påslagna i olika celler. UV-strålning kan ge mutationer."
+  ],
+  "exempel": [
+   [
+    "mRNA-sekvensen AUGUUUGGCAAAUGA läses från början. Hur många aminosyror får proteinet?",
+    "Kodonen är AUG, UUU, GGC, AAA och UGA. UGA är ett stoppkodon, så proteinet får 4 aminosyror."
+   ]
+  ],
+  "ord": [
+   [
+    "stoppkodon",
+    "ett kodon som avslutar translationen"
+   ],
+   [
+    "punktmutation",
+    "en mutation där en enda bas byts ut"
+   ],
+   [
+    "läsram",
+    "hur mRNA delas upp i grupper om tre baser"
+   ],
+   [
+    "genuttryck",
+    "att en gen är påslagen och används för att göra protein"
+   ]
+  ],
+  "tips": "Dela upp mRNA i grupper om tre från startkodonet och sluta vid det första stoppkodonet."
+ }
+}

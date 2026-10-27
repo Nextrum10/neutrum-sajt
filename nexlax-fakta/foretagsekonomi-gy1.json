@@ -1,0 +1,196 @@
+{
+ "Företag och företagsformer": {
+  "mal": [
+   "Beskriva enskild firma, handelsbolag, aktiebolag och ekonomisk förening och vem som står för skulderna.",
+   "Förklara hur bolagsstämma, styrelse och vd hänger ihop i ett aktiebolag.",
+   "Beskriva vad en affärsidé och en affärsplan är och göra en SWOT-analys."
+  ],
+  "fakta": [
+   "I en enskild firma är ägaren och företaget samma person, så ägaren står för skulderna med allt hen äger. Delägarna i ett handelsbolag ansvarar solidariskt.",
+   "Ett aktiebolag är en egen juridisk person, och aktieägarna riskerar normalt bara det de har satt in. Bolagsstämman väljer styrelsen, och styrelsen utser vd.",
+   "En ekonomisk förening drivs för att gynna medlemmarnas ekonomi.",
+   "Affärsidén säger vilket behov företaget löser, för vilken målgrupp och med vilket erbjudande. Affärsplanen beskriver hur idén ska bli verklighet.",
+   "SWOT: styrkor och svagheter är inre faktorer, i företaget, och möjligheter och hot är yttre faktorer, som kommer utifrån."
+  ],
+  "exempel": [
+   [
+    "En cykelverkstad har en kunnig mekaniker men en trång lokal, och en ny cykelbana byggs i närheten. Var hör sakerna hemma i SWOT?",
+    "Den kunniga mekanikern är en styrka och den trånga lokalen en svaghet. Cykelbanan kommer utifrån och är en möjlighet."
+   ]
+  ],
+  "ord": [
+   [
+    "juridisk person",
+    "en organisation som kan äga, skriva avtal och ha skulder i eget namn"
+   ],
+   [
+    "solidariskt ansvar",
+    "att var och en av delägarna kan krävas på hela skulden"
+   ],
+   [
+    "bolagsstämma",
+    "aktieägarnas möte, där de högsta besluten i ett aktiebolag fattas"
+   ]
+  ],
+  "tips": "Fråga dig om något finns i företaget eller kommer utifrån: inre är styrka eller svaghet, yttre är möjlighet eller hot."
+ },
+ "Marknadsföring": {
+  "mal": [
+   "Använda marknadsmixens fyra P: produkt, pris, plats och påverkan.",
+   "Förklara hur ett företag segmenterar marknaden och väljer målgrupp.",
+   "Beskriva AIDA-modellen och produktens livscykel.",
+   "Förklara vad positionering är."
+  ],
+  "fakta": [
+   "Marknadsmixen: produkt (varan, kvalitet, design och förpackning), pris (vad kunden betalar och rabatterna), plats (var och hur man köper) och påverkan (reklam, försäljare och annat som når kunderna).",
+   "Segmentering är att dela in marknaden i grupper med liknande behov, geografiskt, demografiskt, psykografiskt eller efter köpbeteende. Målgruppen är de kunder företaget vill nå.",
+   "AIDA beskriver hur reklam leder kunden: uppmärksamhet, intresse, önskan och till sist handling, att köpa.",
+   "Produktens livscykel har fyra faser: introduktion, tillväxt, mognad och nedgång. Genom att förnya varan kan företaget förlänga livscykeln.",
+   "Positionering är hur företaget vill att kunderna ska uppfatta varan jämfört med konkurrenternas varor."
+  ],
+  "exempel": [
+   [
+    "En bokhandel börjar skicka ett nyhetsbrev med boktips till sina kunder. Vilket P handlar det om?",
+    "Påverkan, för nyhetsbrevet når ut till kunderna och ska få dem att handla."
+   ]
+  ],
+  "ord": [
+   [
+    "lansering",
+    "när en ny vara börjar säljas"
+   ],
+   [
+    "demografisk",
+    "som har med ålder, kön, inkomst och liknande att göra"
+   ],
+   [
+    "psykografisk",
+    "som har med värderingar, intressen och livsstil att göra"
+   ]
+  ],
+  "tips": "Fråga vad företaget ändrar: varan själv, priset, var den säljs eller hur kunderna får höra om den. Då hittar du rätt P."
+ },
+ "Kostnader och kalkyler": {
+  "mal": [
+   "Skilja på fasta och rörliga kostnader och räkna ut totala kostnader och självkostnad per styck.",
+   "Räkna ut pålägg och marginal i procent.",
+   "Räkna ut täckningsbidrag, nollpunkt och vinst.",
+   "Bedöma om en extra order lönar sig."
+  ],
+  "fakta": [
+   "Fasta kostnader, som hyra och försäkring, är på kort sikt lika stora hur mycket som än tillverkas. Rörliga kostnader, som material, växer med antalet.",
+   "Total kostnad = fasta kostnader + rörlig kostnad per styck · antal. Självkostnad per styck = total kostnad / antal.",
+   "Pålägg räknas på inköpspriset och marginal på försäljningspriset: (pris − inköpspris) / inköpspris och (pris − inköpspris) / pris.",
+   "Täckningsbidrag per styck = pris − rörlig kostnad per styck. Täckningsbidraget ska först täcka de fasta kostnaderna, och det som blir över är vinst.",
+   "Nollpunkt i antal = fasta kostnader / täckningsbidrag per styck. Vinst = totalt täckningsbidrag − fasta kostnader."
+  ],
+  "exempel": [
+   [
+    "En vara köps in för 50 kr och säljs för 80 kr, utan moms. Hur stort är pålägget och marginalen?",
+    "Skillnaden är 30 kr. Pålägg: 30 / 50 = 60 %. Marginal: 30 / 80 = 37,5 %."
+   ],
+   [
+    "De fasta kostnaderna är 30 000 kr, priset 250 kr och den rörliga kostnaden 150 kr per styck. Var ligger nollpunkten?",
+    "Täckningsbidraget är 250 − 150 = 100 kr per styck. Nollpunkten: 30 000 / 100 = 300 stycken."
+   ]
+  ],
+  "ord": [
+   [
+    "självkostnad",
+    "vad en vara kostar att ta fram när alla kostnader räknas med"
+   ],
+   [
+    "täckningsbidrag",
+    "det som blir kvar av priset när de rörliga kostnaderna är betalda"
+   ],
+   [
+    "nollpunkt",
+    "den försäljning där företaget varken går med vinst eller förlust"
+   ]
+  ],
+  "tips": "Ändras inte de fasta kostnaderna är det den rörliga kostnaden, inte självkostnaden, som avgör om en extra affär lönar sig."
+ },
+ "Resultat och balans": {
+  "mal": [
+   "Räkna ut ett företags resultat ur intäkter och kostnader.",
+   "Förklara skillnaden mellan resultaträkningen och balansräkningen.",
+   "Sortera poster som anläggnings- och omsättningstillgångar, eget kapital och kort- och långfristiga skulder."
+  ],
+  "fakta": [
+   "Resultat = intäkter − kostnader. Ett positivt resultat är vinst och ett negativt är förlust.",
+   "Resultaträkningen visar intäkter och kostnader under en period, till exempel ett år. Balansräkningen visar tillgångar, eget kapital och skulder en viss dag.",
+   "Tillgångar = eget kapital + skulder. Därför är balansräkningens två sidor alltid lika stora.",
+   "Anläggningstillgångar används i flera år, som maskiner och byggnader. Omsättningstillgångar omsätts snabbt, som varulager, kundfordringar och pengar på banken.",
+   "Kortfristiga skulder ska betalas inom ett år och långfristiga senare. Pengar som ägarna satt in, och vinst som stannar kvar, är eget kapital."
+  ],
+  "exempel": [
+   [
+    "Ett företag har tillgångar på 700 000 kr och eget kapital på 280 000 kr. Hur stora är skulderna?",
+    "700 000 − 280 000 = 420 000 kr."
+   ],
+   [
+    "Ett kafé säljer för 900 000 kr. Råvarorna kostar 380 000 kr och övriga kostnader 440 000 kr. Hur stort är resultatet?",
+    "900 000 − 380 000 − 440 000 = 80 000 kr, en vinst."
+   ]
+  ],
+  "ord": [
+   [
+    "eget kapital",
+    "ägarnas del av företaget: tillgångarna minus skulderna"
+   ],
+   [
+    "kundfordran",
+    "pengar som kunder ska betala för varor de redan har fått"
+   ],
+   [
+    "leverantörsskuld",
+    "en obetald faktura till någon som sålt något till företaget"
+   ]
+  ],
+  "tips": "Fråga om det gäller en period eller en dag: ett helt år är resultaträkningen, en viss dag är balansräkningen."
+ },
+ "Bokföring": {
+  "mal": [
+   "Förklara dubbel bokföring, verifikationer och kontoklasserna.",
+   "Avgöra om en affärshändelse ska bokföras i debet eller kredit.",
+   "Räkna ut moms på och ur ett pris och hur mycket moms ett företag ska betala.",
+   "Bokföra en kontant försäljning med moms."
+  ],
+  "fakta": [
+   "Varje affärshändelse ska ha en verifikation, som ett kvitto eller en faktura, och bokförs på minst två konton, med lika mycket i debet som i kredit.",
+   "Tillgångar och kostnader ökar i debet. Skulder, eget kapital och intäkter ökar i kredit.",
+   "Kontoklasserna i den vanliga svenska kontoplanen: 1 tillgångar, 2 eget kapital och skulder, 3 intäkter från försäljningen och 4–7 kostnader.",
+   "Med 25 % moms är priset med moms = priset utan moms · 1,25. Ur ett pris med moms är momsen 20 % av priset, eftersom 25/125 = 0,2.",
+   "Utgående moms tar företaget ut av kunderna, och ingående moms betalar det på sina inköp. Moms att betala = utgående − ingående moms. Momsen är ingen intäkt."
+  ],
+  "exempel": [
+   [
+    "Ett företag köper en dator för 15 000 kr och betalar från banken. Hur bokförs det, om du bortser från momsen?",
+    "Inventarier 15 000 kr i debet, för tillgången ökar, och bank 15 000 kr i kredit, för pengarna på banken minskar."
+   ],
+   [
+    "En vara kostar 750 kr med 25 % moms. Hur mycket av priset är moms?",
+    "Utan moms: 750 / 1,25 = 600 kr. Momsen är 750 − 600 = 150 kr, alltså 20 % av 750."
+   ]
+  ],
+  "ord": [
+   [
+    "affärshändelse",
+    "något som ändrar företagets ekonomi, som ett köp, en försäljning eller ett lån"
+   ],
+   [
+    "debet",
+    "kontots vänstra sida"
+   ],
+   [
+    "kredit",
+    "kontots högra sida"
+   ],
+   [
+    "verifikation",
+    "underlaget som visar att en affärshändelse har skett"
+   ]
+  ],
+  "tips": "Fråga dig vad som ökar och vad som minskar: en tillgång som ökar står i debet, och pengar som går ut från banken står i kredit."
+ }
+}

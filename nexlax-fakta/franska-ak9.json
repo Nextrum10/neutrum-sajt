@@ -1,0 +1,245 @@
+{
+ "Mat och att beställa": {
+  "mal": [
+   "Använda ord för mat och dryck.",
+   "Beställa artigt med je voudrais och s'il vous plaît, och be om notan.",
+   "Välja du, de la, de l' eller des när du talar om en del av något.",
+   "Använda bara de efter en negation och efter en mängd."
+  ],
+  "fakta": [
+   "Je voudrais (jag skulle vilja ha) och je prends (jag tar) är sätten att beställa. Till personalen säger du vous: s'il vous plaît.",
+   "Lite av något heter du framför maskulina ord, de la framför feminina, de l' framför vokal och des i plural: du riz, de la soupe, de l'huile, des carottes.",
+   "Du är de och le ihop. De och la blir inte ett ord.",
+   "Efter en negation blir du, de la och des bara de: je ne mange pas de viande.",
+   "Efter en mängd står också bara de: un verre de jus, beaucoup de lait. Framför vokal blir de till d'."
+  ],
+  "exempel": [
+   [
+    "Fyll i: Je voudrais ___ soupe. (la soupe)",
+    "Soupe är femininum, så lite soppa heter de la soupe."
+   ],
+   [
+    "Säg: Han äter inte fisk. (le poisson)",
+    "Il ne mange pas de poisson. Efter negationen blir du poisson bara de poisson."
+   ]
+  ],
+  "ord": [
+   [
+    "la carte",
+    "menyn"
+   ],
+   [
+    "l'addition",
+    "notan"
+   ],
+   [
+    "le serveur, la serveuse",
+    "servitören, servitrisen"
+   ],
+   [
+    "un verre",
+    "ett glas"
+   ]
+  ],
+  "tips": "Je voudrais är artigare än je veux (jag vill), så använd det när du beställer."
+ },
+ "Vardagen och reflexiva verb": {
+  "mal": [
+   "Böja reflexiva verb i presens med rätt pronomen.",
+   "Beskriva din morgon och kväll med verb som se lever och se coucher.",
+   "Göra reflexiva meningar nekande med ne … pas.",
+   "Stava lever och appeler rätt i presens."
+  ],
+  "fakta": [
+   "Reflexiva verb har ett extra pronomen, som sig på svenska: je me, tu te, il/elle se, nous nous, vous vous, ils/elles se.",
+   "Pronomenet står mellan subjektet och verbet: je me prépare. Framför vokal och stumt h blir me, te och se till m', t' och s'.",
+   "Ne står före pronomenet och pas efter verbet: je ne me prépare pas.",
+   "Verb som lever och acheter får accent grave när ändelsen är stum: j'achète, ils achètent, men nous achetons.",
+   "Appeler har två l när ändelsen är stum, som i je m'appelle och tu t'appelles, och ett l när den hörs."
+  ],
+  "exempel": [
+   [
+    "Säg: Hon gör sig i ordning klockan sju. (se préparer)",
+    "Elle se prépare à sept heures. Efter elle kommer se, och pronomenet står före verbet."
+   ],
+   [
+    "Säg: Vi duschar inte på kvällen. (se doucher)",
+    "Nous ne nous douchons pas le soir. Nous står två gånger, och ne och pas ramar in pronomenet och verbet."
+   ]
+  ],
+  "ord": [
+   [
+    "le matin",
+    "morgonen, på morgonen"
+   ],
+   [
+    "le soir",
+    "kvällen, på kvällen"
+   ],
+   [
+    "tôt",
+    "tidigt"
+   ],
+   [
+    "tard",
+    "sent"
+   ],
+   [
+    "se doucher",
+    "duscha"
+   ],
+   [
+    "se réveiller",
+    "vakna"
+   ]
+  ],
+  "tips": "Om den egna kroppen säger man le, la eller les, inte mon eller ses: je me brosse les cheveux."
+ },
+ "Staden och vägbeskrivningar": {
+  "mal": [
+   "Säga vad som finns i en stad med il y a.",
+   "Säga vart du går med au, à la, à l' och aux.",
+   "Fråga om vägen och förstå en vägbeskrivning.",
+   "Beskriva var något ligger med à côté de och en face de."
+  ],
+  "fakta": [
+   "Il y a betyder det finns och ändras inte i plural: il y a un musée, il y a trois parcs.",
+   "À och le blir au, och à och les blir aux. À la och à l' ändras inte: au musée, aux magasins, à la plage, à l'hôtel.",
+   "Où (var) har accent. Utan accent betyder ou eller.",
+   "Läget: à côté de är bredvid, en face de mittemot, près de nära, loin de långt från och derrière bakom.",
+   "I en vägbeskrivning används vous-formen, med verbet först: Tournez …, Prenez …, Allez …"
+  ],
+  "exempel": [
+   [
+    "Fyll i: Nous allons ___ musée. (le musée)",
+    "Musée är maskulinum, och à och le blir au: Nous allons au musée."
+   ],
+   [
+    "Säg: Bageriet ligger bredvid kyrkan. (la boulangerie, l'église)",
+    "La boulangerie est à côté de l'église. À côté de betyder bredvid."
+   ]
+  ],
+  "ord": [
+   [
+    "à droite",
+    "till höger"
+   ],
+   [
+    "à gauche",
+    "till vänster"
+   ],
+   [
+    "tout droit",
+    "rakt fram"
+   ],
+   [
+    "le carrefour",
+    "korsningen"
+   ],
+   [
+    "le feu",
+    "trafikljuset"
+   ],
+   [
+    "la rue",
+    "gatan"
+   ]
+  ],
+  "tips": "Blanda inte ihop à droite (till höger) och tout droit (rakt fram)."
+ },
+ "Nära framtid": {
+  "mal": [
+   "Säga vad som ska hända med aller och ett verb i infinitiv.",
+   "Böja aller i presens.",
+   "Göra nära framtid nekande med ne … pas runt aller.",
+   "Använda tidsord som demain och ce soir."
+  ],
+  "fakta": [
+   "Nära framtid är aller i presens och ett verb i infinitiv: je vais cuisiner, jag ska laga mat.",
+   "aller: je vais, tu vas, il/elle va, nous allons, vous allez, ils/elles vont.",
+   "Det är bara aller som böjs. Verbet efter står kvar i infinitiv, vem det än gäller.",
+   "I en nekande mening står ne och pas runt aller, och infinitiven kommer efter: je ne vais pas danser."
+  ],
+  "exempel": [
+   [
+    "Säg: Vi ska dansa i kväll.",
+    "Nous allons danser ce soir. Allons hör till nous, och danser står i infinitiv."
+   ],
+   [
+    "Säg: Han ska inte sjunga. (chanter)",
+    "Il ne va pas chanter. Ne och pas står runt va, och chanter kommer efter i infinitiv."
+   ]
+  ],
+  "ord": [
+   [
+    "demain",
+    "i morgon"
+   ],
+   [
+    "ce soir",
+    "i kväll"
+   ],
+   [
+    "la semaine prochaine",
+    "nästa vecka"
+   ],
+   [
+    "ce week-end",
+    "i helgen"
+   ],
+   [
+    "pleuvoir",
+    "regna"
+   ],
+   [
+    "il fait beau",
+    "det är fint väder"
+   ]
+  ],
+  "tips": "Böj aldrig verbet efter aller: det heter nous allons regarder, inte nous allons regardez."
+ },
+ "Passé composé": {
+  "mal": [
+   "Bilda passé composé med avoir eller être i presens och ett particip.",
+   "Bilda participet av -er-verb och känna igen vanliga oregelbundna particip.",
+   "Böja participet efter subjektet när hjälpverbet är être.",
+   "Göra passé composé nekande med ne … pas."
+  ],
+  "fakta": [
+   "Passé composé är avoir eller être i presens och ett particip: j'ai dansé, jag dansade eller jag har dansat.",
+   "-er-verben får participet -é: danser blir dansé. Andra lärs in ett och ett, till exempel choisir som blir choisi, écrire écrit och mettre mis.",
+   "De flesta verb tar avoir. Aller, venir, partir, sortir, arriver, rentrer, monter, tomber, rester och naître tar être.",
+   "Med être böjs participet efter subjektet, med -e för femininum och -s för plural: il est sorti, elle est sortie, ils sont sortis.",
+   "Ne och pas står runt hjälpverbet, och participet kommer efter: je n'ai pas dansé."
+  ],
+  "exempel": [
+   [
+    "Säg: Hon har skrivit ett brev. (écrire, une lettre)",
+    "Elle a écrit une lettre. Écrire tar avoir, och participet är écrit."
+   ],
+   [
+    "Fyll i sortir: Léa et Emma sont ___ à huit heures.",
+    "Léa och Emma är två flickor, alltså femininum i plural. Participet sorti får -es: Léa et Emma sont sorties."
+   ]
+  ],
+  "ord": [
+   [
+    "particip",
+    "verbformen efter hjälpverbet, till exempel dansé"
+   ],
+   [
+    "hjälpverb",
+    "avoir eller être, som böjs i presens"
+   ],
+   [
+    "hier",
+    "i går"
+   ],
+   [
+    "hier soir",
+    "i går kväll"
+   ]
+  ],
+  "tips": "Står hjälpverbet être i meningen: titta på subjektet innan du skriver participet."
+ }
+}

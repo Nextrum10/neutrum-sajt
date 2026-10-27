@@ -1,0 +1,544 @@
+{
+ "Ordförråd": {
+  "mal": [
+   "Förstå och använda ord om miljön, klimatet och samhället.",
+   "Skilja på formell och vardaglig engelska.",
+   "Välja hälsningar och avslutningar som passar mottagaren."
+  ],
+  "fakta": [
+   "Förled och ändelser hjälper dig med nya ord: re- betyder igen (rebuild, bygga upp igen), un- betyder o- (unfair, orättvis) och -ment gör ofta ett verb till ett substantiv (agree → agreement).",
+   "Formell engelska används i brev till företag och myndigheter och i ansökningar. Där undviker du slang och skriver gärna hela ord, do not i stället för don't.",
+   "Vardagliga ord har ofta ett formellare ord: get → receive, need → require, enough → sufficient.",
+   "Ett formellt brev börjar med Dear och ett namn eller en titel, och slutar med en formell hälsning. Hi och See you passar bara till kompisar.",
+   "Talspråk som wanna och kinda och förkortningar som pls och btw hör till sms och chatt, inte till formella texter."
+  ],
+  "exempel": [
+   [
+    "Vad betyder ”reuse” och ”unfair”?",
+    "Re- betyder igen och un- betyder o-: reuse är att återanvända och unfair är orättvis."
+   ],
+   [
+    "Gör meningen formell: Hi! Can I get a new card?",
+    "Byt hälsning och ord: Dear Ms Berg, I would like to receive a new card."
+   ]
+  ],
+  "ord": [
+   [
+    "formell",
+    "korrekt och artig, för brev till myndigheter och företag"
+   ],
+   [
+    "vardaglig",
+    "som man pratar med kompisar, informell"
+   ],
+   [
+    "sustainable",
+    "hållbar"
+   ],
+   [
+    "society",
+    "samhälle"
+   ],
+   [
+    "emissions",
+    "utsläpp"
+   ]
+  ],
+  "tips": "Tänk på vem som ska läsa: en kompis får Hi och See you, en okänd mottagare får Dear och en formell avslutning."
+ },
+ "Verb": {
+  "mal": [
+   "Använda pluskvamperfekt (had + particip) för det som hände före något annat.",
+   "Skilja på pluskvamperfekt och present perfect.",
+   "Bygga passiv form med is, are, was eller were + perfekt particip."
+  ],
+  "fakta": [
+   "Pluskvamperfekt är had + perfekt particip och visar vad som hade hänt före något annat i det förflutna: When I got home, they had gone.",
+   "Present perfect (have eller has + particip) gäller fram till nu, och med since och for om något som fortfarande pågår: I have known her for years.",
+   "Passiv form används när det viktiga är vad som händer, inte vem som gör det. Presens: The rooms are cleaned every day. Preteritum: The car was washed.",
+   "Den som gör något i en passiv mening kan stå efter by: The song was sung by a choir.",
+   "Oregelbundna verb har egna particip: take – taken, choose – chosen, give – given."
+  ],
+  "exempel": [
+   [
+    "Fyll i ”finish”: By the time the guests arrived, we ___ the cooking.",
+    "Matlagningen blev klar före gästerna, så det blir pluskvamperfekt: we had finished the cooking."
+   ],
+   [
+    "Gör meningen passiv: People grow rice in many countries.",
+    "Riset är det viktiga, och grow – grew – grown: Rice is grown in many countries."
+   ]
+  ],
+  "ord": [
+   [
+    "pluskvamperfekt",
+    "had + particip: det som hade hänt före något annat"
+   ],
+   [
+    "passiv form",
+    "meningen säger vad som händer med något: the door was opened"
+   ],
+   [
+    "perfekt particip",
+    "verbets tredje form: taken, opened"
+   ],
+   [
+    "by",
+    "av, i en passiv mening: säger vem som gör något"
+   ]
+  ],
+  "tips": "Fråga dig om subjektet gör något självt. En bok skriver inte, den skrivs: då behövs passiv form."
+ },
+ "Konditionalis": {
+  "mal": [
+   "Bygga if-satser om sådant som kan hända, med presens och will.",
+   "Bygga tänkta if-satser med preteritum och would.",
+   "Använda unless och ge råd med If I were you."
+  ],
+  "fakta": [
+   "Kan hända: if + presens, sedan will + grundform: If you call me, I will come. Efter if står inte will.",
+   "Det som alltid gäller kan stå i presens i båda delarna: If you mix blue and yellow, you get green.",
+   "Tänkt: if + preteritum, sedan would + grundform: If I had wings, I would fly. Med be skriver man ofta were, också efter I, och If I were you ger ett råd.",
+   "Det som inte hände: if + had + particip, sedan would have + particip: If I had seen it, I would have told you.",
+   "Unless betyder om inte: We will be late unless we leave now."
+  ],
+  "exempel": [
+   [
+    "Fyll i ”buy”: If I won a lot of money, I ___ a house.",
+    "Villkoret är tänkt, så den andra delen får would + grundform: I would buy a house."
+   ],
+   [
+    "Fyll i ”be”: If the shop ___ open tomorrow, we will go there.",
+    "Det kan hända, så efter if står presens: If the shop is open tomorrow, we will go there."
+   ]
+  ],
+  "ord": [
+   [
+    "villkor",
+    "det som måste hända först, if-delen"
+   ],
+   [
+    "if-sats",
+    "den del av meningen som börjar med if"
+   ],
+   [
+    "would",
+    "skulle, i den andra delen av ett tänkt villkor"
+   ]
+  ],
+  "tips": "Börjar meningen med if sätter du komma efter if-delen: If it snows, we will stay in."
+ },
+ "Idiom": {
+  "mal": [
+   "Förstå vanliga engelska idiom och vad de betyder.",
+   "Förstå och använda frasverb, verb med en partikel som up, down och out.",
+   "Känna igen när ett uttryck inte ska förstås ord för ord."
+  ],
+  "fakta": [
+   "Ett idiom är ett fast uttryck som betyder något annat än orden var för sig: when pigs fly betyder aldrig i livet.",
+   "Idiom har oftast en fast form: byt inte ut orden och ändra inte ordningen i dem.",
+   "Vissa idiom liknar svenska uttryck, andra inte alls. Fundera på i vilken situation uttrycket används.",
+   "Ett frasverb är ett verb + en partikel, och partikeln ändrar betydelsen: take off (lyfta eller ta av sig), take after (brås på).",
+   "Up och down visar ofta mer och mindre: speed up (öka farten), slow down (sakta ner)."
+  ],
+  "exempel": [
+   [
+    "Vad betyder ”It's not my cup of tea”?",
+    "Det är inte min grej, jag gillar det inte så mycket. Idiomet handlar inte om te."
+   ],
+   [
+    "Fyll i: The plane will take ___ in ten minutes. (lyfta)",
+    "Lyfta om ett flygplan heter take off: The plane will take off in ten minutes."
+   ]
+  ],
+  "ord": [
+   [
+    "idiom",
+    "fast uttryck som inte betyder det orden säger"
+   ],
+   [
+    "frasverb",
+    "verb + partikel med en egen betydelse, som take off"
+   ],
+   [
+    "partikel",
+    "det lilla ordet efter verbet: up, down, out, off"
+   ]
+  ],
+  "tips": "Översätt inte ett idiom ord för ord: tänk på situationen och vad personen vill säga."
+ },
+ "Läsförståelse": {
+  "mal": [
+   "Förstå en artikel och en berättelse på engelska.",
+   "Tolka vad personer menar när de säger något bildligt.",
+   "Dra slutsatser som har stöd i texten."
+  ],
+  "fakta": [
+   "Läs hela texten först. Frågor om varför och vad någon menar kräver ofta att du läser flera meningar, inte bara en.",
+   "Skilj på det som står och det du drar slutsatser om. En slutsats ska kunna visas med ledtrådar i texten.",
+   "Små ord ändrar betydelsen: almost (nästan), hardly (knappt), only (bara) och even (till och med). Läs dem noga.",
+   "När någon förklarar något i ett citat står skälet ofta i samma eller nästa mening.",
+   "Ett tal kan stå med bokstäver: eighteen är 18 och sixty är 60."
+  ],
+  "ord": [
+   [
+    "narrator",
+    "berättaren, den som berättar historien"
+   ],
+   [
+    "quote",
+    "citat"
+   ],
+   [
+    "clue",
+    "ledtråd"
+   ]
+  ],
+  "tips": "Ett alternativ kan innehålla ord från texten och ändå vara fel: kontrollera att det svarar på just frågan."
+ },
+ "Övningsblad: present perfect": {
+  "mal": [
+   "Skriva perfekt particip av vanliga oregelbundna verb.",
+   "Bygga present perfect med have och has, också i frågor och nekanden.",
+   "Välja mellan present perfect och past simple med hjälp av signalord."
+  ],
+  "fakta": [
+   "Present perfect är have eller has + perfekt particip: I have cleaned, she has cleaned. Nekande: haven't eller hasn't.",
+   "Oregelbundna verb har egna particip: do – did – done, take – took – taken, speak – spoke – spoken.",
+   "Present perfect används när tiden inte sägs, för erfarenheter och med ever, never, already, just och yet, och med since och for om något som pågår än.",
+   "Past simple används när det sägs när något hände, med yesterday, last week, ago eller in och ett årtal (in 2015).",
+   "Ever, never, already och just står mellan have och particip: She has just left. Yet står sist: I haven't started yet."
+  ],
+  "exempel": [
+   [
+    "Fyll i ”lose” i present perfect: Oh no! I ___ my keys.",
+    "Tiden sägs inte, och det märks nu: I have lost my keys. Lose – lost – lost."
+   ],
+   [
+    "Present perfect eller past simple? We ___ (meet) two years ago.",
+    "Ago säger när det hände, så det blir past simple: We met two years ago."
+   ]
+  ],
+  "ord": [
+   [
+    "present perfect",
+    "have eller has + particip: I have tried"
+   ],
+   [
+    "particip",
+    "verbets tredje form: tried, taken"
+   ],
+   [
+    "signalord",
+    "ord som visar vilken tidsform som passar, som ago eller ever"
+   ]
+  ],
+  "tips": "Säger meningen exakt när det hände? Då blir det past simple, även om du skulle säga ”har” på svenska."
+ },
+ "NP-träning: skriva": {
+  "mal": [
+   "Planera en sammanhängande text med inledning, stycken och avslutning.",
+   "Binda ihop texten med bindeord.",
+   "Utveckla innehållet med skäl och exempel.",
+   "Hitta och rätta vanliga fel i en engelsk text."
+  ],
+  "fakta": [
+   "Inledningen säger vad texten handlar om, varje stycke har en huvudtanke och avslutningen sammanfattar. En topic sentence först i stycket säger vad det handlar om.",
+   "Bindeord visar hur meningarna hänger ihop: in addition lägger till, but och although visar en motsats, for instance ger ett exempel och to sum up avslutar.",
+   "Utveckla det du skriver: säg vad du tycker, varför, och ge ett exempel.",
+   "Vanliga fel för svenskar: I am 15 (inte I have 15 years), he is a teacher (med a) och I want you to come (inte I want that you come).",
+   "Läs uppgiften noga och håll dig till ämnet. Läs igenom texten när du är klar: stämmer tempus, -s efter he, she och it, och stavningen?"
+  ],
+  "exempel": [
+   [
+    "Bind ihop: Homework is useful. It can take too much time.",
+    "Det andra går emot det första, så du behöver en motsats: Homework is useful, but it can take too much time."
+   ],
+   [
+    "Utveckla meningen: Sport is good for you.",
+    "Lägg till ett skäl och ett exempel: Sport is good for you because it makes you stronger. For instance, swimming trains the whole body."
+   ]
+  ],
+  "ord": [
+   [
+    "inledning",
+    "textens början, som säger vad den handlar om"
+   ],
+   [
+    "stycke",
+    "en del av texten med en huvudtanke"
+   ],
+   [
+    "bindeord",
+    "ord som binder ihop meningar: but, because, for instance"
+   ]
+  ],
+  "tips": "Spara några minuter till sist för att läsa igenom texten och rätta dina egna fel."
+ },
+ "Läsa: NP-träning": {
+  "mal": [
+   "Läsa en artikel, en berättelse och ett forum på engelska och svara på frågor om dem.",
+   "Hitta argument för och emot i en text.",
+   "Skilja på fakta och åsikter.",
+   "Förstå budskapet i en berättelse och vad personer menar."
+  ],
+  "fakta": [
+   "Läs texten först och leta sedan efter nyckelord som FOR, AGAINST, why och according to the text.",
+   "Ett faktapåstående går att kontrollera. En åsikt är vad någon tycker, och ord som I think, I believe, should och best visar ofta en åsikt.",
+   "Ett argument för stöder en idé, och ett argument emot talar mot den. Texten säger ofta vem som tycker vad.",
+   "Budskapet i en berättelse är det den vill säga läsaren. Fundera på vad huvudpersonen väljer och vad som händer sedan.",
+   "Ett okänt ord kan du ofta förstå av sammanhanget. Prova din gissning i meningen och se om den passar."
+  ],
+  "ord": [
+   [
+    "argument",
+    "skäl för eller emot något"
+   ],
+   [
+    "fact",
+    "fakta, något som går att kontrollera"
+   ],
+   [
+    "opinion",
+    "åsikt, vad någon tycker"
+   ],
+   [
+    "according to",
+    "enligt"
+   ],
+   [
+    "message",
+    "budskap, det en berättelse vill säga"
+   ]
+  ],
+  "tips": "Välj det svar som texten stöder, även om du själv tycker något annat."
+ },
+ "Indirekt anföring": {
+  "mal": [
+   "Återge vad någon har sagt med said that och told me.",
+   "Flytta verbet ett steg bakåt i tiden och byta pronomen och tidsord.",
+   "Återge frågor med asked if och asked where, och uppmaningar med told me to."
+  ],
+  "fakta": [
+   "Said står utan person efter sig: He said that he was ready. Told har en person efter sig: He told me that he was ready.",
+   "Verbet flyttas ett steg bakåt: is och am blir was, are blir were, will blir would, can blir could, have blir had och presens blir preteritum.",
+   "Pronomen och tidsord byts: I blir he eller she, my blir his eller her, here blir there, tomorrow blir the next day och yesterday the day before.",
+   "Frågor: ja/nej-frågor får if eller whether, andra behåller frågeordet. Ordföljden blir som i ett påstående, och meningen slutar med punkt: She asked what time it was.",
+   "Uppmaningar återges med told + person + to, och nekande med not to: He told us to wait. She told me not to run."
+  ],
+  "exempel": [
+   [
+    "Återge: Anna said, ”I am going to the gym.”",
+    "Am going blir was going, och I blir she: Anna said that she was going to the gym."
+   ],
+   [
+    "Återge: Dad asked, ”Have you done your homework?”",
+    "Ja/nej-frågan får if, ordföljden blir som i ett påstående och have blir had: Dad asked if I had done my homework."
+   ]
+  ],
+  "ord": [
+   [
+    "direkt anföring",
+    "det någon sa, ordagrant inom citattecken"
+   ],
+   [
+    "indirekt anföring",
+    "att återge vad någon har sagt, utan citattecken"
+   ],
+   [
+    "uppmaning",
+    "när någon säger åt någon att göra något: Sit down!"
+   ]
+  ],
+  "tips": "Kontrollera att pronomenen stämmer med vem som berättar: I i citatet blir oftast he eller she."
+ },
+ "Läsa och förstå": {
+  "mal": [
+   "Förstå en berättelse och en text med olika åsikter på engelska.",
+   "Tolka bildliga uttryck och vad personer menar.",
+   "Hitta textens huvudbudskap och vad varje person tycker."
+  ],
+  "fakta": [
+   "Ett bildligt uttryck betyder inte det orden säger: I could eat a horse betyder att man är jättehungrig.",
+   "När flera personer säger sitt i en text: håll isär vem som tycker vad, till exempel med ett ord per person.",
+   "Huvudbudskapet gäller hela texten, inte bara en del av den. Titta på hur texten börjar och slutar.",
+   "Ett okänt ord kan du ibland förstå av delarna: care (omsorg) + -less (utan) blir careless, slarvig.",
+   "Tidsord som at first, soon och by the end visar i vilken ordning saker händer."
+  ],
+  "ord": [
+   [
+    "narrator",
+    "berättaren"
+   ],
+   [
+    "opinion",
+    "åsikt"
+   ],
+   [
+    "main message",
+    "huvudbudskap, det viktigaste texten vill säga"
+   ]
+  ],
+  "tips": "Fastnar du på vad någon menar: läs vad personen gör efteråt, det visar ofta vad orden betydde."
+ },
+ "Ordbildning": {
+  "mal": [
+   "Bilda motsatser med un-, in-, im-, il-, ir- och dis-.",
+   "Förstå vad re- och mis- gör med ett ord.",
+   "Göra om ett ord till substantiv, adjektiv eller adverb med -ness, -ment, -tion, -ful, -less, -ous och -ly."
+  ],
+  "fakta": [
+   "Un-, in- och dis- ger motsatsen: unkind, invisible, disobey. Före p, b och m blir in- oftast im-, före l il- och före r ir-: impolite, illogical, irrelevant.",
+   "Re- betyder igen (reread, replay), och mis- betyder fel (misspell, misread).",
+   "Substantiv bildas ofta med -ness (darkness), -ment (agreement) och -tion eller -sion (information, discussion).",
+   "Adjektiv bildas med -ful (full av), -less (utan) och -ous: hopeful, hopeless, famous.",
+   "Adverb bildas oftast med -ly: quick – quickly. Men lovely och lonely är adjektiv."
+  ],
+  "exempel": [
+   [
+    "Vilket ord passar? \"She spoke ___ (polite) to the old man.\"",
+    "Ordet säger hur hon talade, så det behövs ett adverb: politely."
+   ]
+  ],
+  "ord": [
+   [
+    "prefix",
+    "förstavelse, som un- och re-"
+   ],
+   [
+    "suffix",
+    "ändelse, som -ness och -ful"
+   ],
+   [
+    "ordklass",
+    "om ordet är ett substantiv, adjektiv, verb eller adverb"
+   ],
+   [
+    "word family",
+    "ord som hör ihop: act, action, active, actively"
+   ]
+  ],
+  "tips": "Ser du ett okänt ord, leta efter ett ord du känner inuti det: unbelievable är un + believe + able, alltså otrolig."
+ },
+ "Modala verb i perfekt": {
+  "mal": [
+   "Bygga should have, could have, would have, must have, might have och can’t have med particip.",
+   "Tala om sådant som borde ha hänt eller kunde ha hänt, men inte gjorde det.",
+   "Dra slutsatser om vad som har hänt: nästan säkert, kanske eller omöjligt."
+  ],
+  "fakta": [
+   "Formen är modalt verb + have + particip: should have gone, could have won, must have seen.",
+   "Should have = borde ha, om något du ångrar eller kritiserar. Could have = kunde ha, det var möjligt men hände inte. Would have = skulle ha.",
+   "Must have = nästan säkert. Might have, may have eller could have = kanske. Can’t have = omöjligt.",
+   "I tal låter should’ve som \"should of\", men det skrivs should have eller should’ve."
+  ],
+  "exempel": [
+   [
+    "Hennes skor är blöta. Passar \"She must have walked in the rain\" eller \"She can’t have walked in the rain\"?",
+    "Blöta skor tyder starkt på regn, så du är nästan säker: She must have walked in the rain."
+   ]
+  ],
+  "ord": [
+   [
+    "particip",
+    "verbets tredje form: go – went – gone, see – saw – seen"
+   ],
+   [
+    "modalt verb",
+    "hjälpverb som can, could, must, might, should och would"
+   ],
+   [
+    "slutsats",
+    "det du tror har hänt utifrån det du ser"
+   ],
+   [
+    "should’ve",
+    "kortform av should have"
+   ]
+  ],
+  "tips": "Fråga dig hur säker du är. Nästan säker: must have. Kanske: might have. Omöjligt: can’t have."
+ },
+ "Engelska i världen": {
+  "mal": [
+   "Känna igen vanliga skillnader mellan brittisk och amerikansk engelska, i ord och i stavning.",
+   "Läsa ett datum skrivet på brittiskt och på amerikanskt sätt.",
+   "Förklara varför engelska talas på så många platser och i så många varianter."
+  ],
+  "fakta": [
+   "Samma sak kan heta olika: biscuit – cookie, queue – line, petrol – gas. Båda är rätt, och de flesta förstår båda.",
+   "Brittisk stavning har ofta -our och -re där amerikansk har -or och -er: colour – color, theatre – theater.",
+   "I Storbritannien kommer dagen före månaden (3/5 är 3 May), i USA månaden före dagen (3/5 är March 5).",
+   "Engelskan spreds med det brittiska imperiet från 1600-talet, och senare med USA:s filmer, musik och internet.",
+   "I dag används engelska ofta som lingua franca, ett gemensamt språk för människor med olika förstaspråk."
+  ],
+  "exempel": [
+   [
+    "Hur stavar en amerikan theatre och centre?",
+    "Med -er: theater och center. Brittisk -re blir ofta -er i amerikansk engelska."
+   ]
+  ],
+  "ord": [
+   [
+    "British English",
+    "brittisk engelska"
+   ],
+   [
+    "American English",
+    "amerikansk engelska"
+   ],
+   [
+    "variety",
+    "en variant av ett språk, som australisk engelska"
+   ],
+   [
+    "official language",
+    "officiellt språk, som används i lagar, domstolar och skolor"
+   ],
+   [
+    "lingua franca",
+    "ett gemensamt språk för människor med olika förstaspråk"
+   ]
+  ],
+  "tips": "Välj brittisk eller amerikansk stavning och håll dig till den i hela texten. Båda är rätt, men en blandning ser slarvig ut."
+ },
+ "NP-träning: ord och grammatik": {
+  "mal": [
+   "Välja rätt tempus, också past continuous och used to.",
+   "Böja oregelbundna verb i preteritum och perfekt particip.",
+   "Bygga if-satser och jämförelser.",
+   "Binda ihop meningar med sambandsord som although och so."
+  ],
+  "fakta": [
+   "Past continuous (was eller were + -ing) visar vad som pågick när något annat hände: We were eating when the phone rang. Used to + grundform är en vana förr.",
+   "How long, for och since om något som pågått fram till nu ger present perfect. Många particip slutar på -n: take – taken, ride – ridden.",
+   "If-satser: kan hända ger if + presens och will, tänkt ger if + preteritum och would eller could.",
+   "Jämförelser: -er och -est eller more och most, och the före superlativ. Mellan as och as står grundformen: as fast as.",
+   "Although (fast) står före en hel sats och despite (trots) före ett substantiv: although it was cold, despite the cold. So visar en följd."
+  ],
+  "exempel": [
+   [
+    "Fyll i ”sleep”: I ___ when the alarm went off.",
+    "Sömnen pågick när larmet gick, så det blir past continuous: I was sleeping when the alarm went off."
+   ],
+   [
+    "Fyll i ”good”: This is the ___ book I have ever read.",
+    "Boken jämförs med alla andra, och good är oregelbundet: the best book I have ever read."
+   ]
+  ],
+  "ord": [
+   [
+    "past continuous",
+    "was eller were + -ing: något som pågick då"
+   ],
+   [
+    "used to",
+    "brukade, om en vana förr som inte gäller längre"
+   ],
+   [
+    "sambandsord",
+    "ord som binder ihop meningar, som so och although"
+   ]
+  ],
+  "tips": "Gissa inte en oregelbunden form efter ett verb som liknar: think blir thought, men drink blir drank."
+ }
+}

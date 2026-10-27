@@ -1,0 +1,200 @@
+{
+ "Taluppfattning": {
+  "mal": [
+   "Säga vilket tal som kommer före och efter ett tal upp till 20.",
+   "Jämföra tal och ordna dem från minst till störst.",
+   "Läsa och skriva talen upp till 20 med siffror och med ord.",
+   "Dela upp ett tal i tiotal och ental."
+  ],
+  "fakta": [
+   "Talet efter är ett mer. Talet före är ett mindre. Efter 16 kommer 17, och före 16 kommer 15.",
+   "Ett tal med två siffror har tiotal och ental. 17 är 1 tiotal och 7 ental.",
+   "Talen 13 till 19 slutar på -ton när du skriver dem med ord. Sjutton skrivs 17: först tiotalet, sedan entalet.",
+   "Ju senare ett tal kommer när du räknar 1, 2, 3 …, desto större är det.",
+   "Ordningstal säger vilken plats något har: första, andra, tredje, fjärde, femte."
+  ],
+  "exempel": [
+   [
+    "Du står på tredje plats i en kö. Hur många står före dig?",
+    "Tredje plats betyder att två står före dig: den första och den andra. Svaret är 2."
+   ],
+   [
+    "Vilket tal står mitt emellan 15 och 17?",
+    "Räkna: 15, 16, 17. Talet i mitten är 16."
+   ]
+  ],
+  "ord": [
+   [
+    "tiotal",
+    "tio stycken, som en hel rad med tio"
+   ],
+   [
+    "ental",
+    "de som blir kvar utanför tiotalen"
+   ],
+   [
+    "ordningstal",
+    "ord för plats, som första, andra och tredje"
+   ]
+  ],
+  "tips": "Räkna högt från ett tal du kan, så hittar du talet före och efter."
+ },
+ "Addition och subtraktion": {
+  "mal": [
+   "Hitta tiokamrater, två tal som blir 10 tillsammans.",
+   "Räkna plus och minus med svar upp till 20.",
+   "Hitta talet som fattas i en uträkning.",
+   "Lösa små räknehistorier med plus och minus."
+  ],
+  "fakta": [
+   "Tiokamrater är två tal som blir 10 tillsammans, som 1 och 9. Dina tio fingrar visar dem: fäll ner några och räkna resten.",
+   "Plus betyder att det blir fler. Minus betyder att det blir färre.",
+   "Gå via 10 när du räknar plus över 10: 8 + 4 = 8 + 2 + 2 = 12.",
+   "Gå via 10 när du räknar minus också: 14 − 6 = 14 − 4 − 2 = 8.",
+   "Du kan kontrollera minus med plus: 14 − 6 = 8, för 8 + 6 = 14."
+  ],
+  "exempel": [
+   [
+    "Det ligger 11 pennor på bordet. Du tar bort 3. Hur många ligger kvar?",
+    "Du tar bort, så det är minus: 11 − 3 = 8. Det ligger 8 pennor kvar."
+   ],
+   [
+    "Vilket tal fattas? 5 + ? = 13",
+    "Räkna från 5 upp till 13: 5 + 5 = 10 och 3 till blir 13. Det är 5 + 3 = 8 steg. Talet är 8."
+   ]
+  ],
+  "ord": [
+   [
+    "tiokamrater",
+    "två tal som blir 10 tillsammans"
+   ],
+   [
+    "plus",
+    "lägga till, det blir fler"
+   ],
+   [
+    "minus",
+    "ta bort, det blir färre"
+   ]
+  ],
+  "tips": "Läs räknehistorien noga: får någon fler är det plus, och tar någon bort eller går något iväg är det minus."
+ },
+ "Geometri": {
+  "mal": [
+   "Känna igen triangel, kvadrat och cirkel.",
+   "Räkna hörn och sidor på en form.",
+   "Använda lägesord som under, ovanför, först och sist.",
+   "Fortsätta ett mönster och jämföra längder."
+  ],
+  "fakta": [
+   "En triangel har 3 hörn och 3 sidor.",
+   "En kvadrat har 4 hörn och 4 sidor som är lika långa. En cirkel är rund och har inga hörn.",
+   "Lägesord säger var något är: på, under, ovanför, bredvid, framför, bakom, först, i mitten och sist.",
+   "Ett mönster upprepar sig. Hitta den del som kommer igen, så vet du vad som kommer sedan.",
+   "Kan du vika en form på mitten så att båda halvorna blir lika, är den symmetrisk."
+  ],
+  "exempel": [
+   [
+    "Mönstret är stjärna, hjärta, hjärta, stjärna, hjärta, hjärta. Vad kommer sedan?",
+    "Delen stjärna, hjärta, hjärta kommer igen och igen. Efter två hjärtan kommer en stjärna."
+   ],
+   [
+    "Hur många hörn har två kvadrater tillsammans?",
+    "En kvadrat har 4 hörn. Två kvadrater har 4 + 4 = 8 hörn."
+   ]
+  ],
+  "ord": [
+   [
+    "hörn",
+    "där två sidor möts"
+   ],
+   [
+    "sida",
+    "en rak kant på en form"
+   ],
+   [
+    "mönster",
+    "något som upprepas på samma sätt"
+   ]
+  ],
+  "tips": "Peka på varje hörn en gång när du räknar, så räknar du inget hörn två gånger."
+ },
+ "Räkna och jämföra tal": {
+  "mal": [
+   "Hitta talet som fattas när svaret ska bli 10.",
+   "Räkna plus och minus med tal upp till 20.",
+   "Jämföra tal med tecknen <, > och =.",
+   "Fortsätta talföljder som går uppåt eller nedåt."
+  ],
+  "fakta": [
+   "Tecknet > betyder större än och < betyder mindre än. Den öppna sidan är mot det större talet: 15 > 11 och 4 < 7.",
+   "Tecknet = betyder lika med: båda sidorna är lika mycket, som 4 + 3 = 7.",
+   "Står det plus eller minus på ena sidan, räknar du ut den sidan först och jämför sedan.",
+   "I talföljderna här ändras talen lika mycket varje gång. Titta på hur mycket det ändras från ett tal till nästa.",
+   "När entalen är 9 kommer ett nytt tiotal: efter 39 kommer 40."
+  ],
+  "exempel": [
+   [
+    "Vilka två tal kommer sedan? 1, 3, 5, 7, …",
+    "Talen ökar med 2 varje gång. 7 + 2 = 9 och 9 + 2 = 11. Svaret är 9 och 11."
+   ],
+   [
+    "Vilket tecken ska stå mellan 9 + 3 och 11?",
+    "Räkna först: 9 + 3 = 12. 12 är större än 11, så tecknet är >."
+   ]
+  ],
+  "ord": [
+   [
+    "större än",
+    "tecknet >"
+   ],
+   [
+    "mindre än",
+    "tecknet <"
+   ],
+   [
+    "lika med",
+    "tecknet ="
+   ],
+   [
+    "talföljd",
+    "tal i en rad som följer en regel"
+   ]
+  ],
+  "tips": "Tänk att tecknet är en mun som alltid är öppen mot det större talet."
+ },
+ "Dubbelt och hälften": {
+  "mal": [
+   "Räkna ut dubbelt så mycket som ett tal.",
+   "Räkna ut hälften av ett tal.",
+   "Läsa en uppgift och se om den frågar efter dubbelt eller hälften."
+  ],
+  "fakta": [
+   "Dubbelt betyder lika många en gång till. Räkna talet plus samma tal.",
+   "Hälften betyder att dela i två lika stora delar.",
+   "Dubbelt och hälften är motsatser: tar du hälften av det dubbla är du tillbaka där du började.",
+   "Ett tal som 13 går inte att dela lika i två högar med hela saker: en blir över."
+  ],
+  "exempel": [
+   [
+    "Vad är dubbelt så mycket som 11?",
+    "Lika många en gång till: 11 + 11 = 22."
+   ],
+   [
+    "Ali har 30 kulor. Sam har hälften så många. Hur många har Sam?",
+    "Hälften så många betyder att dela 30 i två lika delar. 15 + 15 = 30, så Sam har 15 kulor."
+   ]
+  ],
+  "ord": [
+   [
+    "dubbelt",
+    "lika många en gång till"
+   ],
+   [
+    "hälften",
+    "en av två lika stora delar"
+   ]
+  ],
+  "tips": "Läs noga: dubbelt så många blir fler, och hälften så många blir färre."
+ }
+}

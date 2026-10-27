@@ -218,8 +218,8 @@ window.NEXTRUM_INTRO = (function () {
       + 'Föreslå tiden, och kalendern för oktober med dagens datum markerat.'),
     lektioner: introbild('foralder', 'lektioner', 'Mina lektioner på en telefon: flikarna Pass, Studieplan och '
       + 'Efter passen, och passen i matematik med dag, tid, plats och om de är betalda.'),
-    bekrafta: introbild('foralder', 'bekrafta', 'Bekräfta rapport på en telefon: rapporten efter ett pass i '
-      + 'matematik, med hur det gick, vad de gjorde och vad som behöver tränas.'),
+    betalning: introbild('foralder', 'betalning', 'Betalning och planer på en telefon: att betala och betalt i '
+      + 'oktober, betalsätten kort, Apple Pay, Google Pay och Klarna, och listan Att betala.'),
     nexlax: introbild('foralder', 'nexlax', 'NexLäx på en telefon: dagar i rad, XP och märket, hur långt barnet '
       + 'kommit i matematik åk 6, och nästa steg på vägen.'),
     meddelanden: introbild('foralder', 'meddelanden', 'Meddelanden på en telefon: en tråd mellan föräldern och '

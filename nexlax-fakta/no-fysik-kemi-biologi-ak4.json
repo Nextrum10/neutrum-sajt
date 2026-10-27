@@ -1,0 +1,166 @@
+{
+ "Djur och växter i närmiljön": {
+  "mal": [
+   "Sortera djur i grupper: däggdjur, fåglar, fiskar, groddjur, kräldjur och insekter.",
+   "Ordna grodans utveckling och berätta hur djur klarar vintern.",
+   "Förklara vad växtens delar gör och hur frön gror och sprids.",
+   "Förklara hur bin hjälper blommorna att få frön."
+  ],
+  "fakta": [
+   "Däggdjur ger sina ungar di, alltså mjölk, och har oftast päls. Fåglar har fjädrar. Fiskar andas med gälar.",
+   "Insekter har sex ben och en kropp i tre delar. Spindlar har åtta ben och är inga insekter.",
+   "Groddjur, som grodan, börjar som rom i vatten och blir grodyngel. Kräldjur, som ormar och ödlor, har torr, fjällig hud.",
+   "Djur klarar vintern på olika sätt: de flyttar söderut, går i ide, får vit vinterpäls eller äter av mat de gömt.",
+   "Roten tar upp vatten, stjälken leder det, bladen gör näring med solljus och i blomman bildas frön. Bin flyttar pollen mellan blommor."
+  ],
+  "exempel": [
+   [
+    "En fladdermus kan flyga, men den har päls och ger sina ungar di. Vilken grupp hör den till?",
+    "Däggdjur. Det som avgör är att ungarna får di, inte att den kan flyga."
+   ]
+  ],
+  "ord": [
+   [
+    "groddjur",
+    "djur som börjar livet i vatten och sedan kan leva på land, som grodor"
+   ],
+   [
+    "kräldjur",
+    "djur med torr, fjällig hud, som ormar och ödlor"
+   ],
+   [
+    "pollen",
+    "ett fint pulver i blommorna som behövs för att det ska bli frön"
+   ],
+   [
+    "pollinering",
+    "när pollen förs från en blomma till en annan"
+   ],
+   [
+    "gälar",
+    "det som fiskar och grodyngel andas med i vattnet"
+   ]
+  ],
+  "tips": "Räkna benen: sex ben är en insekt, åtta ben är en spindel."
+ },
+ "Ljud och ljus": {
+  "mal": [
+   "Förklara att ljud uppstår när något vibrerar, och vad ljudet kan gå genom.",
+   "Räkna ut hur långt ljudet går på några sekunder.",
+   "Förklara hur skuggor, speglar och reflexer fungerar.",
+   "Berätta att vitt ljus kan delas upp i regnbågens färger."
+  ],
+  "fakta": [
+   "Ljud uppstår när något vibrerar. Ljudet går genom luft, vatten och fasta saker, men inte genom rymden, där det inte finns någon luft.",
+   "I luft går ljudet ungefär 340 meter på en sekund. Ljuset går mycket, mycket fortare.",
+   "Ett eko är ljud som studsar mot något och kommer tillbaka. En kort och hårt spänd sträng ger en ljus ton.",
+   "Ljus går rakt fram. Där något stoppar ljuset blir det en skugga. En spegel och en reflex kastar tillbaka ljuset.",
+   "Vitt solljus består av många färger. I en regnbåge har ljuset delats upp i färgerna."
+  ],
+  "exempel": [
+   [
+    "Ljudet går ungefär 340 meter på en sekund. Hur långt går det på 2 sekunder?",
+    "2 · 340 = 680 meter."
+   ],
+   [
+    "Du ser blixten och räknar till 5 sekunder innan åskan hörs. Ungefär hur långt bort är åskan?",
+    "5 · 340 = 1 700 meter, alltså ungefär 1,7 kilometer."
+   ]
+  ],
+  "ord": [
+   [
+    "vibrera",
+    "röra sig fram och tillbaka mycket snabbt"
+   ],
+   [
+    "ton",
+    "hur ljust eller mörkt ett ljud låter"
+   ],
+   [
+    "ljuskälla",
+    "något som sänder ut eget ljus, som solen eller en lampa"
+   ],
+   [
+    "hörselskydd",
+    "skydd för öronen mot starkt ljud"
+   ]
+  ],
+  "tips": "Räknar du med ljudets fart: multiplicera antalet sekunder med 340."
+ },
+ "Material och ämnen": {
+  "mal": [
+   "Säga vilka material som leder elektricitet och värme och vilka som dras till en magnet.",
+   "Para ihop material med vad de görs av och vad de används till.",
+   "Beskriva hur ämnen smälter, fryser, avdunstar och kondenserar.",
+   "Förklara vad en eld behöver och vad rost är."
+  ],
+  "fakta": [
+   "Metaller, som koppar, leder elektricitet och värme bra. Plast, trä och gummi leder dåligt och kan därför skydda oss.",
+   "En magnet drar till sig järn och stål. Glas görs främst av sand och papper av trä.",
+   "Is smälter till vatten, vatten fryser till is, vatten avdunstar till ånga och ånga kondenserar till droppar. Sådant kan gå tillbaka.",
+   "Det som har brunnit upp har blivit nya ämnen och kan inte bli som förut. En eld behöver något som brinner, syre och värme.",
+   "Järn som ligger i fukt och luft blir rödbrunt. Det rödbruna är rost."
+  ],
+  "exempel": [
+   [
+    "Du lägger en träkloss och en sten i vatten. Vilken flyter?",
+    "Träklossen. Trä flyter oftast i vatten, men en sten sjunker."
+   ]
+  ],
+  "ord": [
+   [
+    "leda",
+    "släppa igenom elektricitet eller värme"
+   ],
+   [
+    "kondensera",
+    "när ånga kyls av och blir vattendroppar"
+   ],
+   [
+    "syre",
+    "en gas i luften som elden behöver för att brinna"
+   ]
+  ],
+  "tips": "Fråga dig om förändringen går att göra ogjord: då har ämnet bara bytt form."
+ },
+ "Himlakroppar": {
+  "mal": [
+   "Förklara dag och natt, ett dygn, en månad och ett år.",
+   "Förklara varför månen ser olika ut under en månad.",
+   "Ordna planeterna och känna igen några av dem.",
+   "Säga vilken kraft som håller planeterna i sina banor."
+  ],
+  "fakta": [
+   "Solen är en stjärna. Jorden snurrar ett varv runt sig själv på ett dygn, 24 timmar. Det är natt på den sida som är vänd bort från solen.",
+   "Jorden går ett varv runt solen på ett år, och månen går runt jorden på ungefär en månad.",
+   "Månen lyser inte själv. Vi ser olika mycket av den sida som solen lyser på, och därför ändrar den form.",
+   "Solsystemet har åtta planeter. Från solen: Merkurius, Venus, Jorden, Mars, Jupiter, Saturnus, Uranus och Neptunus.",
+   "Gravitationen håller planeterna i sina banor. Årstiderna beror på att jordaxeln lutar, inte på hur nära solen jorden är."
+  ],
+  "exempel": [
+   [
+    "Vilken planet ligger längst ut i solsystemet?",
+    "Neptunus, den åttonde planeten från solen."
+   ]
+  ],
+  "ord": [
+   [
+    "planet",
+    "en stor himlakropp som går i en bana runt en stjärna"
+   ],
+   [
+    "bana",
+    "vägen som en himlakropp går runt en annan"
+   ],
+   [
+    "gravitation",
+    "kraften som drar saker mot varandra, till exempel mot jorden"
+   ],
+   [
+    "jordaxeln",
+    "den tänkta linjen genom nordpolen och sydpolen som jorden snurrar runt"
+   ]
+  ],
+  "tips": "Hitta på en egen ramsa där orden börjar på M, V, J, M, J, S, U och N, så minns du planeternas ordning."
+ }
+}

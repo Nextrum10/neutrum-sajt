@@ -1,0 +1,209 @@
+{
+ "Celler och mikroorganismer": {
+  "mal": [
+   "Räkna ut hur mycket ett mikroskop förstorar och hur stort något är i verkligheten.",
+   "Säga vad cellens delar gör och vilka som bara finns i växtceller.",
+   "Skilja på bakterier, virus och svampar och förklara antibiotika och vaccin.",
+   "Räkna ut hur snabbt bakterier förökar sig."
+  ],
+  "fakta": [
+   "Mikroskopets förstoring är okularets förstoring gånger objektivets. Verklig storlek = storleken i mikroskopet delat med förstoringen.",
+   "Alla levande organismer består av celler. Cellkärnan styr cellen, cellmembranet släpper in och ut ämnen och mitokondrierna frigör energi. Växtceller har också cellvägg och kloroplaster.",
+   "Bakterier är celler utan cellkärna. Virus är inga celler, är mycket mindre än bakterier och förökar sig bara inne i andra celler. Antibiotika hjälper mot bakterier, inte mot virus.",
+   "Ett vaccin låter kroppen öva på att känna igen en smitta, så att den kan försvara sig snabbare.",
+   "Bakterier förökar sig genom att dela sig, och varje delning dubblar antalet. I kyla förökar de sig långsammare."
+  ],
+  "exempel": [
+   [
+    "En bakterie delar sig var 30:e minut. Hur många bakterier har det blivit efter 2 timmar?",
+    "2 timmar är 4 delningar: 1 → 2 → 4 → 8 → 16. Det blir 16 bakterier."
+   ],
+   [
+    "Ett hårstrå ser 8 mm brett ut i ett mikroskop som förstorar 100 gånger. Hur brett är det i verkligheten?",
+    "8 / 100 = 0,08 mm, och 0,08 · 1 000 = 80 µm."
+   ]
+  ],
+  "ord": [
+   [
+    "okular",
+    "linsen du tittar i"
+   ],
+   [
+    "objektiv",
+    "linsen närmast provet"
+   ],
+   [
+    "mikroorganism",
+    "en levande organism som är för liten för att synas utan mikroskop"
+   ],
+   [
+    "µm",
+    "mikrometer, en tusendels millimeter"
+   ]
+  ],
+  "tips": "Antal delningar = tiden delat med tiden för en delning. Dubbla sedan en gång per delning."
+ },
+ "Tryck och densitet": {
+  "mal": [
+   "Räkna ut densitet, massa eller volym med ρ = m / V.",
+   "Avgöra om något flyter eller sjunker i vatten.",
+   "Räkna ut tryck, kraft eller area med p = F / A.",
+   "Förklara trycket i vatten och lufttrycket."
+  ],
+  "fakta": [
+   "Densitet är massa delat med volym: ρ = m / V, ofta i g/cm³. Då är m = ρ · V och V = m / ρ.",
+   "Vatten har densiteten 1,0 g/cm³. Det som har högre densitet sjunker, och det som har lägre flyter. Is har lägre densitet än vatten.",
+   "Volymen av en sten mäts i ett mätglas: så mycket som vattnet stiger är stenens volym. 1 ml = 1 cm³.",
+   "Tryck är kraft delat med area: p = F / A. Enheten är pascal, 1 Pa = 1 N/m². Större area ger mindre tryck.",
+   "Trycket i vatten ökar med ungefär 10 kPa per meter djup. Lufttrycket vid havsytan är ungefär 100 kPa."
+  ],
+  "exempel": [
+   [
+    "En träbit väger 30 g och har volymen 50 cm³. Vilken densitet har den, och flyter den?",
+    "ρ = 30 / 50 = 0,6 g/cm³. Det är mindre än vattnets 1,0 g/cm³, så den flyter."
+   ],
+   [
+    "En person med tyngden 600 N står på en yta på 0,04 m². Hur stort är trycket?",
+    "p = 600 / 0,04 = 15 000 Pa."
+   ]
+  ],
+  "ord": [
+   [
+    "densitet",
+    "hur mycket massa det finns per volym, ρ"
+   ],
+   [
+    "pascal",
+    "enheten för tryck, Pa"
+   ],
+   [
+    "kPa",
+    "kilopascal, 1 000 Pa"
+   ],
+   [
+    "tyngd",
+    "kraften som gravitationen drar med, i newton"
+   ]
+  ],
+  "tips": "Skriv formeln först och kolla enheterna: g delat med cm³ ger g/cm³, och N delat med m² ger Pa."
+ },
+ "Syror och baser": {
+  "mal": [
+   "Känna igen syror och baser i vardagen och var de finns.",
+   "Arbeta säkert med syror och baser.",
+   "Använda pH-skalan och indikatorer för att avgöra om något är surt, neutralt eller basiskt.",
+   "Räkna ut hur många gånger surare en lösning är."
+  ],
+  "fakta": [
+   "Syror i vardagen: ättiksyra i ättika, citronsyra i citroner, kolsyra i läsk och saltsyra i magsaften. Tvål och propplösare är basiska.",
+   "pH-skalan går ungefär från 0 till 14: under 7 är surt, 7 neutralt och över 7 basiskt. Varje steg nedåt gör lösningen tio gånger surare.",
+   "En indikator byter färg efter pH. BTB är gul i en sur lösning, grön i en neutral och blå i en basisk.",
+   "Basiska lösningar har många hydroxidjoner, OH⁻. Tillsätter du en bas till en sur lösning stiger pH.",
+   "Använd skyddsglasögon, och häll alltid syran i vattnet, aldrig tvärtom. Starka baser frätar lika mycket som starka syror."
+  ],
+  "exempel": [
+   [
+    "Hur många gånger surare är en lösning med pH 2 än en med pH 6?",
+    "6 − 2 = 4 steg, och varje steg är 10 gånger: 10 · 10 · 10 · 10 = 10 000 gånger."
+   ]
+  ],
+  "ord": [
+   [
+    "frätande",
+    "kan skada hud, ögon och material"
+   ],
+   [
+    "späda",
+    "blanda med vatten så att lösningen blir svagare"
+   ],
+   [
+    "natriumhydroxid",
+    "en stark bas, NaOH, som finns i propplösare"
+   ],
+   [
+    "kalka",
+    "tillsätta kalk, så att surt vatten blir mindre surt"
+   ]
+  ],
+  "tips": "Låga pH-tal är sura: ju lägre tal, desto surare."
+ },
+ "Energiformer": {
+  "mal": [
+   "Känna igen energiformer och beskriva energiomvandlingar.",
+   "Förklara energiprincipen: energi kan inte förstöras.",
+   "Räkna ut verkningsgrad, effekt och energi.",
+   "Räkna med lägesenergi, E = m · g · h."
+  ],
+  "fakta": [
+   "Energiformer är till exempel lägesenergi, rörelseenergi, kemisk energi, strålningsenergi, elektrisk energi och värme. Energi kan inte förstöras, bara omvandlas.",
+   "Nästan all energi på jorden kommer från solen, också den i mat, olja och kol. Vid varje omvandling blir en del värme.",
+   "Verkningsgrad = nyttig energi delat med tillförd energi, ofta i procent.",
+   "Energi mäts i joule (J). Effekt är energi per sekund, P = E / t, i watt (W). Då är E = P · t.",
+   "Med effekten i kW och tiden i timmar blir energin i kWh. Lägesenergi: E = m · g · h, med g = 9,8 N/kg."
+  ],
+  "exempel": [
+   [
+    "En motor får 500 J och ger 400 J rörelseenergi. Hur stor är verkningsgraden?",
+    "400 / 500 = 0,8 = 80 %."
+   ],
+   [
+    "En hårtork på 1 200 W är på i 2 minuter. Hur mycket energi använder den i kJ?",
+    "2 minuter = 120 s. E = 1 200 · 120 = 144 000 J = 144 kJ."
+   ]
+  ],
+  "ord": [
+   [
+    "energiprincipen",
+    "energi kan varken skapas eller förstöras, bara omvandlas"
+   ],
+   [
+    "verkningsgrad",
+    "hur stor del av energin som blir till nytta"
+   ],
+   [
+    "effekt",
+    "energi per sekund, i watt"
+   ],
+   [
+    "kWh",
+    "kilowattimme: energin när 1 kW används i en timme"
+   ]
+  ],
+  "tips": "Kolla enheterna innan du räknar: watt gånger sekunder ger joule, watt gånger timmar ger wattimmar."
+ },
+ "Cellens delar och fotosyntes": {
+  "mal": [
+   "Säga vad cellkärnan, cellmembranet, cytoplasman, mitokondrierna och kloroplasterna gör.",
+   "Skilja på växtceller och djurceller.",
+   "Fylla i fotosyntesens och cellandningens ordformler och säga var de sker."
+  ],
+  "fakta": [
+   "Cellen är det minsta som kan leva. Cellkärnan innehåller DNA och styr cellen, cellmembranet släpper in och ut ämnen, och cytoplasman fyller cellen.",
+   "Mitokondrierna frigör energin i druvsocker med hjälp av syre. Det kallas cellandning och sker i både växtceller och djurceller.",
+   "Av växtceller och djurceller är det bara växtcellerna som har cellvägg, kloroplaster och en stor vakuol. Cellväggen och vakuolen ger växtcellen en fast form.",
+   "Fotosyntes sker i kloroplasterna: koldioxid + vatten + ljus → druvsocker + syre. Klorofyllet gör kloroplasterna gröna.",
+   "Cellandning: druvsocker + syre → koldioxid + vatten, och energi frigörs. Det är fotosyntesens formel baklänges."
+  ],
+  "exempel": [
+   [
+    "Har en muskelcell kloroplaster?",
+    "Nej. En muskelcell är en djurcell, och djurceller har inga kloroplaster. Däremot har den många mitokondrier."
+   ]
+  ],
+  "ord": [
+   [
+    "organell",
+    "en del inne i cellen med en egen uppgift"
+   ],
+   [
+    "vakuol",
+    "en blåsa med cellsaft inne i växtcellen"
+   ],
+   [
+    "druvsocker",
+    "glukos, sockret som växten gör och som cellen får energi ur"
+   ]
+  ],
+  "tips": "Fotosyntes och cellandning har samma ämnen åt olika håll: den ena bygger socker, den andra bryter ner det."
+ }
+}

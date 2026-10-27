@@ -1,0 +1,326 @@
+{
+ "Genetik och evolution": {
+  "mal": [
+   "Förklara vad DNA, gener, kromosomer och mutationer är.",
+   "Para ihop DNA:s baser och bygga den motsatta strängen.",
+   "Räkna ut hur stor del av avkomman som väntas få en recessiv egenskap.",
+   "Förklara naturligt urval och varför det du tränar upp inte ärvs."
+  ],
+  "fakta": [
+   "DNA bär arvsmassan. En gen är en bit DNA med instruktionen till ett protein, och DNA:t är packat i kromosomer. De flesta av kroppens celler har 46 kromosomer, könscellerna 23.",
+   "DNA:s baser parar alltid på samma sätt: A med T och C med G.",
+   "Varje förälder ger ett av sina två anlag. Ett dominant anlag (stor bokstav) syns även om det bara finns ett. Ett recessivt (liten bokstav) syns bara när båda anlagen är recessiva.",
+   "Naturligt urval: individerna skiljer sig åt, de som passar miljön bäst får flest ungar, och deras egenskaper blir vanligare. Nya ärftliga egenskaper kommer från mutationer.",
+   "Det du tränar upp under livet ändrar inte DNA:t i dina könsceller och ärvs inte. Charles Darwin beskrev det naturliga urvalet 1859, och fossil visar hur arter förändrats."
+  ],
+  "exempel": [
+   [
+    "Röd blomfärg är dominant (R) och vit recessiv (r). En RR-växt korsas med en rr-växt. Hur stor del av avkomman väntas få vita blommor?",
+    "RR ger alltid R och rr alltid r, så alla blir Rr. R är dominant, så 0 % blir vita."
+   ],
+   [
+    "Bygg den motsatta strängen till C C A T.",
+    "C → G, C → G, A → T och T → A. Svaret är G G T A."
+   ]
+  ],
+  "ord": [
+   [
+    "anlag",
+    "en variant av en gen, som A eller a"
+   ],
+   [
+    "dominant",
+    "ett anlag som syns även om du bara har ett av det"
+   ],
+   [
+    "recessiv",
+    "ett anlag som bara syns om du har två av det"
+   ],
+   [
+    "avkomma",
+    "ungarna eller fröna som föräldrarna får"
+   ]
+  ],
+  "tips": "Rita ett korsningsschema med en förälder längs varje kant: varje ruta är en fjärdedel av avkomman."
+ },
+ "Elektromagnetism och energiförsörjning": {
+  "mal": [
+   "Förklara induktion och vad generatorn, elmotorn och transformatorn gör.",
+   "Räkna med transformatorns varvtal och med effekten P = U · I.",
+   "Skilja på förnybara och icke förnybara energikällor och beskriva energins väg i ett kraftverk.",
+   "Räkna ut energi i kWh och verkningsgrad."
+  ],
+  "fakta": [
+   "Ström i en ledning ger ett magnetfält. När magnetfältet i en spole ändras induceras en spänning, och ju snabbare det ändras, desto större blir den.",
+   "En generator gör rörelseenergi till el och en elmotor el till rörelse. En transformator ändrar växelspänningens storlek: U₂ / U₁ = N₂ / N₁.",
+   "Effekt: P = U · I. Energi: E = P · t, och med kW och timmar blir det kWh. Verkningsgrad = nyttig energi / tillförd energi.",
+   "Sol, vind och vatten är förnybara och tar inte slut. Fossila bränslen och uran tar slut. Fossila bränslen släpper ut lagrat kol som koldioxid.",
+   "I ett vattenkraftverk blir vattnets lägesenergi rörelseenergi som snurrar en turbin, och generatorn gör el. En solcell gör ljus direkt till el."
+  ],
+  "exempel": [
+   [
+    "En transformator har 500 varv på primärspolen och 100 varv på sekundärspolen och kopplas till 230 V. Vilken spänning blir det på sekundärsidan?",
+    "U₂ = 230 · 100 / 500 = 46 V."
+   ],
+   [
+    "En ugn på 3 kW är på i 40 minuter. Hur många kWh går åt?",
+    "40 minuter = 40/60 h = 2/3 h. E = 3 · 2/3 = 2 kWh."
+   ]
+  ],
+  "ord": [
+   [
+    "inducera",
+    "skapa en spänning med ett magnetfält som ändras"
+   ],
+   [
+    "växelström",
+    "ström som byter riktning hela tiden"
+   ],
+   [
+    "turbin",
+    "ett hjul med skovlar som snurras av vatten, ånga eller vind"
+   ],
+   [
+    "förnybar",
+    "en energikälla som inte tar slut"
+   ]
+  ],
+  "tips": "Gör om minuter till timmar innan du räknar kWh: dela med 60."
+ },
+ "Organisk kemi": {
+  "mal": [
+   "Förklara vad ett kolväte är och skilja på alkaner och alkener.",
+   "Använda alkanernas formel CₙH₂ₙ₊₂ och namnen från metan till pentan.",
+   "Säga vad som bildas när ett kolväte brinner.",
+   "Känna igen alkoholer, karboxylsyror, estrar, näringsämnen och polymerer."
+  ],
+  "fakta": [
+   "Ett kolväte består bara av kol och väte. En kolatom bildar fyra bindningar, så kolatomer kan bygga långa kedjor.",
+   "Alkaner har bara enkelbindningar och formeln CₙH₂ₙ₊₂. Met-, et-, prop-, but- och pent- betyder 1, 2, 3, 4 och 5 kolatomer. En alken har en dubbelbindning.",
+   "När ett kolväte brinner med gott om syre bildas koldioxid och vatten. Naturgas är mest metan, CH₄.",
+   "Alkoholer har en OH-grupp, som etanol. Karboxylsyror har en COOH-grupp, som ättiksyra. Alkohol + karboxylsyra → ester + vatten, och många estrar doftar frukt.",
+   "Stärkelse är byggd av glukos, proteiner av aminosyror och fett av glycerol och fettsyror. En polymer är många små molekyler i en lång kedja."
+  ],
+  "exempel": [
+   [
+    "Vilken formel har oktan, alkanen med 8 kolatomer?",
+    "Väteatomerna blir 2 · 8 + 2 = 18. Oktan är C₈H₁₈."
+   ]
+  ],
+  "ord": [
+   [
+    "enkelbindning",
+    "ett elektronpar som binder ihop två atomer"
+   ],
+   [
+    "dubbelbindning",
+    "två elektronpar mellan samma två atomer"
+   ],
+   [
+    "ester",
+    "ett ämne som bildas av en alkohol och en karboxylsyra"
+   ],
+   [
+    "metanol",
+    "den enklaste alkoholen, som är mycket giftig att dricka"
+   ]
+  ],
+  "tips": "I en alkan är väteatomerna dubbelt så många som kolatomerna, plus två."
+ },
+ "Radioaktivitet": {
+  "mal": [
+   "Skilja på alfa-, beta- och gammastrålning och vad som stoppar dem.",
+   "Förklara isotoper och räkna ut antalet neutroner ur masstalet.",
+   "Räkna med halveringstid.",
+   "Förklara fission, fusion, radon, stråldos och kol-14-metoden."
+  ],
+  "fakta": [
+   "Alfastrålning är heliumkärnor och stoppas av ett papper. Betastrålning är elektroner och stoppas av en tunn aluminiumplåt. Gammastrålning dämpas av tjockt bly eller betong.",
+   "Isotoper är atomer av samma grundämne med olika antal neutroner. Masstalet är protoner plus neutroner.",
+   "Halveringstiden är tiden tills hälften av ett radioaktivt ämne finns kvar. Efter två halveringstider är en fjärdedel kvar, efter tre en åttondel.",
+   "Fission är när tunga kärnor, som uran, klyvs. Fusion är när lätta kärnor slås ihop, som väte till helium i solen. Båda frigör mycket energi.",
+   "Vi får alltid lite strålning från naturen, till exempel från marken och rymden. Radon är en radioaktiv gas från marken. Stråldos mäts i sievert (Sv)."
+  ],
+  "exempel": [
+   [
+    "Ett ämne har halveringstiden 3 timmar. Du har 400 g. Hur mycket finns kvar efter 9 timmar?",
+    "9 / 3 = 3 halveringstider: 400 → 200 → 100 → 50 g."
+   ],
+   [
+    "Uran-235 har 92 protoner. Hur många neutroner har det?",
+    "235 − 92 = 143 neutroner."
+   ]
+  ],
+  "ord": [
+   [
+    "sönderfall",
+    "när en ostabil atomkärna sänder ut strålning och ändras"
+   ],
+   [
+    "masstal",
+    "antalet protoner plus neutroner i kärnan"
+   ],
+   [
+    "kol-14-metoden",
+    "att räkna ut åldern på något som har levt, ur hur mycket kol-14 som finns kvar"
+   ]
+  ],
+  "tips": "Räkna halveringar som en kedja: dela med 2 en gång för varje halveringstid."
+ },
+ "NP-träning: biologi": {
+  "mal": [
+   "Använda det du kan om fotosyntes, ekosystem och kroppen i frågor i provets stil.",
+   "Förklara hur antibiotikaresistens uppstår och vad ett vaccin gör.",
+   "Väga argument för och emot i en fråga om miljö och hälsa.",
+   "Hitta och använda fakta i en kort genomgång."
+  ],
+  "fakta": [
+   "Läs frågan noga och se efter vad den frågar om. En fråga med \"varför\" vill ha en förklaring, inte bara ett namn.",
+   "Visa hur du tänker: säg vad som händer först och vad det leder till. Blir ett djur färre får de som äter det mindre mat, och det som det äter kan bli fler.",
+   "Fotosyntes: koldioxid + vatten → druvsocker + syre, och cellandningen går åt andra hållet. Hjärtat pumpar blodet, och njurarna renar det och bildar urin.",
+   "Antibiotika verkar mot bakterier, inte mot virus. Resistens uppstår när de bakterier som av en slump tål antibiotikan överlever och förökar sig.",
+   "Ett argument är ett skäl för eller emot. Ett bra argument säger vad som händer och varför, och ett starkt svar visar båda sidorna."
+  ],
+  "exempel": [
+   [
+    "I en skog äter lodjur rådjur, och rådjur äter unga träd. Rådjuren blir färre. Vad händer troligen med lodjuren och de unga träden?",
+    "Lodjuren får mindre mat och kan bli färre. De unga träden blir mindre uppätna och kan bli fler."
+   ]
+  ],
+  "ord": [
+   [
+    "resistent",
+    "tål ett läkemedel, så att det inte dödar längre"
+   ],
+   [
+    "immunförsvar",
+    "kroppens försvar mot smitta"
+   ],
+   [
+    "producent",
+    "en organism som bygger sin egen näring med solljus, som en växt"
+   ],
+   [
+    "ekologisk odling",
+    "odling utan kemiskt syntetiska bekämpningsmedel och konstgödsel"
+   ]
+  ],
+  "tips": "Kontrollera svaret: läs frågan igen och se att du har svarat på just det som frågades."
+ },
+ "NP-träning: fysik": {
+  "mal": [
+   "Räkna med effekt, energi i kWh, ström och medelhastighet i frågor i provets stil.",
+   "Förklara skillnaden mellan massa och tyngd och vad tröghet betyder.",
+   "Väga för- och nackdelar med energikällor, som kärnkraft.",
+   "Hitta och använda fakta och formler i en kort genomgång."
+  ],
+  "fakta": [
+   "Skriv formeln, sätt in talen med enheter och räkna: P = U · I, E = P · t, U = R · I och medelhastighet = sträcka / tid.",
+   "1 kWh = 1 000 Wh, energin när 1 000 W används i en timme. Gör om minuter till timmar först.",
+   "Massan mäts i kg och är lika överallt. Tyngden är gravitationens kraft i newton, ungefär 9,8 N per kg på jorden och mindre på månen.",
+   "Tröghet: ett föremål fortsätter i samma rörelse om inga krafter påverkar det eller om de tar ut varandra. Energi kan inte förstöras, bara omvandlas, till exempel till värme.",
+   "Sol, vind och vatten är förnybara, men fossila bränslen och uran tar slut. Ett bra svar om energikällor visar både fördelar och nackdelar."
+  ],
+  "exempel": [
+   [
+    "En dator på 80 W är på i 6 timmar. Hur många kWh går åt?",
+    "80 · 6 = 480 Wh = 0,48 kWh."
+   ],
+   [
+    "En bil kör 45 km på 30 minuter. Vilken är medelhastigheten?",
+    "30 minuter = 0,5 h. v = 45 / 0,5 = 90 km/h."
+   ]
+  ],
+  "ord": [
+   [
+    "effekt",
+    "hur mycket energi som omvandlas per sekund, i watt"
+   ],
+   [
+    "tröghet",
+    "att ett föremål vill fortsätta i samma rörelse"
+   ],
+   [
+    "vakuum",
+    "tomrum, utan luft eller något annat ämne"
+   ]
+  ],
+  "tips": "Kolla att svaret är rimligt: en löpare springer några meter per sekund, inte hundratals."
+ },
+ "NP-träning: kemi": {
+  "mal": [
+   "Skilja på grundämnen, kemiska föreningar och blandningar.",
+   "Förklara med partikelmodellen vad som händer när vatten kokar.",
+   "Använda pH-skalan och förklara neutralisation.",
+   "Förklara förbränning, rost, kolets kretslopp och växthuseffekten."
+  ],
+  "fakta": [
+   "Ett grundämne har en sorts atomer, och en kemisk förening flera sorter som sitter ihop. I en blandning, som luft, är ämnena inte bundna och kan skiljas åt.",
+   "Vid en kemisk reaktion bildas nya ämnen, men atomerna försvinner inte. Det som brinner blir till stor del gaser som går ut i luften.",
+   "För att något ska brinna behövs bränsle, syre och värme. När kol brinner bildas koldioxid, och druvsocker förbränns i kroppen till koldioxid och vatten.",
+   "Kolet i fossila bränslen har legat lagrat i miljontals år. När de eldas ökar koldioxiden i luften, och växthuseffekten förstärks.",
+   "pH under 7 är surt, 7 neutralt och över 7 basiskt. När en syra och en bas neutraliserar varandra bildas vatten och ett salt."
+  ],
+  "exempel": [
+   [
+    "Socker och sand rörs ut i vatten. Är det en blandning eller en förening, och hur får du bort sanden?",
+    "Det är en blandning. Häll den genom ett filter: sanden fastnar, och sockret går igenom löst i vattnet."
+   ]
+  ],
+  "ord": [
+   [
+    "förbränning",
+    "när ett ämne reagerar med syre, ofta med värme och ljus"
+   ],
+   [
+    "neutralisation",
+    "när en syra och en bas tar ut varandra"
+   ],
+   [
+    "destillation",
+    "att skilja ämnen åt genom att koka och kyla tillbaka ångan"
+   ]
+  ],
+  "tips": "Kontrollera atomerna: det som finns före en reaktion finns kvar efteråt, bara i nya ämnen."
+ },
+ "NP-träning: undersöka och förklara": {
+  "mal": [
+   "Hitta frågeställningen i en beskriven undersökning.",
+   "Skilja på det som ändras med flit, det som mäts och det som hålls lika.",
+   "Dra en slutsats ur ett resultat och förklara den med partikelmodellen.",
+   "Föreslå hur en undersökning kan bli mer tillförlitlig."
+  ],
+  "fakta": [
+   "Frågeställningen är det undersökningen vill ta reda på. Den kan ofta skrivas som en fråga: påverkar A hur B blir?",
+   "Den variabel du ändrar med flit kallas oberoende, och den du mäter beroende. Allt annat håller du lika, så att jämförelsen blir rättvis.",
+   "En slutsats säger vad resultatet visar, till exempel \"ju mer av A, desto mer av B\". Den ska bygga på mätningarna.",
+   "Gör flera försök och räkna ut ett medelvärde, så blir resultatet mer tillförlitligt.",
+   "Partikelmodellen förklarar mycket: i varmare vätska rör sig partiklarna snabbare."
+  ],
+  "exempel": [
+   [
+    "Omar undersöker om ljus påverkar hur snabbt krasse växer. Han ställer tre krukor i olika mycket ljus. Vad ska han hålla lika?",
+    "Allt utom ljuset: samma sorts frön, lika mycket jord och vatten och samma temperatur. Annars vet han inte vad som gjorde skillnaden."
+   ]
+  ],
+  "ord": [
+   [
+    "variabel",
+    "något som kan ändras eller mätas i en undersökning"
+   ],
+   [
+    "frågeställning",
+    "den fråga som undersökningen ska svara på"
+   ],
+   [
+    "medelvärde",
+    "summan av mätvärdena delat med antalet mätningar"
+   ],
+   [
+    "tillförlitlig",
+    "går att lita på och blir likadan om man gör om den"
+   ]
+  ],
+  "tips": "Läs texten först och leta sedan i den för varje fråga: talen till en räknefråga står i resultatet."
+ }
+}

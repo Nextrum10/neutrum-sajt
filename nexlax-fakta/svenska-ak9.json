@@ -1,0 +1,547 @@
+{
+ "Satsdelar": {
+  "mal": [
+   "Hitta subjekt, predikat, objekt och adverbial i längre meningar.",
+   "Skilja direkt objekt från indirekt objekt.",
+   "Avgöra om en mening har objekt eller inte."
+  ],
+  "fakta": [
+   "Hitta predikatet först. Subjektet får du med vem eller vad + predikatet. Det kan vara flera ord, som ”min äldsta kusin”, och kan stå efter verbet.",
+   "Direkt objekt: vem eller vad + predikat + subjekt? I ”Pappa köpte Lea en glass”: Vad köpte pappa? En glass.",
+   "Indirekt objekt: till eller för vem? Köpte en glass till vem? Lea. Det är den som får något eller har nytta av det.",
+   "Alla meningar har inte objekt: i ”Hon skrattade” finns bara subjekt och predikat. Många meningar har ett direkt objekt men inget indirekt.",
+   "Adverbial svarar på när, var, hur eller varför. Också ord som kanske, ofta och inte är adverbial."
+  ],
+  "exempel": [
+   [
+    "Ta ut satsdelarna i ”På julafton gav farmor oss ett nytt spel.”",
+    "På julafton = adverbial, gav = predikat, farmor = subjekt, oss = indirekt objekt, ett nytt spel = direkt objekt."
+   ]
+  ],
+  "ord": [
+   [
+    "direkt objekt",
+    "det som handlingen gäller: vad gav hon?"
+   ],
+   [
+    "indirekt objekt",
+    "den som får något eller har nytta av det: till eller för vem?"
+   ]
+  ],
+  "tips": "Det indirekta objektet står oftast mellan predikatet och det direkta objektet: visade oss vägen."
+ },
+ "Argumentation": {
+  "mal": [
+   "Skilja tes, argument och motargument.",
+   "Förklara hur en skribent bemöter ett motargument.",
+   "Känna igen ethos, pathos och logos.",
+   "Känna igen retoriska frågor, upprepning och uppmaningar."
+  ],
+  "fakta": [
+   "Tesen är skribentens huvudåsikt. Argument stöder den, och ett motargument talar emot den. Att bemöta är att visa varför motargumentet inte väger så tungt.",
+   "En debattartikel har ofta ordningen tes, argument, motargument och avslutning, gärna med en uppmaning till läsaren.",
+   "Ethos är att verka trovärdig, till exempel genom sin erfarenhet. Pathos är att väcka känslor. Logos är att använda fakta och logik.",
+   "Ett argument blir starkare med belägg, som siffror från en undersökning eller ett tydligt exempel.",
+   "En retorisk fråga har ett svar som verkar självklart och inte behöver sägas. Upprepning av samma ord förstärker budskapet."
+  ],
+  "exempel": [
+   [
+    "Vilket grepp används? ”Enligt kommunens mätning har bullret ökat med en fjärdedel på fem år.”",
+    "Logos, för skribenten använder fakta och siffror."
+   ],
+   [
+    "Tesen är ”Skolan borde ha fler utflykter.” Ge ett motargument och bemöt det.",
+    "Motargument: utflykter tar tid från lektionerna. Bemötande: på en utflykt lär man sig också, fast på ett annat sätt."
+   ]
+  ],
+  "ord": [
+   [
+    "belägg",
+    "något som visar att ett argument stämmer, som fakta eller ett exempel"
+   ],
+   [
+    "retorik",
+    "konsten att tala och skriva så att man övertygar"
+   ],
+   [
+    "uppmaning",
+    "när texten säger åt läsaren att göra något"
+   ]
+  ],
+  "tips": "Ethos handlar om vem som talar, pathos om vad läsaren känner och logos om vad som går att visa."
+ },
+ "Källkritik": {
+  "mal": [
+   "Använda de källkritiska kriterierna äkthet, tid, beroende och tendens.",
+   "Skilja fakta från åsikt.",
+   "Ta reda på vem som står bakom en text och varför den är skriven.",
+   "Kontrollera en uppgift med flera oberoende källor."
+  ],
+  "fakta": [
+   "Äkthet: är källan det den utger sig för att vara? Tid: när skrevs den, och stämmer det fortfarande?",
+   "Beroende: har källan hämtat uppgifterna från någon annan? Tendens: vill avsändaren påverka åt ett visst håll?",
+   "En förstahandskälla har själv sett eller varit med om det som hänt. En andrahandskälla har fått veta det av någon annan.",
+   "Kontrollera en uppgift genom att jämföra källor som inte har hämtat från varandra. Att många delar något gör det inte sant.",
+   "Desinformation är falsk information som sprids med flit. En vinklad rubrik vill väcka känslor snarare än informera."
+  ],
+  "exempel": [
+   [
+    "Ett konto har en tidnings namn och bild och sprider en nyhet, men namnet är stavat lite fel. Vilket kriterium tänker du extra på?",
+    "Äkthet: kontot kanske inte är det som det utger sig för att vara."
+   ],
+   [
+    "Två artiklar säger samma sak, men den ena hänvisar till den andra. Bevisar det att uppgiften stämmer?",
+    "Nej. De är beroende av varandra, så det är egentligen en källa. Leta efter en oberoende."
+   ]
+  ],
+  "ord": [
+   [
+    "källa",
+    "det man hämtar information från"
+   ],
+   [
+    "avsändare",
+    "den som står bakom en text"
+   ],
+   [
+    "oberoende källor",
+    "källor som inte har hämtat uppgifterna från varandra"
+   ],
+   [
+    "faktagranskare",
+    "någon som kontrollerar om påståenden stämmer"
+   ]
+  ],
+  "tips": "Hittar du ingen avsändare, var extra försiktig och leta efter samma uppgift hos en källa där du vet vem som står bakom."
+ },
+ "Språkhistoria": {
+  "mal": [
+   "Ordna svenskans perioder från runsvenska till nusvenska.",
+   "Förklara hur svenskan är släkt med andra språk.",
+   "Berätta vilka språk svenskan har lånat ord från, och ungefär när."
+  ],
+  "fakta": [
+   "Svenska är ett germanskt språk och ett av de nordiska språken, närmast släkt med norska och danska. Finska hör till en annan språkfamilj.",
+   "Perioderna: runsvenska (från vikingatiden), fornsvenska (från 1200-talet), äldre nysvenska (från 1500-talet), yngre nysvenska (från 1700-talet) och nusvenska (från omkring 1900).",
+   "Gustav Vasas bibel från 1541 fick stor betydelse för hur svenska stavades.",
+   "Lånorden kom i vågor: latin med kyrkan och skolan, lågtyska med handeln på medeltiden, franska på 1700-talet och engelska framför allt under 1900-talet.",
+   "Många vetenskapsord har grekiska rötter. Ett lånord som fått svensk stavning kallas försvenskat, som sajt och dejt."
+  ],
+  "exempel": [
+   [
+    "Engelskans ”job” blev ”jobb” på svenska. Vad har hänt?",
+    "Ordet har fått svensk stavning, med två b efter den korta vokalen. Det är ett försvenskat lånord."
+   ]
+  ],
+  "ord": [
+   [
+    "runor",
+    "tecknen man skrev med på vikingatiden"
+   ],
+   [
+    "lånord",
+    "ett ord som svenskan har lånat från ett annat språk"
+   ],
+   [
+    "lågtyska",
+    "tyskan i norra Tyskland, som de tyska handelsmännen talade"
+   ],
+   [
+    "Hansan",
+    "ett förbund av främst tyska handelsstäder under medeltiden"
+   ]
+  ],
+  "tips": "Tänk på vem svenskarna hade kontakt med och när: kyrkan gav latin, handeln lågtyska, hovet franska och i dag nätet engelska."
+ },
+ "Läsförståelse": {
+  "mal": [
+   "Känna igen tillbakablickar och berättarperspektiv i en novell.",
+   "Tolka symboler och hur en person förändras.",
+   "Skilja en utredande text från en debattartikel.",
+   "Hitta argument för och emot och skribentens slutsats."
+  ],
+  "fakta": [
+   "En tillbakablick berättar om något som hänt tidigare. Tidsord som ”tre år tidigare” och verb som ”hade sagt” visar den.",
+   "En berättare utanför historien berättar med han eller hon. En jag-berättare är själv med i historien.",
+   "En symbol är en sak eller bild som står för något mer, som en känsla eller en förändring hos en person.",
+   "En utredande text väger för och emot och slutar med en slutsats. En debattartikel driver en tes.",
+   "En tolkningsfråga har stöd i texten, även om svaret inte står ordagrant. Leta upp stället som stöder ditt svar."
+  ],
+  "exempel": [
+   [
+    "I en novell ligger ett halvfärdigt pussel kvar på bordet efter att mormor har dött. Vad kan pusslet stå för?",
+    "Kanske det som mormor inte hann göra klart, eller att familjen nu måste fortsätta utan henne."
+   ]
+  ],
+  "ord": [
+   [
+    "tillbakablick",
+    "ett avsnitt om något som hänt tidigare"
+   ],
+   [
+    "berättarperspektiv",
+    "vem som berättar och genom vems ögon"
+   ],
+   [
+    "utredande text",
+    "en text som undersöker en fråga från flera håll"
+   ],
+   [
+    "slutsats",
+    "det skribenten kommer fram till"
+   ]
+  ],
+  "tips": "Jämför hur huvudpersonen tänker och gör i början och i slutet: där syns förändringen."
+ },
+ "NP-träning: skriva": {
+  "mal": [
+   "Skriva en tes och stödja den med argument och belägg ur ett underlag.",
+   "Hänvisa till källor och bemöta motargument.",
+   "Välja mellan krönika, novell, argumenterande och utredande text efter uppgiften.",
+   "Planera en text: mottagare, huvudtanke, början och slut."
+  ],
+  "fakta": [
+   "Läs uppgiften noga: vilken texttyp, vilken mottagare och vilket ämne? Gör en plan med huvudtanke, början och slut innan du skriver.",
+   "En argumenterande text har en tes i en mening, argument med belägg, ett motargument som du bemöter och en avslutning. Rubrik och stycken behövs.",
+   "Använder du ett underlag, tala om varifrån uppgiften kommer: ”Enligt …” eller ”I artikeln … skriver …”. Ett direkt citat står inom citattecken.",
+   "En utredande text undersöker en fråga från flera håll och slutar med en slutsats. En krönika har personlig ton och egna erfarenheter som exempel.",
+   "En novell har få personer och en händelse eller vändpunkt. Gestalta: visa känslor genom handlingar och detaljer i stället för att bara säga dem."
+  ],
+  "exempel": [
+   [
+    "Ett underlag är en artikel av Maja Ek som säger att unga sover för lite. Hur hänvisar du till den?",
+    "”I sin artikel skriver Maja Ek att unga sover för lite.” Då ser läsaren varifrån uppgiften kommer."
+   ],
+   [
+    "Gestalta meningen ”Han var nervös”.",
+    "Till exempel: ”Han torkade händerna mot byxorna och läste samma rad tre gånger.”"
+   ]
+  ],
+  "ord": [
+   [
+    "underlag",
+    "texter du får läsa och använda i din egen text"
+   ],
+   [
+    "belägg",
+    "något som stöder ett argument, som ett exempel eller en siffra"
+   ],
+   [
+    "krönika",
+    "en personlig åsiktstext med egna erfarenheter"
+   ],
+   [
+    "gestaltning",
+    "att visa i stället för att berätta rakt ut"
+   ],
+   [
+    "mottagare",
+    "den som texten är skriven för"
+   ]
+  ],
+  "tips": "Läs igenom texten när du är klar: svarar den på uppgiften, är styckena tydliga och står källan vid varje uppgift du lånat?"
+ },
+ "Läsa: NP-träning": {
+  "mal": [
+   "Tolka en novell: miljö, vändpunkt, berättarperspektiv, symbol och tema.",
+   "Hitta tes, exempel och stilmedel i en krönika.",
+   "Läsa siffror ur en undersökning och avgöra vilka slutsatser som håller.",
+   "Stödja dina svar med det som står i texten."
+  ],
+  "fakta": [
+   "Läs hela texten först. Gå sedan tillbaka till texten för varje fråga och leta efter stöd för ditt svar.",
+   "En novells vändpunkt är där något ändras. Temat är vad novellen handlar om på djupet, till exempel svartsjuka eller mod.",
+   "En krönika är en personlig åsiktstext med egna exempel. Leta efter tesen och efter stilmedel som liknelser och retoriska frågor.",
+   "En symbol är en sak som står för något mer, till exempel en person eller en känsla.",
+   "En undersökning gäller bara dem som svarade. Procent är delen delad med det hela: 12 av 48 är 12/48 = 0,25 = 25 %."
+  ],
+  "exempel": [
+   [
+    "I en enkät svarade 40 elever. 26 av dem läser varje dag. Hur många procent är det?",
+    "26/40 = 0,65 = 65 %."
+   ],
+   [
+    "Vad är skillnaden mellan handling och tema i en novell?",
+    "Handlingen är det som händer. Temat är vad novellen handlar om på djupet, till exempel att våga säga ifrån."
+   ]
+  ],
+  "ord": [
+   [
+    "vändpunkt",
+    "där något ändras i berättelsen"
+   ],
+   [
+    "tema",
+    "det texten handlar om på djupet"
+   ],
+   [
+    "stilmedel",
+    "ett sätt att skriva som ger effekt, som en liknelse"
+   ],
+   [
+    "enkät",
+    "en undersökning med frågor som många svarar på"
+   ]
+  ],
+  "tips": "Står det ”avrunda till hela procent”, räkna först exakt och avrunda sist."
+ },
+ "Språk och variation": {
+  "mal": [
+   "Förklara skillnader mellan talspråk och skriftspråk.",
+   "Välja stilnivå efter mottagare och situation.",
+   "Förklara dialekt, sociolekt, idiolekt och standardsvenska.",
+   "Nämna Sveriges nationella minoritetsspråk."
+  ],
+  "fakta": [
+   "Talspråk är spontant och har utfyllnadsord som liksom och typ. Skriftspråk kan planeras och ändras innan någon läser det. Inget av dem är sämre.",
+   "Stilnivå är hur formellt språket är. Ju viktigare och mer okänd mottagaren är, desto mer formellt bör du skriva.",
+   "Dialekt hör ihop med en region och sociolekt med en grupp, som en åldersgrupp. Idiolekt är en enskild persons eget sätt att tala och skriva.",
+   "Standardsvenska är den form av svenska som de flesta förstår överallt i landet.",
+   "Sverige har fem nationella minoritetsspråk: finska, jiddisch, meänkieli, romani chib och samiska. Meänkieli talas i Tornedalen."
+  ],
+  "exempel": [
+   [
+    "Skriv om till skriftspråk: ”Dom va så trötta att dom somna direkt.”",
+    "”De var så trötta att de somnade direkt.”"
+   ]
+  ],
+  "ord": [
+   [
+    "stilnivå",
+    "hur formellt eller vardagligt språket är"
+   ],
+   [
+    "utfyllnadsord",
+    "småord som fyller ut talet"
+   ],
+   [
+    "sociolekt",
+    "språk som hör ihop med en grupp"
+   ],
+   [
+    "idiolekt",
+    "en persons eget språk"
+   ],
+   [
+    "nationellt minoritetsspråk",
+    "ett språk som har talats länge i Sverige och har ett särskilt skydd i lagen"
+   ]
+  ],
+  "tips": "Chatt och sms är skrivna men ligger nära talspråket, så tänk efter innan du skriver till en lärare eller en arbetsgivare."
+ },
+ "Läsa och tolka": {
+  "mal": [
+   "Hitta budskapet i en krönika och förklara skribentens exempel.",
+   "Tolka bildspråk, som liknelser och metaforer.",
+   "Förstå dolda känslor och hur en person förändras.",
+   "Tolka vad ett slut antyder."
+  ],
+  "fakta": [
+   "Budskapet är det skribenten vill att du ska förstå. I en krönika syns det ofta i slutet eller i ett exempel ur livet.",
+   "En liknelse jämför med som: ”tung som en sten”. En metafor säger att något är något annat: ”Livet är en berg-och-dalbana.”",
+   "Personer döljer ofta vad de känner. Jämför vad de säger med vad de gör.",
+   "Ett öppet slut säger inte allt. Fråga dig vad det antyder, och leta efter stöd i texten.",
+   "En text som berättas med jag är skriven i första person, och du kommer nära skribentens eller berättarens tankar."
+  ],
+  "exempel": [
+   [
+    "”Jag sa att jag inte saknade honom alls, och sedan satt jag kvar vid fönstret tills det blev mörkt.” Vad känner berättaren?",
+    "Berättaren saknar honom, fast hen säger motsatsen. Det hen gör avslöjar känslan."
+   ]
+  ],
+  "ord": [
+   [
+    "budskap",
+    "det texten vill säga"
+   ],
+   [
+    "antyda",
+    "visa något utan att säga det rakt ut"
+   ],
+   [
+    "första person",
+    "texten berättas med jag"
+   ],
+   [
+    "metafor",
+    "säger att något är något annat, utan som"
+   ]
+  ],
+  "tips": "Ett tolkningssvar ska gå att peka ut i texten: kan du inte visa var stödet står, läs en gång till."
+ },
+ "Litteraturhistoria": {
+  "mal": [
+   "Ordna litteraturens stora epoker från antiken till modernismen.",
+   "Känna igen några kända verk och författare och vilken tid de hör till.",
+   "Beskriva i stora drag vad som präglade varje epok."
+  ],
+  "fakta": [
+   "Antiken: Iliaden och Odysséen, som tillskrivs Homeros, och den grekiska teaterns tragedier och komedier.",
+   "Medeltiden: de lärda skrev på latin, sagorna och Eddan skrevs ner på Island, folkvisor spreds muntligt och Dante skrev Den gudomliga komedin.",
+   "Renässansen betyder pånyttfödelse: antikens tankar fick nytt liv. Boktryckarkonsten spred böckerna, och Shakespeare och Cervantes skrev.",
+   "Upplysningen satte förnuftet i centrum, romantiken känslan och naturen, och realismen vardagen och samhället, som i Strindbergs Röda rummet.",
+   "Modernismen bröt mot traditionen på 1900-talet, till exempel med dikter på fri vers."
+  ],
+  "exempel": [
+   [
+    "Vilken epok passar bäst? En dikt hyllar en vild fors och en ensam vandrares längtan.",
+    "Naturen, känslan och längtan är typiska drag för romantiken."
+   ]
+  ],
+  "ord": [
+   [
+    "epok",
+    "en tidsperiod vars litteratur har gemensamma drag"
+   ],
+   [
+    "epos",
+    "en lång berättande dikt om hjältar"
+   ],
+   [
+    "tragedi",
+    "en pjäs där det går illa för huvudpersonen"
+   ],
+   [
+    "renässans",
+    "pånyttfödelse"
+   ],
+   [
+    "fri vers",
+    "dikt utan rim och fast rytm"
+   ]
+  ],
+  "tips": "Lär dig ordningen först: antiken, medeltiden, renässansen, upplysningen, romantiken, realismen och modernismen."
+ },
+ "Språkriktighet": {
+  "mal": [
+   "Välja rätt mellan ligga och lägga, sitta och sätta, sjunka och sänka, och att och och.",
+   "Skriva genitiv utan apostrof.",
+   "Böja adjektiv och particip efter ordet de hör till.",
+   "Undvika dubbel supinum och välja rätt preposition efter vanliga ord."
+  ],
+  "fakta": [
+   "Lägga, sätta och sänka gör man med något: lägga boken. Ligga, sitta och sjunka gör något självt: boken ligger.",
+   "Ligga: låg, har legat. Lägga: lade eller la, har lagt. Sitta: satt, har suttit. Sätta: satte, har satt.",
+   "Genitiv skrivs utan apostrof: Omars jacka, Sveriges kust.",
+   "Adjektivet följer sitt ord: huset är stort, husen är stora, brödet är bakat.",
+   "Efter till exempel hade velat eller skulle ha kunnat kommer infinitiv: hade velat gå, inte hade velat gått."
+  ],
+  "exempel": [
+   [
+    "Välj: ”Hon ___ sig på bänken.” (satte eller satt)",
+    "Hon satte sig, för att sätta sig är att placera sig. Efteråt satt hon där."
+   ]
+  ],
+  "ord": [
+   [
+    "kongruens",
+    "att orden böjs så att de passar ihop"
+   ],
+   [
+    "supinum",
+    "verbformen efter har och hade: legat, lagt"
+   ],
+   [
+    "genitiv",
+    "formen som visar vem något tillhör: Omars, husets"
+   ],
+   [
+    "infinitiv",
+    "verbets grundform: gå, läsa"
+   ]
+  ],
+  "tips": "Prova att sätta ”något” efter verbet. Går det, som i ”lägga något”, är det lägga, sätta eller sänka."
+ },
+ "Tala inför publik": {
+  "mal": [
+   "Planera ett tal med inledning, huvuddel och avslutning.",
+   "Anpassa talet efter syfte och publik, och tala med stödord.",
+   "Använda röst, tempo, pauser, ögonkontakt och kroppsspråk.",
+   "Känna igen tretal, kontrast och anafor, och bemöta ett motargument."
+  ],
+  "fakta": [
+   "Inledningen fångar intresset, huvuddelen ger innehållet och avslutningen sammanfattar eller uppmanar.",
+   "Tänk på vem som lyssnar och varför du talar: för att informera, övertyga eller underhålla.",
+   "Lyssnaren kan inte läsa om, så säg det viktigaste tydligt och gärna mer än en gång.",
+   "Tretal är tre led i rad, kontrast ställer två saker mot varandra, och anafor upprepar samma ord först i flera meningar.",
+   "Bemöt ett motargument genom att hålla med om det som stämmer och visa varför din åsikt ändå håller."
+  ],
+  "exempel": [
+   [
+    "Vilket grepp används? ”Förr cyklade vi till skolan. I dag blir vi skjutsade.”",
+    "Förr ställs mot i dag. Det är en kontrast."
+   ]
+  ],
+  "ord": [
+   [
+    "stödord",
+    "några få ord som påminner dig om vad du ska säga"
+   ],
+   [
+    "röd tråd",
+    "att talets delar hänger ihop"
+   ],
+   [
+    "tretal",
+    "tre led i rad"
+   ],
+   [
+    "kontrast",
+    "två motsatser som ställs mot varandra"
+   ],
+   [
+    "anafor",
+    "samma ord först i flera meningar"
+   ]
+  ],
+  "tips": "Öva högt några gånger med klockan. Då hör du var du behöver en paus."
+ },
+ "NP-träning: källor och sammanfattning": {
+  "mal": [
+   "Sammanfatta det viktigaste i en text med egna ord.",
+   "Skilja citat, referat och egen åsikt.",
+   "Skriva tydliga källhänvisningar.",
+   "Välja en källa som går att lita på."
+  ],
+  "fakta": [
+   "En sammanfattning är kortare än texten och tar med det viktigaste, med egna ord och utan din egen åsikt.",
+   "Arbeta i steg: läs hela texten, stryk under det viktigaste, skriv med egna ord och jämför med texten.",
+   "Ett citat återger exakt vad någon skrivit, inom citattecken. Ett referat återger innehållet med egna ord.",
+   "En källhänvisning säger vem som skrivit, titeln, när och var texten publicerades. ”Jag läste det på nätet” räcker inte.",
+   "Visa vems åsikt det är med ord som anser, menar och skriver, och nämn rätt källa vid varje uppgift."
+  ],
+  "exempel": [
+   [
+    "Källan: ”Cyklister som bär hjälm skadar huvudet mer sällan när de ramlar.” Återge det med egna ord.",
+    "Till exempel: ”Med hjälm är risken mindre att skada huvudet om man ramlar med cykeln.”"
+   ],
+   [
+    "Hänvisa till artikeln ”Hav i fara” av Omar Said i skoltidningen 2023.",
+    "Till exempel: I artikeln ”Hav i fara” i skoltidningen 2023 skriver Omar Said att …"
+   ]
+  ],
+  "ord": [
+   [
+    "sammanfattning",
+    "en kort text med det viktigaste ur en längre"
+   ],
+   [
+    "citat",
+    "exakt återgivna ord, inom citattecken"
+   ],
+   [
+    "referat",
+    "innehållet återgivet med egna ord"
+   ],
+   [
+    "källhänvisning",
+    "uppgift om varifrån något kommer"
+   ],
+   [
+    "upphovsperson",
+    "den som har skrivit eller gjort texten"
+   ]
+  ],
+  "tips": "Börja sammanfattningen med titel, skribent och ämne, så vet läsaren direkt vad den handlar om."
+ }
+}

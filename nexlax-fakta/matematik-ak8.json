@@ -1,0 +1,584 @@
+{
+ "Algebra": {
+  "mal": [
+   "Använda orden variabel, term, koefficient, konstantterm, uttryck och likhet.",
+   "Förenkla uttryck genom att slå ihop termer och multiplicera in i parenteser.",
+   "Räkna ut värdet av ett uttryck, också med negativa tal.",
+   "Ställa upp ett uttryck ur en vardaglig beskrivning."
+  ],
+  "fakta": [
+   "I 5x + 2 är x variabeln, 5 koefficienten och 2 konstanttermen. 5x och 2 är uttryckets två termer.",
+   "Ett uttryck har inget likhetstecken. En likhet har två uttryck med ett likhetstecken emellan, och en ekvation är en likhet där något är okänt.",
+   "Bara termer med samma variabel kan slås ihop: 2a + 6a = 8a. En ensam bokstav betyder 1 gång bokstaven.",
+   "Multiplicera in: 4(x + 5) = 4x + 20. Ett minustecken framför en parentes byter tecken inuti: 8x − (3x − 2) = 5x + 2."
+  ],
+  "exempel": [
+   [
+    "Vad är värdet av 4 − 2x om x = −3?",
+    "4 − 2 · (−3) = 4 + 6 = 10."
+   ],
+   [
+    "En bok kostar b kr och ett block 25 kr. Skriv ett uttryck för vad 3 böcker och 2 block kostar.",
+    "3 böcker kostar 3b kr och 2 block kostar 2 · 25 = 50 kr. Uttrycket är 3b + 50."
+   ]
+  ],
+  "ord": [
+   [
+    "variabel",
+    "en bokstav som står för ett tal som kan variera"
+   ],
+   [
+    "koefficient",
+    "talet som multipliceras med variabeln, som 5 i 5x"
+   ],
+   [
+    "konstantterm",
+    "en term utan variabel, bara ett tal"
+   ],
+   [
+    "term",
+    "en del av ett uttryck mellan plus- och minustecknen"
+   ]
+  ],
+  "tips": "”Fyra mindre än n” skrivs n − 4, inte 4 − n, så läs texten långsamt och översätt bit för bit."
+ },
+ "Ekvationer": {
+  "mal": [
+   "Lösa ekvationer där x står på båda sidor om likhetstecknet.",
+   "Lösa ekvationer med parenteser.",
+   "Ställa upp en ekvation ur en text, lösa den och pröva svaret."
+  ],
+  "fakta": [
+   "Samla x på ena sidan: dra bort lika många x från båda sidor. Samla sedan talen på den andra sidan.",
+   "Med parentes: multiplicera in först, eller dela båda sidor med talet framför parentesen. 4(x − 1) = 20 ger x − 1 = 5, alltså x = 6.",
+   "Ett minustecken framför en parentes byter tecken inuti: 10 − (x + 2) = 10 − x − 2.",
+   "Ur en text: bestäm vad x står för och skriv det texten säger med tecken. ”Ett tal minskat med 4” är x − 4.",
+   "Pröva svaret i texten, inte bara i ekvationen. Då ser du om ekvationen var rätt uppställd."
+  ],
+  "exempel": [
+   [
+    "Lös 6x − 5 = 2x + 19.",
+    "Dra bort 2x: 4x − 5 = 19. Lägg till 5: 4x = 24. Dela med 4: x = 6. Kontroll: 6 · 6 − 5 = 31 och 2 · 6 + 19 = 31."
+   ],
+   [
+    "Lina är 4 år yngre än sin syster. Tillsammans är de 32 år. Hur gammal är Lina?",
+    "Lina är x år och systern x + 4 år. x + (x + 4) = 32 ger 2x = 28, så x = 14. Kontroll: 14 + 18 = 32."
+   ]
+  ],
+  "ord": [
+   [
+    "led",
+    "det som står på ena sidan om likhetstecknet"
+   ],
+   [
+    "pröva",
+    "sätta in svaret och se att båda leden blir lika"
+   ]
+  ],
+  "tips": "Dra bort det minsta antalet x från båda sidor, så slipper du räkna med negativa x."
+ },
+ "Procent": {
+  "mal": [
+   "Byta mellan bråk, decimaltal och procent.",
+   "Räkna ut nya värdet med förändringsfaktor när något ökar eller minskar i procent.",
+   "Räkna ut den procentuella förändringen mellan två värden.",
+   "Räkna med flera procentuella förändringar efter varandra."
+  ],
+  "fakta": [
+   "Procent till decimaltal: dela med 100. 8 % = 0,08 och 120 % = 1,2.",
+   "Förändringsfaktor: en ökning med 7 % ger 1,07 och en minskning med 35 % ger 0,65. Nya värdet = gamla värdet · förändringsfaktorn.",
+   "Procentuell förändring: dela det nya värdet med det gamla. Faktorn 1,12 betyder +12 % och 0,9 betyder −10 %.",
+   "Flera förändringar i rad: multiplicera förändringsfaktorerna. +10 % och sedan −20 % ger 1,1 · 0,8 = 0,88, alltså −12 % totalt."
+  ],
+  "exempel": [
+   [
+    "En dator kostar 6 000 kr. Priset sänks med 18 %. Vad kostar den nu?",
+    "Förändringsfaktorn är 1 − 0,18 = 0,82. 6 000 · 0,82 = 4 920 kr."
+   ],
+   [
+    "Ett pris höjs med 50 % och sedan sänks det nya priset med 50 %. Hur har priset ändrats totalt?",
+    "Faktorerna är 1,5 och 0,5. 1,5 · 0,5 = 0,75, så priset har sänkts med 25 %."
+   ]
+  ],
+  "ord": [
+   [
+    "förändringsfaktor",
+    "talet du multiplicerar med för att få det nya värdet"
+   ],
+   [
+    "procentuell förändring",
+    "hur många procent något har ökat eller minskat jämfört med från början"
+   ]
+  ],
+  "tips": "Lägg aldrig ihop procenten vid flera förändringar; multiplicera förändringsfaktorerna i stället."
+ },
+ "Geometri": {
+  "mal": [
+   "Räkna ut en okänd sida i en rätvinklig triangel med Pythagoras sats.",
+   "Avgöra om en triangel är rätvinklig utifrån sidornas längder.",
+   "Räkna ut arean av triangel, parallellogram och cirkel.",
+   "Räkna ut volymen av rätblock och cylinder, och byta till liter."
+  ],
+  "fakta": [
+   "Pythagoras sats: i en rätvinklig triangel är a² + b² = c², där c är hypotenusan, den längsta sidan, och a och b är kateterna.",
+   "Söker du en katet drar du bort: b² = c² − a².",
+   "Area: triangel = basen · höjden / 2, parallellogram = basen · höjden och cirkel = π · r².",
+   "Volym: rätblock = längden · bredden · höjden och cylinder = π · r² · höjden. 1 dm³ = 1 liter.",
+   "Höjden står alltid vinkelrätt mot basen. Den sneda sidan i en parallellogram är inte höjden."
+  ],
+  "exempel": [
+   [
+    "Kateterna i en rätvinklig triangel är 8 cm och 15 cm. Hur lång är hypotenusan?",
+    "c² = 8² + 15² = 64 + 225 = 289, så c = √289 = 17 cm."
+   ],
+   [
+    "En cylinder har radien 3 cm och höjden 10 cm. Hur stor är volymen? Räkna med π ≈ 3,14.",
+    "Basytan är 3,14 · 3² = 28,26 cm². Volymen är 28,26 · 10 = 282,6 cm³."
+   ]
+  ],
+  "ord": [
+   [
+    "hypotenusa",
+    "den längsta sidan i en rätvinklig triangel, mitt emot den räta vinkeln"
+   ],
+   [
+    "katet",
+    "en av de två sidor som bildar den räta vinkeln"
+   ],
+   [
+    "parallellogram",
+    "en fyrhörning där de motstående sidorna är parallella"
+   ],
+   [
+    "cylinder",
+    "en kropp med två lika stora cirklar som botten och lock, som en burk"
+   ]
+  ],
+  "tips": "Kvadrera sidorna och lägg ihop eller dra ifrån först; dra roten ur först i sista steget."
+ },
+ "Sannolikhet": {
+  "mal": [
+   "Räkna ut sannolikhet som bråk, decimaltal och procent.",
+   "Räkna ut sannolikheten för att något inte händer.",
+   "Räkna antalet utfall och kombinationer.",
+   "Räkna ut sannolikheten i två steg, som två kast eller två dragningar med återläggning."
+  ],
+  "fakta": [
+   "Sannolikhet = antalet gynnsamma utfall / antalet möjliga utfall, när alla utfall är lika troliga.",
+   "Sannolikheten är alltid ett tal från 0 till 1. Det omöjliga har sannolikheten 0 och det säkra 1.",
+   "Sannolikheten att något inte händer är 1 minus sannolikheten att det händer.",
+   "Antalet kombinationer: multiplicera antalet val i varje steg. 2 mössor och 5 halsdukar ger 2 · 5 = 10 sätt.",
+   "Två försök som inte påverkar varandra: multiplicera sannolikheterna. Ett mynt minns inte vad det visade förra gången."
+  ],
+  "exempel": [
+   [
+    "I en påse finns 5 gula och 15 gröna kulor. Hur stor är sannolikheten att få en gul kula? Svara i procent.",
+    "5 av 20 kulor är gula: 5/20 = 0,25 = 25 %."
+   ],
+   [
+    "Du slår en tärning och singlar en slant. Hur stor är sannolikheten att få en etta och krona?",
+    "Etta: 1/6. Krona: 1/2. Båda: 1/6 · 1/2 = 1/12."
+   ]
+  ],
+  "ord": [
+   [
+    "utfall",
+    "ett möjligt resultat, som att tärningen visar 4"
+   ],
+   [
+    "gynnsamt utfall",
+    "ett utfall som är det du söker"
+   ],
+   [
+    "sannolikhet",
+    "hur troligt något är, ett tal från 0 till 1"
+   ],
+   [
+    "krona och klave",
+    "myntets två sidor"
+   ]
+  ],
+  "tips": "Rita en tabell med alla utfall när två saker händer samtidigt, så missar du inga."
+ },
+ "Vardagsekonomi": {
+  "mal": [
+   "Räkna ut jämförpris i kronor per kilo eller liter.",
+   "Räkna ut vad erbjudanden som ”3 för 2” och procentrabatt ger.",
+   "Räkna ut lön, ränta på ett lån och hur lång tid ett lån eller sparande tar.",
+   "Jämföra att betala direkt med att betala varje månad."
+  ],
+  "fakta": [
+   "Jämförpris = priset / mängden. Räkna om gram till kilo först: 500 g = 0,5 kg.",
+   "”3 för 2” betyder att du får 3 varor men betalar för 2.",
+   "Lön = timlön · antalet timmar.",
+   "Ränta räknas i procent av det du lånat: 5 % ränta på 4 000 kr är 0,05 · 4 000 = 200 kr på ett år.",
+   "Vid avbetalning är månadsbeloppet gånger antalet månader det du betalar totalt. Jämför det med priset kontant."
+  ],
+  "exempel": [
+   [
+    "Ett paket med 400 g kaffe kostar 36 kr. Vad är jämförpriset?",
+    "400 g = 0,4 kg. 36 / 0,4 = 90 kr per kilo."
+   ],
+   [
+    "Nora sparar 150 kr i veckan. Hur mycket har hon sparat efter ett år med 52 veckor?",
+    "150 · 52 = 7 800 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "jämförpris",
+    "priset per kilo, liter eller styck"
+   ],
+   [
+    "ränta",
+    "det du betalar för att låna pengar, eller får när du sparar"
+   ],
+   [
+    "kontant",
+    "att betala hela priset direkt"
+   ],
+   [
+    "avbetalning",
+    "att betala lite i taget, ofta varje månad"
+   ],
+   [
+    "budget",
+    "en plan för vad pengarna ska räcka till"
+   ]
+  ],
+  "tips": "Ett år har 12 månader, 4 kvartal och 52 veckor, så räkna om till samma tid innan du jämför."
+ },
+ "Hastighet och enheter": {
+  "mal": [
+   "Räkna ut hastighet, sträcka och tid med v = s / t.",
+   "Räkna med tid i minuter och i decimalform av timmar.",
+   "Byta mellan km/h och m/s.",
+   "Byta mellan enheter för area och volym, som cm² och m² eller liter och m³."
+  ],
+  "fakta": [
+   "Hastighet = sträcka / tid, v = s / t. Då är s = v · t och t = s / v.",
+   "Minuter till timmar: dela med 60. 45 minuter = 0,75 h, och 1 h 12 min = 1,2 h.",
+   "km/h till m/s: dela med 3,6. m/s till km/h: multiplicera med 3,6. 108 km/h = 30 m/s.",
+   "Area: 1 m = 100 cm, så 1 m² = 100 · 100 cm². Volym: 1 m = 10 dm, så 1 m³ = 10 · 10 · 10 dm³, och 1 dm³ = 1 liter."
+  ],
+  "exempel": [
+   [
+    "En buss kör 195 km på 3 timmar och 15 minuter. Vad är medelhastigheten?",
+    "15 minuter = 0,25 h, så tiden är 3,25 h. v = 195 / 3,25 = 60 km/h."
+   ],
+   [
+    "Hur många minuter tar det att gå 3 km i 5 km/h?",
+    "t = 3 / 5 = 0,6 h, och 0,6 · 60 = 36 minuter."
+   ]
+  ],
+  "ord": [
+   [
+    "medelhastighet",
+    "hela sträckan delad med hela tiden"
+   ],
+   [
+    "km/h",
+    "kilometer per timme"
+   ],
+   [
+    "m/s",
+    "meter per sekund"
+   ]
+  ],
+  "tips": "Se till att tiden och hastigheten har samma enhet innan du räknar: timmar med km/h och sekunder med m/s."
+ },
+ "Pythagoras sats": {
+  "mal": [
+   "Räkna ut hypotenusan när du vet kateterna.",
+   "Räkna ut en katet när du vet hypotenusan och den andra kateten.",
+   "Använda Pythagoras sats på stegar, diagonaler och avstånd i ett koordinatsystem.",
+   "Avgöra om en triangel är rätvinklig."
+  ],
+  "fakta": [
+   "I en rätvinklig triangel är a² + b² = c². c är hypotenusan, den längsta sidan, mitt emot den räta vinkeln.",
+   "Hypotenusan: c = √(a² + b²). En katet: b = √(c² − a²).",
+   "En triangel är rätvinklig om kvadraterna på de två kortaste sidorna tillsammans är lika med kvadraten på den längsta.",
+   "Avståndet mellan två punkter: skillnaden i x och skillnaden i y är kateterna, och avståndet är hypotenusan.",
+   "En diagonal delar en rektangel eller kvadrat i två rätvinkliga trianglar, där sidorna är kateterna."
+  ],
+  "exempel": [
+   [
+    "En rätvinklig triangel har hypotenusan 17 cm och en katet som är 8 cm. Hur lång är den andra kateten?",
+    "b² = 17² − 8² = 289 − 64 = 225, så b = √225 = 15 cm."
+   ],
+   [
+    "Hur långt är det mellan punkterna (2, 1) och (14, 17)?",
+    "Skillnaden i x är 14 − 2 = 12 och i y 17 − 1 = 16. Avståndet är √(12² + 16²) = √(144 + 256) = √400 = 20."
+   ]
+  ],
+  "ord": [
+   [
+    "hypotenusa",
+    "den längsta sidan i en rätvinklig triangel"
+   ],
+   [
+    "katet",
+    "en av de två sidor som bildar den räta vinkeln"
+   ],
+   [
+    "kvadratrot",
+    "det positiva tal som gånger sig självt blir talet, tecknet √"
+   ],
+   [
+    "diagonal",
+    "en sträcka mellan två hörn som inte ligger bredvid varandra"
+   ]
+  ],
+  "tips": "Hypotenusan är alltid längst, så blir den kortare än en katet har du räknat fel."
+ },
+ "Lägesmått och sannolikhet": {
+  "mal": [
+   "Räkna ut medelvärde, median och typvärde.",
+   "Räkna ut variationsbredden.",
+   "Hitta ett saknat värde när du vet medelvärdet.",
+   "Räkna ut sannolikhet som bråk, decimaltal och procent, för ett och två försök."
+  ],
+  "fakta": [
+   "Medelvärde: summan av värdena delat med antalet värden.",
+   "Median: ställ värdena i storleksordning och ta det mittersta. Är de ett jämnt antal tar du medelvärdet av de två i mitten.",
+   "Saknas ett värde: medelvärdet gånger antalet ger summan, och summan minus de kända värdena ger det som saknas.",
+   "Sannolikhet = gynnsamma utfall / möjliga utfall när alla är lika troliga, ett tal från 0 till 1. För två försök som inte påverkar varandra multiplicerar du."
+  ],
+  "exempel": [
+   [
+    "Vad är medianen i 3, 9, 4, 12?",
+    "I ordning: 3, 4, 9, 12. De två i mitten är 4 och 9, så medianen är (4 + 9) / 2 = 6,5."
+   ],
+   [
+    "Ett lyckohjul har 5 lika stora fält, och 2 av dem är röda. Hur stor är sannolikheten för rött i procent?",
+    "2/5 = 0,4 = 40 %."
+   ]
+  ],
+  "ord": [
+   [
+    "typvärde",
+    "det värde som förekommer flest gånger"
+   ],
+   [
+    "variationsbredd",
+    "största värdet minus minsta värdet"
+   ],
+   [
+    "lägesmått",
+    "ett tal som visar var värdena ligger, som medelvärde, median och typvärde"
+   ]
+  ],
+  "tips": "Sortera alltid talen innan du letar median."
+ },
+ "Samband och proportionalitet": {
+  "mal": [
+   "Känna igen ett proportionellt samband i en text, tabell, formel eller graf.",
+   "Räkna ut proportionalitetskonstanten k i y = kx.",
+   "Ställa upp och använda formler som y = kx + m för samband med startvärde.",
+   "Jämföra två samband och se när de ger lika mycket."
+  ],
+  "fakta": [
+   "Ett samband är proportionellt om y alltid är samma tal gånger x: y = kx. Då är y = 0 när x = 0.",
+   "Konstanten k = y / x. Kostar 4 kg 60 kr är k = 60 / 4 = 15 kr per kg.",
+   "Grafen till ett proportionellt samband är en rät linje genom origo.",
+   "Ett samband med startvärde skrivs y = kx + m. m är y när x = 0, och k är hur mycket y ökar när x ökar med 1. Är m inte 0 är sambandet inte proportionellt."
+  ],
+  "exempel": [
+   [
+    "Ett gym kostar 100 kr i månaden plus 30 kr per besök. Vad kostar 8 besök på en månad?",
+    "y = 30x + 100. Med x = 8 blir det 30 · 8 + 100 = 340 kr."
+   ],
+   [
+    "Abonnemang A kostar 50 kr + 10 kr per timme och B 20 kr + 15 kr per timme. Vid hur många timmar kostar de lika mycket?",
+    "50 + 10x = 20 + 15x ger 30 = 5x, så x = 6 timmar. Båda kostar då 110 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "proportionellt",
+    "y är alltid samma tal gånger x"
+   ],
+   [
+    "proportionalitetskonstant",
+    "talet k i y = kx"
+   ],
+   [
+    "startvärde",
+    "värdet när x = 0, talet m i y = kx + m"
+   ],
+   [
+    "linjärt samband",
+    "ett samband vars graf är en rät linje"
+   ]
+  ],
+  "tips": "Dela y med x i varje rad av tabellen: blir det samma tal varje gång är sambandet proportionellt."
+ },
+ "Kvadratrötter": {
+  "mal": [
+   "Räkna ut kvadrater och kvadratrötter.",
+   "Uppskatta mellan vilka heltal en kvadratrot ligger.",
+   "Räkna med rötter i uttryck med flera räknesätt.",
+   "Räkna ut sidan i en kvadrat ur arean och kanten i en kub ur volymen."
+  ],
+  "fakta": [
+   "Kvadraten av ett tal är talet gånger sig självt: 15² = 225. Kvadratroten är tvärtom: √225 = 15.",
+   "Både 20 och −20 har kvadraten 400, men √400 betyder bara den positiva roten, 20.",
+   "Ligger ett tal mellan två kvadrattal ligger roten mellan deras rötter: √40 ligger mellan 6 och 7, för 6² = 36 och 7² = 49.",
+   "Står det något under rottecknet räknar du det först: √(200 + 25) = √225 = 15.",
+   "En kubs volym är kanten · kanten · kanten. Är volymen 8 dm³ är kanten 2 dm, för 2 · 2 · 2 = 8."
+  ],
+  "exempel": [
+   [
+    "En kvadratisk matta har arean 6,25 m². Hur lång är en sida?",
+    "√6,25 = 2,5, för 2,5 · 2,5 = 6,25. Sidan är 2,5 m."
+   ],
+   [
+    "Vad är 3 · √16 − √4?",
+    "√16 = 4 och √4 = 2. 3 · 4 − 2 = 12 − 2 = 10."
+   ]
+  ],
+  "ord": [
+   [
+    "kvadrat av ett tal",
+    "talet gånger sig självt, skrivs a²"
+   ],
+   [
+    "kvadratrot",
+    "det positiva tal som gånger sig självt ger talet, tecknet √"
+   ],
+   [
+    "kvadrattal",
+    "ett heltal gånger sig självt, som 400"
+   ]
+  ],
+  "tips": "Uppskatta först: √90 måste ligga mellan 9 och 10, så ett svar som 45 är fel."
+ },
+ "Mönster och talföljder": {
+  "mal": [
+   "Hitta regeln i en talföljd och räkna ut nästa tal.",
+   "Räkna ut ett tal långt fram i en talföljd utan att skriva ut alla tal före.",
+   "Skriva en formel för tal nummer n och använda den.",
+   "Räkna ut vilket nummer ett visst tal har i en talföljd."
+  ],
+  "fakta": [
+   "I en talföljd som ökar lika mycket varje gång är skillnaden mellan två tal intill varandra alltid densamma.",
+   "Från tal nummer 1 till tal nummer n är det n − 1 steg. Tal nummer n = första talet + (n − 1) · skillnaden.",
+   "En formel som 2n + 5 ger talen när du sätter in n = 1, 2, 3 och så vidare: 7, 9, 11 …",
+   "Talet framför n är skillnaden mellan talen. Talet som läggs till får du genom att jämföra med det första talet.",
+   "Alla talföljder ökar inte lika mycket: i 5, 10, 20, 40 dubblas talen, och kvadrattalen 25, 36, 49, 64 ökar med 11, 13 och 15."
+  ],
+  "exempel": [
+   [
+    "Talföljden 6, 10, 14, 18, … ökar lika mycket varje gång. Vilken formel ger tal nummer n?",
+    "Talen ökar med 4, så formeln börjar med 4n. För n = 1 är 4n = 4, men talet är 6, så lägg till 2: 4n + 2. Kontroll: 4 · 4 + 2 = 18."
+   ],
+   [
+    "Vilket nummer har talet 50 i samma talföljd, med formeln 4n + 2?",
+    "4n + 2 = 50 ger 4n = 48, så n = 12. Talet 50 är tal nummer 12."
+   ]
+  ],
+  "ord": [
+   [
+    "talföljd",
+    "tal i en bestämd ordning som följer en regel"
+   ],
+   [
+    "skillnad",
+    "hur mycket ett tal är större eller mindre än talet före"
+   ],
+   [
+    "kvadrattal",
+    "ett heltal gånger sig självt: 1, 4, 9, 16 …"
+   ]
+  ],
+  "tips": "Pröva formeln på flera tal som du redan vet, till exempel tal nummer 1, 2 och 3. Stämmer den inte för alla, är formeln fel."
+ },
+ "Vinklar och månghörningar": {
+  "mal": [
+   "Känna igen vertikalvinklar, sidovinklar och likbelägna vinklar.",
+   "Räkna ut okända vinklar där två linjer korsas och där en linje skär två parallella linjer.",
+   "Räkna ut vinkelsumman i en månghörning med formeln (n − 2) · 180°.",
+   "Räkna ut varje vinkel i en regelbunden månghörning."
+  ],
+  "fakta": [
+   "Sidovinklar ligger bredvid varandra på en rät linje och är tillsammans 180°.",
+   "Vertikalvinklar ligger mitt emot varandra där två linjer korsas och är alltid lika stora.",
+   "När en linje skär två parallella linjer är likbelägna vinklar lika stora.",
+   "Vinkelsumman i en månghörning med n hörn är (n − 2) · 180°, för den går att dela i n − 2 trianglar.",
+   "I en regelbunden månghörning är alla vinklar lika stora: dela vinkelsumman med antalet hörn."
+  ],
+  "exempel": [
+   [
+    "Hur stor är varje vinkel i en regelbunden tolvhörning?",
+    "Vinkelsumman är (12 − 2) · 180° = 1 800°. Varje vinkel är 1 800° / 12 = 150°."
+   ],
+   [
+    "Två linjer korsar varandra, och en av vinklarna är 115°. Hur stora är de andra tre?",
+    "Vertikalvinkeln mitt emot är också 115°. De två sidovinklarna är 180° − 115° = 65° var."
+   ]
+  ],
+  "ord": [
+   [
+    "vertikalvinklar",
+    "två vinklar mitt emot varandra där två linjer korsas"
+   ],
+   [
+    "sidovinklar",
+    "två vinklar bredvid varandra som tillsammans är 180°"
+   ],
+   [
+    "likbelägna vinklar",
+    "vinklar som ligger på samma sätt vid var sin av två parallella linjer"
+   ],
+   [
+    "regelbunden månghörning",
+    "en månghörning där alla sidor är lika långa och alla vinklar lika stora"
+   ]
+  ],
+  "tips": "Rita en figur, även om frågan inte har någon, och markera vinklar som är lika stora med samma tecken."
+ },
+ "Tabeller och diagram": {
+  "mal": [
+   "Räkna ut relativ frekvens som bråk, decimaltal och procent.",
+   "Räkna ut ett antal ur en relativ frekvens.",
+   "Räkna ut vinkeln för en sektor i ett cirkeldiagram, och antalet ur en vinkel.",
+   "Räkna ut medelvärde och typvärde ur en frekvenstabell."
+  ],
+  "fakta": [
+   "Frekvensen är hur många gånger ett värde eller ett svar förekommer.",
+   "Relativ frekvens = frekvensen / antalet svar. Den kan skrivas som bråk, decimaltal eller procent.",
+   "Ett cirkeldiagram är 360°. Sektorns vinkel = andelen · 360°.",
+   "Medelvärde ur en frekvenstabell: multiplicera varje värde med sin frekvens, lägg ihop och dela med antalet värden.",
+   "Linjediagram passar för förändring över tid, stapeldiagram för att jämföra grupper och cirkeldiagram för delar av en helhet."
+  ],
+  "exempel": [
+   [
+    "Av 40 elever har 6 en katt. Hur stor blir den sektorn i ett cirkeldiagram?",
+    "Andelen är 6 / 40 = 0,15. Vinkeln är 0,15 · 360° = 54°."
+   ],
+   [
+    "1 elev har läst 0 böcker, 4 elever 1 bok, 3 elever 2 böcker och 2 elever 3 böcker. Vad är medelvärdet?",
+    "Böckerna är 0 · 1 + 1 · 4 + 2 · 3 + 3 · 2 = 16, och eleverna är 1 + 4 + 3 + 2 = 10. Medelvärdet är 16 / 10 = 1,6 böcker."
+   ]
+  ],
+  "ord": [
+   [
+    "frekvens",
+    "antalet gånger ett värde förekommer"
+   ],
+   [
+    "relativ frekvens",
+    "frekvensen som en andel av alla svar"
+   ],
+   [
+    "sektor",
+    "en tårtbit av ett cirkeldiagram"
+   ],
+   [
+    "typvärde",
+    "det värde som har störst frekvens"
+   ]
+  ],
+  "tips": "Kontrollera att alla relativa frekvenser tillsammans blir 100 % och att alla sektorer tillsammans blir 360°."
+ }
+}

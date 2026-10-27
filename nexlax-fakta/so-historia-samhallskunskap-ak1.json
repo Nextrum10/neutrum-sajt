@@ -1,0 +1,103 @@
+{
+ "Familj och vänner": {
+  "mal": [
+   "Säga vad släktingarna kallas, som mormor, farbror och kusin.",
+   "Berätta att familjer kan se olika ut.",
+   "Visa hur en bra kompis gör, till exempel turas om och säger förlåt."
+  ],
+  "fakta": [
+   "Mor- betyder på mammas sida, och far- betyder på pappas sida. Morbror är mammas bror.",
+   "Dina föräldrars syskon är dina mostrar, fastrar, morbröder och farbröder. Deras barn är dina kusiner.",
+   "Familjer ser olika ut. En del barn har två mammor eller två pappor, och en del har en bonusförälder.",
+   "En bra kompis turas om, låter alla vara med och lyssnar. Du kan ha många kompisar.",
+   "Har ni blivit osams kan ni prata om det och lyssna på varandra. Säg förlåt om du har gjort fel."
+  ],
+  "exempel": [
+   [
+    "Vad kallas pappas syster?",
+    "Far- betyder på pappas sida. Pappas syster är din faster."
+   ]
+  ],
+  "ord": [
+   [
+    "syskon",
+    "bröder och systrar"
+   ],
+   [
+    "kusin",
+    "barnet till din mammas eller pappas syster eller bror"
+   ],
+   [
+    "bonusförälder",
+    "en förälders nya partner"
+   ]
+  ],
+  "tips": "Fråga dig först: är det på mammas eller pappas sida? Då vet du om ordet börjar med mor- eller far-."
+ },
+ "Platser och yrken": {
+  "mal": [
+   "Berätta vad man gör på platser nära dig, som biblioteket och vårdcentralen.",
+   "Veta vilket nummer du ringer när det är bråttom.",
+   "Para ihop yrken med vad de som har dem gör."
+  ],
+  "fakta": [
+   "Ring 112 när någon är i fara eller har skadat sig och behöver hjälp snabbt.",
+   "På biblioteket lånar du böcker gratis. På apoteket hämtar du medicin.",
+   "Är du sjuk och behöver träffa en läkare går du till vårdcentralen.",
+   "Alla kan ha alla yrken, både kvinnor och män.",
+   "Många yrken hjälps åt så att vi får det vi behöver, till exempel mat i affären."
+  ],
+  "exempel": [
+   [
+    "Hur kommer mjölken till affären?",
+    "Bonden mjölkar korna. Mejeriet häller mjölken i paket. En lastbil kör paketen till affären, där du köper dem."
+   ]
+  ],
+  "ord": [
+   [
+    "yrke",
+    "det arbete som någon har, till exempel bagare"
+   ],
+   [
+    "veterinär",
+    "en läkare för djur"
+   ]
+  ],
+  "tips": "Titta på ordet: ofta säger namnet vad man gör där, som simhall och mataffär."
+ },
+ "Säker i trafiken": {
+  "mal": [
+   "Gå säkert längs en väg och över en gata.",
+   "Förklara varför du har hjälm, reflex och bilbälte.",
+   "Säga vad trafikljusens färger betyder."
+  ],
+  "fakta": [
+   "Gå på trottoaren. Finns det ingen trottoar går du på vänster sida av vägen. Då ser du bilarna som kommer mot dig.",
+   "Stanna, titta och lyssna innan du går över gatan. Titta efter bilar även när gubben är grön.",
+   "Trafikljuset för bilar har rött, gult och grönt. Rött betyder stanna eller vänta, grönt betyder kör eller gå.",
+   "Ha hjälm när du cyklar och bälte när du åker bil. I Sverige kör bilarna på höger sida.",
+   "En cykel ska ha broms och ringklocka. I mörker ska den ha lyse fram och rött lyse bak."
+  ],
+  "exempel": [
+   [
+    "Du ska gå över vid ett övergångsställe. En bil kommer. Vad gör du?",
+    "Du väntar tills bilen har stannat eller kört förbi. Sedan tittar du åt båda hållen igen och går."
+   ]
+  ],
+  "ord": [
+   [
+    "trottoar",
+    "den del av gatan där man går"
+   ],
+   [
+    "övergångsställe",
+    "där man går över gatan, ofta med vita streck"
+   ],
+   [
+    "reflex",
+    "en sak som lyser när ljus från en bil träffar den"
+   ]
+  ],
+  "tips": "En reflex lyser bara när ljus träffar den. Häng den i knähöjd, där bilens ljus når den."
+ }
+}

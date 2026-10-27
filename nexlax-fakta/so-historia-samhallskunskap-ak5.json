@@ -1,0 +1,80 @@
+{
+ "Vikingarnas värld": {
+  "mal": [
+   "Berätta om vikingarnas resor och handel, västerut och österut.",
+   "Förklara vad tinget, trälarna och runorna var.",
+   "Placera vikingatiden bland de andra tiderna och räkna ut hur länge den varade.",
+   "Förklara hur vi kan veta något om vikingarna."
+  ],
+  "fakta": [
+   "Vikingatiden var ungefär år 800–1050 och räknas som slutet av järnåldern. Vikingarna bodde i dagens Sverige, Norge och Danmark.",
+   "De flesta var bönder. Många reste för att handla, med till exempel silver och pälsar, och en del plundrade kloster och städer.",
+   "Vikingar från Sverige reste österut, genom dagens Ryssland och Ukraina, mot Konstantinopel. Andra seglade västerut ända till Nordamerika.",
+   "Vikingarna trodde på många gudar, som Oden, Tor och Frej. På tinget avgjorde de fria männen viktiga frågor.",
+   "Vi vet om vikingarna genom runstenar och gravar, och genom texter som andra skrev ner, ofta långt senare."
+  ],
+  "exempel": [
+   [
+    "Medeltiden i Sverige varade ungefär från år 1050 till år 1520. Ungefär hur många år är det?",
+    "1520 − 1050 = 470. Medeltiden varade ungefär 470 år."
+   ]
+  ],
+  "ord": [
+   [
+    "långskepp",
+    "vikingarnas smala skepp, som kunde segla både på hav och på floder"
+   ],
+   [
+    "träl",
+    "en ofri människa som ägdes av någon annan"
+   ],
+   [
+    "Mjölner",
+    "Tors hammare"
+   ],
+   [
+    "Istanbul",
+    "det namn som Konstantinopel har i dag"
+   ],
+   [
+    "arkeolog",
+    "en forskare som undersöker spår från förr, till exempel gravar"
+   ],
+   [
+    "källa",
+    "något som berättar om det som har hänt, som en runsten eller en text"
+   ]
+  ],
+  "tips": "Se upp med orden alla, bara och aldrig i påståenden: det gällde sällan alla vikingar."
+ },
+ "Läsa: Vikingatiden": {
+  "mal": [
+   "Hitta fakta i en text om vikingatiden, som årtal, skepp och handel.",
+   "Skilja på det som står i texten och det som inte står där.",
+   "Dra en egen slutsats ur flera saker som texten berättar."
+  ],
+  "fakta": [
+   "Läs hela texten en gång först. Under frågorna kan du öppna den igen och leta efter det frågan gäller.",
+   "Leta efter nyckelord. Frågar man efter ett årtal, leta efter siffror. Frågar man efter ett namn, leta efter stor bokstav.",
+   "Står det ”enligt texten” ska svaret stå i texten, även om du vet något annat.",
+   "En del frågor kräver att du lägger ihop två saker som står på olika ställen i texten. Läs hela meningen, inte bara ett ord."
+  ],
+  "exempel": [
+   [
+    "Texten: ”Lina tog med paraply, men hon behövde det aldrig.” Regnade det?",
+    "Det står inte rakt ut. Men eftersom Lina aldrig behövde paraplyet kan vi dra slutsatsen att det inte regnade."
+   ]
+  ],
+  "ord": [
+   [
+    "nyckelord",
+    "ett viktigt ord i frågan som hjälper dig att hitta svaret i texten"
+   ],
+   [
+    "slutsats",
+    "något du förstår av texten fast det inte står rakt ut"
+   ]
+  ],
+  "tips": "Ord som bara och alla gör ofta ett påstående falskt. Kontrollera dem mot texten."
+ }
+}
