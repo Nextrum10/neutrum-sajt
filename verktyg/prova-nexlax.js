@@ -136,7 +136,7 @@ function nexlaxRpc() {
     niva_starta: k => {
       anrop.push(['niva_starta', k]);
       return { forsok: 'forsok-1', niva: { id: k.p_niva, titel: 'Jämför bråk', amne: 'Matematik', omrade: 'Bråk', arskurs: 'ak6',
-               sort: 'vanlig', lastext: null }, fragor: frågor, klara: [] };
+               sort: 'vanlig', lastext: null }, fragor: frågor, klara: [...rätt] };
     },
     niva_svara: k => {
       anrop.push(['niva_svara', k]);
@@ -546,7 +546,21 @@ async function provaBarnet(webb) {
     (await page.evaluate(() => window.__vibb.length)) === 0 && (await page.locator('[data-nl-vibb]').count()) === 0);
   await page.click('.upg-spel [data-spel="vidare"]');
   await svara(0);
+  /* Fyra uppgifter är två prickar på vägen (2026-10-27): efter två är första
+     delen klar, och Fortsätt hämtar nivån igen och spelar nästa. */
+  prova('spelaren: mätaren är delens', (await text(page, '.upg-spel .upg-spel-tal')) === '2/2', await text(page, '.upg-spel .upg-spel-tal'));
   await page.click('.upg-spel [data-spel="vidare"]');
+  await page.waitForSelector('.upg-spel .upg-delklar', { timeout: 5000 }).catch(() => {});
+  prova('spelaren: första delen klar, med delarna och nästa del ett tryck bort',
+    (await text(page, '.upg-spel .upg-delklar')).includes('Första delen klar') && (await page.locator('.upg-spel .upg-delklar .nl-delrad i').count()) === 2
+    && (await page.locator('.upg-spel [data-spel="nasta-del"]').count()) === 1 && (await känt(page)).includes('upplast'),
+    await text(page, '.upg-spel .upg-delklar'));
+  await page.click('.upg-spel [data-spel="nasta-del"]');
+  await page.waitForSelector('.upg-spel .upg-alt', { timeout: 5000 }).catch(() => {});
+  const startAnrop = anrop.filter(a => a[0] === 'niva_starta');
+  prova('spelaren: nästa del fortsätter i samma försök', startAnrop.length === 2
+    && (await text(page, '.upg-spel .upg-spel-tal')) === '0/2' && (await text(page, '.upg-spel .upg-fraga-text')).includes('Fråga 3'),
+    startAnrop.length + ' ' + await text(page, '.upg-spel .upg-fraga-text'));
   await svara(0);
   prova('spelaren: tre i rad säger det', (await text(page, '.upg-spel .upg-besked')).includes('Tre i rad')
     && (await page.locator('.upg-spel.het').count()) === 1, await text(page, '.upg-spel .upg-besked'));
@@ -660,6 +674,12 @@ async function provaTelefonen(webb) {
       for (let i = 0; i < 14; i++) {
         if (await synlig(page, '.upg-spel .upg-slut')) break;
         if (await synlig(page, '.upg-spel [data-spel="vidare"]')) { await page.click('.upg-spel [data-spel="vidare"]'); continue; }
+        /* Nivån är två prickar: efter den första kommer Fortsätt till nästa. */
+        if (await synlig(page, '.upg-spel [data-spel="nasta-del"]')) {
+          await page.click('.upg-spel [data-spel="nasta-del"]');
+          await page.waitForSelector('.upg-spel .upg-alt', { timeout: 5000 }).catch(() => {});
+          continue;
+        }
         await page.click('.upg-spel .upg-alt[data-alt="0"]').catch(() => {});
         await page.click('.upg-spel [data-spel="kolla"]').catch(() => {});
         await page.waitForSelector('.upg-spel [data-spel="vidare"]', { timeout: 3000 }).catch(() => {});

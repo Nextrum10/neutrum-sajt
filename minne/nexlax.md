@@ -867,6 +867,64 @@ man har kvar av uppgifter på varje sektion som duolingo har."
    ställen omskrivna, 26 rader).
 5. **Ledet.** Varje område har ett band med ett streck per nivå, och strecken fylls
    med frågorna som är klara (`ledHtml`, `områdetsUppgifter`), så man ser hur mycket
-   som är kvar av området; noden på vägen har en ring som fylls på samma sätt.
-   Ingenting sparas för det: det räknas ur försöken, som stjärnorna.
+   som är kvar av området; noden på vägen fick en ring som fylldes på samma sätt
+   (sedan Fas 25.1 är ringen prickens, nedan). Ingenting sparas för det: det räknas
+   ur försöken, som stjärnorna.
 6. Allt är skrivet med AI och har inte lästs av någon som undervisar i ämnet.
+
+## Fas 25.1: prickarna, ringen och det gråa (2026-10-27)
+
+Leo samma eftermiddag, med skärmbilder av Duolingos väg: "De är nånting fel i
+nexläx de blir såhär grått ibland fixa de. De med uppgifter de måste se bättre ut
+och vara skönare att trycka på de knapparna med lite feedback. Utöver de så ska de
+max vara 3 uppgifter i varje liksom prick. Den ska se ut som duolingos här. Vägen
+ska ha flera uppgifter som duolingo har här."
+
+1. **Det gråa.** `NXStudie.laddarFörsta` sätter `aria-busy` på Din väg och Din
+   utveckling medan NexLäx hämtas om (vyn tonar ned med opacity .55) och släpper det
+   när innehållet byts. `sättHtml` byter inte ett innehåll som är detsamma
+   (2026-10-13, så att inget blinkar), och då stod fliken grå tills nästa omritning:
+   till exempel Din utveckling efter en nivå som öppnats och stängts. `sättHtml` tar
+   nu bort `aria-busy` själv. Provat i förhandsvisningen: före ändringen stod
+   `#nl-utveckling` kvar med `aria-busy="true"`, efter inte.
+2. **Prickarna.** En nivå står på vägen som en prick per högst tre frågor
+   (`PER_PRICK`, `delar()`), med delarna så lika som det går (8 blir 3, 3, 2 och 10
+   blir 3, 3, 2, 2), och Mästarprovet delas likadant (i ockra, med kronan). Namnet står
+   under den första pricken och stjärnorna under den sista. **Databasen vet inget om
+   delarna**: försöket, rättningen, stjärnorna (rätt på första försöket i hela nivån)
+   och XP:n är nivåns som förut, och ingen migration behövs. Spelaren (`starta`)
+   spelar bara delen som står på tur, den första med en fråga som inte är rätt
+   besvarad. Ett fel kommer tillbaka sist i samma del, och mätaren och talet är delens.
+   När delen är klar och nivån inte kommer en egen skärm (`delKlar`: Första delen klar!,
+   delarna, delens XP, Fortsätt och Till vägen, och ljudet `upplast`) i stället för
+   resultatet. Fortsätt startar nivån igen, och `niva_starta` fortsätter i samma försök.
+   Delarna görs i ordning, så vägen räknar dem ur antalet klara frågor
+   (`nodensDelar`); en senare prick i en påbörjad nivå säger det och startar delen som
+   står på tur. Repetitionen står inte på vägen och delas inte. Fortsätt där du slutade
+   säger vilken del som står på tur.
+3. **Ett dygn.** `niva_starta` fortsätter bara ett försök som började det senaste dygnet
+   (Fas 23.2). Med tre frågor i en prick slutar fler mitt i en nivå än förut, och den
+   som kommer tillbaka efter mer än ett dygn börjar om nivån: prickarna hen gjort blir
+   ogjorda. Skärmen efter en del säger det ("Det du gjort står kvar i ett dygn"). En
+   längre tid kräver en migration, med `niva_starta`, `pagaende` i `nexlax_for_barnet`
+   och `laddaPågående` ändrade samtidigt, och är Leos beslut: den är inte skriven.
+4. **Ringen.** Runt pricken som står på tur, och runt en påbörjad, står en ring som i
+   Duolingo: ett grått spår och delens klara frågor i områdets färg, med mitten 3 px
+   under prickens så att den omsluter kanten under. Fas 25:s ring blev en liten ring i
+   nodens hörn, för `.upg-nod-knapp svg` (ikonens 30 px) och `svg{max-width:100%}` i
+   `nextrum.css` vann över dess storlek. Den har nu två klasser och `max-width:none`.
+   Pulsen runt nästa steg är borta: ringen och bubblan räcker.
+5. **Trycket.** Prickarna har en kant under (en skugga som står still), de öppna i
+   områdets ton i stället för en kontur, och trycket sjunker mot kanten (`scale` .9 med
+   `transform-origin` nedtill, och `brightness`), fjädrar tillbaka och vibrerar
+   (`känn('tryck')`, som förut). Inget `translate` och ingen animerad skugga (CLAUDE.md
+   avsnitt 3): Duolingos knapp flyttas ned över kanten, vår krymper mot den. Kortet
+   under en prick har en pil mot pricken (`--x`) och fjädrar in med `scale`, och en prick
+   som just klarats studsar (`nyss.del`, som vyerna får ur `onStäng`). Uppmätt i
+   förhandsvisningen: en tryckt prick flyttar sig 0 px när kortet öppnas och stängs.
+6. **Förhandsvisningen** har sex frågor per nivå (två prickar), och dess `niva_starta`
+   fortsätter ett försök från det senaste dygnet, som databasen. `prova-nexlax.js` provar
+   delen: mätaren, skärmen och att nästa del fortsätter i samma försök (106 av 106), och
+   `prova-forhandsvisning.js` gör en nivå i två prickar (72 av 72). Det senare föll på
+   faktabladet sedan Fas 25, som ingen hade kört det mot. Faktabladets knapp i områdets
+   huvud är 44 px hög; den var 40 med en osynlig yta runt, och provet mäter knappen.

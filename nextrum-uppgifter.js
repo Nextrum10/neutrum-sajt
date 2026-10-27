@@ -800,7 +800,7 @@ window.NXUppgifter = (function () {
      HEMMET: DIN VÄG
      o: { host, katalog, forsok, uppgifter, pågående, läge, amne,
           arskurs, elevKod, elevNamn, öppen, hjälpare: { namn },
-          rapporter, progress, nyss: { klar, oppen } }
+          rapporter, progress, nyss: { klar, oppen, del } }
      ============================================================ */
   const XLED = [0, 1, 2, 1, 0, -1, -2, -1];
 
@@ -836,6 +836,11 @@ window.NXUppgifter = (function () {
      går om. Är texten densamma som sist står DOM:en kvar. */
   const sistaHtml = new WeakMap();
   function sättHtml(host, html) {
+    /* NXStudie.laddarFörsta tonar ned det som står kvar medan det nya hämtas,
+       och tonen släpps när innehållet byts. Står ritningen kvar för att inget
+       ändrats byts inget, och fliken stod grå tills nästa omritning (Leo
+       2026-10-27: "de blir såhär grått ibland"). */
+    host.removeAttribute('aria-busy');
     const sist = sistaHtml.get(host);
     /* Står första elementet kvar är det vår ritning (ett "Hämtar" som någon
        annan satt in har ett annat). */
@@ -933,6 +938,9 @@ window.NXUppgifter = (function () {
     if (nästa) {
       const n = nästa.niva;
       const p = nästa.framsteg;
+      /* En påbörjad nivå säger vilken prick som står på tur. */
+      const dl = p && p.totalt ? delar(p.totalt) : null;
+      const dlNu = dl ? Math.max(0, dl.findIndex(d => p.klara < d.till)) : 0;
       /* Ämnet först, i ämnets färg: Fortsätt där du slutade kan vara i ett
          annat ämne än det som är valt nedanför. */
       const ämne = banaNamn(n.amne, n.arskurs);
@@ -942,8 +950,9 @@ window.NXUppgifter = (function () {
         + '<span class="nl-cta-et">' + esc(nästa.rubrik) + '</span>'
         + '<span class="nl-cta-amne">' + esc(ämne) + '</span>'
         + '<b class="nl-cta-titel">' + esc(stegTitel(n)) + '</b>'
-        + '<span class="nl-cta-fakta">' + esc([område, p ? p.klara + ' av ' + p.totalt + ' klara' : omfattning(n, o.katalog)].filter(Boolean).join(' · ')) + '</span>'
-        + (p ? prickar(p.klara, p.totalt, 'nl-cta-prickar') : '')
+        + '<span class="nl-cta-fakta">' + esc([område, dl && dl.length > 1 ? 'Del ' + (dlNu + 1) + ' av ' + dl.length
+            : p ? p.klara + ' av ' + p.totalt + ' klara' : omfattning(n, o.katalog)].filter(Boolean).join(' · ')) + '</span>'
+        + (dl && dl.length > 1 ? delRad(dl.length, dlNu, dlNu, 'nl-cta-prickar') : p ? prickar(p.klara, p.totalt, 'nl-cta-prickar') : '')
         + '</div>'
         + '<button type="button" class="nl-cta-knapp" data-nl-starta="' + esc(n.id) + '">'
           + IKON.spela + '<span>' + esc(nästa.knapp) + '</span></button>'
@@ -1522,6 +1531,47 @@ window.NXUppgifter = (function () {
     return p && p.totalt ? Math.min(1, p.klara / p.totalt) : 0;
   }
 
+  /* Prickarna (2026-10-27, Leo: "max vara 3 uppgifter i varje liksom prick
+     ... Vägen ska ha flera uppgifter som duolingo har"). En nivå står på
+     vägen som en prick per tre uppgifter, och delarna är så lika stora som
+     det går: åtta blir 3, 3 och 2, inte 3, 3, 1 och 1. Det är bara hur nivån
+     visas och spelas. Försöket, stjärnorna och XP:n är nivåns som förut, och
+     databasen vet inget om delarna. */
+  const PER_PRICK = 3;
+  function delar(antal) {
+    const n = Math.max(1, Math.ceil(antal / PER_PRICK));
+    const bas = Math.floor(antal / n), över = antal % n;
+    const ut = [];
+    let från = 0;
+    for (let i = 0; i < n; i++) {
+      const till = från + bas + (i < över ? 1 : 0);
+      ut.push({ från, till });
+      från = till;
+    }
+    return ut;
+  }
+  /* En nivås delar på vägen, hur många uppgifter som är gjorda och vilken
+     del som står på tur. Ett påbörjat försök räknas på sina egna frågor,
+     som kan vara fler eller färre än katalogens om en fråga stängts av. I
+     spelaren görs delarna i ordning, så de gjorda är alltid de första. */
+  function nodensDelar(x, katalog) {
+    const p = x.framsteg;
+    const antal = p && p.totalt ? p.totalt : antalFrågor(x.niva, katalog);
+    const d = delar(antal);
+    const gjorda = x.klar ? antal : p ? Math.min(antal, p.klara) : 0;
+    const i = d.findIndex(del => gjorda < del.till);
+    return { delar: d, gjorda, nu: x.klar ? -1 : i < 0 ? d.length - 1 : i,
+             klara: x.klar || i < 0 ? d.length : i };
+  }
+  /* Delarna som en rad små prickar: gjorda, den som står på tur och resten. */
+  function delRad(antal, gjorda, nu, klass) {
+    if (antal < 2) return '';
+    let ut = '<span class="nl-delrad ' + (klass || '') + '" role="img" aria-label="'
+      + esc(gjorda + ' av ' + antal + ' delar klara') + '">';
+    for (let i = 0; i < antal; i++) ut += '<i class="' + (i < gjorda ? 'klar' : i === nu ? 'nu' : '') + '"></i>';
+    return ut + '</span>';
+  }
+
   /* Ledet (2026-10-27, Leo: "På sektionerna där de exempelvis står 0/3 eller
      0/2 sätt ihop alla de uppgifterna på sektionen i ledet av uppgifter så
      man ser hur mycket man har kvar av uppgifter på varje sektion som
@@ -1562,7 +1612,10 @@ window.NXUppgifter = (function () {
       const förra = i > 0 ? väg.områden[i - 1] : null;
       const ikon = a.klart ? (a.bemästrat ? IKON.krona : IKON.bock) : a.läge === 'last' || a.läge === 'nasta' ? IKON.lås : String(i + 1);
       const visaSteg = a.läge !== 'last';
-      const noder = visaSteg ? a.nivåer.concat(a.mästare ? [a.mästare] : []).map(n => nodHtml(n, o, väg, XLED[x++ % XLED.length])).join('') : '';
+      const noder = visaSteg ? a.nivåer.concat(a.mästare ? [a.mästare] : []).map(n => {
+        const nd = nodensDelar(n, o.katalog);
+        return nd.delar.map((_, j) => nodHtml(n, j, nd, o, väg, XLED[x++ % XLED.length])).join('');
+      }).join('') : '';
       return '<li class="nl-omr nl-omr-' + a.läge + (a.bemästrat ? ' nl-omr-bem' : '') + '" data-nl-f="' + områdesFärg(väg.amne, i) + '">'
         + '<div class="nl-omr-huvud">'
         + '<span class="nl-omr-ik" aria-hidden="true">' + ikon + '</span>'
@@ -1606,61 +1659,100 @@ window.NXUppgifter = (function () {
       + IKON.bok + '<span>Fakta</span></button>';
   }
 
-  function nodHtml(n, o, väg, led) {
-    const läge = n.klar ? 'klar' : n.aktuell ? 'aktuell' : n.öppen ? 'oppen' : 'last';
-    const ärÖppen = o.öppen === n.niva.id;
+  /* En prick på vägen: del j av nivån n. Namnet står under den första
+     delen och stjärnorna under den sista, så att en nivå med fyra prickar
+     läses som en. Ringen är hur långt man kommit i delen, som ringen runt
+     nästa lektion i Duolingo: den står alltid runt den som står på tur,
+     också tom, och runt en annan påbörjad del. */
+  function nodHtml(n, j, nd, o, väg, led) {
+    const del = nd.delar[j];
+    const antal = nd.delar.length;
+    const första = j === 0, sista = j === antal - 1;
+    const klar = n.klar || j < nd.klara;
+    const aktuell = n.aktuell && j === nd.nu;
+    const läge = klar ? 'klar' : aktuell ? 'aktuell' : n.öppen ? 'oppen' : 'last';
+    const nyckel = n.niva.id + ':' + j;
+    const ärÖppen = o.öppen === nyckel;
     const nyss = o.nyss || {};
     const mästare = n.sort === 'mastare';
-    const ikon = mästare ? IKON.krona : n.klar ? IKON.bock : n.öppen ? IKON.spela : IKON.lås;
+    const ikon = mästare ? IKON.krona : klar ? IKON.bock : !n.öppen ? IKON.lås : aktuell ? IKON.spela : IKON.stjärna;
+    const storlek = del.till - del.från;
+    const iDelen = Math.max(0, Math.min(storlek, nd.gjorda - del.från));
+    const ring = !klar && storlek > 0 && (aktuell || iDelen > 0);
+    const nyssKlar = nyss.del === nyckel || (nyss.klar === n.niva.id && sista);
+    const vad = n.klar ? 'klar, ' + n.stjarnor + ' av 3 stjärnor' : klar ? 'delen är klar'
+      : aktuell ? 'nästa steg' : n.öppen ? 'öppen' : 'låst';
     return '<li class="upg-nod ' + läge + (mästare ? ' mastare' : '') + (n.niva.lastext ? ' las' : '') + (ärÖppen ? ' vald' : '')
-      + (nyss.klar === n.niva.id ? ' nyss-klar' : '') + (nyss.oppen === n.niva.id ? ' nyss-oppen' : '') + '" style="--x:' + led + '">'
-      + '<button type="button" class="upg-nod-knapp" data-nl-nod="' + esc(n.niva.id) + '" aria-expanded="' + (ärÖppen ? 'true' : 'false') + '"'
-      + ' aria-label="' + esc(stegTitel(n.niva) + ', ' + (n.klar ? 'klar, ' + n.stjarnor + ' av 3 stjärnor' : n.aktuell ? 'nästa steg' : n.öppen ? 'öppen' : 'låst')) + '">'
+      + (nyssKlar ? ' nyss-klar' : '') + (nyss.oppen === n.niva.id && första ? ' nyss-oppen' : '') + '" style="--x:' + led + '">'
+      + '<button type="button" class="upg-nod-knapp" data-nl-nod="' + esc(nyckel) + '" aria-expanded="' + (ärÖppen ? 'true' : 'false') + '"'
+      + ' aria-label="' + esc(stegTitel(n.niva) + (antal > 1 ? ', del ' + (j + 1) + ' av ' + antal : '') + ', ' + vad) + '">'
       + ikon
-      /* Hur långt man kommit i en påbörjad nivå, som ringen runt en nod i
-         Duolingo. pathLength 100 gör längden till procenten. */
-      + (n.framsteg && !n.klar && n.framsteg.totalt
-          ? '<svg class="upg-nod-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47" pathLength="100"/>'
-            + '<circle class="fylld" cx="50" cy="50" r="47" pathLength="100" stroke-dasharray="'
-            + Math.round(delGjord(n) * 100) + ' 100"/></svg>'
+      /* pathLength 100 gör längden till procenten. */
+      + (ring
+          ? '<svg class="upg-nod-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" pathLength="100"/>'
+            + (iDelen ? '<circle class="fylld" cx="50" cy="50" r="46" pathLength="100" stroke-dasharray="'
+              + Math.round(iDelen / storlek * 100) + ' 100"/>' : '') + '</svg>'
           : '')
-      + (n.aktuell ? '<span class="upg-nod-bubbla" aria-hidden="true">' + (n.pågår ? 'Fortsätt' : mästare ? 'Provet' : 'Börja') + '</span>' : '')
+      + (aktuell ? '<span class="upg-nod-bubbla" aria-hidden="true">' + (n.pågår || nd.gjorda ? 'Fortsätt' : mästare ? 'Provet' : 'Börja') + '</span>' : '')
       + '</button>'
-      + '<span class="upg-nod-namn">' + esc(mästare ? 'Mästarprov' : n.niva.titel) + '</span>'
-      + (n.klar ? stjärnRad(n.stjarnor, 3, 'upg-stj-sm')
-          : n.framsteg ? prickar(n.framsteg.klara, n.framsteg.totalt, 'nl-nod-prickar')
-          : n.given ? '<span class="upg-nod-given">Från studiehjälparen</span>' : '')
-      + (ärÖppen ? nodKort(n, o, väg) : '')
+      + (första ? '<span class="upg-nod-namn">' + esc(mästare ? 'Mästarprov' : n.niva.titel) + '</span>' : '')
+      + (sista && n.klar ? stjärnRad(n.stjarnor, 3, 'upg-stj-sm') : '')
+      + (första && !n.klar && n.given ? '<span class="upg-nod-given">Från studiehjälparen</span>' : '')
+      + (ärÖppen ? nodKort(n, j, nd, o, väg) : '')
       + '</li>';
   }
 
-  function nodKort(n, o, väg) {
+  /* Hur lång en del är: uppgifterna och ungefär minuterna. Lästexten läses
+     i den första. */
+  function delOmfattning(niva, storlek, j) {
+    const läsa = niva.lastext && j === 0 ? Math.max(1, Math.round(niva.lastext.length / 900)) : 0;
+    return storlek + (storlek === 1 ? ' uppgift' : ' uppgifter') + ' · ca ' + Math.max(1, Math.round(storlek * 0.5) + läsa) + ' min';
+  }
+
+  function nodKort(n, j, nd, o, väg) {
     const niva = n.niva;
     const mästare = n.sort === 'mastare';
+    const antal = nd.delar.length;
+    const del = nd.delar[j];
+    const storlek = del.till - del.från;
+    const iDelen = Math.max(0, Math.min(storlek, nd.gjorda - del.från));
+    const kvar = antal - nd.klara;
     const i = väg.steg.indexOf(n);
     const förra = i > 0 ? väg.steg.slice(0, i).reverse().find(x => x.sort === 'vanlig') : null;
     let text = '', knapp = '';
+    const starta = t => '<button type="button" class="btn btn-primary btn-sm" data-nl-starta="' + esc(niva.id) + '">' + esc(t) + '</button>';
     if (!n.öppen) {
       text = mästare ? 'Klara alla nivåer i ' + niva.omrade + ' först, så öppnas provet.'
         : 'Klara "' + (förra ? förra.niva.titel : 'nivån före') + '" först, så öppnas den här.';
+    } else if (n.klar) {
+      text = 'Klarad med ' + n.stjarnor + (n.stjarnor === 1 ? ' stjärna' : ' stjärnor')
+        + (mästare ? (n.stjarnor >= BEMÄSTRAD ? '. Området är bemästrat.' : '. Två stjärnor bemästrar området.') : '. Gör om den för fler, det bästa resultatet räknas.');
+      knapp = starta('Gör om');
+    } else if (j < nd.klara) {
+      /* En gjord del i en nivå som inte är klar: nästa del är ett tryck bort. */
+      text = 'Den här delen är klar. ' + (kvar === 1 ? 'En del kvar' : kvar + ' delar kvar') + ', sedan är nivån klar.';
+      knapp = starta('Fortsätt med del ' + (nd.nu + 1));
+    } else if (j > nd.nu) {
+      /* Delarna görs i ordning: de gjorda är alltid de första, och det är
+         så vägen kan räkna dem. */
+      text = 'Delarna görs i ordning, så du ' + (nd.gjorda ? 'fortsätter' : 'börjar') + ' med del ' + (nd.nu + 1) + '.';
+      knapp = starta((nd.gjorda ? 'Fortsätt' : 'Börja') + ' med del ' + (nd.nu + 1));
     } else {
-      text = n.klar
-        ? 'Klarad med ' + n.stjarnor + (n.stjarnor === 1 ? ' stjärna' : ' stjärnor')
-          + (mästare ? (n.stjarnor >= BEMÄSTRAD ? '. Området är bemästrat.' : '. Två stjärnor bemästrar området.') : '. Gör om den för fler, det bästa resultatet räknas.')
-        : n.framsteg ? 'Du har börjat: ' + n.framsteg.klara + ' av ' + n.framsteg.totalt + ' uppgifter klara. Det du svarat är sparat.'
+      text = iDelen ? 'Du har börjat: ' + iDelen + ' av ' + storlek + ' uppgifter klara. Det du svarat är sparat.'
+        : nd.gjorda ? 'Del ' + (j + 1) + ' står på tur. Det du gjort förut är sparat.'
         : n.pågår ? 'Du har börjat. Det du svarat är sparat.'
         : n.given ? 'Din studiehjälpare har gett dig den här.'
         : mästare ? 'Blandade frågor ur hela området. Klarar du det med minst två stjärnor är området bemästrat.' : '';
-      knapp = '<button type="button" class="btn btn-primary btn-sm" data-nl-starta="' + esc(niva.id) + '">'
-        + (n.pågår ? 'Fortsätt' : n.klar ? 'Gör om' : mästare ? 'Gör provet' : 'Starta') + '</button>';
+      knapp = starta(iDelen || nd.gjorda || n.pågår ? 'Fortsätt' : mästare ? 'Gör provet' : 'Starta');
     }
-    const fakta = [omfattning(niva, o.katalog), niva.lastext ? 'Läsförståelse' : '',
+    const fakta = [antal > 1 ? delOmfattning(niva, storlek, j) : omfattning(niva, o.katalog), niva.lastext ? 'Läsförståelse' : '',
       n.xp ? 'Du har fått ' + xpText(n.xp) + ' här' : ''].filter(Boolean).join(' · ');
     return '<div class="upg-nod-kort">'
+      + (antal > 1 ? '<span class="upg-nod-del">Del ' + (j + 1) + ' av ' + antal + '</span>' : '')
       + '<b>' + esc(stegTitel(niva)) + '</b>'
       + (niva.beskrivning ? '<p>' + esc(niva.beskrivning) + '</p>' : '')
       + (fakta ? '<span class="upg-nod-fakta">' + esc(fakta) + '</span>' : '')
-      + (n.framsteg ? prickar(n.framsteg.klara, n.framsteg.totalt) : '')
+      + (antal > 1 ? delRad(antal, nd.klara, nd.nu) : n.framsteg ? prickar(n.framsteg.klara, n.framsteg.totalt) : '')
       + (text ? '<p class="upg-nod-lage">' + esc(text) + '</p>' : '')
       + '<div class="upg-nod-atg">' + knapp
       + (n.första ? '<button type="button" class="upg-lank" data-upg-genomgang="' + esc((n.senast || n.första).id) + '">Se rättningen</button>' : '')
@@ -2203,7 +2295,7 @@ window.NXUppgifter = (function () {
      tillbaka sist, tills allt är rätt.
 
      o: { supa, niva, elev, katalog, forsok, uppgifter, pågående, läge,
-          hämtaLäge() → Promise<läge|null>, onStäng({ ändrat, klar, oppen }) }
+          hämtaLäge() → Promise<läge|null>, onStäng({ ändrat, klar, oppen, del }) }
      ============================================================ */
   let öppenSpelare = null;
 
@@ -2250,7 +2342,7 @@ window.NXUppgifter = (function () {
     let timrar = [];
     const senare = (ms, fn) => { timrar.push(setTimeout(() => { if (öppenSpelare === rot) fn(); }, ms)); };
     const tysta = () => { timrar.forEach(clearTimeout); timrar = []; };
-    let senastKlar = null, senastÖppnad = null;
+    let senastKlar = null, senastÖppnad = null, senastDel = null;
     let forsok = (o.forsok || []).slice();
     const märkenFöre = new Set(märken(underlag({ katalog: o.katalog, forsok, uppgifter: o.uppgifter, läge: o.läge }))
       .filter(m => m.klart).map(m => m.id));
@@ -2273,7 +2365,7 @@ window.NXUppgifter = (function () {
     window.addEventListener('popstate', påBakåt);
 
     function mittINivån() {
-      return T && T.data && !T.resultat && T.svarade > 0;
+      return T && T.data && !T.resultat && T.svarade > 0 && T.läge !== 'delklar';
     }
 
     async function påBakåt() {
@@ -2318,7 +2410,7 @@ window.NXUppgifter = (function () {
       document.documentElement.classList.remove('upg-spelar');
       rot.remove();
       if (fokusFöre && fokusFöre.isConnected && fokusFöre.focus) fokusFöre.focus({ preventScroll: true });
-      if (typeof o.onStäng === 'function') o.onStäng({ ändrat, klar: senastKlar, oppen: senastÖppnad });
+      if (typeof o.onStäng === 'function') o.onStäng({ ändrat, klar: senastKlar, oppen: senastÖppnad, del: senastDel });
     }
 
     /* Ett drag med en bricka följs av ett klick på samma bricka. Det
@@ -2350,6 +2442,7 @@ window.NXUppgifter = (function () {
       else if (vad === 'last') börjaFrågorna();
       else if (vad === 'igen') starta(T.niva);
       else if (vad === 'nasta' && T.nästa) starta(T.nästa);
+      else if (vad === 'nasta-del' && T.läge === 'delklar') starta(T.niva);
       else if (vad === 'klar') stäng();
       else if (vad === 'forsok-igen') kolla();
       else if (vad === 'fakta-klar' && T && T.läge === 'fakta') starta(T.niva);
@@ -2441,10 +2534,21 @@ window.NXUppgifter = (function () {
       T.data = data;
       T.lastext = (data.niva && data.niva.lastext) || niva.lastext || null;
       const klara = new Set(data.klara || []);
-      T.total = (data.fragor || []).length;
+      const alla = data.fragor || [];
+      T.total = alla.length;
       T.klara = klara.size;
       T.svarade = klara.size;
-      T.kö = (data.fragor || []).filter(f => !klara.has(f.id));
+      /* Bara delen som står på tur spelas (prickarna, delar()): den första
+         med en uppgift som inte är rätt besvarad. Ett fel kommer tillbaka
+         sist i samma del, och nästa del är ett tryck bort när den är klar.
+         Repetitionen står inte på vägen och spelas hel. */
+      T.delar = niva.sort === 'repetition' ? [{ från: 0, till: T.total }] : delar(T.total);
+      const nr = T.delar.findIndex(d => alla.slice(d.från, d.till).some(f => !klara.has(f.id)));
+      T.del = Math.max(0, nr);
+      const del = T.delar[T.del];
+      T.kö = nr < 0 ? [] : alla.slice(del.från, del.till).filter(f => !klara.has(f.id));
+      T.delStorlek = del.till - del.från;
+      T.delKlara = T.delStorlek - T.kö.length;
       uppdateraMätare();
       if (!T.kö.length) {
         kropp.innerHTML = '<div class="upg-spel-fel"><b>Den här nivån är redan klar</b><p>Stäng och starta den igen för en ny omgång.</p></div>';
@@ -2474,12 +2578,15 @@ window.NXUppgifter = (function () {
       nästaFråga();
     }
 
+    /* Mätaren är delens, som Duolingos mätare är lektionens: tre uppgifter
+       fyller den. */
     function uppdateraMätare() {
-      const andel = T.total ? T.klara / T.total : 0;
-      mätare.firstChild.style.width = Math.round(andel * 100) + '%';
-      mätare.setAttribute('aria-valuemax', String(T.total));
-      mätare.setAttribute('aria-valuenow', String(T.klara));
-      talEl.textContent = T.total ? T.klara + '/' + T.total : '';
+      const av = T.delStorlek || T.total;
+      const gjort = T.delStorlek ? T.delKlara : T.klara;
+      mätare.firstChild.style.width = Math.round((av ? gjort / av : 0) * 100) + '%';
+      mätare.setAttribute('aria-valuemax', String(av));
+      mätare.setAttribute('aria-valuenow', String(gjort));
+      talEl.textContent = av ? gjort + '/' + av : '';
     }
 
     function nästaFråga() {
@@ -2760,7 +2867,7 @@ window.NXUppgifter = (function () {
       T.läge = 'besked';
       const rätt = !!svar.ratt;
       const xp = Number(svar.xp) || 0;
-      if (rätt) T.klara++;
+      if (rätt) { T.klara++; T.delKlara++; }
       else T.kö.push(f);
       iRad = rätt ? iRad + 1 : 0;
       uppdateraMätare();
@@ -2856,8 +2963,36 @@ window.NXUppgifter = (function () {
     function vidare() {
       if (T.läge !== 'besked') return;
       if (T.resultat) return slut();
-      if (!T.kö.length) return slut();
+      if (!T.kö.length) return T.delar.length > 1 ? delKlar() : slut();
       nästaFråga();
+    }
+
+    /* En del är klar och nivån inte: en egen skärm, som efter en lektion i
+       Duolingo, med nästa del ett tryck bort och vägen ett till. Det är inget
+       resultat: stjärnorna räknas när hela nivån är gjord. */
+    function delKlar() {
+      T.läge = 'delklar';
+      senastDel = T.niva.id + ':' + T.del;
+      rot.classList.remove('ratt', 'fel', 'het');
+      besked.className = 'upg-besked';
+      besked.innerHTML = '';
+      const antal = T.delar.length;
+      const gjorda = T.delar.filter(d => d.till <= T.klara).length;
+      const kvar = antal - gjorda;
+      känn('upplast');
+      kropp.innerHTML = '<div class="upg-delklar" data-nl-f="' + ämnesKod(T.niva.amne) + '">'
+        + '<span class="upg-delklar-ik">' + IKON.bock + '</span>'
+        + '<h2 tabindex="-1">' + esc(antal - kvar === 1 ? 'Första delen klar!' : 'Del ' + (T.del + 1) + ' klar!') + '</h2>'
+        + '<p class="upg-delklar-titel">' + esc(stegTitel(T.niva)) + '</p>'
+        + delRad(antal, gjorda, gjorda, 'upg-delklar-rad')
+        + (T.xp ? '<p class="upg-delklar-xp">' + IKON.blixt + '+' + tusen(T.xp) + ' XP</p>' : '')
+        + '<p class="upg-slut-not">' + esc((kvar === 1 ? 'En del kvar' : kvar + ' delar kvar')
+          + ', sedan är nivån klar och stjärnorna räknas. Det du gjort står kvar i ett dygn.') + '</p>'
+        + '</div>';
+      knappar.innerHTML = '<button type="button" class="btn btn-primary btn-block" data-spel="nasta-del">Fortsätt</button>'
+        + '<button type="button" class="btn btn-ghost btn-block" data-spel="klar">Till vägen</button>';
+      const h = kropp.querySelector('h2');
+      if (h) h.focus({ preventScroll: true });
     }
 
     /* ---------- resultatet ---------- */

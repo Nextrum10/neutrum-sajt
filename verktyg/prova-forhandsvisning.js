@@ -244,13 +244,27 @@ async function provaStudievyn(webb) {
   await page.waitForFunction(() => /ett prov/.test(document.querySelector('#trad').textContent), null, { timeout: 5000 }).catch(() => {});
   prova('studievyn: ett meddelande står i tråden', (await text(page, '#trad')).includes('Hej Sara, det här är ett prov.'));
 
-  /* NexLäx: nivån i läxan, alla fyra rätt. */
+  /* NexLäx: nivån i läxan, alla sex rätt. Ett nytt område börjar med
+     faktabladet (2026-10-27), och nivån är två prickar: efter tre frågor
+     kommer Fortsätt till nästa del. */
   await page.evaluate(() => { location.hash = '#nexlax'; });
   const starta = '[data-nl-starta="' + id(305) + '"]';
   await page.waitForSelector(starta, { timeout: 5000 }).catch(() => {});
   await page.locator(starta).first().click().catch(() => {});
-  await page.waitForSelector('.upg-spel .upg-alt', { timeout: 5000 }).catch(() => {});
-  for (let i = 0; i < 6 && await page.locator('.upg-spel .upg-alt').count(); i++) {
+  await page.waitForSelector('.upg-spel .upg-alt, .upg-spel [data-spel="fakta-klar"]', { timeout: 5000 }).catch(() => {});
+  if (await page.locator('.upg-spel [data-spel="fakta-klar"]').count()) {
+    await page.click('.upg-spel [data-spel="fakta-klar"]');
+    await page.waitForSelector('.upg-spel .upg-alt', { timeout: 5000 }).catch(() => {});
+  }
+  let delar = 0;
+  for (let i = 0; i < 10; i++) {
+    if (await page.locator('.upg-spel [data-spel="nasta-del"]').count()) {
+      delar++;
+      await page.click('.upg-spel [data-spel="nasta-del"]');
+      await page.waitForSelector('.upg-spel .upg-alt', { timeout: 5000 }).catch(() => {});
+      continue;
+    }
+    if (!await page.locator('.upg-spel .upg-alt').count()) break;
     const fråga = (await text(page, '.upg-spel .upg-fraga-text, .upg-spel .upg-fraga h3, .upg-spel .upg-fraga')).trim();
     const rätt = await page.evaluate(t => {
       const alla = [].concat.apply([], Object.values(NXForhandsvisning.frågor));
@@ -264,8 +278,8 @@ async function provaStudievyn(webb) {
     await vänta(150);
   }
   await page.waitForSelector('.upg-spel .upg-slut', { timeout: 5000 }).catch(() => {});
-  prova('studievyn: en nivå i NexLäx går att göra hela vägen', await synlig(page, '.upg-spel .upg-slut'),
-    await text(page, '.upg-spel'));
+  prova('studievyn: en nivå i NexLäx går att göra hela vägen, två prickar', await synlig(page, '.upg-spel .upg-slut') && delar === 1,
+    delar + ' ' + await text(page, '.upg-spel'));
   const försök = await värld(page, n => NXForhandsvisning.värld.niva_forsok.filter(f => f.niva_id === n && f.klar_at).length, id(305));
   prova('studievyn: försöket är klart i världen', försök === 1, försök);
   await bild(page, 'studievyn-nexlax-klar', '.upg-spel');

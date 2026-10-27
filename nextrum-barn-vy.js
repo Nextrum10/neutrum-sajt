@@ -738,7 +738,7 @@
       onStäng: ut => {
         if (!ut || !ut.ändrat) return;
         S.nl.öppen = null;
-        S.nl.nyss = { klar: ut.klar, oppen: ut.oppen };
+        S.nl.nyss = { klar: ut.klar, oppen: ut.oppen, del: ut.del };
         laddaNexlax();
       }
     });

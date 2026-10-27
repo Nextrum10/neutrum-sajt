@@ -120,24 +120,29 @@ window.NXForhandsvisning = (function () {
 
   function niva(n, omrade, titel, ordning, extra) {
     return Object.assign({ id: id(300 + n), nyckel: 'fv-ma6-' + n, amne: 'Matematik', arskurs: 'ak6', omrade: omrade,
-      titel: titel, beskrivning: titel + ', i din takt.', ordning: ordning, antal_fragor: 4, aktiv: true,
+      titel: titel, beskrivning: titel + ', i din takt.', ordning: ordning, antal_fragor: 6, aktiv: true,
       sort: 'vanlig', lastext: null, spar: 'vag' }, extra || {});
   }
 
-  /* Frågorna i förhandsvisningen: fyra per nivå, med facit. Påhittade
+  /* Frågorna i förhandsvisningen: sex per nivå, med facit, så att en nivå
+     blir två prickar på vägen (delar() i nextrum-uppgifter.js). Påhittade
      här, inte ur banken, och ingen elev ser dem. */
   var FRÅGOR = {
     Bråk: [
       ['Vilket bråk är störst?', ['1/3', '1/2', '1/4'], 1, 'Ju mindre nämnare, desto större bitar: 1/2 är störst.'],
       ['Vad är 2/4 förkortat så långt det går?', ['1/2', '2/8', '4/8'], 0, 'Dela både täljare och nämnare med 2.'],
       ['Hur mycket är 1/4 av 20?', ['4', '5', '10'], 1, '20 delat i fyra lika delar är 5.'],
-      ['Vilket bråk är lika mycket som 3/6?', ['1/3', '2/3', '1/2'], 2, '3/6 förkortat med 3 blir 1/2.']
+      ['Vilket bråk är lika mycket som 3/6?', ['1/3', '2/3', '1/2'], 2, '3/6 förkortat med 3 blir 1/2.'],
+      ['Hur många fjärdedelar är en hel?', ['2', '4', '8'], 1, 'En hel delad i fyra lika delar blir fyra fjärdedelar.'],
+      ['Vad är 1/2 + 1/4?', ['2/6', '3/4', '1/8'], 1, '1/2 är 2/4, och 2/4 + 1/4 är 3/4.']
     ],
     Procent: [
       ['Hur mycket är 10 % av 300 kr?', ['3 kr', '30 kr', '300 kr'], 1, '10 % är en tiondel: 300 delat med 10.'],
       ['Hur mycket är 25 % av 80?', ['20', '25', '40'], 0, '25 % är en fjärdedel, och 80 delat med 4 är 20.'],
       ['En tröja kostar 200 kr. Den är 50 % billigare. Vad kostar den nu?', ['50 kr', '100 kr', '150 kr'], 1, 'Halva priset är 100 kr.'],
-      ['Hur skrivs 0,75 i procent?', ['7,5 %', '75 %', '750 %'], 1, 'Hundradelar är procent: 0,75 är 75 hundradelar.']
+      ['Hur skrivs 0,75 i procent?', ['7,5 %', '75 %', '750 %'], 1, 'Hundradelar är procent: 0,75 är 75 hundradelar.'],
+      ['Hur mycket är 1 % av 500 kr?', ['0,5 kr', '5 kr', '50 kr'], 1, '1 % är en hundradel: 500 delat med 100 är 5.'],
+      ['Ett pris höjs från 100 kr till 120 kr. Hur många procent är höjningen?', ['12 %', '20 %', '120 %'], 1, 'Höjningen är 20 kr av 100 kr, alltså 20 %.']
     ]
   };
 
@@ -988,15 +993,24 @@ window.NXForhandsvisning = (function () {
       if (n.sort !== 'vanlig') {
         return { __fel: [400, 'P0001', 'Mästarprov och repetition går inte att göra i förhandsvisningen. Prova en vanlig nivå.'] };
       }
-      var f = { id: nyttId(), niva_id: n.id, student_id: k.p_elev || ALVA, startad_at: nu(), klar_at: null,
-                antal: 4, ratt_direkt: 0, stjarnor: 0, godkand: false, fragor: [] };
-      var frågor = frågorFör(n.id);
-      f.fragor = frågor.map(function (x) { return x.id; });
-      W.niva_forsok.push(f);
-      spel[f.id] = { frågor: frågor, rätt: {}, fel: {} };
+      /* Ett påbörjat försök från det senaste dygnet fortsätter, som
+         niva_starta i databasen gör: så spelas prickarna en i taget. */
+      var elev = k.p_elev || ALVA;
+      var sedan = Date.now() - 86400000;
+      var f = W.niva_forsok.filter(function (x) {
+        return x.niva_id === n.id && x.student_id === elev && !x.klar_at && Date.parse(x.startad_at) > sedan;
+      }).sort(function (a, b) { return String(b.startad_at).localeCompare(String(a.startad_at)); })[0];
+      if (!f) {
+        f = { id: nyttId(), niva_id: n.id, student_id: elev, startad_at: nu(), klar_at: null,
+              antal: 0, ratt_direkt: 0, stjarnor: 0, godkand: false, fragor: [] };
+        f.fragor = frågorFör(n.id).map(function (x) { return x.id; });
+        f.antal = f.fragor.length;
+        W.niva_forsok.push(f);
+      }
+      var s = spelFör(f.id);
       return { forsok: f.id, niva: { id: n.id, titel: n.titel, amne: n.amne, omrade: n.omrade, arskurs: n.arskurs,
-               sort: n.sort, lastext: n.lastext }, klara: [],
-               fragor: frågor.map(function (x) { return { id: x.id, typ: x.typ, fraga: x.fraga, alternativ: x.alternativ }; }) };
+               sort: n.sort, lastext: n.lastext }, klara: Object.keys(s.rätt),
+               fragor: s.frågor.map(function (x) { return { id: x.id, typ: x.typ, fraga: x.fraga, alternativ: x.alternativ }; }) };
     },
     niva_svara: function (k) {
       var s = spelFör(k.p_forsok);
@@ -1011,10 +1025,12 @@ window.NXForhandsvisning = (function () {
       var klar = Object.keys(s.rätt).length === s.frågor.length;
       var resultat = null;
       if (klar && !f.klar_at) {
+        var antal = s.frågor.length;
         f.klar_at = nu();
-        f.stjarnor = f.ratt_direkt === 4 ? 3 : f.ratt_direkt >= 3 ? 2 : 1;
+        f.antal = antal;
+        f.stjarnor = f.ratt_direkt === antal ? 3 : f.ratt_direkt >= antal * 0.75 ? 2 : 1;
         f.godkand = true;
-        resultat = { antal: 4, ratt_direkt: f.ratt_direkt, stjarnor: f.stjarnor, godkand: true, forut: 0, klar_at: f.klar_at,
+        resultat = { antal: antal, ratt_direkt: f.ratt_direkt, stjarnor: f.stjarnor, godkand: true, forut: 0, klar_at: f.klar_at,
                      xp_fragor: f.ratt_direkt * 10, xp_niva: 50, xp_omrade: 0 };
       }
       return { ratt: rätt, facit: fråga.ratt, forklaring: fråga.forklaring, klar: klar, xp: rätt ? 10 : 0, resultat: resultat };
