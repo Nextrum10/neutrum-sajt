@@ -368,10 +368,13 @@
    radernas höjd. */
 .upg-stig{list-style:none;margin:0;padding:8px 0 4px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .upg-nod{
-  --x:0;
+  --x:0;--xs:38px;
+  position:relative;
   display:flex;flex-direction:column;align-items:center;gap:6px;
   width:min(100%,360px);padding:4px 0;
 }
+/* Den öppna pricken och dess kort står över pricken under. */
+.upg-nod.vald{z-index:4}
 .upg-nod > .upg-nod-knapp,
 .upg-nod > .upg-nod-namn,
 .upg-nod > .upg-stj,
@@ -381,9 +384,11 @@
   .upg-nod > .upg-nod-namn,
   .upg-nod > .upg-stj,
   .upg-nod > .upg-nod-given{translate:calc(var(--x) * 26px) 0}
+  .upg-nod{--xs:26px}
 }
 .upg-nod-knapp{
   position:relative;
+  touch-action:manipulation;
   width:72px;height:72px;border-radius:50%;
   display:grid;place-items:center;
   border:0;cursor:pointer;
@@ -446,32 +451,35 @@
 .upg-nod.last .upg-nod-namn{color:var(--bl-3);font-weight:500}
 .upg-nod-given{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc-text)}
 
-/* Kortet under en vald nod. Det växer NEDÅT, under det man tryckte
-   på: det enda som flyttar sig är det som står under fingret. Pilen
-   pekar på pricken, som står förskjuten i sicksacken (--x). */
+/* Kortet vid en vald prick står OVANPÅ vägen, som Duolingos (2026-10-27,
+   Leo: "Hela din väg måste blir mer smooth att trycka på"): ingenting under
+   det flyttar sig när det öppnas eller stängs, och sidan rullas inte för att
+   hålla något still. Det står under pricken, eller ovanför när det inte får
+   plats på skärmen (.ovan, placeraKort). Pilen pekar på pricken, som står
+   förskjuten i sicksacken (--x), och kortet växer ut ur pilen. */
 .upg-nod-kort{
-  position:relative;
-  width:100%;margin-top:12px;padding:16px;
+  position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:1;
+  padding:16px;
   border:1px solid var(--ln);border-radius:20px;background:var(--yta);
-  box-shadow:var(--sk-1);text-align:left;
+  box-shadow:var(--sk-2);text-align:left;
   display:flex;flex-direction:column;align-items:flex-start;gap:8px;
-  transform-origin:calc(50% + var(--x) * 38px) 0;
-  animation:upg-kort-in .34s var(--vy-fjader,ease) both;
+  transform-origin:calc(50% + var(--x) * var(--xs)) 0;
 }
+.upg-nod-kort.in{animation:upg-kort-in .36s var(--vy-fjader,ease) both}
+.upg-nod-kort.stanger{animation:upg-kort-ut .16s var(--e) both;pointer-events:none}
+.upg-nod-kort.ovan{top:auto;bottom:var(--ovan,100%);transform-origin:calc(50% + var(--x) * var(--xs)) 100%}
 .upg-nod-kort::before{
   content:"";position:absolute;top:-8px;left:calc(50% - 8px);width:14px;height:14px;
-  translate:calc(var(--x) * 38px) 0;rotate:45deg;
+  translate:calc(var(--x) * var(--xs)) 0;rotate:45deg;
   background:inherit;border:1px solid;border-color:inherit;border-right-color:transparent;border-bottom-color:transparent;
   border-top-left-radius:4px;
 }
-@media (max-width:380px){
-  .upg-nod-kort{transform-origin:calc(50% + var(--x) * 26px) 0}
-  .upg-nod-kort::before{translate:calc(var(--x) * 26px) 0}
-}
-@keyframes upg-kort-in{from{opacity:0;scale:.94}to{opacity:1;scale:1}}
+.upg-nod-kort.ovan::before{top:auto;bottom:-8px;rotate:225deg}
+@keyframes upg-kort-in{from{opacity:0;scale:.9}to{opacity:1;scale:1}}
+@keyframes upg-kort-ut{to{opacity:0;scale:.94}}
 .nl-omr .upg-nod-kort{
-  background:color-mix(in srgb,var(--nl-f,var(--acc)) 8%,var(--yta));box-shadow:none;
-  border-color:color-mix(in srgb,var(--nl-f,var(--acc)) 26%,transparent);
+  background:color-mix(in srgb,var(--nl-f,var(--acc)) 7%,var(--yta));
+  border-color:color-mix(in srgb,var(--nl-f,var(--acc)) 30%,transparent);
 }
 .upg-nod-del{font-family:var(--f-mono);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--nl-f,var(--acc-text))}
 .upg-nod-kort .nl-delrad{margin:2px 0}
@@ -973,7 +981,7 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
 
 @media (prefers-reduced-motion:reduce){
   .upg-nod-bubbla,.nl-serie.tand svg,.upg-slut-laga.tand svg,.upg-delklar-ik{animation:none}
-  .upg-fraga,.upg-las,.upg-besked,.upg-nod-kort,.upg-marke.nytt,.upg-slut-ny,.upg-slut-stj i.tand,
+  .upg-fraga,.upg-las,.upg-besked,.upg-nod-kort,.upg-nod-kort.in,.upg-nod-kort.stanger,.upg-marke.nytt,.upg-slut-ny,.upg-slut-stj i.tand,
   .upg-besked-xp,.upg-spel-xp.studs,.upg-slut-xp,.upg-slut-serie,.upg-slut-upp,
   .upg-nod.nyss-klar .upg-nod-knapp,.upg-nod.nyss-oppen .upg-nod-knapp{animation:none}
   .nl-mat i,.upg-spel-mat i{transition:none}

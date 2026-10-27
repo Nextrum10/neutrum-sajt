@@ -924,7 +924,22 @@ ska ha flera uppgifter som duolingo har här."
    förhandsvisningen: en tryckt prick flyttar sig 0 px när kortet öppnas och stängs.
 6. **Förhandsvisningen** har sex frågor per nivå (två prickar), och dess `niva_starta`
    fortsätter ett försök från det senaste dygnet, som databasen. `prova-nexlax.js` provar
-   delen: mätaren, skärmen och att nästa del fortsätter i samma försök (106 av 106), och
+   delen: mätaren, skärmen och att nästa del fortsätter i samma försök, och kortet på plats
+   (107 av 107), och
    `prova-forhandsvisning.js` gör en nivå i två prickar (72 av 72). Det senare föll på
    faktabladet sedan Fas 25, som ingen hade kört det mot. Faktabladets knapp i områdets
    huvud är 44 px hög; den var 40 med en osynlig yta runt, och provet mäter knappen.
+7. **Kortet står ovanpå vägen** (samma kväll, Leo: "Hela din väg måste blir mer smooth
+   att trycka på och kännas bättre"). Förut ritade vyn om hela vägen vid varje tryck på
+   en prick (`S.nl.öppen` och `ritaOchHåll`): knappen byttes mitt i trycket och hann
+   aldrig fjädra tillbaka, och kortet stod i flödet och sköt allt under sig nedåt, som
+   sidan sedan rullades för att hålla still. Nu sköter NXUppgifter trycket själv
+   (`växlaNod`, i samma lyssnare som väljaren): kortet sätts in och tas bort på plats, med
+   en rörelse in och en ut, och vilken prick som är öppen står på värden (`data-nod`), så
+   att en omritning visar samma kort. Kortet står ovanpå vägen (`position:absolute`), som
+   Duolingos, och täcker pricken under; ett tryck utanför, Escape eller Starta stänger det.
+   Får det inte plats under pricken på skärmen står det ovanför (`placeraKort`, `.ovan`,
+   med sidhuvudet ur `NXStudie.täcktÖverst`). Vyerna har ingen kod för prickarna längre.
+   Uppmätt i förhandsvisningen: pricken, pricken under och sidan flyttar sig 0 px, ingen
+   omritning och inget layoutskifte, och kortet vid områdets sista prick står ovanpå nästa
+   område.

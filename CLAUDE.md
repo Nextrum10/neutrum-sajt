@@ -209,7 +209,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   annars). **Ledet**: varje område har ett streck per nivå som fylls med de klara frågorna; inget sparas. **Prickarna** (Fas 25.1,
   Leo: "max vara 3 uppgifter i varje liksom prick"): en nivå står på vägen som en prick per högst tre frågor (`delar()`), med
   en ring runt den som står på tur, och spelas en del i taget i samma försök; databasen vet inget om delarna, och stjärnorna är
-  nivåns. Ett försök fortsätter bara ett dygn (`niva_starta`), så gjorda prickar blir ogjorda efter det.
+  nivåns. Ett försök fortsätter bara ett dygn (`niva_starta`), så gjorda prickar blir ogjorda efter det. Kortet vid en prick
+  står ovanpå vägen och öppnas på plats (`växlaNod`), aldrig genom att vyn ritar om vägen (Leo: "mer smooth att trycka på").
   Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
   (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare och en kampanjkod per

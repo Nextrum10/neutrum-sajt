@@ -4628,7 +4628,7 @@ window.NXStudie = (function () {
     läxRad: läxRad, nivåMätare: nivåMätare, historikRad: historikRad, ämnesSammanfattning: ämnesSammanfattning,
     progressRad: progressRad, progressPerÄmne: progressPerÄmne,
     tomt: tomt, laddar: laddar, laddarFörsta: laddarFörsta, håll: håll, hållLista: hållLista, släppLista: släppLista,
-    scrollaTill: scrollaTill, visaÖverst: visaÖverst,
+    scrollaTill: scrollaTill, visaÖverst: visaÖverst, täcktÖverst: täcktÖverst,
     hämtaAlla: hämtaAlla, passMedSvar: passMedSvar,
     månadsval: månadsval, FÖRSTA_MÅNAD: FÖRSTA_MÅNAD, månadsGräns: månadsGräns, månadsNamn: månadsNamn, månadIso: månadIso,
     passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,

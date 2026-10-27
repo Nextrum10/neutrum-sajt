@@ -311,6 +311,27 @@ async function provaBarnet(webb) {
     const k = document.querySelector('#bv-nl-vag .upg-nod-knapp, #bv-nl-vag .nl-omr');
     return !!k && k.getBoundingClientRect().top < window.innerHeight;
   }));
+  /* Kortet vid en prick (2026-10-27): det öppnas och stängs på plats, ovanpå
+     vägen. Vägen ritas inte om och ingenting under pricken flyttar sig. */
+  const kortet = await page.evaluate(async () => {
+    const vänta = ms => new Promise(r => setTimeout(r, ms));
+    const knapp = document.querySelector('#bv-nl-vag .upg-nod.aktuell .upg-nod-knapp') || document.querySelector('#bv-nl-vag .upg-nod-knapp');
+    const li = knapp.closest('.upg-nod');
+    const nästa = li.nextElementSibling && li.nextElementSibling.querySelector('.upg-nod-knapp');
+    const före = nästa ? nästa.getBoundingClientRect().top : 0;
+    knapp.click();
+    await vänta(450);
+    const kort = li.querySelector('.upg-nod-kort');
+    const ut = { öppen: li.classList.contains('vald') && !!kort && getComputedStyle(kort).position === 'absolute',
+      sammaKnapp: knapp.isConnected, flytt: nästa ? Math.round(nästa.getBoundingClientRect().top - före) : 0,
+      värd: document.querySelector('#bv-nl-vag').dataset.nod === knapp.dataset.nlNod };
+    document.querySelector('#bv-nl-vag .nl-omr-huvud').click();
+    await vänta(450);
+    ut.stängt = !li.classList.contains('vald') && !li.querySelector('.upg-nod-kort') && !document.querySelector('#bv-nl-vag').dataset.nod;
+    return ut;
+  });
+  prova('banan: kortet vid en prick öppnas på plats, ovanpå vägen, och ett tryck utanför stänger det',
+    kortet.öppen && kortet.sammaKnapp && kortet.flytt === 0 && kortet.värd && kortet.stängt, JSON.stringify(kortet));
   await page.click('#bv-nl-vag [data-nl-baner]');
   await vänta(100);
   prova('banan: banderollen öppnar väljaren', (await page.getAttribute('#bv-nl-vag [data-nl-baner]', 'aria-expanded')) === 'true'

@@ -571,7 +571,7 @@
      står under Rapporter, och "Från passet" på vägen, när föräldern slagit
      på rapporterna. */
   const U = NXUppgifter;
-  S.nl = { data: null, läge: null, öppen: null, nyss: null, alla: false, val: { amne: '', arskurs: '', spar: 'vag' } };
+  S.nl = { data: null, läge: null, nyss: null, alla: false, val: { amne: '', arskurs: '', spar: 'vag' } };
 
   async function laddaNexlax() {
     const sek = $('#bv-nexlax'), tom = $('#bv-nl-tom');
@@ -648,7 +648,7 @@
     if (!host || !S.nl.data) return;
     const b = nlBana();
     const ut = U.ritaVäg(Object.assign(nlUnderlag(), {
-      host, amne: b.amne, arskurs: b.arskurs, spar: b.spar, öppen: S.nl.öppen, nyss: S.nl.nyss, barnvy: true,
+      host, amne: b.amne, arskurs: b.arskurs, spar: b.spar, nyss: S.nl.nyss, barnvy: true,
       hjälpare: S.data && S.data.studiehjalpare ? { namn: S.data.studiehjalpare } : null
     }));
     S.nl.nyss = null;
@@ -737,7 +737,6 @@
       hämtaLäge: () => U.laddaLäge(supa, d.elev),
       onStäng: ut => {
         if (!ut || !ut.ändrat) return;
-        S.nl.öppen = null;
         S.nl.nyss = { klar: ut.klar, oppen: ut.oppen, del: ut.del };
         laddaNexlax();
       }
@@ -752,7 +751,6 @@
     if (amne) {
       const ak = amne.dataset.nlAk || '';
       S.nl.val = { amne: amne.dataset.nlAmne, arskurs: ak, spar: S.nl.val.spar || 'vag' };
-      S.nl.öppen = null;
       ritaOchHåll('#bv-nl-vag .nl-baner', ritaVägen,
         '#bv-nl-vag .nl-amne[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"]');
       return;
@@ -760,24 +758,16 @@
     const ak = e.target.closest('#bv-nl-vag [data-nl-ak]');
     if (ak) {
       S.nl.val = { amne: host ? host.dataset.amne : '', arskurs: ak.dataset.nlAk, spar: S.nl.val.spar || 'vag' };
-      S.nl.öppen = null;
       ritaOchHåll('#bv-nl-vag .nl-baner', ritaVägen, '#bv-nl-vag .nl-ak-knapp[data-nl-ak="' + CSS.escape(ak.dataset.nlAk) + '"]');
       return;
     }
     const spar = e.target.closest('#bv-nl-vag [data-nl-spar]');
     if (spar) {
       S.nl.val = { amne: host ? host.dataset.amne : '', arskurs: host ? host.dataset.arskurs : '', spar: spar.dataset.nlSpar };
-      S.nl.öppen = null;
       ritaOchHåll('#bv-nl-vag .nl-spar', ritaVägen, '#bv-nl-vag [data-nl-spar="' + CSS.escape(spar.dataset.nlSpar) + '"]');
       return;
     }
-    const nod = e.target.closest('[data-nl-nod]');
-    if (nod) {
-      const id = nod.dataset.nlNod;
-      S.nl.öppen = S.nl.öppen === id ? null : id;
-      ritaOchHåll('[data-nl-nod="' + CSS.escape(id) + '"]', ritaVägen);
-      return;
-    }
+    /* En prick på vägen öppnar sitt kort på plats, i NXUppgifter (växlaNod). */
     const alla = e.target.closest('[data-nl-alla]');
     if (alla) {
       const öppnar = !S.nl.alla;

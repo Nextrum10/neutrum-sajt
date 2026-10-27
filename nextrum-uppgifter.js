@@ -853,6 +853,8 @@ window.NXUppgifter = (function () {
   function ritaVäg(o) {
     const host = o.host;
     if (!host) return null;
+    /* Vilken prick som är öppen står på värden, som väljaren (växlaNod). */
+    o = Object.assign({}, o, { öppen: host.dataset.nod || null });
     const { finns, ämnen, amne, arskurs } = lösBana(o);
     const bana = Object.assign({}, o, { amne, arskurs });
     const väg = amne ? vägen(bana) : null;
@@ -887,6 +889,8 @@ window.NXUppgifter = (function () {
     /* Faktabladen för banan hämtas nu, så att knappen och spelaren har
        dem utan att vänta. Inget ritas om när de kommer. */
     if (amne && arskurs) laddaFakta(amne, arskurs);
+    const vald = host.querySelector('.upg-nod.vald');
+    if (vald) placeraKort(vald);
     return { väg, np, nästa, amne, arskurs, spar };
   }
 
@@ -1757,6 +1761,70 @@ window.NXUppgifter = (function () {
       + '<div class="upg-nod-atg">' + knapp
       + (n.första ? '<button type="button" class="upg-lank" data-upg-genomgang="' + esc((n.senast || n.första).id) + '">Se rättningen</button>' : '')
       + '</div></div>';
+  }
+
+  /* Kortet vid en prick öppnas och stängs på plats (2026-10-27, Leo: "Hela din
+     väg måste blir mer smooth att trycka på och kännas bättre"). Förut ritade
+     vyn om hela vägen vid varje tryck: knappen byttes mitt i trycket, så den
+     hann aldrig fjädra tillbaka, och kortet sköt allt under sig nedåt, som
+     sidan sedan rullades för att hålla still. Nu står kortet ovanpå vägen, som
+     Duolingos, och ingenting under det flyttar sig. Vilken prick som är öppen
+     står på värden (data-nod), så att en omritning visar samma kort. */
+  function växlaNod(host, nyckel) {
+    const knapp = host.querySelector('[data-nl-nod="' + CSS.escape(nyckel) + '"]');
+    const li = knapp && knapp.closest('.upg-nod');
+    const förra = host.querySelector('.upg-nod.vald');
+    if (förra) stängNod(förra);
+    host.dataset.nod = '';
+    sistaHtml.delete(host);
+    if (!li || förra === li) return;
+    const o = senaste.get(host);
+    const sep = nyckel.lastIndexOf(':');
+    const id = nyckel.slice(0, sep), j = Number(nyckel.slice(sep + 1));
+    const väg = o && vägen(o);
+    const n = väg && väg.steg.find(x => x.niva.id === id);
+    if (!n) return;
+    host.dataset.nod = nyckel;
+    li.classList.add('vald');
+    knapp.setAttribute('aria-expanded', 'true');
+    li.insertAdjacentHTML('beforeend', nodKort(n, j, nodensDelar(n, o.katalog), o, väg));
+    const kort = li.querySelector('.upg-nod-kort:last-child');
+    if (kort) kort.classList.add('in');
+    placeraKort(li);
+  }
+  /* Kortet går ut med en kort rörelse och tas bort efteråt. Utan rörelse
+     (eller om animationen aldrig slutar) tas det bort direkt. */
+  function stängNod(li) {
+    li.classList.remove('vald');
+    const knapp = li.querySelector('.upg-nod-knapp');
+    if (knapp) knapp.setAttribute('aria-expanded', 'false');
+    li.querySelectorAll('.upg-nod-kort').forEach(kort => {
+      if (lugnt()) { kort.remove(); return; }
+      kort.classList.remove('in');
+      kort.classList.add('stanger');
+      const bort = () => kort.remove();
+      kort.addEventListener('animationend', bort, { once: true });
+      setTimeout(bort, 260);
+    });
+  }
+  function stängNoder(host) {
+    host.querySelectorAll('.upg-nod.vald').forEach(stängNod);
+    if (host.dataset.nod) { host.dataset.nod = ''; sistaHtml.delete(host); }
+  }
+  /* Kortet står under pricken. Får det inte plats på skärmen, men ovanför,
+     står det ovanför i stället, med pilen nedåt: en prick långt ned ska inte
+     öppna ett kort man inte ser. Värdet sätts en gång, inte per bildruta. */
+  function placeraKort(li) {
+    const kort = li.querySelector('.upg-nod-kort:not(.stanger)');
+    const knapp = li.querySelector('.upg-nod-knapp');
+    if (!kort || !knapp) return;
+    kort.classList.remove('ovan');
+    const r = kort.getBoundingClientRect();
+    if (r.bottom <= window.innerHeight - 12) return;
+    const topp = typeof NXStudie !== 'undefined' && NXStudie.täcktÖverst ? NXStudie.täcktÖverst() : 80;
+    if (knapp.getBoundingClientRect().top - 14 - r.height < topp + 8) return;
+    kort.style.setProperty('--ovan', (li.offsetHeight - knapp.offsetTop + 14) + 'px');
+    kort.classList.add('ovan');
   }
 
   /* ---------- repetitionen ---------- */
@@ -3469,6 +3537,19 @@ window.NXUppgifter = (function () {
     const mål = e.target && e.target.closest ? e.target : null;
     if (!mål) return;
 
+    /* En prick på vägen: kortet växlar på plats (växlaNod). */
+    const nod = mål.closest('.nl [data-nl-nod]');
+    if (nod) {
+      växlaNod(nod.closest('.nl'), nod.dataset.nlNod);
+      return;
+    }
+    /* Ett tryck utanför ett öppet kort stänger det, som i Duolingo, och Starta
+       i kortet gör det också: tillbaka från spelaren står vägen utan kort.
+       Ett byte av bana kommer hit först och lämnar inget kort öppet. */
+    document.querySelectorAll('.nl .upg-nod.vald').forEach(li => {
+      if (!li.contains(mål) || mål.closest('[data-nl-starta]')) stängNoder(li.closest('.nl'));
+    });
+
     /* Fler ämnen: bara väljaren byts, och knappen hålls under fingret. */
     const fler = mål.closest('[data-nl-fler]');
     if (fler) {
@@ -3554,6 +3635,16 @@ window.NXUppgifter = (function () {
       if (rad) rad.scrollBy({ left: Number(pil.dataset.nlRankSkrolla) * rad.clientWidth * 0.8, behavior: lugnt() ? 'auto' : 'smooth' });
       känn('tryck');
     }
+  });
+
+  /* Escape stänger ett öppet kort på vägen, och fokus går tillbaka till pricken. */
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || öppenSpelare || document.querySelector('.nx-fraga')) return;
+    const li = document.querySelector('.nl .upg-nod.vald');
+    if (!li) return;
+    const knapp = li.querySelector('.upg-nod-knapp');
+    stängNoder(li.closest('.nl'));
+    if (knapp) knapp.focus({ preventScroll: true });
   });
 
   /* Dagens uppdrag är hopfällt; öppnar man dem står de öppna när vägen ritas om. */
