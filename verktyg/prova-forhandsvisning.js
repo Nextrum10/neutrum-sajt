@@ -330,7 +330,24 @@ async function provaStudievyn(webb) {
   await bild(page, 'studievyn-nexlax-klar', '.upg-spel');
   await page.click('.upg-spel [data-spel-stang]').catch(() => {});
 
-  /* En betalning går inte iväg. */
+  /* Betala nu på det bekräftade passet, före planen: med timmar i
+     banken öppnar knappen först valet mellan timmarna och kortet. */
+  await page.evaluate(() => { location.hash = '#betalning'; });
+  const betala = '[data-betala="' + id(106) + '"]';
+  await page.waitForSelector(betala, { timeout: 5000 }).catch(() => {});
+  await page.locator(betala).first().click().catch(() => {});
+  await page.waitForSelector('.nx-kassa-villkor [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
+  await page.click('.nx-kassa-villkor [data-kassa-kryss]').catch(() => {});
+  await page.click('.nx-kassa-villkor [data-svar="ja"]').catch(() => {});
+  await page.waitForFunction(i => { const b = NXForhandsvisning.värld.bookings.find(x => x.id === i); return b && b.betalning_status === 'betald'; },
+    id(106), { timeout: 15000 }).catch(() => {});
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  await stängNotisrutan(page);
+  const betalt = await värld(page, i => NXForhandsvisning.värld.bookings.find(x => x.id === i), id(106));
+  prova('studievyn: Betala nu går genom Stripes kassa och passet blir betalt', betalt && betalt.betalning_status === 'betald'
+    && betalt.betalt_ore === 39900 && kassor.some(k => k.rader && k.rader[0].ore === 39900), JSON.stringify({ betalt, kassor }));
+
+  /* En plan genom kassan. */
   await page.evaluate(() => { location.hash = '#erbjudanden'; });
   await page.waitForSelector('[data-kop]', { timeout: 5000 }).catch(() => {});
   await page.locator('[data-kop]').first().click().catch(() => {});
@@ -350,20 +367,6 @@ async function provaStudievyn(webb) {
     && kassor[0] && kassor[0].rader && kassor[0].rader[0].ore === 151600, JSON.stringify({ köpt, kassor }));
   prova('studievyn: adressen bär inte sessionen efteråt', !/fvkassa/.test(page.url()), page.url());
   await stängNotisrutan(page);
-
-  /* Betala nu på det bekräftade passet. */
-  await page.evaluate(() => { location.hash = '#betalning'; });
-  const betala = '[data-betala="' + id(106) + '"]';
-  await page.waitForSelector(betala, { timeout: 5000 }).catch(() => {});
-  await page.locator(betala).first().click().catch(() => {});
-  await page.waitForSelector('.nx-kassa-villkor [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
-  await page.click('.nx-kassa-villkor [data-kassa-kryss]').catch(() => {});
-  await page.click('.nx-kassa-villkor [data-svar="ja"]').catch(() => {});
-  await page.waitForFunction(i => { const b = NXForhandsvisning.värld.bookings.find(x => x.id === i); return b && b.betalning_status === 'betald'; },
-    id(106), { timeout: 10000 }).catch(() => {});
-  const betalt = await värld(page, i => NXForhandsvisning.värld.bookings.find(x => x.id === i), id(106));
-  prova('studievyn: Betala nu går genom Stripes kassa och passet blir betalt', betalt && betalt.betalning_status === 'betald'
-    && betalt.betalt_ore === 39900 && kassor.some(k => k.rader && k.rader[0].ore === 39900), JSON.stringify({ betalt, kassor }));
 
   prova('studievyn: inget annat anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   prova('studievyn: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));
