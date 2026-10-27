@@ -334,8 +334,8 @@ async function provaStudievyn(webb) {
      banken öppnar knappen först valet mellan timmarna och kortet. */
   await page.evaluate(() => { location.hash = '#betalning'; });
   const betala = '[data-betala="' + id(106) + '"]';
-  await page.waitForSelector(betala, { timeout: 5000 }).catch(() => {});
-  await page.locator(betala).first().click().catch(() => {});
+  await page.waitForSelector(betala + ':visible', { timeout: 5000 }).catch(() => {});
+  await page.locator(betala + ':visible').first().click({ timeout: 5000 }).catch(e => konsol.push('klick: ' + e.message.split('\n')[0]));
   await page.waitForSelector('.nx-kassa-villkor [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
   await page.click('.nx-kassa-villkor [data-kassa-kryss]').catch(() => {});
   await page.click('.nx-kassa-villkor [data-svar="ja"]').catch(() => {});
