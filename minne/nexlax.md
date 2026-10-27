@@ -830,7 +830,18 @@ man har kvar av uppgifter på varje sektion som duolingo har."
    sedan 68 banor, 989 vanliga nivåer och 8 762 frågor. Migrationen är
    `20261027120000_uppgiftsbanken_fortsattning.sql` (ur `bygg-uppgifter.py --sql`)
    och körs **efter merge**, som de förra bankerna; vyerna tål att den saknas, och
-   faktabladen för de nya områdena ligger då oanvända. **Ordningen i NP-spåret**:
+   faktabladen för de nya områdena ligger då oanvända. **I drift 2026-10-27**
+   (Leo: "Kör", efter merge av #347; ingen annan session arbetade då): filen hämtades
+   från merge-commiten av #346 (0873d83) genom `extensions.http_get`, prövades mot sin md5
+   (`ee55c1ad…`, 3 815 037 byte) och kördes och registrerades i ett do-block (`$kor$`) med
+   vakter före och efter: driften hade 1 285 nivåer och 7 515 frågor aktiva, efteråt 1 462
+   (989 vanliga) och 8 762 i 68 banor, annars rullas allt tillbaka. Raden i
+   `schema_migrations` har filens md5, ingen vanlig nivå saknar frågor och varje nivås
+   `antal_fragor` stämmer. **Facitprovet mot driften**, som en läsfråga utan nya objekt:
+   `intern.niva_ratta` godtog facit och nekade varje annat valalternativ, nonsens i en
+   skrivfråga, omvänd ordning och förskjutna par, och `intern.niva_fraga_ut` lämnade ut
+   frågorna utan facit: 38 187 prov på alla 8 762 aktiva frågor, 0 fel. Hela `rls-test.sql`
+   kördes inte: migrationen är bara data, ingen policy, trigger eller funktion. **Ordningen i NP-spåret**:
    verktyget läser filerna i namnordning, så `fortsattning_*` kommer före `np_*`, och
    26 nivåer i NP-spåret i nio banor fick ordningstalet höjt med 8–9. Varje nivå där
    är öppen, så inget låses (samma sak hände med `fler_*` i Fas 23.5).
