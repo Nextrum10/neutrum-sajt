@@ -407,12 +407,20 @@ async function provaBarnet(webb) {
   prova('flikarna: streak står i stället för dagar', (await text(page, '#bv-nl-vag .nl-serie')).includes('streak') && !(await text(page, '#bv-nl-vag .nl-serie')).includes('dagar'),
     await text(page, '#bv-nl-vag .nl-serie'));
   prova('fortsätt: säger vilket ämne', (await text(page, '#bv-nl-vag .nl-cta-amne')).includes('Åk'), await text(page, '#bv-nl-vag .nl-cta-amne'));
-  prova('uppdrag: hopfällda, och öppnas med ett tryck', (await page.locator('#bv-nl-vag details.nl-uppdrag[open]').count()) === 0
-    && (await page.locator('#bv-nl-vag details.nl-uppdrag').count()) === 1);
-  await page.click('#bv-nl-vag details.nl-uppdrag > summary');
+  /* Sidopanelen (2026-10-27): på en bred skärm står dagen bredvid vägen och kortets
+     egna uppdrag är dolt; på en smalare är det tvärtom. */
+  prova('sidopanel: bred skärm visar dagen bredvid vägen', await synlig(page, '#bv-nl-vag .nl-sida .nl-uppdrag-lista')
+    && await synlig(page, '#bv-nl-vag .nl-sida-rang') && !(await synlig(page, '#bv-nl-vag .nl-kort details.nl-uppdrag')));
+  await page.setViewportSize({ width: 1000, height: 900 });
+  await vänta(150);
+  prova('sidopanel: smal skärm döljer den', !(await synlig(page, '#bv-nl-vag .nl-sida')));
+  prova('uppdrag: hopfällda, och öppnas med ett tryck', (await page.locator('#bv-nl-vag .nl-kort details.nl-uppdrag[open]').count()) === 0
+    && (await page.locator('#bv-nl-vag .nl-kort details.nl-uppdrag').count()) === 1);
+  await page.click('#bv-nl-vag .nl-kort details.nl-uppdrag > summary');
   await vänta(100);
-  prova('uppdrag: listan syns när man trycker', await synlig(page, '#bv-nl-vag .nl-uppdrag-lista'));
-  await page.click('#bv-nl-vag details.nl-uppdrag > summary');
+  prova('uppdrag: listan syns när man trycker', await synlig(page, '#bv-nl-vag .nl-kort .nl-uppdrag-lista'));
+  await page.click('#bv-nl-vag .nl-kort details.nl-uppdrag > summary');
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.click('#bv-flik-rank');
   await vänta(250);
   const rk = await page.$$eval('#bv-nl-rank .nl-rk', b => b.map(x => x.className.replace('nl-rk ', '')));
@@ -528,7 +536,7 @@ async function provaBarnet(webb) {
   const upp = await text(page, '#bv-nl-vag .nl-uppdrag');
   prova('uppdrag: dagens tre med sina tal', upp.includes('Samla 50 XP') && upp.includes('20/50') && upp.includes('Klara en nivå'), upp.slice(0, 200));
   prova('uppdrag: veckans och månadens', upp.includes('den här veckan') && upp.includes('Månadens utmaning'));
-  prova('uppdrag: kistan är stängd', (await page.locator('#bv-nl-vag .nl-kista:not(.oppen)').count()) === 1);
+  prova('uppdrag: kistan är stängd', (await page.locator('#bv-nl-vag .nl-kort .nl-kista:not(.oppen)').count()) === 1);
   prova('uppdrag: ingen text säger att något går förlorat', !/förlora|missa|bryts|tappar/i.test(upp), upp);
 
   /* Ljudet av och på. */
@@ -738,7 +746,7 @@ async function provaStudievyn(webb) {
   await page.goto(BAS + '/foralder#nexlax');
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
   await page.waitForFunction(() => document.querySelector('#nl-vag .nl-baner'), null, { timeout: 8000 }).catch(() => {});
-  prova('studievyn: väljaren och uppdragen', await synlig(page, '#nl-vag .nl-baner') && await synlig(page, '#nl-vag .nl-uppdrag'));
+  prova('studievyn: väljaren och uppdragen', await synlig(page, '#nl-vag .nl-baner') && await synlig(page, '#nl-vag .nl-sida .nl-uppdrag'));
   await page.click('#nl-vag [data-nl-spar="np"]').catch(() => {});
   await vänta(200);
   const länkar = await page.$$eval('#nl-vag .nl-np-lank', a => a.map(x => [x.getAttribute('href'), x.getAttribute('target'), x.getAttribute('rel')]));
