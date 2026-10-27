@@ -188,6 +188,9 @@ window.NEXTRUM_IMAGE_WIDTHS = [640, 960, 1280, 1600, 1920];
 
    Fredagen hade 'anpassning' till 2026-10-27: på en telefon syntes bara
    studiehjälparens tröja, utan huvud. 'forklaringen' visar båda ansiktena.
+   Söndagen hade 'online' till samma dag, med bara ett halvt ansikte vid
+   kanten på en telefon (Leo: "söndagen bilden gillar jag ej");
+   'studiehjalparen' står hel i utsnittet.
    ------------------------------------------------------------ */
 window.NEXTRUM_HERO_VECKA = [
   { bild: 'hero', film: 'hero-studievy.mp4' },  // måndag
@@ -196,7 +199,7 @@ window.NEXTRUM_HERO_VECKA = [
   { bild: 'sjalvfortroende' },                   // torsdag
   { bild: 'forklaringen' },                      // fredag
   { bild: 'genombrottet' },                      // lördag
-  { bild: 'online' }                             // söndag
+  { bild: 'studiehjalparen' }                    // söndag
 ];
 
 /* ------------------------------------------------------------
