@@ -1003,4 +1003,5 @@ jämförde sedan. Ingen fråga hade ett fel markerat svar. Det som rättades:
 Lämnat med flit: precisionsfrågorna (100 mot 100,1, 0,98 mot "ungefär 1"), kommat mellan huvudsatser (skolregeln)
 och reklamationen inom två månader. Granskarna är AI och ingen som undervisar har läst frågorna. En del
 (företagsekonomi) lästes med facit framme och är svagare prövad. 30 frågor fick nytt id, så ett försök i gång på
-just dem börjar om.
+just dem börjar om. Migrationen `20261027150000_uppgiftsbanken_granskningen` är i drift sedan 2026-10-27, ur
+merge-commiten 22a7847 (md5 `a76ce426…`), med 8 762 aktiva frågor före och efter.
