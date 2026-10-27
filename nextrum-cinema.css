@@ -4086,8 +4086,8 @@ html[data-motion] .nx-ov-h.nx-in em,
 html[data-motion] [data-ordfyll].nx-fylld em{background-size:100% .055em}
 
 /* ---------- ämnesbandet ----------
-   Alla ämnen i NexLäx, var och en i sin färg, utan linjer. Bandet följer
-   scrollen åt ett håll (Leo 2026-10-27). Språken som saknar egen token
+   Alla ämnen i NexLäx, var och en i sin färg, utan linjer. Bandet går långsamt
+   av sig självt, med CSS (Leo 2026-10-27). Språken som saknar egen token
    blandar de som finns, så mörkt läge följer med. */
 .nx-amnesband{
   --band-es:color-mix(in srgb,var(--amne-sv) 50%,var(--amne-so));
@@ -4096,7 +4096,12 @@ html[data-motion] [data-ordfyll].nx-fylld em{background-size:100% .055em}
   position:relative;overflow:clip;
   padding-block:clamp(14px,2vw,26px);
 }
-.nx-amnesband-spar{display:flex;width:max-content;will-change:transform}
+.nx-amnesband-spar{display:flex;width:max-content}
+.nx-amnesband-spar.nx-gar{
+  animation:nx-band var(--band-tid,60s) linear infinite;will-change:transform;
+}
+.nx-amnesband-spar.nx-pausad{animation-play-state:paused}
+@keyframes nx-band{to{transform:translate3d(calc(-100% / var(--band-n,1)),0,0)}}
 .nx-amnesband-rad{
   display:flex;flex:none;list-style:none;margin:0;padding:0;
 }
