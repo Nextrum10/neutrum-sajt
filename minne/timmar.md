@@ -1031,3 +1031,12 @@ eget upplägg"): den första versionen hade ett timpris admin satte, ingen kod, 
   kom, och en uppgift säger vad admin ska avgöra (`eget_upplagg_dubbel:<köp>`, `eget_upplagg_aterkallat:<köp>`).
 - **Provat** i `rls-test.sql` avsnitt 58 (21 rader), `koder_test.ts`, `erbjudanden_test.ts`, `rendera_test.ts` och
   `prova-kassan.js` (Egna upplägg, och Upplägget med kod).
+
+## Tipstimmen godkänns av oss (2026-10-28, `bonusarna_godkanns`)
+
+Tipstimmen räknas bara när vi godkänt den (`tipstimme_beslut`), och de 60
+dagarna räknas från det senare av intjänad och godkänd
+(`intern.tipstimmar_godkanda`). Allt som drar timmen
+(`intern.tipstimmar_kvar`, `forsta_timmen_bjuds`, `klippkort_dra`,
+påminnelsen) går genom `intern.tipstimmar_oanvanda` och följer med.
+Hela beskrivningen: `minne/affaren.md`, Bonusarna godkänns av oss.

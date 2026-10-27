@@ -219,6 +219,18 @@
     meta: [NXBetalning.periodText(u.period), kronor(u.belopp_ore), u.status === 'godkand' ? 'godkänd' : 'utkast'],
     till: '#loner', person: true, gör: 'Betala ut'
   });
+  /* bonusarna_godkanns (2026-10-28): en värvningsbonus eller tipstimme som
+     väntar på vårt beslut. Samma urval som intern.admin_att_gora. */
+  const sakBonus = b => ({
+    titel: namnFör(b.varvare_profil_id),
+    meta: ['värvningsbonus', kronor(b.brutto_ore), b.varvad_profil_id ? 'för ' + namnFör(b.varvad_profil_id) : null],
+    till: '#varvning', person: true, gör: 'Godkänn'
+  });
+  const sakTipstimme = r => ({
+    titel: namnFör(r.tipsare_id),
+    meta: ['tipstimme', 'för ' + namnFör(r.tipsad_id)],
+    till: '#varvning', person: true, gör: 'Godkänn'
+  });
   function sakUppgift(u) {
     const idag = isoFor(new Date());
     return {
@@ -320,6 +332,8 @@
     const genomfördaUtan = utanRapport();
     const attBetalaUt = S.utbetalningar.filter(u =>
       u.status === 'utkast' || u.status === 'godkand');
+    const bonusar = (S.varvningsbonus || []).filter(b => b.status === 'att_godkanna');
+    const tipstimmar = (S.tipstimmar || []).filter(r => !r.beslut);
 
     return [
       { antal: sett ? anmälningar.length : l.nya_leads != null ? l.nya_leads : anmälningar.length,
@@ -353,7 +367,11 @@
       { antal: attBetalaUt.length,
         rubrik: 'utbetalningar att göra', ental: 'utbetalning att göra',
         under: 'Studiehjälpare som väntar på sin ersättning.', till: '#loner', dit: 'Löner',
-        saker: attBetalaUt.map(sakUtbetalning) }
+        saker: attBetalaUt.map(sakUtbetalning) },
+      { antal: bonusar.length + tipstimmar.length,
+        rubrik: 'bonusar att godkänna', ental: 'bonus att godkänna',
+        under: 'Värvningsbonusar och tipstimmar som ingen får förrän vi godkänt dem.', till: '#varvning', dit: 'Bonusar',
+        saker: bonusar.map(sakBonus).concat(tipstimmar.map(sakTipstimme)) }
     ].filter(p => p.antal > 0);
   }
 

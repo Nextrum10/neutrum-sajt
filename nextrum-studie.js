@@ -4348,7 +4348,8 @@ window.NXStudie = (function () {
       forsta_pass_genomfort: 'när din kompis har hållit sitt första pass'
     };
     var VÄRV_LÄGE = {
-      vantar: ['Väntar', 'ar-vantar'], intjanad: ['Intjänad', 'ar-klar'], utbetald: ['Utbetald', 'ar-klar']
+      vantar: ['Väntar', 'ar-vantar'], att_godkanna: ['Vi går igenom den', 'ar-vantar'],
+      intjanad: ['Intjänad', 'ar-klar'], utbetald: ['Utbetald', 'ar-klar']
     };
     function värvDag(v) {
       var dag = function (t) { return t ? datumText(String(t).slice(0, 10)) : ''; };
@@ -4366,7 +4367,9 @@ window.NXStudie = (function () {
       host.innerHTML = '<p class="nx-tips-intro">Känner du någon som vill jobba som studiehjälpare? Dela din länk, '
         + 'eller be hen skriva koden i jobbansökan.</p>'
         + (data.bonus_ges && belopp
-          ? '<p class="nx-tips-bonus" data-varv-bonus><b>' + esc(kr(belopp) + ' inklusive semesterersättning ' + när + '.') + '</b></p>'
+          /* bonusarna_godkanns (2026-10-28): vi godkänner varje bonus innan den blir intjänad. */
+          ? '<p class="nx-tips-bonus" data-varv-bonus><b>' + esc(kr(belopp) + ' inklusive semesterersättning ' + när
+              + ' och vi har godkänt bonusen.') + '</b></p>'
           : '<p class="nx-tips-bonus" data-varv-bonus>Just nu ger en värvning ingen bonus, men vi ser att tipset kom från dig.</p>')
         + (data.aktiv
           ? '<div class="nx-tips-kod"><span class="nx-tips-et">Din kod</span><b translate="no">' + esc(data.kod) + '</b></div>'
@@ -4424,11 +4427,12 @@ window.NXStudie = (function () {
       var intro = familj
         ? 'Känner ni en familj som behöver hjälp med skolan? Dela er länk, eller be dem skriva koden i intresseanmälan.'
           + (data.timme_ges
-            ? ' När en ny familj som anmält sig med er kod har haft två timmar läxhjälp får ni en timme i er timbank.'
+            ? ' När en ny familj som anmält sig med er kod har haft två timmar läxhjälp, och vi har godkänt tipset, får ni en timme i er timbank.'
             : '')
         : 'Känner du någon som vill jobba som studiehjälpare? Dela din länk, eller be hen skriva koden i jobbansökan.'
           + (data.bonus_ges
-            ? ' När vi tar in någon som sökt med din kod får du ' + kr(belopp) + ' extra i lönen, inklusive semesterersättning.'
+            ? ' När vi tar in någon som sökt med din kod, och vi har godkänt bonusen, får du ' + kr(belopp)
+              + ' extra i lönen, inklusive semesterersättning.'
             : ' Då ser vi att tipset kom från dig.');
 
       host.innerHTML = '<p class="nx-tips-intro">' + esc(intro) + '</p>'
@@ -4447,6 +4451,11 @@ window.NXStudie = (function () {
             + esc('Den dras på nästa läxhjälpspass ni föreslår, en timme per pass'
               + (data.kvar_till ? ', och gäller till ' + datumText(data.kvar_till) : '') + '. ')
             + '<a href="#profil/timbank">Se timbanken</a></p>'
+          : '')
+        /* bonusarna_godkanns (2026-10-28): intjänade timmar som väntar på vårt beslut. */
+        + (familj && Number(data.att_godkanna || 0)
+          ? '<p class="nx-tips-timme">' + esc(antal(Number(data.att_godkanna), 'En timme', 'timmar')
+            + ' för tips väntar på att vi går igenom tipset.') + '</p>'
           : '')
         + (bonus && !familj
           ? '<p class="nx-tips-timme"><b>' + esc(kr(bonus)) + ' i bonus.</b> '

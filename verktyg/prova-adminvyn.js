@@ -442,6 +442,9 @@ async function genomAdminvyn(webb, roll, o) {
     prova(namn + ': värvningsbonus: tre rader ur databasen, med lägena och delningen',
       /Kalle Kompis/.test(lista) && /Intjänad/.test(lista) && /Väntar/.test(lista) && /Annullerad/.test(lista)
         && /267,86\s*kr grund \+ 32,14\s*kr semester/.test(lista) && /Hade redan ett konto/.test(lista), lista.slice(0, 400));
+    const tips = await page.locator('#vb-tips').innerText().catch(() => '');
+    prova(namn + ': värvningsbonus: tipstimmarna läses ur databasen (bonusarna_godkanns)',
+      /Ingen tipsad familj/.test(tips), tips.slice(0, 200));
     const summa = await page.locator('#vb-summa').innerText().catch(() => '');
     prova(namn + ': värvningsbonus: summeringen per värvare och lönemånad', /Tove/.test(summa) && /300\s*kr/.test(summa),
       summa.slice(0, 300));
