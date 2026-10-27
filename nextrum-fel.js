@@ -88,10 +88,28 @@
     tom();
   }
 
+  /* Bara fel ur vår egen kod: kastade i en fil på vår domän eller i ett
+     skript i sidan. Resten går inte att rätta härifrån, och det åt förut
+     av taket, så att ett riktigt fel efter det aldrig kom fram:
+     - "Script error." utan fil och rad är ett skript från en annan domän
+       eller ett tillägg i webbläsaren, och webbläsaren döljer resten.
+       Fem kom 2026-10-20–27 från en iPhone i /admin och /foralder, där
+       CSP:n bara släpper in våra egna filer.
+     - Instagram och Facebook kör egen kod i sidan när den visas i deras
+       app, och den står som rad 1 i sidan själv. Där står <!doctype
+       html> på varje sida, så inget skript av oss kastar på den raden. */
+  function frånOss(e) {
+    var fil = String(e.filename || '');
+    if (fil.indexOf(location.origin + '/') !== 0) return false;
+    var sidan = fil.split(/[?#]/)[0] === location.origin + location.pathname;
+    return !(sidan && e.lineno <= 1);
+  }
+
   window.addEventListener('error', function (e) {
     /* Bilder och skript som inte laddar ger också 'error', men utan
        felobjekt. De hanteras redan där de hör hemma. */
     if (!e || !e.message) return;
+    if (!frånOss(e)) return;
     rapportera(e.message, e.error && e.error.stack);
   });
 

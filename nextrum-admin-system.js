@@ -247,9 +247,12 @@
       rubrik: 'Nekad av databasen', åtgärd: 'uppgift',
       text: 'En policy eller en trigger sa nej. Antingen försökte personen något hen inte får, eller så nekar en policy för mycket.',
       råd: 'Gör det till en uppgift. En policy som nekar för mycket ser ut som en tom lista för användaren, så det här är ofta det enda spåret.' },
-    { sort: 'extern', klass: '', test: /^script error\.?$|resizeobserver loop/i,
+    /* Sista grenen är kod som appen runt sidan kör (Instagram, Facebook):
+       den står som rad 1 i sidan själv, där vi bara har <!doctype html>.
+       En fil av oss har en punkt i namnet och går aldrig hit. */
+    { sort: 'extern', klass: '', test: /^script error\.?$|resizeobserver loop|https?:\/\/[^\s/]+\/[^\s.:]*:1:\d+\)?$/i,
       rubrik: 'Utifrån', åtgärd: 'avfärda',
-      text: 'Felet kom från ett skript på en annan domän eller ett tillägg i webbläsaren, och webbläsaren döljer detaljerna.',
+      text: 'Felet kom inte ur vår kod utan från ett skript på en annan domän, ett tillägg i webbläsaren eller appen som visade sidan (Instagram, Facebook).',
       råd: 'Går inte att rätta härifrån. Markera åtgärdat.' },
     { sort: 'kod', klass: 'ar-ny', test: /typeerror|referenceerror|rangeerror|syntaxerror|cannot read propert|is not a function|is not defined|is null|is undefined/i,
       rubrik: 'Fel i koden', åtgärd: 'uppgift',
@@ -264,8 +267,10 @@
 
   function felSort(f) {
     /* e.message saknar felets namn ("Cannot read properties …"),
-       men stackens första rad har det ("TypeError: Cannot …"). */
-    const text = String(f.meddelande || '') + ' ' + String(f.stack || '').split('\n')[0];
+       men stackens första rad har det ("TypeError: Cannot …").
+       Utan stack slutade texten förut på ett mellanslag, och då
+       träffade "Script error." aldrig Utifrån utan stod som Okänt. */
+    const text = (String(f.meddelande || '') + ' ' + String(f.stack || '').split('\n')[0]).trim();
     return FELSORTER.find(s => s.test.test(text)) || OKÄND_SORT;
   }
 
