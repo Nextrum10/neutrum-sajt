@@ -116,7 +116,7 @@ function falskSupabase(o) {
         created_at: '2026-10-07T10:00:00Z', identities: [{ id: 'ny-1' }] });
     }
     if (p === '/auth/v1/logout') return svar(route, 204);
-    if (p === '/auth/v1/token') return svar(route, 200, session(o.inloggad));
+    if (p === '/auth/v1/token') return svar(route, 200, session(o.loggarIn || o.inloggad));
     if (p.startsWith('/auth/v1/')) return svar(route, 200, {});
     if (p.startsWith('/functions/v1/')) return svar(route, 404, {});
     if (p.startsWith('/storage/v1/')) return svar(route, 400, {});
@@ -364,6 +364,36 @@ async function provaIngetSkapaKonto(webb) {
   }
 }
 
+/* ============ 4b. Kortet man valt gäller (2026-10-27) ============
+   Leo: "trycker jag som studiehjälpare och loggar in som familj så kommer
+   jag in utan problem som familj. fixa det". Rätt konto under rätt kort
+   kommer in; fel konto loggas ut igen med ett besked om rätt kort. */
+async function provaKortet(webb) {
+  for (const [konto, vy, in_] of [['foralder-1', '/larare', false], ['handledare-1', '/foralder', false],
+                                  ['foralder-1', '/foralder', true], ['handledare-1', '/larare', true]]) {
+    const { context, page, S, konsol } = await öppna(webb, { inloggad: null, loggarIn: konto, matchad: true, villkor: 'ja' });
+    await page.goto(BAS + vy);
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await page.fill('#a-email', S.användare[konto].email);
+    await page.fill('#a-pass', 'ett-langt-losen');
+    const laddad = page.waitForEvent('load', { timeout: 4000 }).then(() => true, () => false);
+    await page.click('#auth-submit');
+    const omladdad = await laddad;
+    const namn = konto + ' under ' + vy;
+    if (in_) {
+      prova(namn + ': kommer in', omladdad && !S.logg.some(r => r.väg === '/auth/v1/logout'));
+    } else {
+      await page.waitForSelector('#auth-msg.show', { timeout: 4000 }).catch(() => {});
+      const besked = await text(page, '#auth-msg');
+      prova(namn + ': loggas ut igen, lokalt', !omladdad && S.logg.some(r => r.väg === '/auth/v1/logout' && /scope=local/.test(r.sök)));
+      prova(namn + ': beskedet pekar på rätt kort', vy === '/larare' ? /Familj och elev/.test(besked) : /Välj Studiehjälpare/.test(besked), besked);
+      prova(namn + ': inloggningen står kvar', await synlig(page, '#view-auth'));
+    }
+    prova(namn + ': inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+    await context.close();
+  }
+}
+
 /* ============ 5. Telefonen ============ */
 async function provaTelefonen(webb) {
   for (const [namn, mörkt] of [['telefon', false], ['telefon mörkt', true]]) {
@@ -400,6 +430,7 @@ async function provaTelefonen(webb) {
     await provaKontoIBruk(webb);
     await provaStudiehjälparen(webb);
     await provaIngetSkapaKonto(webb);
+    await provaKortet(webb);
     await provaTelefonen(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);
