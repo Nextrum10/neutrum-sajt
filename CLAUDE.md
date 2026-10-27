@@ -638,7 +638,7 @@ under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
-som vill jobba (`#bli`) och Nästa steg. **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): alla läxhjälps- och guidesidor i fyra grupper (Ämne, Årskurs, Område, Guider) med ämnesfärgens prick, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp; en ny sida i kartan läggs in där på alla sidor, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
+som vill jobba (`#bli`) och Nästa steg. **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): ämnena, stadierna och guiderna i var sin grupp med ämnesfärgens prick, och under Område navets regioner (Hela Stockholm, Innerstaden, Söderort, Västerort, Norr och väster om stan, Söder och öster om stan), Online och In English, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp. **Orterna står i navets ortskatalog**, inte en och en i footern (2026-10-26, när stadsdelsområdena och kommunerna fick egna sidor: trettio länkar på varje sida, och fler när resten av länet kommer till, hade varken varit snyggt eller sett ut som något annat än en doorway-lista); en ny ämnes-, stadie- eller guidesida läggs in i footern på alla sidor, en ny ort bara i generatorn, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): fyra blad i
 en rad, två och två på telefon, läxhjälpen, expertisen, erfarenheten och NexLäx, var och en med en NexLäx-ämnesfärg
 i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
@@ -1077,7 +1077,7 @@ Detaljer: `minne/funktioner.md`.
 
 ## 8. Genererade filer — ändra aldrig för hand
 Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessidor.py`
-(`laxhjalp-*` med stadiesidorna, guiderna, navets kort och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `bygg-logga.js` (för hand: favicons, mejlloggan, BIMI och profilbilden ur
+(`laxhjalp-*` med stadiesidorna, orterna, guiderna, navets kort och ortskatalog och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `bygg-logga.js` (för hand: favicons, mejlloggan, BIMI och profilbilden ur
 `bilder/nextrum-logga.svg`),
 `bygg-banken.py` (för hand, och `--facit`; bladen och facit står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar),
 `bygg-introbilder.js` (för hand mot en falsk Supabase, när en del som en bild visar ändras),
@@ -1087,13 +1087,20 @@ priset; körs när en rubrik eller priset ändras, och `kolla-delningsbilder.py`
 säger bara det som är sant: inga antal, betyg, betygshöjningar, okontrollerade skolnamn,
 kursnamn med årtal eller vad familjerna brukar göra (de är för få, 2026-10-06); en guide länkar det den påstår, och dess författare är Nextrum. En adress
 som stått i kartan blir aldrig en 404. Förladda inte typsnittet utan att mäta.
+**Titeln och beskrivningen syns hela i en sökträff** (2026-10-26): högst 600 och 920 px i Arial
+(`verktyg/textbredd.py`, `kolla-titlar.py` i CI), unika, `og:` och `twitter:` som sidans, och priset
+tidigt i läxhjälpssidornas beskrivning; generatorn skriver mot 580 och 900 och väljer ortssidornas titel
+själv (`omradestitel()`). **En ort får en sida** (2026-10-26, Leo: "lägg till landningssidor för varje ort
+i Stockholm") bara med lika mycket eget som de första orterna: delområdena, trafiken och biblioteken,
+kontrollerade mot källor, och sina grannar (`grannar`, `region`); en ort som inte gått att kontrollera
+väntar hellre än står med påhittade bibliotek.
 
 Detaljer: `minne/genererat-och-ci.md`.
 
 ## 9. CI — `.github/workflows/kontroll.yml`
 Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
 `kolla-betalningsvillkor.py`, `kolla-migrationer.py`, `bygg-uppgifter.py --kolla`,
-`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `kolla-villkor.py`, `kolla-delningsbilder.py`, `test/innehall-regler.py`, `satt-version.py --kolla`, de genererade filerna
+`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `kolla-villkor.py`, `kolla-delningsbilder.py`, `kolla-titlar.py`, `test/innehall-regler.py`, `satt-version.py --kolla`, de genererade filerna
 (`git diff --exit-code`), språkdiffen (också attributnamn), `deno check` och `deno test`.
 - `node --check` ser bara syntax; ett namn som inte hämtats ur `NXAdmin` smäller vid körning.
 - `indexnow.yml` är ingen kontroll. Nyckeln står i roten och i `verktyg/indexnow.py`: byt båda.
@@ -1127,6 +1134,16 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Ortssidorna och sökträffarna** (2026-10-26, Leo: "gör rubrikerna bättre, Bilderna mer passande, fixa små felen
+  ... Lägg även till landningssidor för varje ort i Stockholm") är inte mergade: 24 nya ortssidor (30 med de första),
+  navets ortskatalog, footerns regioner, nya titlar och beskrivningar på alla öppna sidor, `kolla-titlar.py` i CI och
+  ämnets, stadiets eller ortens eget foto i delningsbilderna. Ingen migration och ingen edge-funktion. **Tio kommuner
+  har ingen sida** (Vaxholm, Sigtuna, Upplands-Bro, Ekerö, Norrtälje, Nykvarn, Haninge, Tyresö, Nynäshamn och Värmdö):
+  sökbudgeten tog slut innan deras trafik och bibliotek var kontrollerade, och Österåkers bibliotek likaså. Inga nya
+  foton: nätet släppte inte fram någon bildtjänst, så sidorna delar på de 14 som finns, och inget foto visar orten.
+  Trettio sidor med samma upplägg är vad Google kallar doorway-sidor om de saknar eget innehåll; de har det (delarna,
+  trafiken, biblioteken, egna frågor), men följ dem i Search Console när de är ute: en ort som inte visas efter några
+  månader slås hellre ihop med sin region än får fler likadana grannar (`minne/genererat-och-ci.md`).
 - **Dokument med bilder, kön i matchningen och papperskorgen** (2026-10-26, `dokument_med_bilder` 20261026140000,
   `kon_i_matchningen` 20261026150000 och `papperskorgen` 20261026160000) är i drift sedan kvällen 2026-10-26 (Leo:
   "merge och driftsätt"): PR #338 mergades (64d0a90), och Vercel lade ut vyerna och integritetspolicyn på båda språken

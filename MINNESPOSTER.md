@@ -357,8 +357,10 @@ skickar den de sidor vars text ändrats till Bing via IndexNow
 
 Områdessidorna och ämnessidorna får inte innehålla något som inte är
 sant: inga antal, inga betyg, inga betygshöjningar, inga okontrollerade
-skolnamn, inga kursnamn med årtal. Sju sidor som säger samma sak med
-utbytt ortnamn är doorway pages.
+skolnamn, inga kursnamn med årtal. Sidor som säger samma sak med
+utbytt ortnamn är doorway pages: en ort får en sida bara med egna delar,
+egen trafik och egna bibliotek, kontrollerade (trettio orter sedan
+2026-10-26, `minne/genererat-och-ci.md`).
 
 ---
 

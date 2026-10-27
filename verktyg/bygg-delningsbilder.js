@@ -77,6 +77,9 @@ function radFör(fil, html, en) {
     return en ? 'Nextrum · tutoring in Stockholm' : 'Nextrum · läxhjälp i Stockholm';
   }
   if (html.includes('>Guide för föräldrar</span>')) return 'Guide för föräldrar · Nextrum';
+  // En områdessida har orten i rubriken redan (2026-10-26): "Läxhjälp i
+  // Stockholm" under "Läxhjälp i Täby" sa emot den.
+  if (html.includes('data-sidtyp="omrade"')) return `Hemma eller online · ${PRIS} kr i timmen`;
   return en ? `Tutoring in Stockholm · SEK ${PRIS} an hour` : `Läxhjälp i Stockholm · ${PRIS} kr i timmen`;
 }
 

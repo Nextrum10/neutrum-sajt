@@ -11,7 +11,7 @@ Arkivet för avsnitt 8 och 9 i `CLAUDE.md`, ordagrant. Reglerna står i kärnan,
 |---|---|---|
 | `nextrum-maskot-svar.js` | `verktyg/bygg-maskotsvar.py` | `faq.html`, `en/faq.html` |
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
-| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen, 3 stadier, online), de fyra guiderna, `404.html` och ämnes-, stadie- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
+| `laxhjalp-*.html` (30 orter, 6 ämnen, 4 stadier, online), de tio guiderna, `404.html` och ämnes-, stadie- och guidekorten och ortskatalogen i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
 | `sitemap.xml` | `verktyg/bygg-sitemap.py` | sidornas canonical, hreflang och noindex |
 | `favicon.svg`, `favicon-48.png`, `favicon-96.png`, `apple-touch-icon.png`, `bilder/nextrum-logo-512.png`, `bilder/nextrum-logo-profil.png`, `bilder/nextrum-logo-bimi.svg` | `verktyg/bygg-logga.js` | märkets två vägar i `bilder/nextrum-logga.svg`, loggan spårad ur Leos bild 2026-10-15. Körs för hand (Chromium), inte i CI. PNG:erna står på papperet ända ut i kanten; profilbilden och BIMI har märket mindre, för Gmail beskär till en cirkel. Sidornas inline-svg skrivs inte härifrån (`CLAUDE.md` avsnitt 3). Ikonlänkarna står på alla sidor och läses av områdesgeneratorn ur `var-ide.html`; `satt-logga.py` (sips, bara på en Mac) togs bort samma dag |
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i `verktyg/bladen/` (en modul per stadium, en per NP-serie: `np_ak6.py`, `np_ak9.py`, `np_gymnasiet.py`, figurerna i `figurer.py`). Körs för hand (kräver Chromium), inte i CI; verktyget mäter varje sida och vägrar ett blad som inte ryms. `python3 verktyg/bygg-banken.py ak4-` ritar bara de bladen. `--sql <mönster>` ger raderna till `biblioteksmaterial`, och ett nytt blad är en NY migration med bara de nya raderna; `--kolla` visar vad som saknar bild, facit eller migration. Facit står i `verktyg/bladen/facit_<modul>.py` (ett svar per uppgift) och ritas med `--facit` till `bank/facit/*.png`, en sida per blad; ryms inte frågorna tas de bort, sedan blir stilen mindre. Länkarna till andras material (provgruppernas sidor) står i `verktyg/bladen/lankar.py`, ritas inte, och kommer med i `--sql` när namnet matchar. Ett blads id kommer ur filnamnet: ändra aldrig `fil` på ett befintligt blad, en rättelse är en ny PNG och ingen ny rad |
@@ -170,8 +170,55 @@ TEXTNODER-avvikelser i språkbaslinjen. Generatorn läser blocket ur
 `var-ide.html`; de handskrivna sidorna ändras för hand, och
 `utbildningsprov.html`, som saknade två länkar, fick samma block (sidan
 togs bort 2026-10-21, med provet i ansökan). "Hammarby
-Sjöstad" står i baslinjen som svenska kvar i engelskan på varje engelsk sida:
-det är ett ortnamn.
+Sjöstad" stod i baslinjen som svenska kvar i engelskan på varje engelsk sida
+till 2026-10-26, då gruppen Område blev navets regioner (nedan).
+
+**Orterna** (2026-10-26, Leo: "Lägg även till landningssidor för varje ort i
+Stockholm"). Till de sex första kom 24: stadsdelarna i Stockholms stad som
+saknade en sida (Kungsholmen, Vasastan, Östermalm, Hägersten och Liljeholmen,
+Älvsjö, Skärholmen, Enskede, Årsta och Vantör, Skarpnäck, Vällingby och
+Hässelby, Spånga och Tensta, Kista och Rinkeby) och de kommuner i länet som
+gick att kontrollera (Sundbyberg, Danderyd, Täby, Lidingö, Sollentuna,
+Vallentuna, Österåker, Huddinge, Botkyrka, Salem, Södertälje, Järfälla och
+Upplands Väsby). Varje ort har lika mycket eget som de första: delarna,
+trafiken, biblioteken och två egna frågor, och två av de gemensamma (`F_*`),
+olika för grannar. Trafiken och biblioteken är kontrollerade genom sökträffar
+(kommunernas och bibliotekens egna sidor och Wikipedia), inte öppnade: nätet
+släppte inte fram sidorna. Vasastan och Österåker nämner inget eget bibliotek (Stadsbiblioteket
+är stängt för renovering, och Österåkers bibliotek hann inte kontrolleras).
+**Tio kommuner väntar**: Vaxholm, Sigtuna, Upplands-Bro, Ekerö, Norrtälje,
+Nykvarn, Haninge, Tyresö, Nynäshamn och Värmdö. Sökbudgeten tog slut innan
+deras trafik och bibliotek var kontrollerade, och en ortssida med påhittade
+bibliotek är sämre än ingen. En ny ort läggs in som en post i `OMRADEN` med
+`region` och `grannar`; generatorn vägrar en granne som inte finns, en region
+som inte finns och en regionrad som nämner en ort utan sida
+(`prova_regionraderna()`).
+
+**Navet har en ortskatalog** (`#orter`, mellan `ORT_START` och `ORT_SLUT` i
+`laxhjalp-stockholm.html`): orterna i fem regioner (Innerstaden, Söderort,
+Västerort, Norr och väster om stan, Söder och öster om stan), i svensk
+bokstavsordning, med ankarna `#innerstaden`, `#soderort`, `#vasterort`,
+`#norr-och-vaster` och `#soder-och-oster`. Footerns grupp Område länkar till
+ankarna i stället för till varje ort, och ämnes- och stadiesidorna visar ett
+kort per region (`regionkort()`). En ortssida länkar till sina grannar och
+till navet (`andra_omraden()`), inte till alla andra. Byter ett ankare namn
+ändras footern på alla sidor med det.
+
+**Titeln och beskrivningen** (2026-10-26). En förhandsvisning av sökträffarna
+visade att Google kortade beskrivningen på 24 av 52 sidor och titeln på två,
+och att det som föll bort på nio läxhjälpssidor var priset, som stod sist.
+`verktyg/textbredd.py` mäter texten i Arial som Google ritar den (titeln i 20
+px, beskrivningen i 14 px), och `kolla-titlar.py` fäller CI när en titel är
+över 600 px eller en beskrivning över 920 px, när två sidor har samma titel
+eller beskrivning och när `og:` eller `twitter:` säger något annat än sidan.
+Generatorn skriver mot 580 och 900 px och stannar annars, och ortssidornas
+titel väljs av `omradestitel()`: med pris och "hemma eller online" när den
+får plats, annars med det ena. Läxhjälpssidornas beskrivningar börjar med
+orten eller ämnet och priset. Titlarna slutar på " | Nextrum" på alla öppna
+sidor. Startsidans titel säger idén (Läxhjälp av unga, för unga i
+Stockholm), så att den inte tävlar med navet om "läxhjälp Stockholm", och prissidan och guiden om vad läxhjälp
+kostar säger olika saker. Erbjudandet i JSON-LD är timpriset, som på
+prissidan (det stod 379, paketens pris).
 
 **Guiderna är tio, i tre grupper** (2026-10-07): För er som hjälper till
 hemma (de fyra första), Under läsåret (nationella proven i sexan och i
@@ -205,7 +252,11 @@ någon skillnad. De engelska sidorna har `og:locale` `en_GB` (de hade
 en bild per sida i kartan, 1200 × 630, med sidans foto, rubriken och en
 rad med priset (en guide säger Guide för föräldrar, jobbsidan och
 villkoren inget pris). Fotot är det sidan delade förut och står sedan
-kvar i `delning/innehall.json`. Generatorn och de handskrivna sidorna
+kvar i `delning/innehall.json`; de genererade sidorna har inget foto där
+sedan 2026-10-26 och tar heron, som generatorn väljer per sida (ett ämne,
+ett stadium eller en ort har sitt eget foto i stället för samma tre överallt),
+och en ortssida säger "Hemma eller online" i stället för "Läxhjälp i
+Stockholm" under rubriken. Generatorn och de handskrivna sidorna
 pekar `og:image` och `twitter:image` dit. Byggs för hand med Chromium;
 mallen serveras från samma origin som typsnittet, annars ritas bilden
 med reservtypsnittet. `kolla-delningsbilder.py` fäller CI om en sida i

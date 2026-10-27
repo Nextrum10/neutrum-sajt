@@ -87,6 +87,12 @@ jobs:
       - name: Delningsbilderna är aktuella
         run: python3 verktyg/kolla-delningsbilder.py
 
+      # 2026-10-26: Google kortar en titel efter ungefär 600 px och en
+      # beskrivning efter 920. På nio läxhjälpssidor föll priset bort
+      # på det sättet. Det här mäter varje sida i kartan i Arials mått.
+      - name: Titlarna och beskrivningarna syns hela i en sökträff
+        run: python3 verktyg/kolla-titlar.py
+
       # 2026-10-22: Om oss och exemplen på startsidan säger bara det som
       # går att visa. Inga antal, omdömen, procent, kronor eller namn, och
       # ekvationerna i exemplet räknas om. Platshållarna skrivs ut.
