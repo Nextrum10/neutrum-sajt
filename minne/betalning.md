@@ -16,7 +16,7 @@ Avsnitten Kortet reserveras vid bokningen, Kortet försöker igen och Familjen b
 
 ---
 
-## Betala alla: flera pass i samma kassa (2026-10-27, `flera_pass_och_aterbetalningar`)
+## Betala alla: flera pass i samma kassa (2026-10-27, `flera_pass_och_aterbetalningar`, i drift samma kväll)
 
 Leo: "man ska kunna betala flera saker under samma kassa, eller alltså fler pass samtidigt. antingen alla eller pass
 för pass." Pass för pass är som förut (Betala nu på passet, `betalaPasset` i webhooken). Betala alla är en kassa för
@@ -67,7 +67,7 @@ två till tjugo av familjens pass, med en rad per pass hos Stripe och på kvitto
   (`skrivRaderna`) i stället för charge:ns summa, som är hela kassans.
 - **Provat** i `rls-test.sql` avsnitt 57, `passkassa_test.ts` och `prova-kassan.js` (Betala alla och Liggaren).
 
-## Återbetalningarna i adminvyn (2026-10-27, `flera_pass_och_aterbetalningar`)
+## Återbetalningarna i adminvyn (2026-10-27, `flera_pass_och_aterbetalningar`, i drift samma kväll)
 
 Leo: "bygg en återbetalningsfunktion för oss i admin." Det fanns redan Återbetala på ett pass, på ett köp och på en
 rad med syskontillägg. Det som saknades och nu finns:

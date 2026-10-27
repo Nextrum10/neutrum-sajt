@@ -2149,6 +2149,38 @@ en session, med de andra sessionerna i repot underrättade före och efter, i de
    planen, familjerabatten dragen), upplägget borta efter köpet, Köp till timmar till det, ett annat dras tillbaka inom fem
    minuter (inget mejl), och Skriv i Gmail.
 
+**Körd** samma kväll (Leo: "Testa så allt funkar som det ska och sen Merge, driftsätt och migrera"), steg 1 till 5 i
+den ordningen, med de två andra sessionerna i repot underrättade före och efter. Provkörningen först, före merge: båda
+migrationerna och hela `rls-test.sql` ur 7465aa3, med md5 prövade, i ett do-block mot driften som rullades tillbaka,
+2264 av 2264, och efteråt stod driften som före (senaste migrationen 20261027150000, inga nya tabeller, september
+stängd, 26 aktiva provfrågor, villkoren 2026-10-26). PR #354 mergades 17.36 UTC (b9acaa7, samma träd som 7465aa3), och
+nextrum.se serverade `/anvandarvillkor` och `/en/anvandarvillkor` med 27 oktober och `#eget-upplagg`, och `/foralder`
+och `/admin` med de nya vyerna, en halv minut senare (hämtat från databasen). `notis-avanmal` v11 (17.41 UTC) och
+`notis-ko` v38 (18.04 UTC) från merge-commiten, hämtade tillbaka och byte för byte lika main (6 och 17 filer):
+`mallar.ts` har sina tre escapes för det hårda mellanslaget kvar, för bakstrecket skickades som u005c efter ett prov på
+något ofarligt (`minne/funktioner.md`). Röktest: 400 "Länken saknar kod." och 401 "Fel eller saknad hemlighet." ur
+funktionernas egen kod. Sedan migrationerna, var och en hel i ett do-block ur b9acaa7 (18.05 och 18.06 UTC): versionen
+inte redan registrerad, filens md5 prövad (`aa680378…`, `dab5f0be…`), filen körd och dess text registrerad. De 30
+funktioner de skapar eller lappar är lika en lokal databas byggd ur filerna i kropp, inställningar, rättigheter och
+kommentar, och de nya tabellernas kolumner, triggrar (också på `bookings`, `klippkort`, `betalningar`, `notiser` och
+`erbjudanden`), policyer, RLS och rättigheter (utom Postgres 17:s MAINTAIN) har samma fingeravtryck i båda (116 rader).
+Villkorens version är 2026-10-27. Sedan funktionerna från hjälpagenter, en funktion var och fem samtidigt, och var och
+en jämförd två gånger med main, fil för fil: anropet som det stod i transkriptet, och funktionen hämtad tillbaka.
+`stripe-webhook` v17, `stripe-reservation` v4, `stripe-aterbetalning` v10, `stripe-avstamning` v3 och
+`klippkort-betala` v5 är byte för byte lika (`stripe-reservation` saknar `_delad/aterbetalning.ts` som förut, för den
+importeras bara som typ), och sist `stripe-checkout` v26 (18.52 UTC) och `drift` v27 (18.50 UTC), `drift` samtidigt med
+kassan, för den bär bara agentens fakta. `drift` är byte för byte lika i alla fem filer, och kassan i nio av tio: i
+`index.ts` saknas en tom rad mellan två stycken i en kommentar (rad 400), samma kod, och den blir lika nästa gång kassan
+driftsätts, som de tomma raderna 2026-10-14 och 2026-10-24. Röktest från databasen med tillägget `http` och den publika nyckeln: 400 "stripe-signature saknas." för
+webhooken, 401 "Fel eller saknad hemlighet." för reservationen och 401 "Inloggningen gick inte att verifiera." för de
+inloggade; ingen grind svarade. Hela `rls-test.sql` ur b9acaa7 mot driften efter migrationerna, tillbakarullat: 2264 av
+2264.
+Advisorn: bland det migrationerna skapat är de enda nya posterna `skicka_eget_upplagg`, `aterkalla_eget_upplagg` och
+`kod_pa_upplagget` för `authenticated` (med flit), och inget nytt för `anon`. Steg 6 krävde inget, och steg 7 är inte
+gjort. Mellan Vercel (17.36 UTC) och kassan (18.52 UTC) svarade den gamla kassan "Vilket pass?" på Betala alla, i en
+timme och en kvart, längre än steg 1 ber om: hjälpagenterna tog mellan elva och tjugoåtta minuter var för en uppladdning.
+Ingen kassa för flera pass och inget upplägg fanns i driften efteråt.
+
 Kvar efter: provet (steg 7), att säga till familjerna om villkoren 2026-10-27, och juristen: punkten `#eget-upplagg`,
 raderna 37–39 i `DATASKYDD.md`, policyns nya meningar om återbetalningarna, kassan och upplägget, och mejlet om
 upplägget (ett erbjudande till en befintlig kund, med avanmälan i varje mejl).

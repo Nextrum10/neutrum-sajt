@@ -2128,8 +2128,8 @@ försök kraschade i förhandsvisningen, som saknar rättningen; den säger nu s
 
 Leo samma dag: "man ska kunna betala flera saker under samma kassa ... antingen alla eller pass för
 pass", "bygg en återbetalningsfunktion för oss i admin" och "gör en funktion att admin kan skicka
-egna upplägg att köpa". Inte i drift (`DEPLOY-BETALNING.md` 9.28); vyerna tål att migrationerna
-saknas.
+egna upplägg att köpa". I drift sedan kvällen 2026-10-27 (`DEPLOY-BETALNING.md` 9.28); vyerna tål
+att migrationerna saknas, och Vercel lade ut dem en halvtimme före migrationerna.
 
 **Betala alla** står överst i listan Att betala under Betalning & planer (`#bet-alla`,
 `ritaBetalaAlla`) när minst två pass ska betalas med pengar: antalet, summan och den orange

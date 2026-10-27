@@ -129,7 +129,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   vyerna som bygger på dem, och `fakturering` och `faktura-utskick` behåller sina namn: de gör lönernas
   underlag.
 - **Betala alla** (2026-10-27, `flera_pass_och_aterbetalningar`, Leo: "man ska kunna betala flera saker under samma
-  kassa, eller alltså fler pass samtidigt. antingen alla eller pass för pass"; inte i drift): 2–20 bekräftade pass i
+  kassa, eller alltså fler pass samtidigt. antingen alla eller pass för pass"; i drift sedan 2026-10-27): 2–20 bekräftade pass i
   EN kassa med en rad per pass, och pass för pass som förut. Kassan bär Stripes id i stället för passen
   (`passkassor`, `passkassor_pass`: `bookings` har ett unikt PaymentIntent och en unik session per pass), och passen
   får `passkassa_id` när den är betald. Bara databasen räknar och skriver (`passkassa_skapa`; `passkassa_betald` i en
@@ -418,7 +418,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Egna upplägg** (2026-10-27, `egna_upplagg`, Leo: "admin säljer 6 h till familjen därför att det är lov och då
   skickar vi ett upplägg, villkoren är samma men det är bara 6h istället", och samma dag: "rabattkod gäller också för
   upplägg. Samma sak som vanliga planer bara annat antal timmar ... De köper och möjligheten försvinner, vill de ha eget
-  upplägg igen måste vi skicka igen. Mejl ska gå ut när de fått möjlighet till eget upplägg"; inte i drift): admin
+  upplägg igen måste vi skicka igen. Mejl ska gå ut när de fått möjlighet till eget upplägg"; i drift sedan 2026-10-27): admin
   skickar en familj ett upplägg i familjens panel (`skicka_eget_upplagg()`, `is_admin()`: ett namn, 1–40 timmar och
   1–60 dagar att köpa det), till planernas timpris (det rabatterade timpriset i `erbjudanden_pris`, 379 kr i dag, satt
   av databasen och fryst på upplägget; admin sätter inget eget pris). Familjen får ett mejl (notistypen `eget_upplagg`,
@@ -470,7 +470,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   betalningsvyn"): ett kort per betalning med beloppet, läget som kantens färg, familjen, typen, koden, dagen och
   raderna betalningen betalade (`betalningsrader` när de finns), bara visning.
 - **Återbetalningarna** (2026-10-27, `flera_pass_och_aterbetalningar`, Leo: "bygg en återbetalningsfunktion för oss i
-  admin"; inte i drift): allt betalas tillbaka från Liggaren (passet, köpet, en rad i en betalning med flera,
+  admin"; i drift sedan 2026-10-27): allt betalas tillbaka från Liggaren (passet, köpet, en rad i en betalning med flera,
   övertiden och en betalning utan rad), med beloppet ur databasen och en anledning, aldrig mer än det som är kvar.
   Varje återbetalning i Stripe, var den än gjordes, står i `aterbetalningar` (`aterbetalning_logga`, från
   `stripe-aterbetalning` och webhooken, med Stripes metadata som facit), med vem av oss, varför och var (`adminvyn`,
@@ -1096,7 +1096,7 @@ Detaljer: `minne/sakerhet.md`.
   `/expire`, och en som redan blivit klar ger 409 med `pagar`), bygger köpets rader med `buntaKassan` och läser
   regeln som ett fel om den inte går att läsa; webhooken prövar en sen tvisthändelse före tilläggets gren och skriver
   avgiften för en betalning som bara är tillägg på liggarens rad (`charge.updated`).
-- **Betala alla och upplägget** (2026-10-27, inte i drift): `stripe-checkout` tar `{passen: [...]}` (2–20 pass,
+- **Betala alla och upplägget** (2026-10-27, i drift sedan samma kväll): `stripe-checkout` tar `{passen: [...]}` (2–20 pass,
   databasens belopp per pass, nyckeln `nextrum-passen-`) och `{upplagg, rabattkod}` (koden prövad med familjens token i
   `kod_pa_upplagget`, priset och koden dragna av databasen i `eget_upplagg_kop()`, och ingen kassa när koden hunnit sluta
   gälla; nyckeln `nextrum-upplagg-`), och SESSIONSFORM står kvar på 12. Webhooken betalar kassan genom `passkassa_betald` och
@@ -1210,16 +1210,23 @@ Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
 - **Betala alla, återbetalningarna och egna upplägg** (2026-10-27, `flera_pass_och_aterbetalningar` 20261027160000
-  och `egna_upplagg` 20261027170000) är **inte i drift**: kedjan står i `DEPLOY-BETALNING.md` 9.28 (Vercel, `notis-ko` och
-  `notis-avanmal` före migrationerna, för de känner mejlet om upplägget, sedan migrationerna i ordning, sex edge-funktioner
-  med kassan sist, och `drift`). Lokalt 2264 av 2264 i `rls-test.sql`, också med filerna körda två gånger. Den 27 oktober
-  var funktionerna filerna skriver om i driften byte för byte som i en databas byggd ur filerna, och varje ankare de lappar
-  stod där en gång, så vakterna släpper igenom dem. Samma meddelande sa att planerna skulle gälla köpmånaden; Leo tog
+  och `egna_upplagg` 20261027170000) är i drift sedan kvällen 2026-10-27 (Leo: "Testa så allt funkar som det ska och sen
+  Merge, driftsätt och migrera"). Först en provkörning mot driften före merge, båda migrationerna och hela
+  `rls-test.sql`, tillbakarullad: 2264 av 2264. PR #354 mergades (b9acaa7), Vercel lade ut sajten med villkoren
+  2026-10-27, `notis-ko` v38 och `notis-avanmal` v11 gick ut före migrationerna (de känner mejlet om upplägget), sedan
+  migrationerna i ordning, var och en hel i ett do-block ur merge-commiten med md5 och filens text, och sist funktionerna:
+  `stripe-webhook` v17, `stripe-reservation` v4, `stripe-aterbetalning` v10, `stripe-avstamning` v3, `klippkort-betala` v5
+  och kassan `stripe-checkout` v26, med `drift` v27. Alla är hämtade tillbaka och byte för byte lika main, utom en tom rad
+  i en kommentar i kassans `index.ts` (samma kod, lika nästa gång kassan driftsätts), de 30
+  funktionerna och de nya tabellerna i databasen är lika en databas byggd ur filerna, hela `rls-test.sql` gick 2264 av 2264
+  mot driften efteråt, tillbakarullat, och advisorn fick bara de tre nya funktionerna för `authenticated`, med flit
+  (`DEPLOY-BETALNING.md` 9.28). Samma meddelande sa att planerna skulle gälla köpmånaden; Leo tog
   tillbaka det ("skojade, planerna är i 30 dagar"), och inget ändrades där. Upplägget gjordes om samma eftermiddag (Leo:
   "rabattkod gäller också för upplägg. Samma sak som vanliga planer bara annat antal timmar"): planernas timpris i stället
   för ett pris admin satte, koderna och Köp till timmar som på en plan, och ett mejl när det skickas. Villkorens version
-  blir 2026-10-27, så alla får frågan igen. Ett eget upplägg ger första timmen gratis om det är familjens första plan, för
-  villkoren är planens. Kvar: provet i testläge (9.28 steg 7), och juristen har inte läst `#eget-upplagg`, raderna 37–39 i
+  är 2026-10-27, så alla får frågan igen. Ett eget upplägg ger första timmen gratis om det är familjens första plan, för
+  villkoren är planens. Kvar: provet i testläge (9.28 steg 7), att säga till familjerna om villkoren, och juristen har
+  inte läst `#eget-upplagg`, raderna 37–39 i
   `DATASKYDD.md`, policyns nya meningar om återbetalningarna, kassan och upplägget, eller mejlet om upplägget, som är ett
   erbjudande till en befintlig kund med avanmälan i varje mejl.
 - **Fas 25** (2026-10-27, Leos lista samma morgon: NexLäx från åk 6, faktabladen och ledet, Betalning & planer i
