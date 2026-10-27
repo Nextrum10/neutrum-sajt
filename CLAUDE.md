@@ -625,7 +625,8 @@ Detaljer: `minne/grunden.md`.
 
 ## 3. Filkartan
 - `nextrum-config.js` är enda filen som ändras vid uppsättning; `nextrum-fel.js` laddas före
-  `nextrum-app.js` (`NX`); bildvägar står bara i `nextrum-images.js`, också vyernas bild per
+  `nextrum-app.js` (`NX`) och rapporterar bara fel ur vår egen kod (2026-10-27: inte "Script error.",
+  och inte det appar som Instagram kör på sidans rad 1, där varje sida har `<!doctype html>`); bildvägar står bara i `nextrum-images.js`, också vyernas bild per
   veckodag (`NEXTRUM_HERO_VECKA`; filmen bara på måndagen); `nextrum-samtycke.js` bara
   på öppna sidor. `nextrum-modulvakt.js` prövar en funktion per fil i alla fyra vyerna, moduler
   nås som identifierare (aldrig `window[...]`), och en ny `nextrum-admin-*.js` ska in där.
