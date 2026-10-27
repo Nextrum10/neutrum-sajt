@@ -2448,7 +2448,7 @@
   const medErRabatt = 'med er rabatt';
 
   async function laddaErbjudanden() {
-    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta, rabatt] = await Promise.all([
+    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta, rabatt, upplagg] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
       /* Alla kolumner (planerna, 2026-10-07): timmar_pa_kopet finns först
          efter migrationen, och en uttrycklig lista med den hade gett ett
@@ -2481,8 +2481,15 @@
       supa.rpc('forsta_timmen_lage'),
       /* Familjens rabatt per timme (familjerabatter, 2026-10-15). Ett fel,
          eller en databas före migrationen, är ingen rabatt. */
-      supa.rpc('min_familjerabatt')
+      supa.rpc('min_familjerabatt'),
+      /* Egna upplägg (egna_upplagg, 2026-10-27) som admin skickat och som
+         går att köpa: inte köpta, inte tillbakadragna och inte för gamla.
+         Före migrationen finns tabellen inte, och då finns inga. */
+      supa.from('egna_upplagg').select('id, namn, timmar, timpris_ore, pris_ore, giltigt_till')
+        .is('kopt_at', null).is('aterkallad_at', null).gte('giltigt_till', isoFor(new Date()))
+        .order('skapad_at', { ascending: true })
     ]);
+    S.erb.upplagg = upplagg.error ? [] : (upplagg.data || []);
     S.forstaTimmen = forsta.error ? null : (forsta.data || null);
     S.familjerabatt = rabatt.error ? 0 : Math.max(Number(rabatt.data) || 0, 0);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
@@ -2678,25 +2685,33 @@
      inget drag familjen måste göra, så kortet står som en stilla knapp;
      timmarna står först när de räcker, som i betalaKnapp. Alla val står
      på passets sida, dit raden leder. */
-  function radBetala(b) {
+  /* Radens enda val (2026-10-27 ett eget steg, så att Betala alla tar
+     samma pass som har Betala nu): 'betala', 'timmar', 'timbank',
+     'kort-spara' eller 'kort-val'. */
+  function radensVal(b) {
     // Sen avbokning (2026-10-22): avgiften är pengar, och betalas med Betala nu.
-    if (b.status === 'cancelled') return '<button type="button" class="btn btn-orange btn-sm" data-betala="' + esc(b.id) + '">Betala nu</button>';
-    const tim = kortFör(b);
-    const bank = !tim && bankFör(b);
-    if (tim) return '<button type="button" class="btn btn-orange btn-sm" data-timmar="' + esc(b.id) + '">Betala med timmar</button>';
-    if (bank) return '<button type="button" class="btn btn-orange btn-sm" data-timbank="' + esc(b.id) + '">Betala med timbanken</button>';
+    if (b.status === 'cancelled') return 'betala';
+    if (kortFör(b)) return 'timmar';
+    if (bankFör(b)) return 'timbank';
     /* Kortet reserveras (2026-10-13): Betala i förväg är borta med
        strömbrytaren på. Knappen väljer kortet, och ett kort som saknas
        eller nekades är familjens drag. */
     const kr = kortResRad(b);
-    if (kr && kortValt(b) && S.kort.pa && (kr.lage === 'misslyckad' || (kr.lage === 'vald' && !S.kort.kort))) {
-      return '<button type="button" class="btn btn-primary btn-sm" data-kort-spara>'
-        + (S.kort.kort ? 'Byt kort' : kr.lage === 'misslyckad' ? 'Lägg till kort' : 'Spara kortet') + '</button>';
-    }
-    if (kortKanVäljas(b)) {
-      return '<button type="button" class="btn btn-orange btn-sm" data-kort-val="' + esc(b.id) + '">Välj kort</button>';
-    }
+    if (kr && kortValt(b) && S.kort.pa && (kr.lage === 'misslyckad' || (kr.lage === 'vald' && !S.kort.kort))) return 'kort-spara';
+    if (kortKanVäljas(b)) return 'kort-val';
     // Också efter ett nekat försök: samma knapp, samma ord (2026-10-21).
+    return 'betala';
+  }
+  function radBetala(b) {
+    const val = radensVal(b);
+    if (val === 'timmar') return '<button type="button" class="btn btn-orange btn-sm" data-timmar="' + esc(b.id) + '">Betala med timmar</button>';
+    if (val === 'timbank') return '<button type="button" class="btn btn-orange btn-sm" data-timbank="' + esc(b.id) + '">Betala med timbanken</button>';
+    if (val === 'kort-spara') {
+      const kr = kortResRad(b);
+      return '<button type="button" class="btn btn-primary btn-sm" data-kort-spara>'
+        + (S.kort.kort ? 'Byt kort' : kr && kr.lage === 'misslyckad' ? 'Lägg till kort' : 'Spara kortet') + '</button>';
+    }
+    if (val === 'kort-val') return '<button type="button" class="btn btn-orange btn-sm" data-kort-val="' + esc(b.id) + '">Välj kort</button>';
     return '<button type="button" class="btn btn-orange btn-sm" data-betala="' + esc(b.id) + '">Betala nu</button>';
   }
   const BETALNING_TEXT = {
@@ -3641,9 +3656,85 @@
     if (mål && !mål.hidden) NXStudie.visaÖverst(mål);
   }
 
+  /* EGNA UPPLÄGG (2026-10-27, Leo: "admin säljer 6 h till familjen därför
+     att det är lov och då skickar vi ett upplägg, villkoren är samma men
+     det är bara 6h istället"). Ett band per upplägg ovanför planerna, med
+     timmarna, priset och Köp. Familjens rabatt dras på varje timme när den
+     lämnar ett pris kvar, samma regel som eget_upplagg_kop(); kassan tar
+     databasens belopp. Det gäller som en plan, 30 dagar från köpet. */
+  function upplaggetsPris(u) {
+    const d = Number(S.familjerabatt) || 0;
+    const per = Number(u.timpris_ore);
+    const ned = d > 0 && d < per ? d : 0;
+    return { per: per - ned, pris: (per - ned) * Number(u.timmar), rabatt: ned };
+  }
+  function ritaUpplagg() {
+    const host = $('#erb-upplagg');
+    if (!host) return;
+    const lista = S.erb.upplagg || [];
+    if (!lista.length) { host.hidden = true; host.innerHTML = ''; return; }
+    const kr = NXBetalning.kronor;
+    host.hidden = false;
+    host.innerHTML = lista.map(u => {
+      const p = upplaggetsPris(u);
+      return '<article class="erb-upplagg-kort"><div>'
+        + '<h5>Ett upplägg till er</h5>'
+        + '<b>' + esc(u.namn) + ': ' + esc(timmarOrd(Number(u.timmar))) + ', ' + esc(kr(p.pris)) + '</b>'
+        + '<p>' + esc(kr(p.per) + ' i timmen' + (p.rabatt ? ' ' + medErRabatt : '') + '. Gäller i ' + PLANENS_DAGAR
+          + ' dagar från köpet, som en plan. Köp det senast ' + datumText(u.giltigt_till) + '.') + '</p>'
+        + '</div>'
+        + (S.erb.aktiv && !S.väntar
+          ? '<button type="button" class="btn btn-orange" data-kop-upplagg="' + esc(u.id) + '">Köp</button>'
+          : '<button type="button" class="btn btn-ghost" disabled>Köp</button>')
+        + '</article>';
+    }).join('');
+  }
+
+  /* Köp på ett upplägg: köpvillkoren med timmarna och priset, och sedan
+     samma kassa som för en plan, med upplägget id i stället för en kod. */
+  async function köpUpplägg(knapp, id) {
+    const u = (S.erb.upplagg || []).find(x => x.id === id);
+    if (!u || !S.erb.aktiv || S.väntar) return;
+    const kronor = NXBetalning.kronor;
+    const p = upplaggetsPris(u);
+    const tl = tilläggIKassan(p.pris);
+    const titel = 'Köp ' + u.namn;
+    if (!await NXStudie.kassansVillkor({
+      titel: titel,
+      rader: [timmarOrd(Number(u.timmar)) + ' läxhjälp · ' + kronor(p.pris),
+        'Gäller i ' + PLANENS_DAGAR + ' dagar från köpet, som en plan'],
+      tillagg: tl,
+      text: 'Ni betalar med kort eller Klarna i nästa steg.'
+    })) return;
+    const extra = tl && tl.valfri && !tl.med ? { med_tillagg: false } : {};
+    const kropp = ui => Object.assign({ upplagg: id, retur: location.origin, ui: ui, villkor: true }, extra);
+    await medan(knapp, 'Öppnar…', async () => {
+      const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
+      const svar = await startaKassa(kropp('inbaddad'));
+      if (!svar) { laddaErbjudanden().catch(() => {}); return; }
+      const vad = timmarOrd(Number(u.timmar)) + ' · ' + kronor(svar.belopp_ore != null ? svar.belopp_ore : p.pris)
+        + medVad(Number(svar.familjerabatt_ore) > 0, null) + tilläggISvaret(svar);
+      if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
+        const Stripe = await stripeKlar;
+        if (Stripe) {
+          try { await öppnaKassa(knapp, null, svar, Stripe, { titel: titel, vad: vad, klar: köpKlart }); return; }
+          catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
+        }
+        const reserv = await startaKassa(kropp('sida'));
+        if (reserv && reserv.url) { location.href = reserv.url; return; }
+        if (!reserv) return;
+      } else if (svar.url) {
+        location.href = svar.url;
+        return;
+      }
+      alert('Kassan kunde inte öppnas. Försök igen, eller hör av dig till oss.');
+    });
+  }
+
   function ritaErbjudanden() {
     const planer = $('#erb-planer');
     if (!planer) return;
+    ritaUpplagg();
     /* Bara planerna (2026-10-22): Fyll timbankens kolumn stod bredvid
        dem till samma dag. */
     const kat = S.erb.katalog;
@@ -3880,7 +3971,9 @@
     return S.erb.kort
       .filter(k => k.sort === 'plan' && k.status === 'betald' && String(k.giltigt_till) > idag
         // planerna_per_manad (2026-10-21): den här månadens plan, inte nästa och inte timmar till en plan.
-        && (!k.galler_fran || String(k.galler_fran) <= idag) && !k.till_plan)
+        && (!k.galler_fran || String(k.galler_fran) <= idag) && !k.till_plan
+        // Aldrig till ett eget upplägg (egna_upplagg, 2026-10-27): upplägget pris följer inte med.
+        && k.erbjudande !== 'plan_eget')
       .sort((a, c) => String(c.giltigt_till).localeCompare(String(a.giltigt_till))
         || String(c.created_at || '').localeCompare(String(a.created_at || '')))[0] || null;
   }
@@ -4423,6 +4516,9 @@
     if (tb) { await betalaMedBanken(tb, tb.dataset.timbank); return; }
     const köp = e.target.closest('[data-kop]');
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
+    // Ett eget upplägg (2026-10-27) som admin skickat.
+    const ku = e.target.closest('[data-kop-upplagg]');
+    if (ku) { await köpUpplägg(ku, ku.dataset.kopUpplagg); return; }
     if (e.target.closest('#erb-kod-anvand')) { await provaErbKod(); return; }
     /* Köp till timmar (2026-10-14): Välj själv, stegen och kassan. */
     if (e.target.closest('[data-extra-valj]')) {
@@ -4450,6 +4546,9 @@
     if (ks) { await sparaKort(ks); return; }
     const kt = e.target.closest('[data-kort-ta-bort]');
     if (kt) { await taBortKort(kt); return; }
+    // Betala alla (2026-10-27): flera pass i samma kassa.
+    const ba = e.target.closest('[data-betala-alla]');
+    if (ba) { await betalaAlla(ba); return; }
     const bet = e.target.closest('[data-betala]');
     if (bet) { await betalaIKassan(bet, bet.dataset.betala, false); return; }
     // Betala tillägg nu (syskontillagg_som_skuld, 2026-10-21).
@@ -4574,6 +4673,18 @@
         text: efter ? (efter === 1 ? 'Ett av dem har redan hållits.' : efter + ' av dem har redan hållits.') + ' Betala med kort eller Klarna.'
           : 'Betala med kort eller Klarna, så är det klart före passet.',
         mål: '#bet-att-betala'
+      });
+    }
+
+    /* Ett eget upplägg (egna_upplagg, 2026-10-27) som admin skickat: det
+       väntar på att familjen köper det, under Betalning & planer. */
+    const upp = S.väntar ? [] : ((S.erb && S.erb.upplagg) || []);
+    if (upp.length) {
+      poster.push({
+        rubrik: upp.length > 1 ? upp.length + ' upplägg till er' : 'Ett upplägg till er',
+        text: upp.length > 1 ? 'De står under Betalning & planer.'
+          : upp[0].namn + ': ' + timmarOrd(Number(upp[0].timmar)) + '. Köp det under Betalning & planer.',
+        mål: '#erb-upplagg'
       });
     }
 
@@ -5097,6 +5208,7 @@
     const idag = isoFor(new Date());
     const lista = attBetala();
     ritaBetSam(lista);
+    ritaBetalaAlla(lista);
     if (S.sido) S.sido.märke('betalning', lista.length + (S.syskon && Number(S.syskon.upplupna) > 0 ? 1 : 0));
     $('#bet-att-antal').textContent = lista.length ? String(lista.length) : '';
     if (!lista.length) {
@@ -5125,6 +5237,87 @@
           + (till ? tilläggKnapp(b, till, true) : radBetala(b))
       });
     }).join('');
+  }
+
+  /* BETALA ALLA (2026-10-27, Leo: "man ska kunna betala flera saker under
+     samma kassa, eller alltså fler pass samtidigt. antingen alla eller pass
+     för pass"). Passen under Att betala som har Betala nu, högst tjugo, i en
+     kassa med en rad per pass; pass för pass står kvar i listan. Ett pass
+     som timmarna eller timbanken kan betala är inte med: köpta timmar går
+     före pengar, som på raden. Ett tillägg för övertid betalas för sig, och
+     ett pass vars pris inte går att räkna här också. Knappen säger Betala nu, som alla
+     betalknappar, och kortet säger att det är alla. Summan är radernas
+     priser: stripe-checkout räknar varje pass igen ur databasen, med samma
+     regel som för ett pass, och tar det den räknar. */
+  const ALLA_MAX = 20;
+  const allaAttBetala = lista => lista.filter(b => !tillägg(b) && kanBetalas(b) && passetsPris(b) > 0
+    && radensVal(b) === 'betala').slice(0, ALLA_MAX);
+  function ritaBetalaAlla(lista) {
+    const host = $('#bet-alla');
+    if (!host) return;
+    const alla = allaAttBetala(lista);
+    if (alla.length < 2) { host.hidden = true; host.innerHTML = ''; return; }
+    const summa = alla.reduce((n, b) => n + passetsPris(b), 0);
+    host.hidden = false;
+    host.innerHTML = '<article class="bet-tillagg-kort">'
+      + '<div class="bet-tillagg-topp"><div><small>'
+      + esc((alla.length === lista.length ? 'Alla ' : '') + alla.length + ' pass på en gång') + '</small>'
+      + '<b>' + esc(NXBetalning.kronor(summa)) + '</b></div>'
+      + '<button type="button" class="btn btn-orange" data-betala-alla>Betala nu</button></div>'
+      + '<p class="bet-tillagg-not">' + esc('En kassa, med en rad per pass. Vill ni hellre betala pass för pass gör ni det i listan.'
+        + (alla.length < lista.length ? ' Det som inte är med här betalas för sig.' : '')) + '</p></article>';
+  }
+
+  /* Betala nu på kortet ovan: köpvillkoren med passen och summan, och
+     sedan samma kassa som för ett pass, med passens id:n i stället för ett. */
+  async function betalaAlla(knapp) {
+    const alla = allaAttBetala(attBetala());
+    if (alla.length < 2) return;
+    const kronor = NXBetalning.kronor;
+    const summa = alla.reduce((n, b) => n + passetsPris(b), 0);
+    const sk = S.syskon && Number(S.syskon.upplupna) > 0 ? S.syskon : null;
+    if (!await NXStudie.kassansVillkor({
+      titel: 'Betala ' + alla.length + ' pass',
+      rader: alla.map(b => (b.subject ? b.subject + ', ' : '') + datumText(b.wanted_date)
+        + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '') + ' · ' + kronor(passetsPris(b))),
+      tillagg: sk ? { rad: 'Upplupet tillägg för extra barn, ' + kronor(sk.upplupet_ore)
+        + ': ingår inte här. Betala det med Betala tillägg nu under Betalning, eller med nästa köp av timmar.',
+        valfri: false, med: false } : null,
+      text: 'Totalt ' + kronor(summa) + '. Varje pass står som en egen rad i kassan, och ni betalar allt med kort eller Klarna i nästa steg.'
+    })) return;
+    const ids = alla.map(b => b.id);
+    await medan(knapp, 'Öppnar…', async () => {
+      const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
+      const svar = await startaKassa({ passen: ids, retur: location.origin, ui: 'inbaddad', villkor: true });
+      if (!svar) { laddaPass().catch(() => {}); return; }
+      const vad = (svar.antal_pass || ids.length) + ' pass · ' + kronor(svar.belopp_ore || summa);
+      if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
+        const Stripe = await stripeKlar;
+        if (Stripe) {
+          try {
+            await öppnaKassa(knapp, null, svar, Stripe, { titel: 'Betala passen', vad: vad, sort: 'passen', klar: passenBetalda });
+            return;
+          } catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
+        }
+        const reserv = await startaKassa({ passen: ids, retur: location.origin, ui: 'sida', villkor: true });
+        if (reserv && reserv.url) { location.href = reserv.url; return; }
+        if (!reserv) return;
+      } else if (svar.url) {
+        location.href = svar.url;
+        return;
+      }
+      alert('Kassan kunde inte öppnas. Försök igen, eller hör av dig till oss.');
+    });
+  }
+
+  function passenBetalda() {
+    const p = panel;
+    if (!p) return;
+    p.klar = true;
+    p.besked.textContent = '✓ Tack! Passen är betalda. Det kan ta en liten stund innan de står som betalda här, och kvittot kommer med mejl.';
+    p.besked.hidden = false;
+    setTimeout(() => { laddaPass().catch(() => {}); }, 2500);
+    setTimeout(() => { laddaPass().catch(() => {}); }, 8000);
   }
 
   /* Summan överst i Betalning: vad som är kvar att betala och vad som

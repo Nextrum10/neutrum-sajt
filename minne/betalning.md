@@ -16,6 +16,82 @@ Avsnitten Kortet reserveras vid bokningen, Kortet försöker igen och Familjen b
 
 ---
 
+## Betala alla: flera pass i samma kassa (2026-10-27, `flera_pass_och_aterbetalningar`)
+
+Leo: "man ska kunna betala flera saker under samma kassa, eller alltså fler pass samtidigt. antingen alla eller pass
+för pass." Pass för pass är som förut (Betala nu på passet, `betalaPasset` i webhooken). Betala alla är en kassa för
+två till tjugo av familjens pass, med en rad per pass hos Stripe och på kvittot.
+
+- **Vilka pass.** Kortet Betala alla står överst under Att betala (`#bet-alla`, `ritaBetalaAlla`) när minst två pass
+  har Betala nu på raden (`radensVal(b) === 'betala'`): ett pass som timmarna eller timbanken kan betala är inte med,
+  för köpta timmar går före pengar, som på raden, och övertiden betalas för sig. Knappen säger Betala nu (Leo: alla
+  betalknappar), och kortet säger att det är alla. Köpvillkoren först, med en rad per pass och totalen.
+- **Beloppet** räknas i `stripe-checkout` för varje pass med samma regel och samma rad som kassan för ett pass
+  (`passetsBelopp`, `passetsRad` i `_delad/passkassa.ts`): den sena avbokningen, den hållna tiden minus timbankens
+  övertid, det frysta timpriset och tillägget, rabatten en gång. Anropet säger bara vilka pass (`{ passen }`).
+- **Databasen äger kassan** (`passkassor`, `passkassor_pass`, `passkassa_skapa()` och de andra `passkassa_*`, bara
+  tjänstekontot). Under familjens lås och med radlås prövas passen igen (familjens, bekräftade, genomförda eller
+  sent avbokade med en avgift, obetalda, inte undantagna, med en studiehjälpare). Två tryck blir samma kassa (samma
+  pass, belopp och minuter, minst 35 minuter kvar); annars släpps familjens öppna kassor, och kassan
+  (`kassanForPassen`, som syskontilläggets `forsoketsKassa`) låter dem gå ut hos Stripe innan den nya öppnas. En kassa
+  för ett pass för sig som bär ett av passen går också ut (`kassornaForPasset`), och Betala nu på ett pass stänger en
+  kassa för flera som bär det. Betala med timmar stänger den också (`klippkort-betala`).
+- **Kassan bär Stripes id:n, inte passen.** `bookings` har ett unikt PaymentIntent och en unik session per pass (Fas
+  12.1), och webhooken hittar ett pass på dess charge. Sessionen och PaymentIntent står på kassan och i liggaren, och
+  passet pekar på kassan (`bookings.passkassa_id`, som bara databasen och admin skriver: `bookings_passkassa_ny`). Ett
+  pass i kassan får läget väntar och sitt belopp (`passkassa_session`), som en kassa för ett pass.
+- **Betalningen** skrivs i en transaktion (`passkassa_betald`): liggarens rad med hela beloppet (typen pass, utan
+  pass på raden), varje pass betalt med sin del på samma tre vägar som `betalaPasset` (obetalt; betalt med timmar,
+  kortet vinner och timmarna kommer tillbaka; betalt med timbanken, `timbank_kort_vinner`, som nu också skriver
+  kassan), en rad per pass i `betalningsrader`, kassan betald och avgiften delad. Ett pass som hunnit betalas med en
+  annan betalning, eller som inte finns längre, får sin rad med en beskrivning och en uppgift
+  (`passkassa_dubbel:<pi>`): betala tillbaka raden. Fel belopp, eller en kassa som redan var betald, står i liggaren
+  som en betalning utan rad med en uppgift (`passkassa_fel:<pi>`). Passens egen bokföring (`bookings_bokfors`) körs
+  bara för ett pass med ett eget PaymentIntent och rör inte en sådan betalning.
+- **Klarna som väntar**: en session som blir klar utan pengar märker kassan (`passkassa_vantar`, `vantar_at`), och då
+  släpper ingen ny kassa den och passen går inte att lägga i en ny (familjen får "En betalning för ett av passen är på
+  väg"). Kommer pengarna betalas kassan; säger Klarna nej släpper webhooken den
+  (`checkout.session.async_payment_failed`), och `payment_intent.payment_failed` gör passen misslyckade
+  (`passkassa_misslyckad`). En kassa som går ut släpps (`checkout.session.expired`), och passen står kvar som
+  obetalda. En släppt kassa kan ändå bli betald när pengarna kommer.
+- **Avgiften delas** på passen efter deras belopp, nedåt till hel öre, och när alla pass bär betalningen får det
+  sista resten (`intern.passkassa_avgift_dela`), så att bokslutet, som räknar passens avgifter, räknar den en gång.
+  Kommer den med `charge.updated` skrivs den på liggaren och delas (`betalning_avgift`), och `stripe-avstamning`
+  hämtar den för en kassa som saknar den.
+- **Återbetalning och tvist per rad.** `betalningsrader_aterbetalda` skriver passets återbetalda belopp och läge ur
+  raden (hela tillbaka blir återbetalt; en tvist står kvar). Webhooken fördelar Stripes lista på raderna
+  (`raderUrStripe`): raden i metadata, annars passets id (ett kortare pass), och är hela betalningen tillbaka är varje
+  rad det; en del utan rad i Stripes dashboard blir en uppgift, och inget pass ändras för den. En tvist flaggar
+  liggaren och passen (`betalning_tvist`). Ett kortare pass i kassan får mellanskillnaden som förut
+  (`kortare_pass_att_aterbetala` med kassans PaymentIntent), och `stripe-reservation` skriver raderna ur Stripes lista
+  (`skrivRaderna`) i stället för charge:ns summa, som är hela kassans.
+- **Provat** i `rls-test.sql` avsnitt 57, `passkassa_test.ts` och `prova-kassan.js` (Betala alla och Liggaren).
+
+## Återbetalningarna i adminvyn (2026-10-27, `flera_pass_och_aterbetalningar`)
+
+Leo: "bygg en återbetalningsfunktion för oss i admin." Det fanns redan Återbetala på ett pass, på ett köp och på en
+rad med syskontillägg. Det som saknades och nu finns:
+
+- **Allt betalas tillbaka från adminvyn** (`stripe-aterbetalning`): ett pass i en kassa för flera pass (från sin rad,
+  med `{ pass }` eller `{ betalningsrad }`), övertiden (`{ tillagg: pass }`, med passets id i metadata som
+  `tillagg_booking_id`) och en betalning som inte kunde skrivas ner (`{ betalning }`, bara en med `utan_rad`, läst med
+  admins token). Taket är alltid det som är kvar på raden, ur databasen, och läget läses tillbaka från Stripe. Under
+  Liggaren står Återbetala på passets rad i en kassa, på övertiden och på betalningen utan rad (förut "Betalas tillbaka
+  i Stripe"), och familjens panel länkar till familjens betalningar i Liggaren.
+- **Varje återbetalning skrivs ner** i `aterbetalningar` (`aterbetalning_logga`, bara tjänstekontot), var den än
+  gjordes: i adminvyn (vem av oss och anledningen), av sig själv (ett kortare pass, `av: 'system'`) eller i Stripes
+  dashboard (utan metadata). Webhooken skriver varje återbetalning den ser i `charge.refunded`, och
+  `stripe-aterbetalning` sin egen direkt; båda läser samma metadata (anledningen står i Stripe sedan Fas 12.4), så det
+  gör inget vem som hinner först, och samma återbetalning två gånger blir en rad. Betalningen, familjen och vad det var
+  läses ur liggaren och raden, aldrig ur anropet. Raden står fast (`intern.aterbetalningar_star_fast`), också för
+  databasens ägare, utom att en nyckel blir null när det den pekar på raderas och att anledningen töms när familjen
+  avidentifieras (`profiles_aterbetalningar_gallras`).
+- **Fliken Återbetalningar** under Betalningar: en rad per återbetalning, senaste först, med vad det var, familjen,
+  var den gjordes och av vem, anledningen och beloppet, och summorna (återbetalat, i adminvyn, utanför adminvyn).
+  Testbetalningar räknas inte i summorna.
+- **Provat** i `rls-test.sql` avsnitt 57, `passkassa_test.ts`, `tillagg_test.ts` och `prova-kassan.js`
+  (Återbetalningarna).
+
 ## Sen avbokning (2026-10-22, `sen_avbokning`, i drift sedan samma kväll)
 
 Leo: "minst 12h innan måste det avbokas, avbokas det inom 12h av att lektionen ska hållas betalas

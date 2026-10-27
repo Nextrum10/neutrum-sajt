@@ -63,9 +63,10 @@ export function kodPaFelBetalning(kropp: Record<string, unknown> | null | undefi
   return null;
 }
 
-/** Tar köpet en kod? Bara en plan i katalogen, som intern.kod_galler_kopet. */
+/** Tar köpet en kod? Bara en plan i katalogen, som intern.kod_galler_kopet:
+ *  aldrig timmar till planen och aldrig ett eget upplägg (2026-10-27). */
 export function kodenGallerKopet(e: { kod?: string | null; sort?: string | null } | null | undefined): boolean {
-  return !!e && e.sort === 'plan' && e.kod !== 'plan_extra';
+  return !!e && e.sort === 'plan' && e.kod !== 'plan_extra' && e.kod !== 'plan_eget';
 }
 
 /**

@@ -1993,3 +1993,63 @@ och inget annat.
   2202 mot driften, i ett do-block som slutar med ett fel och rullar tillbaka allt. Advisorn fick bara
   `mina_handlingar_bilder`, `stalle_lage` och `ta_bort_ur_stallet` som nya poster, för `authenticated` (med flit:
   de prövar den inloggade eller `is_admin()` först), och inget nytt för `anon`.
+
+### Flera pass i samma kassa och återbetalningarna (flera_pass_och_aterbetalningar, 2026-10-27, inte i drift)
+
+`20261027160000_flera_pass_och_aterbetalningar.sql` (Leo: "man ska kunna betala flera saker under samma kassa ... bygg
+en återbetalningsfunktion för oss i admin"). Kedjan i driften: `DEPLOY-BETALNING.md` 9.28.
+
+- **Kassan för flera pass** är `passkassor` (familjen, 2–20 pass, beloppet, Stripes session och PaymentIntent, läget
+  `oppen`, `betald` eller `slappt`, och `vantar_at` när en Klarna-betalning väntar) och `passkassor_pass` (varje pass
+  belopp och minuter, som kassan räknade dem). Passen får `bookings.passkassa_id` när kassan är betald, för
+  `bookings_stripe_pi_uniq` och `bookings_stripe_session_uniq` låter inte två pass bära samma id. Bara tjänstekontot
+  skriver, genom `passkassa_skapa` (familjens egna bekräftade pass som ska betalas, en öppen kassa per familj, samma
+  pass och belopp återanvänder den, och nej till pass i en kassa som väntar på Klarna), `passkassa_session`,
+  `passkassa_vantar`, `passkassa_slapp` och `passkassa_misslyckad`, och vakterna (`intern.passkassor_vakt`,
+  `passkassor_pass_star_fast`, `bookings_passkassa_ny`) håller beloppen och passen fasta och lägena framåt.
+- **`passkassa_betald()`** skriver betalningen i en transaktion: liggarens rad med hela beloppet (`typ = 'pass'`,
+  `booking_id` null), varje pass betalt med sin del på samma tre vägar som `betalaPasset` (obetalt, med timmar, med
+  timbanken: kortet vinner, och `timbank_kort_vinner` är lappad så att passet får kassan), en rad per pass i
+  `betalningsrader`, och kassan betald. Ett pass som hunnit betalas på annat sätt får sin rad med en beskrivning och
+  en uppgift. Avgiften delas på passen efter beloppen (`intern.passkassa_avgift_dela`, `betalning_avgift()`), så att
+  bokslutet räknar den en gång.
+- **Lappade och omskrivna**: `timbank_kort_vinner` och `betalningsrader_aterbetalda` med `replace()` och vakter som
+  räknar träffarna; `betalning_tvist`, `kortare_pass_att_aterbetala` och `betalningsrad_att_aterbetala` hela, och
+  avsnitt 0 prövar först att deras kroppar i driften är de filerna lämnade (md5 `f471f657…`, `854e527c…`, `e77c1326…`)
+  eller den här filens. Filen går att köra två gånger. Lästa ur driften 2026-10-27: alla elva funktioner de två filerna
+  rör (`md5(prosrc)`) var lika en databas byggd ur filerna till och med `20261027150000`, driftens senaste.
+- **`aterbetalningar`**: en rad per återbetalning i Stripe (refund-id unikt), skriven bara av `aterbetalning_logga`
+  (tjänstekontot: `stripe-aterbetalning` och webhooken), med betalningen, raden, passet eller köpet, familjen, vem av
+  oss och varför, och `satt` (`adminvyn`, `automatiskt`, `stripe`). Raderas aldrig (triggrar mot delete och truncate),
+  ändras bara när det en kolumn pekar på tas bort (`on delete set null`), och anledningen töms när familjen
+  avidentifieras (`profiles_aterbetalningar_gallras`). Bara superadmin läser.
+- `service_role` skriver inte direkt i `passkassor`, `passkassor_pass` eller `aterbetalningar`.
+- **Prov**: `rls-test.sql` avsnitt 57 (FP, 41 rader): bara tjänstekontot öppnar, familjens egna pass, två tryck en
+  kassa, betalningen i en transaktion med kortet som vinner, avgiften delad, återbetalning och tvist per rad, Klarna
+  som väntar, och loggens rader.
+
+### Egna upplägg (egna_upplagg, 2026-10-27, inte i drift)
+
+`20261027170000_egna_upplagg.sql` (Leo: "admin säljer 6 h till familjen därför att det är lov och då skickar vi ett
+upplägg, villkoren är samma men det är bara 6h istället"). Körs efter `flera_pass_och_aterbetalningar`.
+
+- **Katalogens rad `plan_eget`** (sorten `plan`) säljs aldrig: den står inte aktiv och villkoret
+  `erbjudanden_eget_saljs_inte` håller den så, så den finns inte i `erbjudanden_pris`. Köpen pekar på den
+  (`klippkort_erbjudande_fkey`), som timmar till planen och gratistimmarna.
+- **`egna_upplagg`**: familjen, namnet (1–60 tecken), 1–40 timmar, timpriset i hela kronor (högst ordinarie, prövat i
+  funktionen), priset (timmarna gånger timpriset, ett villkor), sista dagen att köpa det, vem som skickade det, och
+  `kopt_at`, `klippkort_id` och `aterkallad_at`, som bara skrivs en gång (`intern.egna_upplagg_vakt`). Admin skickar och
+  drar tillbaka med `skicka_eget_upplagg()` och `aterkalla_eget_upplagg()` (`is_admin()`, högst fem som väntar per
+  familj, ett rådgivande lås per familj), familjen läser sina, och ingen inloggad skriver.
+- **Köpet** skapar `eget_upplagg_kop()` (tjänstekontot): en rad i `klippkort` med `plan_eget` och `upplagg_id`
+  (villkoret `klippkort_upplagg_bara_eget`), till timpriset minus familjerabatten gånger timmarna, och ett väntande köp
+  av samma upplägg yngre än 23 timmar återanvänds. Betalt är det en plan: `klippkort_betald` (30 dagar), liggarens typ
+  `plan`, och första timmen gratis om det är familjens första plan. `klippkort_upplagg_kopt` skriver upplägget köpt, och
+  ett köp som betalas för ett upplägg som redan köpts eller dragits tillbaka blir en uppgift
+  (`eget_upplagg_dubbel:<id>`, `eget_upplagg_aterkallat:<id>`).
+- **Lappade** med `replace()` och vakter som räknar träffarna: `intern.klippkort_rabatt` (lämnar priset och familjerabatten som
+  `eget_upplagg_kop()` satt och tar bort en kod, som för timmar till en plan), `intern.kod_galler_kopet` (inte `plan_eget`, som
+  `kodenGallerKopet` i `_delad/koder.ts`) och `extra_timmar_erbjudande` (inga timmar till ett upplägg).
+  `intern.villkor_version()` blir 2026-10-27, och vakten kräver 2026-10-26 (eller 2026-10-27 när filen körs igen).
+- **Prov**: `rls-test.sql` avsnitt 58 (EU, 16 rader). Lokalt 2259 av 2259 med båda filerna, också när de körts två
+  gånger.

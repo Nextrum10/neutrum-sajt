@@ -30,10 +30,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=1ecea07e">
-<link rel="stylesheet" href="nextrum-vy.css?v=f5835352">
+<link rel="stylesheet" href="nextrum-vy.css?v=2c134c23">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=2e5a5f97">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=0ca16687">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=63687285">
 </head>
 <body class="vy">
@@ -603,6 +603,9 @@
         <div class="bet-tillagg" id="bet-tillagg" hidden></div>
 
         <div class="vy-grupp"><h3>Att betala</h3><span class="vy-antal ar-gor" id="bet-att-antal"></span></div>
+        <!-- Betala alla (2026-10-27): flera pass i samma kassa, med Betala nu.
+             Dolt med färre än två pass att betala; ritaBetalaAlla() ritar det. -->
+        <div class="bet-alla" id="bet-alla" hidden></div>
         <div class="vy-kort vy-lista" id="bet-att-betala"><div class="loading">Hämtar</div></div>
         <!-- Fas 21.3: vägen till planerna där familjen betalar. Syns bara
              när planerna går att köpa och familjen inte redan har timmar
@@ -636,6 +639,10 @@
                kväll: "har man en rabattkod får man ändå gratis timmen",
                "alltså den första"). Rutan står när forsta_timmen_lage() säger
                att timmen inte är tagen, och går när den första planen fått den. -->
+          <!-- Egna upplägg (2026-10-27): det admin skickat till familjen, ett band
+               per upplägg med Köp. Dolt utan upplägg; ritaUpplagg() ritar det. -->
+          <div class="erb-upplagg" id="erb-upplagg" hidden></div>
+
           <div class="erb-erbjudande" id="erb-forsta-box" hidden>
             <span class="erb-erbjudande-ik" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 10h15v10h-15zM3.5 7h17v3h-17zM12 7v13M12 7c-1.6 0-4.5-.6-4.5-2.4C7.5 3.4 8.6 3 9.4 3 11.2 3 12 7 12 7zm0 0c1.6 0 4.5-.6 4.5-2.4 0-1.2-1.1-1.6-1.9-1.6C12.8 3 12 7 12 7z"/></svg></span>
             <div>
@@ -1101,7 +1108,7 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=085fa9d6"></script>
 <script src="nextrum-fel.js?v=c6a9a13f"></script>
-<script src="nextrum-forhandsvisning.js?v=c3628c5e"></script>
+<script src="nextrum-forhandsvisning.js?v=6800b581"></script>
 <script src="nextrum-app.js?v=9c8ce04d"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=8423ea85"></script>
@@ -1115,6 +1122,6 @@
 <script src="nextrum-introduktion.js?v=0edecad8"></script>
 <script src="nextrum-hemskarm.js?v=e239d6b2"></script>
 <script src="nextrum-modulvakt.js?v=544e71de"></script>
-<script src="nextrum-studie-vy.js?v=4b44baee"></script>
+<script src="nextrum-studie-vy.js?v=aa8e8375"></script>
 </body>
 </html>

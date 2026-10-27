@@ -206,7 +206,9 @@
       <!-- Betala nu (2026-10-21). Se anvandarvillkor.html. -->
       <li id="betala-nu">You pay for each session by card or Klarna as soon as the tutor has confirmed the
         time, and if the session is shorter than booked we refund the difference. You pay with Pay now
-        in your view, on the session or under Payment. If you do not manage to pay before the session,
+        in your view, on the session or under Payment. If you have several sessions to pay, you can pay
+        them all at once under Payment, in one checkout with a line per session, or session by session.
+        Each session is then paid as if it had been paid on its own. If you do not manage to pay before the session,
         it still takes place, and a session that has taken place must be paid: it then stays under
         Payment, and we remind you. After the session the tutor writes a report, which you read in your view.</li>
       <li id="hallen-tid">The price applies to the time the session actually lasted, counted per started
@@ -287,8 +289,8 @@
          hit, genom KOPVILLKOR_URL i nextrum-config.js. Platshållaren byttes
          mot texten 2026-10-20, i samma version. Se anvandarvillkor.html. -->
     <h2 id="kopvillkor">Purchase terms</h2>
-    <p>These apply when you pay us, for a session, an extra charge for a session that ran longer,
-      the sibling supplement, a late cancellation, a plan or hours for a plan. Before checkout opens, you tick a box to confirm
+    <p>These apply when you pay us, for a session or several sessions at once, an extra charge for a session that ran longer,
+      the sibling supplement, a late cancellation, a plan, a custom package or hours for a plan. Before checkout opens, you tick a box to confirm
       that you have read them.</p>
     <ul>
       <li><b>Who you buy from.</b> You buy from us, as set out under Who the agreement is with at the top
@@ -330,13 +332,15 @@
          köpts med den står kvar: hur länge de gäller, timbanken,
          prisgarantin och Att sluta. -->
     <p>You fill your time bank with hours in advance with a plan, which is valid for 30 days and has a
-      lower hourly price. If you
+      lower hourly price, or with a custom package we have sent you (see <a href="#eget-upplagg">Custom package</a>).
+      If you
       have a plan you can also buy more hours for it (see <a href="#kop-till">Buy more hours</a>). Fill the
       time bank, hours at the regular hourly price, is no longer sold, but hours you have already bought
       with it are valid as before, and what is set out here applies to them too. If you
       pay session by session the time bank is not used, and each session is paid as under Price and
       payment above.
-      What is available and what it costs is shown on the <a href="/en/priser#erbjudanden">pricing page</a>. It is a
+      Which plans are available and what they cost is shown on the <a href="/en/priser#erbjudanden">pricing page</a>,
+      and a custom package is shown in your view. It is a
       one-off purchase, by card or Klarna. It is not a subscription and does not renew by itself.</p>
     <ul>
       <!-- planerna_30_dagar (2026-10-21). Se anvandarvillkor.html. -->
@@ -382,8 +386,19 @@
         first, with the other free hours. What is left of a free hour when a session ends before a
         full hour is not saved, and free hours that are not used expire. They are
         a gift: they do not count as bought hours and are never paid out as money.</li>
+      <!-- egna_upplagg (2026-10-27). Se anvandarvillkor.html. -->
+      <li id="eget-upplagg"><b>Custom package.</b> We can send your family a custom package, for example
+        hours for a school holiday. It is a plan with the number of hours and the hourly price set out in
+        the package, never more per hour than session by session, and it is shown in your view under
+        Payment &amp; plans for as long as it can be bought. It is bought and valid like a plan: for 30
+        days from the day it is paid, and what is set out here, under Stopping and under
+        <a href="#angerratt">Right of withdrawal</a> also applies to it. If it is the first plan you buy it
+        comes with the <a href="#forsta-timmen">first hour free</a>, and if you have a
+        <a href="#familjerabatt">family discount</a> it is deducted from every hour. A discount code does
+        not apply to a custom package, and more hours cannot be bought for it.</li>
       <li id="kop-till"><b>Buy more hours.</b> If you have a plan that is valid for at least one more day,
-        you can buy 1–20 more hours at a time, under Your time bank in your view. They cost the plan's
+        you can buy 1–20 more hours at a time, under Your time bank in your view. This applies to a plan from
+        the pricing page, not a custom package. They cost the plan's
         hourly price, what you paid per hour for the plan, and expire on the same day as the plan. They
         are a separate purchase with the same rules as the plan: what is set out here, under Stopping and
         under <a href="#angerratt">Right of withdrawal</a> also applies to them, and they come with no free hour.</li>
@@ -600,7 +615,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Swedish National Board for Consumer Disputes (ARN)</a>
       or by a Swedish general court.</p>
 
-    <p class="jur-datum">Last updated 26 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 27 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 

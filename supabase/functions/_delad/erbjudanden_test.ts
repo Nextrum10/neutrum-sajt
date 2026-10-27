@@ -1,7 +1,7 @@
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
-  arErbjudandekod, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen, saljs, SALJS_INTE,
-  sammaInnehall,
+  arErbjudandekod, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradForUpplagg, kassaradTillPlanen,
+  saljs, SALJS_INTE, sammaInnehall,
   svensktDatum,
   manadensForsta,
   planensPeriod,
@@ -194,4 +194,22 @@ Deno.test('kassaraden säger planens månad när planen har en', () => {
     '8 timmar läxhjälp, 5 % rabatt. Gäller 1–30 november 2026.');
   // Utan månad som förut.
   assertEquals(kassarad(e).description, '8 timmar läxhjälp, 5 % rabatt. Gäller i 30 dagar från köpet.');
+});
+
+// ---------- ett eget upplägg (egna_upplagg, 2026-10-27) ----------
+
+Deno.test('upplägget: namnet, timmarna, timpriset och att det gäller som en plan', () => {
+  assertEquals(kassaradForUpplagg({ namn: 'Höstlovet', timmar: 6, timpris_ore: 34900 }), {
+    name: 'Eget upplägg: Höstlovet',
+    description: '6 timmar läxhjälp, 349 kr i timmen. Gäller i 30 dagar från köpet, som en plan.',
+  });
+  assertEquals(kassaradForUpplagg({ namn: ' ', timmar: 1, timpris_ore: 37900 }).name, 'Eget upplägg');
+  assertEquals(kassaradForUpplagg({ namn: 'x', timmar: 1, timpris_ore: 37900 }).description.startsWith('1 timme läxhjälp'), true);
+});
+
+Deno.test('upplägget: familjens rabatt står på raden när den lämnar ett pris kvar', () => {
+  assertEquals(kassaradForUpplagg({ namn: 'Lov', timmar: 4, timpris_ore: 30000, familjerabatt_ore: 1000 }).description,
+    '4 timmar läxhjälp, 300 kr i timmen, med er rabatt 290 kr. Gäller i 30 dagar från köpet, som en plan.');
+  assertEquals(kassaradForUpplagg({ namn: 'Lov', timmar: 4, timpris_ore: 30000, familjerabatt_ore: 30000 }).description,
+    kassaradForUpplagg({ namn: 'Lov', timmar: 4, timpris_ore: 30000 }).description);
 });

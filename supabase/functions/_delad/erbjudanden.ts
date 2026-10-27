@@ -115,6 +115,27 @@ export function kassarad(
   return { name: e.namn, description: `${vad}. ${nar}${egen}${kod}` };
 }
 
+/** Ett eget upplägg (egna_upplagg, 2026-10-27), som eget_upplagg_kop() svarar det. */
+export type Upplagget = { namn: string; timmar: number; timpris_ore: number; familjerabatt_ore?: number };
+
+/**
+ * Raden i kassan och på kvittot för ett eget upplägg: namnet admin gav
+ * det, timmarna och timpriset, och att det gäller som en plan, 30 dagar
+ * från köpet. Familjens rabatt står när köpet har en, som för en plan.
+ * Beloppet är databasens (eget_upplagg_kop), aldrig räknat här.
+ */
+export function kassaradForUpplagg(u: Upplagget): { name: string; description: string } {
+  const timpris = Number(u.timpris_ore);
+  const rabatt = Number(u.familjerabatt_ore) || 0;
+  const namn = String(u.namn ?? '').trim();
+  return {
+    name: namn ? `Eget upplägg: ${namn}` : 'Eget upplägg',
+    description: `${timmarText(Number(u.timmar))} läxhjälp, ${kr(timpris)} kr i timmen`
+      + (rabatt > 0 && rabatt < timpris ? `, med er rabatt ${kr(timpris - rabatt)} kr` : '')
+      + `. Gäller i ${PLANENS_DAGAR} dagar från köpet, som en plan.`,
+  };
+}
+
 /**
  * Hur länge ett obetalt köp återanvänds när familjen trycker Köp igen.
  * Stripe låter en kassa stå öppen i ett dygn; ett köp som är äldre än

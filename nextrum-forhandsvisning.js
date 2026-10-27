@@ -309,6 +309,8 @@ window.NXForhandsvisning = (function () {
       ],
       sparade_kort: [],
       kortreservationer: [],
+      /* Egna upplägg (egna_upplagg, 2026-10-27): inga skickade i världen. */
+      egna_upplagg: [],
       erbjudanden: [
         { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 10 },
         { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 20 },
@@ -474,6 +476,7 @@ window.NXForhandsvisning = (function () {
       /* Kortet (kortet_reserveras): familjen läser sina reservationer, och
          kortet bara genom mitt_kort(). */
       case 'kortreservationer': return roll === 'foralder' && r.parent_id === JAG;
+      case 'egna_upplagg': return roll === 'foralder' && r.familj === JAG;
       case 'sparade_kort': return false;
       case 'payouts': case 'arbetade_timmar': case 'payout_lines': return roll !== 'foralder' && r.tutor_id === JAG;
       case 'varvningsbonus': return false;

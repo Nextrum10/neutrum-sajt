@@ -16,8 +16,20 @@
        som använts, och beloppet räknas i databasen
        (klippkort_aterbetalning_lage): hela köpet är det villkoren lovar
        den som slutar, en del är timmarna till det pris familjen betalade.
-     · Ett tillägg och en betalning utan rad (två kassor stod öppna)
-       betalas tillbaka i Stripes dashboard; webhooken skriver det här.
+     · Övertiden (typen tillagg) och en betalning utan rad (två kassor
+       stod öppna) betalas tillbaka härifrån sedan 2026-10-27
+       (data-aterbetala-tillagg, data-aterbetala-betalning); förut i
+       Stripes dashboard.
+     · En rad betalas tillbaka för sig när betalningen har flera:
+       syskontillägget (2026-10-21) och ett pass i en betalning för flera
+       pass (Betala alla, 2026-10-27), med data-aterbetala-rad. Passet står
+       som återbetalt när hela dess rad gått tillbaka.
+
+   ÅTERBETALNINGARNA (2026-10-27, Leo: "bygg en återbetalningsfunktion för
+   oss i admin"): fliken med varje återbetalning i Stripe, var den än
+   gjordes, ur aterbetalningar: vad, hur mycket, vem av oss och varför, att
+   den gjordes av sig själv (ett kortare pass) eller i Stripes dashboard.
+   Bara visning; raderna ändras aldrig.
 
    KORTET. Varje pass som betalas med det sparade kortet, med läget med
    Leos ord (ej försökt, reserverad, dragen, nekad, frigjord), och de
@@ -53,6 +65,8 @@
   const L = {
     rader: [], kort: [], inst: null, filter: 'alla', sök: '',
     saknas: false, fel: null, kortSaknas: false, kortFel: null,
+    // återbetalningarna (2026-10-27), senaste först
+    åter: [], återSaknas: false, återFel: null,
     // betalningens rader per betalning, och markeringarna per betalning
     betRader: {}, dolda: {},
     // syskontilläggets poster per id, för raderna (syskontillagg_som_skuld)
@@ -103,15 +117,20 @@
   const saknasKod = fel => !!fel && (fel.code === 'PGRST205' || fel.code === '42P01' || fel.code === 'PGRST202');
 
   async function hämta() {
-    const [l, k, i, br, bd, tp] = await Promise.all([
+    const [l, k, i, br, bd, tp, åt] = await Promise.all([
       hämtaAlla('betalningar', '*', q => q.order('betald_at', { ascending: false })),
       hämtaAlla('kortreservationer', '*', q => q.order('andrad', { ascending: false }), 'booking_id'),
       supa.from('betalning_installning').select('*').maybeSingle(),
       // Betalningens rader och markeringarna; före migrationerna finns de inte, och korten klarar sig utan.
       hämtaAlla('betalningsrader', '*', q => q),
       hämtaAlla('betalningar_dolda', '*', q => q, 'betalning_id'),
-      hämtaAlla('tillagg_poster', 'id, bokning_id, pass_start, antal_extra_barn, status', q => q, 'id')
+      hämtaAlla('tillagg_poster', 'id, bokning_id, pass_start, antal_extra_barn, status', q => q, 'id'),
+      // Återbetalningarna (2026-10-27); före migrationen finns de inte.
+      hämtaAlla('aterbetalningar', '*', q => q.order('skapad_at', { ascending: false }))
     ]);
+    L.återSaknas = saknasKod(åt.error);
+    L.återFel = åt.error && !L.återSaknas ? felText(åt.error) : null;
+    L.åter = åt.error ? [] : (åt.data || []);
     L.poster = {};
     (tp.error ? [] : (tp.data || [])).forEach(x => { L.poster[x.id] = x; });
     L.betRader = {};
@@ -132,6 +151,7 @@
     await hämta();
     rita();
     ritaKortet();
+    ritaÅterbetalningarna();
   }
 
   /* ---------- liggaren ---------- */
@@ -159,9 +179,21 @@
     const pass = x.booking_id ? (S.bokningar || []).find(b => b.id === x.booking_id) : null;
     const köp = x.klippkort_id ? (S.klippkort || []).find(k => k.id === x.klippkort_id) : null;
     if (köp) return köp.namn || RADVAD[x.typ] || x.typ;
+    // Ett pass i en betalning för flera pass (2026-10-27): dagen och ämnet, och beskrivningen när passet hann betalas på annat sätt.
+    if (pass && x.typ === 'pass') {
+      return kortDatum(pass.wanted_date) + (pass.subject ? ', ' + pass.subject : '') + (x.beskrivning ? '. ' + x.beskrivning : '');
+    }
     if (pass) return (RADVAD[x.typ] || x.typ) + ', pass ' + kortDatum(pass.wanted_date);
     return x.beskrivning || RADVAD[x.typ] || x.typ;
   }
+
+  /* En betalning för flera pass (Betala alla, 2026-10-27): ett pass utan
+     pass på liggarens rad, och nedskriven. Raderna bär passen. */
+  const fleraPass = r => r.typ === 'pass' && !r.booking_id && !r.utan_rad;
+  /* En rad betalas tillbaka för sig: ett syskontillägg, och ett pass i en
+     betalning för flera pass. Inte i tvist: stripe-aterbetalning nekar den. */
+  const radKanÅterbetalas = (r, x) => !!x.id && x.belopp - x.tillbaka > 0 && r.status !== 'tvist'
+    && (x.typ === 'syskon' || (x.typ === 'pass' && fleraPass(r)));
   function raderFör(r) {
     const egna = L.betRader[r.id] || [];
     return egna.length
@@ -185,7 +217,10 @@
   function radKnappar(r) {
     const kvar = Number(r.belopp_ore) - Number(r.aterbetalt_ore || 0);
     if (!(kvar > 0) || r.status === 'tvist') return '';
-    if (r.utan_rad || r.typ === 'tillagg') return '<span class="eko-not">Betalas tillbaka i Stripe</span>';
+    /* En betalning som inte kunde skrivas ner och övertiden betalas tillbaka
+       härifrån sedan 2026-10-27 (stripe-aterbetalning); förut i Stripes dashboard. */
+    if (r.utan_rad) return knapp('data-aterbetala-betalning', r.id, 'Återbetala');
+    if (r.typ === 'tillagg' && r.booking_id) return knapp('data-aterbetala-tillagg', r.booking_id, 'Återbetala');
     if (r.typ === 'pass' && r.booking_id && (S.bokningar || []).some(b => b.id === r.booking_id)) {
       return knapp('data-aterbetala', r.booking_id, 'Återbetala');
     }
@@ -217,6 +252,8 @@
       + '<time datetime="' + esc(sthlmDag(r.betald_at)) + '">' + esc(kortDatum(r.betald_at)) + '</time></div>'
       + '<div class="lig-kort-taggar"><span class="lig-typ" data-typ="' + esc(r.typ) + '">' + esc(TYP[r.typ] || r.typ) + '</span>'
       + (r.kod ? '<span class="lig-kod">Kod <code translate="no">' + esc(r.kod) + '</code></span>' : '')
+      + (fleraPass(r) && rader.filter(x => x.typ === 'pass' && x.id).length > 1
+        ? '<span class="lig-kod">' + esc(rader.filter(x => x.typ === 'pass' && x.id).length + ' pass i samma kassa') + '</span>' : '')
       + (r.utan_rad ? '<span class="lig-varning">Inte nedskriven på sin rad</span>' : '')
       + '</div>'
       + '<ul class="lig-rader" aria-label="Det betalningen betalade">'
@@ -226,9 +263,8 @@
         + (x.kod && rader.length > 1 ? ' · kod ' + esc(x.kod) : '')
         + (x.tillbaka > 0 ? ' · ' + esc(kronor(x.tillbaka)) + ' tillbaka' : '') + '</span>'
         + '<b>' + esc(kronor(x.belopp)) + '</b>'
-        // Syskontilläggets rad betalas tillbaka för sig (syskontillagg_som_skuld).
-        + (x.typ === 'syskon' && x.post && x.id && x.belopp - x.tillbaka > 0 && r.status !== 'tvist'
-          ? knapp('data-aterbetala-rad', x.id, 'Återbetala') : '')
+        // Syskontilläggets rad och ett pass i en kassa för flera pass betalas tillbaka för sig.
+        + (radKanÅterbetalas(r, x) ? knapp('data-aterbetala-rad', x.id, 'Återbetala') : '')
         + '</li>').join('')
       + '</ul>'
       + (knappar ? '<div class="lig-kort-fot">' + knappar + '</div>' : '')
@@ -262,6 +298,94 @@
       + 'aldrig: de är bokföringsunderlag i sju år. Testbetalningar räknas inte i summorna. Dolda och annullerade '
       + 'betalningar står under Dolda; en annullerad räknas ändå i summorna, för pengarna rörde sig, tills den betalats '
       + 'tillbaka i Stripe.';
+  }
+
+  /* ---------- återbetalningarna (2026-10-27) ---------- */
+  const SÄTT = { adminvyn: 'I adminvyn', automatiskt: 'Av sig själv', stripe: 'I Stripes dashboard' };
+  const ÅTERVAD = { pass: 'Pass', plan: 'Plan', timbank: 'Fyll timbanken', tillagg: 'Övertid', syskon: 'Syskontillägg',
+    utan_rad: 'Betalning utan rad', okand: 'Betalning' };
+  function återVad(a) {
+    const pass = a.booking_id ? (S.bokningar || []).find(b => b.id === a.booking_id) : null;
+    const köp = a.klippkort_id ? (S.klippkort || []).find(k => k.id === a.klippkort_id) : null;
+    if (köp && (a.vad === 'plan' || a.vad === 'timbank')) return köp.namn || ÅTERVAD[a.vad];
+    return (ÅTERVAD[a.vad] || 'Betalning') + (pass ? ' ' + kortDatum(pass.wanted_date) + (pass.subject ? ', ' + pass.subject : '') : '');
+  }
+
+  function återRad(a) {
+    const bet = a.betalning_id ? L.rader.find(r => r.id === a.betalning_id) : null;
+    const meta = [familjLänk(a.familj) || '<span>Familj saknas</span>',
+      esc(SÄTT[a.satt] || a.satt) + (a.satt === 'adminvyn' && a.av && namnFör(a.av) !== '—' ? ' av ' + esc(namnFör(a.av)) : '')]
+      .concat(a.anledning ? ['”' + esc(a.anledning) + '”'] : [])
+      .concat(bet && bet.skarp === false ? ['Test'] : []);
+    const titel = a.booking_id
+      ? '<button type="button" class="eko-titel" data-dp="pass:' + esc(a.booking_id) + '">' + esc(återVad(a)) + '</button>'
+      : '<span class="eko-titel">' + esc(återVad(a)) + '</span>';
+    return '<div class="eko-rad" data-ater-rad="' + esc(a.id) + '">'
+      + dagRuta(sthlmDag(a.skapad_at))
+      + '<span class="eko-mitt">' + titel
+      + '<span class="eko-meta">' + meta.map(m => '<span>' + m + '</span>').join('') + '</span></span>'
+      + '<span class="eko-atg"></span>'
+      + '<span class="eko-lage">' + pill(a.satt === 'stripe' ? 'Utanför vyn' : 'Tillbaka', a.satt === 'stripe' ? 'ar-vantar' : '')
+      + '</span>'
+      + '<span class="eko-belopp"><b>' + esc(kronor(a.belopp_ore)) + '</b></span>'
+      + '</div>';
+  }
+
+  function ritaÅterbetalningarna() {
+    const host = $('#ab-lista'), sam = $('#ab-sam'), fot = $('#ab-fot');
+    if (!host) return;
+    if (L.återSaknas) {
+      host.innerHTML = '<p class="vy-tom">Återbetalningarna finns inte än: migrationen flera_pass_och_aterbetalningar är inte körd.</p>';
+      sam.innerHTML = '';
+      return;
+    }
+    if (L.återFel) { host.innerHTML = '<p class="vy-tom">Återbetalningarna gick inte att hämta: ' + esc(L.återFel) + '</p>'; return; }
+    // Summorna räknar inte testbetalningar, som Liggaren.
+    const skarpa = L.åter.filter(a => { const b = L.rader.find(r => r.id === a.betalning_id); return !b || b.skarp !== false; });
+    const summa = skarpa.reduce((t, a) => t + Number(a.belopp_ore || 0), 0);
+    const utanför = skarpa.filter(a => a.satt === 'stripe').length;
+    sam.innerHTML = samKort('Återbetalat', kronor(summa), skarpa.length + (skarpa.length === 1 ? ' återbetalning' : ' återbetalningar'))
+      + samKort('I adminvyn', String(skarpa.filter(a => a.satt === 'adminvyn').length), 'med vem och varför')
+      + samKort('Utanför adminvyn', String(utanför), utanför ? 'i Stripes dashboard: stäm av raderna' : 'inga', utanför > 0);
+    host.innerHTML = L.åter.length ? L.åter.map(återRad).join('')
+      : '<p class="vy-tom">Inga återbetalningar än. Ni betalar tillbaka under Liggaren, på passet, köpet eller raden.</p>';
+    fot.textContent = 'En rad per återbetalning i Stripe, var den än gjordes: i adminvyn (med vem och varför), av sig själv '
+      + 'när ett pass blev kortare än det betalade, eller i Stripes dashboard. Raderna ändras och raderas aldrig; '
+      + 'anledningen töms när familjen avidentifieras. Testbetalningar räknas inte i summorna.';
+  }
+
+  /* Beloppet och anledningen för en återbetalning, samma ruta för en rad,
+     övertiden och en betalning utan rad. Svarar { ore, anledning } eller null. */
+  function beloppFråga(o) {
+    const kr = Math.floor(o.kvar / 100);
+    return fråga({
+      titel: o.titel,
+      text: o.text,
+      innehåll: '<div class="fgroup" style="margin:14px 0 0"><label for="lig-rad-belopp">Belopp i kronor</label>'
+        + '<input class="inp" id="lig-rad-belopp" type="number" min="1" step="1" max="' + esc(String(kr))
+        + '" value="' + esc(String(kr)) + '" inputmode="numeric">'
+        + '<p class="xsmall" style="color:var(--bl-3);margin:8px 0 0">Högst ' + esc(kronor(o.kvar))
+        + '. Lägre belopp ger en delåterbetalning.</p></div>'
+        + '<div class="fgroup" style="margin:14px 0 0"><label for="lig-rad-anledning">Anledning, för vår egen skull</label>'
+        + '<input class="inp" id="lig-rad-anledning" placeholder="' + esc(o.platshållare || 't.ex. passet hölls inte') + '"></div>',
+      knapp: 'Betala tillbaka',
+      läs: ruta => {
+        const v = Number((ruta.querySelector('#lig-rad-belopp') || {}).value);
+        if (!(v >= 1) || v * 100 > o.kvar) return { fel: 'Välj mellan 1 och ' + kr + ' kronor.' };
+        return { värde: { ore: Math.round(v * 100) >= o.kvar - 99 ? o.kvar : Math.round(v * 100),
+                          anledning: ((ruta.querySelector('#lig-rad-anledning') || {}).value || '').trim() } };
+      }
+    });
+  }
+
+  async function betalaTillbaka(knappen, body) {
+    await medan(knappen, 'Betalar tillbaka…', async () => {
+      const svar = await supa.functions.invoke('stripe-aterbetalning', { body: body });
+      if (svar.error) { alert(await funktionsFel(svar.error)); return; }
+      if (svar.data && svar.data.varning) alert(svar.data.varning);
+      await ritaLiggaren();
+      if (NXAdmin.rita.ritaTillagg) await NXAdmin.rita.ritaTillagg();
+    });
   }
 
   /* ---------- kortet ---------- */
@@ -335,6 +459,17 @@
       rita();
       return;
     }
+    /* Öppna i Liggaren från familjens panel (2026-10-27): familjen sökt.
+       Länken byter själv till fliken, och panelen stänger sig. */
+    const lf = e.target.closest('[data-lig-familj]');
+    if (lf) {
+      const sök = $('#lig-sok');
+      if (sök) sök.value = lf.dataset.ligFamilj || '';
+      L.sök = String(lf.dataset.ligFamilj || '').trim().toLowerCase();
+      L.filter = 'alla';
+      if (L.rader.length || L.saknas || L.fel) rita();
+      return;
+    }
 
     const fk = e.target.closest('[data-kort-forsok]');
     if (fk) {
@@ -406,34 +541,44 @@
     const rad = rk.dataset.aterbetalaRad;
     const l = await supa.rpc('betalningsrad_att_aterbetala', { p_rad: rad });
     if (l.error) { alert(felText(l.error)); return; }
-    const kvar = Number((l.data || {}).kvar_ore) || 0;
-    const valt = await fråga({
-      titel: 'Betala tillbaka tillägget?',
-      text: namnFör((l.data || {}).familj) + '. Bara den här raden betalas tillbaka: resten av betalningen rörs inte. '
-        + 'Stripes avgift kommer inte tillbaka.',
-      innehåll: '<div class="fgroup" style="margin:14px 0 0"><label for="lig-rad-belopp">Belopp i kronor</label>'
-        + '<input class="inp" id="lig-rad-belopp" type="number" min="1" step="1" max="' + esc(String(Math.floor(kvar / 100)))
-        + '" value="' + esc(String(Math.floor(kvar / 100))) + '" inputmode="numeric"></div>'
-        + '<div class="fgroup" style="margin:14px 0 0"><label for="lig-rad-anledning">Anledning, för vår egen skull</label>'
-        + '<input class="inp" id="lig-rad-anledning" placeholder="t.ex. passet hölls inte"></div>',
-      knapp: 'Betala tillbaka',
-      läs: ruta => {
-        const kr = Number((ruta.querySelector('#lig-rad-belopp') || {}).value);
-        if (!(kr >= 1) || kr * 100 > kvar) return { fel: 'Välj mellan 1 och ' + Math.floor(kvar / 100) + ' kronor.' };
-        return { värde: { ore: Math.round(kr * 100) >= kvar - 99 ? kvar : Math.round(kr * 100),
-                          anledning: ((ruta.querySelector('#lig-rad-anledning') || {}).value || '').trim() } };
-      }
+    const d = l.data || {};
+    const kvar = Number(d.kvar_ore) || 0;
+    const ärPass = d.typ === 'pass';
+    const valt = await beloppFråga({
+      titel: ärPass ? 'Betala tillbaka passet?' : 'Betala tillbaka tillägget?',
+      text: namnFör(d.familj) + '. Bara den här raden betalas tillbaka: resten av betalningen rörs inte'
+        + (ärPass ? ', och passet står som återbetalt när hela raden gått tillbaka' : '') + '. Stripes avgift kommer inte tillbaka.',
+      kvar: kvar
     });
     if (!valt) return;
-    await medan(rk, 'Betalar tillbaka…', async () => {
-      const svar = await supa.functions.invoke('stripe-aterbetalning', {
-        body: { betalningsrad: rad, belopp_ore: valt.ore, anledning: valt.anledning }
-      });
-      if (svar.error) { alert(await funktionsFel(svar.error)); return; }
-      if (svar.data && svar.data.varning) alert(svar.data.varning);
-      await ritaLiggaren();
-      if (NXAdmin.rita.ritaTillagg) await NXAdmin.rita.ritaTillagg();
+    await betalaTillbaka(rk, { betalningsrad: rad, belopp_ore: valt.ore, anledning: valt.anledning });
+  });
+
+  /* Övertiden (Fas 20.1) och en betalning som inte kunde skrivas ner
+     (betalning_utan_rad), härifrån sedan 2026-10-27. Taket är liggarens: det
+     betalade minus det som redan gått tillbaka, och funktionen räknar det igen. */
+  document.addEventListener('click', async e => {
+    const tk = e.target.closest('[data-aterbetala-tillagg]');
+    const bk = tk ? null : e.target.closest('[data-aterbetala-betalning]');
+    if (!tk && !bk) return;
+    const r = tk ? L.rader.find(x => x.typ === 'tillagg' && x.booking_id === tk.dataset.aterbetalaTillagg)
+      : L.rader.find(x => x.id === bk.dataset.aterbetalaBetalning);
+    if (!r) return;
+    const kvar = Number(r.belopp_ore) - Number(r.aterbetalt_ore || 0);
+    const valt = await beloppFråga(tk ? {
+      titel: 'Betala tillbaka övertiden?',
+      text: namnFör(r.familj) + '. Tillägget för tiden passet drog över har en egen betalning: bara den betalas tillbaka, '
+        + 'och passet rörs inte. Stripes avgift kommer inte tillbaka.',
+      kvar: kvar, platshållare: 't.ex. passet drog inte över'
+    } : {
+      titel: 'Betala tillbaka betalningen?',
+      text: namnFör(r.familj) + '. Pengarna kom in men kunde inte skrivas ner på det de gällde, troligen en andra kassa '
+        + 'som stod öppen. Stäm av i Stripe vad familjen redan betalat för. Stripes avgift kommer inte tillbaka.',
+      kvar: kvar, platshållare: 't.ex. betalt två gånger'
     });
+    if (!valt) return;
+    await betalaTillbaka(tk || bk, Object.assign(tk ? { tillagg: r.booking_id } : { betalning: r.id },
+      { belopp_ore: valt.ore, anledning: valt.anledning }));
   });
 
   document.addEventListener('input', e => {

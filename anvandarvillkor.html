@@ -224,7 +224,9 @@
            2026-10-13 till 2026-10-21) är borta, och punkten #kortet med det. -->
       <li id="betala-nu">Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat
         tiden, och blir passet kortare än bokat betalar vi tillbaka mellanskillnaden. Ni betalar
-        med Betala nu i er vy, på passet eller under Betalning. Hinner ni inte betala innan passet
+        med Betala nu i er vy, på passet eller under Betalning. Har ni flera pass att betala kan ni
+        betala dem på en gång under Betalning, i en kassa med en rad per pass, eller pass för pass.
+        Varje pass betalas då som om det betalats för sig. Hinner ni inte betala innan passet
         hålls det ändå, och ett pass som har hållits ska betalas: då står det kvar under Betalning, och vi
         påminner er. Efter passet skriver studiehjälparen en rapport, som ni läser i er vy.</li>
       <li id="hallen-tid">Priset gäller den tid passet faktiskt hölls, räknat per påbörjad kvart.
@@ -326,8 +328,8 @@
          och det är en ny version av villkoren. Koderna står inte här med
          flit: en kods villkor står där koden delas ut. -->
     <h2 id="kopvillkor">Köpvillkor</h2>
-    <p>Det här gäller när ni betalar hos oss, för ett pass, ett tillägg för ett pass som blev längre,
-      syskontillägget, en sen avbokning, en plan eller timmar till en plan. Innan kassan öppnas kryssar ni i att ni har
+    <p>Det här gäller när ni betalar hos oss, för ett pass eller flera pass på en gång, ett tillägg för ett pass som blev längre,
+      syskontillägget, en sen avbokning, en plan, ett eget upplägg eller timmar till en plan. Innan kassan öppnas kryssar ni i att ni har
       läst det.</p>
     <ul>
       <li><b>Vem ni köper av.</b> Ni köper av oss, så som det står under Vem avtalet är med överst på
@@ -368,12 +370,14 @@
          köpts med den står kvar: hur länge de gäller, timbanken,
          prisgarantin och Att sluta. -->
     <p>Ni fyller er timbank med timmar i förväg med en plan, som gäller i 30 dagar och har ett lägre
-      timpris. Har ni en plan kan ni också köpa
+      timpris, eller med ett eget upplägg som vi skickat till er (se <a href="#eget-upplagg">Eget upplägg</a>).
+      Har ni en plan kan ni också köpa
       till timmar till den (se <a href="#kop-till">Köp till timmar</a>). Fyll timbanken, timmar till
       ordinarie timpris, säljs inte längre, men timmar ni redan köpt med den gäller som förut, och det
       som står här gäller också dem. Betalar ni pass för pass används
       inte timbanken, och varje pass betalas som under Pris och betalning ovan.
-      Vilka som finns och vad de kostar står på <a href="/priser#erbjudanden">prissidan</a>. Köpet
+      Vilka planer som finns och vad de kostar står på <a href="/priser#erbjudanden">prissidan</a>, och ett
+      eget upplägg står i er vy. Köpet
       görs en gång, med kort eller Klarna. Det är inget abonnemang och förnyas inte av sig självt.</p>
     <ul>
       <!-- planerna_30_dagar (2026-10-21, Leo: "köper planen direkt och den används 30 dagar
@@ -430,8 +434,22 @@
         gratis timmarna. Det som blir över av en gratistimme när ett pass slutar före en hel timme
         sparas inte, och gratistimmar som inte används förfaller. De är en gåva:
         de räknas inte som köpta timmar och betalas aldrig ut som pengar.</li>
+      <!-- egna_upplagg (2026-10-27, Leo: "admin säljer 6 h till familjen därför att det är lov och
+           då skickar vi ett upplägg, villkoren är samma men det är bara 6h istället"). Upplägget är en
+           plan (klippkort med erbjudandet plan_eget och sorten plan): 30 dagar från betalningen,
+           första timmen för den första planen, familjerabatten. Ingen kod (intern.kod_galler_kopet)
+           och inga timmar till det (extra_timmar_erbjudande). -->
+      <li id="eget-upplagg"><b>Eget upplägg.</b> Vi kan skicka ett eget upplägg till er familj, till
+        exempel timmar för ett lov. Det är en plan med det antal timmar och det timpris som står i
+        upplägget, aldrig dyrare per timme än pass för pass, och det står i er vy under Betalning &amp;
+        planer så länge det går att köpa. Det köps och gäller som en plan: i 30 dagar från dagen det
+        betalas, och det som står här, under Att sluta och under <a href="#angerratt">Ångerrätt</a>
+        gäller också det. Är det den första plan ni köper får det <a href="#forsta-timmen">första
+        timmen gratis</a>, och har ni en <a href="#familjerabatt">familjerabatt</a> dras den på varje
+        timme. En rabattkod gäller inte ett eget upplägg, och timmar köps inte till det.</li>
       <li id="kop-till"><b>Köp till timmar.</b> Har ni en plan som gäller minst en dag till kan ni köpa
-        till 1–20 timmar åt gången, under Er timbank i vyn. De kostar planens timpris, det ni betalade
+        till 1–20 timmar åt gången, under Er timbank i vyn. Det gäller en plan från prissidan, inte ett
+        eget upplägg. De kostar planens timpris, det ni betalade
         per timme för planen, och går ut samma dag som planen. De är ett eget köp med samma regler som
         planen: det som står här, under Att sluta och under <a href="#angerratt">Ångerrätt</a> gäller
         också dem, och de får ingen gratis timme.</li>
@@ -672,7 +690,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 26 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 27 oktober 2026.</p>
   </div>
 </section>
 

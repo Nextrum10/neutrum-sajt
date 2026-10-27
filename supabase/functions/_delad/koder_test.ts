@@ -74,6 +74,7 @@ Deno.test('bara en plan tar en kod, aldrig Fyll timbanken eller timmar till plan
   assertEquals(kodenGallerKopet({ kod: 'klipp10', sort: 'klippkort' }), false);
   assertEquals(kodenGallerKopet({ kod: 'plan_extra', sort: 'klippkort' }), false);
   assertEquals(kodenGallerKopet({ kod: 'plan_extra', sort: 'plan' }), false);
+  assertEquals(kodenGallerKopet({ kod: 'plan_eget', sort: 'plan' }), false);
   assertEquals(kodenGallerKopet(null), false);
 });
 

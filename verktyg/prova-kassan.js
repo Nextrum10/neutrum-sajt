@@ -1,6 +1,7 @@
 /* ============================================================
    NEXTRUM — webbläsarprov för kassan, timbankens månader, Liggaren
-   och Kortet (2026-10-21, Fas 3)
+   och Kortet (2026-10-21, Fas 3), och Betala alla och återbetalningarna
+   (2026-10-27)
 
        NODE_PATH="$(npm root -g)" node verktyg/prova-kassan.js [mapp för bilder]
 
@@ -270,6 +271,26 @@ function falskSupabase(o) {
         belopp_ore: hela ? 103700 : 37900 * k.p_timmar, vid_uppsagning_ore: 103700, betalt_ore: 303200,
         aterbetald_ore: 0, giltigt_till: sista(DENNA), utgangen: false };
     },
+    // Vad en rad har kvar att betala tillbaka (flera_pass_och_aterbetalningar, 2026-10-27).
+    betalningsrad_att_aterbetala: k => {
+      const x = (W.betalningsrader || []).find(r => r.id === k.p_rad);
+      const b = x && (W.betalningar || []).find(r => r.id === x.betalning_id);
+      return x ? { rad: x.id, typ: x.typ, pass: x.booking_id || null, familj: b ? b.familj : null, betalning: x.betalning_id,
+        pi: b ? b.stripe_payment_intent : null, kvar_ore: x.belopp_ore - (x.aterbetalt_ore || 0) } : null;
+    },
+    // Egna upplägg (egna_upplagg, 2026-10-27): admin skickar och drar tillbaka.
+    skicka_eget_upplagg: k => {
+      const id = 'upp-ny-' + ((W.egna_upplagg || []).length + 1);
+      (W.egna_upplagg = W.egna_upplagg || []).unshift({ id, familj: k.p_familj, namn: k.p_namn || k.p_timmar + ' timmar',
+        timmar: k.p_timmar, timpris_ore: k.p_timpris_ore, pris_ore: k.p_timmar * k.p_timpris_ore, giltigt_till: dag(k.p_dagar || 14),
+        skapad_av: 'admin-1', skapad_at: nu(0), aterkallad_at: null, kopt_at: null, klippkort_id: null });
+      return id;
+    },
+    aterkalla_eget_upplagg: k => {
+      const u = (W.egna_upplagg || []).find(x => x.id === k.p_id && !x.kopt_at && !x.aterkallad_at);
+      if (u) u.aterkallad_at = nu(0);
+      return !!u;
+    },
     kortreservation_forsok_nu: k => {
       const r = W.kortreservationer.find(x => x.booking_id === k.p_bokning && x.lage === 'misslyckad');
       if (!r) return 'inget att försöka igen';
@@ -429,8 +450,11 @@ async function provaMånaderna(webb) {
   await bild(page, 'timbanken-planer', '#erb-mina-box');
 
   prova('planerna: inget månadsval', (await page.locator('#erb-planer [data-erb-manad]').count()) === 0);
+  /* Kortet säljer sedan Fas 25 (2026-10-27): dagarna står bland fördelarna
+     och vid priset, inte i en egen rad under kortet. */
   prova('planerna: varje plan säger 30 dagar från köpet',
-    (await page.locator('#erb-planer .erb-manad-not').allTextContents()).filter(t => t === 'Gäller i 30 dagar från köpet').length === 2);
+    (await page.locator('#erb-planer .erb-fordelar li').allTextContents()).filter(t => t === 'Gäller i 30 dagar från köpet, obundet').length === 2
+    && (await page.locator('#erb-planer .erb-pris-per').allTextContents()).filter(t => t === 'för 30 dagar').length === 2);
   await bild(page, 'planerna', '#erb-planer');
 
   await page.click('[data-kop="plan_standard"]');
@@ -617,9 +641,10 @@ async function provaLiggaren(webb) {
   prova('liggaren: passet delvis tillbaka, med passets knapp',
     /Delvis tillbaka/.test(pass) && /100\s*kr tillbaka/.test(pass)
       && (await page.locator('[data-lig-rad="lig-2"] [data-aterbetala="pass-2"]').count()) === 1, pass);
-  prova('liggaren: betalningen utan rad betalas tillbaka i Stripe',
+  // Härifrån sedan 2026-10-27, förut i Stripes dashboard.
+  prova('liggaren: betalningen utan rad betalas tillbaka härifrån',
     /Inte nedskriven på sin rad/.test(await innehåll(page, '[data-lig-rad="lig-5"]'))
-      && /Betalas tillbaka i Stripe/.test(await innehåll(page, '[data-lig-rad="lig-5"]')));
+      && (await page.locator('[data-lig-rad="lig-5"] [data-aterbetala-betalning="lig-5"]').count()) === 1);
   prova('liggaren: testköpet är märkt', /Test/.test(await innehåll(page, '[data-lig-rad="lig-4"] .lig-lage')));
 
   /* Korten (2026-10-21): beloppet, läget i färg, familjen, typen, koden, dagen och raderna. */
@@ -652,9 +677,9 @@ async function provaLiggaren(webb) {
   await filter('test', ['lig-4'], 'Test visar bara testköpet');
   await filter('tillbaka', ['lig-2'], 'Tillbaka visar det som gått tillbaka');
   await filter('dolda', ['lig-3', 'lig-6'], 'Dolda visar den annullerade och den dolda testbetalningen');
-  prova('korten: den annullerade har märket, och tillägget betalas tillbaka i Stripe',
+  prova('korten: den annullerade har märket, och övertiden betalas tillbaka härifrån',
     /Annullerad/.test(await innehåll(page, '[data-lig-rad="lig-3"] .lig-lage'))
-      && /Betalas tillbaka i Stripe/.test(await innehåll(page, '[data-lig-rad="lig-3"]')));
+      && (await page.locator('[data-lig-rad="lig-3"] [data-aterbetala-tillagg="pass-k3"]').count()) === 1);
   await filter('alla', ['lig-1', 'lig-2', 'lig-4', 'lig-5'], 'Alla visar allt utom det dolda och det annullerade');
   await page.fill('#lig-sok', 'pi_utan5');
   await vänta(150);
@@ -721,6 +746,229 @@ async function provaLiggaren(webb) {
     /Ej försökt/.test((await page.locator('#kd-lista .eko-rad').allTextContents()).join(' | ')));
   prova('liggaren: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   prova('liggaren: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
+}
+
+/* ============ 7b. Betala alla och återbetalningarna (2026-10-27) ============
+   Leo: "man ska kunna betala flera saker under samma kassa, eller alltså
+   fler pass samtidigt. antingen alla eller pass för pass", och "bygg en
+   återbetalningsfunktion för oss i admin". Familjen: ett kort med alla
+   passen att betala och Betala nu, köpvillkoren med passen, och kassan
+   får passens id:n, aldrig ett belopp. Admin: en betalning för flera pass
+   är ett kort med en rad per pass och Återbetala på raden, övertiden och
+   betalningen utan rad betalas tillbaka härifrån, och Återbetalningar
+   listar vem som betalade tillbaka och varför. */
+function fleraPass(W) {
+  const pass = (id, ämne, d, betalt, tillbaka) => ({ id, parent_id: 'fam-a', tutor_id: 'sh-a', student_id: 'elev-a',
+    subject: ämne, tjanst: 'laxhjalp', wanted_date: dag(d), wanted_time: '16:00', duration_min: betalt > 39900 ? 120 : 60,
+    status: 'completed', betalning_status: tillbaka >= betalt ? 'aterbetald' : 'betald', betalt_ore: betalt,
+    aterbetald_ore: tillbaka, passkassa_id: 'kassa-7', betald_at: nu(-1000), fakturerbar: true, startrabatt: false,
+    timpris_ore: 39900, extra_ore: 6900, antal_barn: 1, created_at: nu(-30000) });
+  W.bookings.push(pass('pass-f1', 'Kemi', -5, 39900, 0), pass('pass-f2', 'Biologi', -4, 79800, 79800));
+  W.betalningar.push({ id: 'lig-7', familj: 'fam-a', typ: 'pass', erbjudande: null, klippkort_id: null, booking_id: null,
+    belopp_ore: 119700, aterbetalt_ore: 79800, valuta: 'sek', status: 'delvis_aterbetald', kod: null,
+    stripe_payment_intent: 'pi_flera7', stripe_charge: 'ch_flera7', avgift_ore: 2400, netto_ore: 117300, skarp: true,
+    utan_rad: false, betald_at: nu(-1000), bokford_at: nu(-1000), andrad_at: nu(-500) });
+  W.betalningsrader.push(
+    { id: 'rad-7a', betalning_id: 'lig-7', typ: 'pass', belopp_ore: 39900, aterbetalt_ore: 0, klippkort_id: null,
+      booking_id: 'pass-f1', kod: null, beskrivning: null },
+    { id: 'rad-7b', betalning_id: 'lig-7', typ: 'pass', belopp_ore: 79800, aterbetalt_ore: 79800, klippkort_id: null,
+      booking_id: 'pass-f2', kod: null, beskrivning: null });
+  W.aterbetalningar = [
+    { id: 'ab-1', stripe_refund: 're_ab1', betalning_id: 'lig-7', betalningsrad_id: 'rad-7b', familj: 'fam-a', vad: 'pass',
+      booking_id: 'pass-f2', klippkort_id: null, belopp_ore: 79800, anledning: 'Passet ställdes in', av: 'admin-1',
+      satt: 'adminvyn', skapad_at: nu(-500) },
+    { id: 'ab-2', stripe_refund: 're_ab2', betalning_id: 'lig-2', betalningsrad_id: null, familj: 'fam-a', vad: 'pass',
+      booking_id: 'pass-2', klippkort_id: null, belopp_ore: 10000, anledning: null, av: null, satt: 'stripe',
+      skapad_at: nu(-3000) }];
+}
+
+async function provaBetalaAlla(webb) {
+  {
+    // Med timmar kvar på planen betalar timmarna passen, och Betala alla står inte där.
+    const { context, page } = await öppna(webb, { anv: FAMILJ });
+    await page.goto(BAS + '/foralder#betalning');
+    await page.waitForSelector('#bet-att-betala [data-timmar]', { timeout: 10000 }).catch(() => {});
+    await vänta(500);
+    prova('betala alla: inte när timmarna kan betala passen',
+      (await page.locator('#bet-att-betala [data-timmar]').count()) >= 2 && !(await synlig(page, '#bet-alla [data-betala-alla]')));
+    await context.close();
+  }
+  const { context, page, S, riktiga, konsol } = await öppna(webb, { anv: FAMILJ, värld: W => { W.klippkort_saldo = []; } });
+  await page.goto(BAS + '/foralder#betalning');
+  await page.waitForSelector('#bet-att-betala [data-betala]', { timeout: 10000 }).catch(() => {});
+  await vänta(500);
+  if (await page.locator('.nx-notisruta [data-notisruta-stang]').count()) {
+    await page.click('.nx-notisruta [data-notisruta-stang]').catch(() => {});
+    await vänta(300);
+  }
+  const n = await page.locator('#bet-att-betala [data-betala]').count();
+  prova('betala alla: kortet står över listan med passen och summan',
+    n >= 2 && await synlig(page, '#bet-alla [data-betala-alla]')
+      && new RegExp('Alla ' + n + ' pass på en gång').test(await innehåll(page, '#bet-alla')),
+    n + ' | ' + await innehåll(page, '#bet-alla'));
+  prova('betala alla: knappen säger Betala nu, som alla betalknappar',
+    (await innehåll(page, '#bet-alla [data-betala-alla]')).trim() === 'Betala nu');
+  await page.click('#bet-alla [data-betala-alla]', { timeout: 3000 }).catch(() => {});
+  await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
+  const ruta = await innehåll(page, villkorsruta);
+  prova('betala alla: köpvillkoren med ett pass per rad och totalen',
+    (await page.locator(villkorsruta + ' .nx-kassa-rader li').count()) === n && /Totalt/.test(ruta), ruta);
+  await kryssaOchTillKassan(page);
+  const k = (kassor(S).pop() || {}).kropp || {};
+  prova('betala alla: kassan får passens id:n och krysset, aldrig ett belopp',
+    Array.isArray(k.passen) && k.passen.length === n && k.villkor === true && !('belopp_ore' in k) && !('pass' in k),
+    JSON.stringify(k));
+  prova('betala alla: pass för pass står kvar i listan',
+    (await page.locator('#bet-att-betala [data-betala]').count()) === n);
+  await bild(page, 'betala-alla', '#bet-alla');
+  prova('betala alla: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('betala alla: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
+}
+
+async function provaÅterbetalningarna(webb) {
+  const { context, page, S, riktiga, konsol } = await öppna(webb, { värld: fleraPass });
+  await tillAdmin(page, 'ekonomi/liggaren');
+  await page.waitForSelector('[data-lig-rad="lig-7"]', { timeout: 6000 }).catch(() => {});
+  const kort = await innehåll(page, '[data-lig-rad="lig-7"]');
+  prova('flera pass: ett kort med en rad per pass och märket',
+    (await page.locator('[data-lig-rad="lig-7"] .lig-rader li').count()) === 2 && /2 pass i samma kassa/.test(kort)
+      && /Kemi/.test(kort) && /Biologi/.test(kort), kort);
+  prova('flera pass: Återbetala på passet som har kvar, inte på det som gått tillbaka, och ingen knapp för hela',
+    (await page.locator('[data-lig-rad="lig-7"] [data-aterbetala-rad="rad-7a"]').count()) === 1
+      && (await page.locator('[data-lig-rad="lig-7"] [data-aterbetala-rad="rad-7b"]').count()) === 0
+      && (await page.locator('[data-lig-rad="lig-7"] .lig-kort-fot').count()) === 0);
+  await page.click('[data-aterbetala-rad="rad-7a"]');
+  await page.waitForSelector('.nx-fraga-box #lig-rad-belopp', { timeout: 4000 }).catch(() => {});
+  prova('flera pass: rutan säger att bara passets rad betalas tillbaka',
+    /Betala tillbaka passet\?/.test(await innehåll(page, '.nx-fraga-box'))
+      && /bara den här raden/i.test(await innehåll(page, '.nx-fraga-box')), await innehåll(page, '.nx-fraga-box'));
+  await page.fill('#lig-rad-belopp', '200');
+  await page.fill('#lig-rad-anledning', 'kortare än bokat');
+  await page.click('.nx-fraga-box [data-fr="ja"]');
+  await vänta(700);
+  const åter = () => (S.logg.filter(r => r.väg === '/functions/v1/stripe-aterbetalning').pop() || {}).kropp || {};
+  prova('flera pass: funktionen får raden, beloppet och anledningen',
+    åter().betalningsrad === 'rad-7a' && åter().belopp_ore === 20000 && åter().anledning === 'kortare än bokat',
+    JSON.stringify(åter()));
+  await page.click('[data-aterbetala-betalning="lig-5"]');
+  await page.waitForSelector('.nx-fraga-box #lig-rad-belopp', { timeout: 4000 }).catch(() => {});
+  prova('utan rad: rutan säger att pengarna inte kunde skrivas ner',
+    /Betala tillbaka betalningen\?/.test(await innehåll(page, '.nx-fraga-box')), await innehåll(page, '.nx-fraga-box'));
+  await page.click('.nx-fraga-box [data-fr="ja"]');
+  await vänta(700);
+  prova('utan rad: funktionen får betalningen och hela det som är kvar',
+    åter().betalning === 'lig-5' && åter().belopp_ore === 39900, JSON.stringify(åter()));
+  await page.click('[data-lig-filter="dolda"]');
+  await vänta(150);
+  await page.click('[data-aterbetala-tillagg="pass-k3"]');
+  await page.waitForSelector('.nx-fraga-box #lig-rad-belopp', { timeout: 4000 }).catch(() => {});
+  prova('övertid: rutan säger att bara tillägget betalas tillbaka',
+    /Betala tillbaka övertiden\?/.test(await innehåll(page, '.nx-fraga-box')), await innehåll(page, '.nx-fraga-box'));
+  await page.click('.nx-fraga-box [data-fr="ja"]');
+  await vänta(700);
+  prova('övertid: funktionen får passet, aldrig liggarens rad', åter().tillagg === 'pass-k3' && åter().belopp_ore === 10000
+    && !('betalning' in åter()), JSON.stringify(åter()));
+
+  await page.click('#flik-aterbetalningar');
+  await page.waitForSelector('#ab-lista .eko-rad', { timeout: 4000 }).catch(() => {});
+  const rader = await page.locator('#ab-lista .eko-rad').allTextContents();
+  prova('återbetalningarna: en rad per återbetalning, den senaste först',
+    rader.length === 2 && /Biologi/.test(rader[0] || '') && /Engelska/.test(rader[1] || ''), rader.join(' | '));
+  prova('återbetalningarna: vem och varför, och den i Stripes dashboard för sig',
+    /I adminvyn av Leo Admin/.test(rader[0] || '') && /Passet ställdes in/.test(rader[0] || '') && /798\s*kr/.test(rader[0] || '')
+      && /I Stripes dashboard/.test(rader[1] || '') && /Utanför vyn/.test(rader[1] || ''), rader.join(' | '));
+  const sam = await innehåll(page, '#ab-sam');
+  prova('återbetalningarna: summan och det som gjordes utanför adminvyn',
+    /Återbetalat\s*898\s*kr\s*2 återbetalningar/.test(sam) && /Utanför adminvyn\s*1/.test(sam), sam);
+  await bild(page, 'aterbetalningarna', '#panel-aterbetalningar');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await vänta(300);
+  prova('återbetalningarna på telefon: ingen sidledsscroll', await ingenSidled(page));
+  prova('återbetalningarna: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('återbetalningarna: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
+}
+
+/* ============ 7c. Egna upplägg (2026-10-27) ============
+   Leo: "admin säljer 6 h till familjen därför att det är lov och då
+   skickar vi ett upplägg, villkoren är samma men det är bara 6h
+   istället." Familjen ser upplägget ovanför planerna och köper det med
+   Köp, och kassan får upplägget id, aldrig ett belopp. Admin skickar ett
+   ur familjens panel, ser det och drar tillbaka det. */
+const UPPLAGGET = { id: 'upp-1', familj: 'fam-a', namn: 'Höstlovet', timmar: 6, timpris_ore: 34900, pris_ore: 209400,
+  giltigt_till: dag(10), skapad_av: 'admin-1', skapad_at: nu(-60), aterkallad_at: null, kopt_at: null, klippkort_id: null };
+
+async function provaUpplagg(webb) {
+  {
+    const { context, page, S, riktiga, konsol } = await öppna(webb, { anv: FAMILJ, värld: W => {
+      W.egna_upplagg = [Object.assign({}, UPPLAGGET)];
+    } });
+    await tillErbjudanden(page);
+    await page.waitForSelector('#erb-upplagg [data-kop-upplagg]', { timeout: 6000 }).catch(() => {});
+    const kort = await innehåll(page, '#erb-upplagg');
+    prova('upplägget: familjen ser det ovanför planerna, med timmarna, priset och att det gäller som en plan',
+      /Höstlovet: 6 timmar, 2\s?094\s*kr/.test(kort) && /349\s*kr i timmen/.test(kort) && /30 dagar från köpet, som en plan/.test(kort),
+      kort);
+    await page.click('#erb-upplagg [data-kop-upplagg="upp-1"]');
+    await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
+    prova('upplägget: köpvillkoren före kassan, med timmarna och priset',
+      /Köp Höstlovet/.test(await innehåll(page, villkorsruta)) && /6 timmar läxhjälp/.test(await innehåll(page, villkorsruta)),
+      await innehåll(page, villkorsruta));
+    await kryssaOchTillKassan(page);
+    const k = (kassor(S).pop() || {}).kropp || {};
+    prova('upplägget: kassan får upplägget och krysset, aldrig ett belopp eller en kod',
+      k.upplagg === 'upp-1' && k.villkor === true && !('belopp_ore' in k) && !('rabattkod' in k) && !('erbjudande' in k),
+      JSON.stringify(k));
+    await bild(page, 'upplagget', '#erb-upplagg');
+    prova('upplägget: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+    prova('upplägget: inga fel i konsolen hos familjen', konsol.length === 0, konsol.join(' | '));
+    await context.close();
+  }
+  const { context, page, S, riktiga, konsol } = await öppna(webb, { värld: W => {
+    W.egna_upplagg = [Object.assign({}, UPPLAGGET)];
+  } });
+  await tillAdmin(page, 'ekonomi/liggaren');
+  await page.waitForSelector('[data-lig-rad="lig-1"] [data-dp="familj:fam-a"]', { timeout: 6000 }).catch(() => {});
+  await page.click('[data-lig-rad="lig-1"] [data-dp="familj:fam-a"]');
+  await page.waitForSelector('[data-dp-flik="ekonomi"]', { timeout: 6000 }).catch(() => {});
+  await page.click('[data-dp-flik="ekonomi"]');
+  await page.waitForSelector('form[data-dp-upplagg]', { timeout: 6000 }).catch(() => {});
+  const panel = await innehåll(page, 'aside.dp');
+  prova('upplägget i panelen: det som skickats, med läget, Skriv i Gmail och Dra tillbaka',
+    /Höstlovet: 6 timmar, 2\s?094\s*kr/.test(panel) && /Väntar på familjen/.test(panel)
+      && (await page.locator('[data-dp-upplagg-bort="upp-1"]').count()) === 1
+      && /mail\.google\.com/.test(await page.getAttribute('a:has-text("Skriv i Gmail")', 'href').catch(() => '') || ''),
+    panel.slice(0, 400));
+  prova('upplägget i panelen: planens timpris är förvalet, och ordinarie är taket',
+    (await page.inputValue('#dp-upp-pris')) === '379' && (await page.getAttribute('#dp-upp-pris', 'max')) === '399');
+  await page.fill('#dp-upp-timmar', '4');
+  await page.fill('#dp-upp-namn', 'Sportlovet');
+  await page.click('form[data-dp-upplagg] button[type="submit"]');
+  await page.waitForSelector('.nx-fraga.open [data-svar="ja"]', { timeout: 4000 }).catch(() => {});
+  prova('upplägget i panelen: frågan säger timmarna, priset och att det gäller som en plan',
+    /4 timmar för 1\s?516\s*kr/.test(await innehåll(page, '.nx-fraga.open')) && /30 dagar från köpet/.test(await innehåll(page, '.nx-fraga.open')),
+    await innehåll(page, '.nx-fraga.open'));
+  await page.click('.nx-fraga.open [data-svar="ja"]');
+  await vänta(900);
+  const skickat = (S.logg.filter(r => r.väg === '/rest/v1/rpc/skicka_eget_upplagg').pop() || {}).kropp || {};
+  prova('upplägget i panelen: databasen får familjen, timmarna, timpriset i öre, namnet och dagarna',
+    skickat.p_familj === 'fam-a' && skickat.p_timmar === 4 && skickat.p_timpris_ore === 37900 && skickat.p_namn === 'Sportlovet'
+      && skickat.p_dagar === 14, JSON.stringify(skickat));
+  prova('upplägget i panelen: det nya står i listan', /Sportlovet: 4 timmar/.test(await innehåll(page, 'aside.dp')));
+  await page.click('[data-dp-upplagg-bort="upp-1"]');
+  await page.waitForSelector('.nx-fraga.open [data-svar="ja"]', { timeout: 4000 }).catch(() => {});
+  await page.click('.nx-fraga.open [data-svar="ja"]');
+  await vänta(900);
+  const bort = (S.logg.filter(r => r.väg === '/rest/v1/rpc/aterkalla_eget_upplagg').pop() || {}).kropp || {};
+  prova('upplägget i panelen: Dra tillbaka frågar databasen om upplägget', bort.p_id === 'upp-1', JSON.stringify(bort));
+  prova('upplägget i panelen: det tillbakadragna är märkt', /Tillbakadraget/.test(await innehåll(page, 'aside.dp')));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await vänta(300);
+  prova('upplägget i panelen på telefon: ingen sidledsscroll', await ingenSidled(page));
+  prova('upplägget i panelen: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('upplägget i panelen: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
 }
 
@@ -814,6 +1062,9 @@ async function provaFalskStripe(webb) {
     await provaTillbaka(webb);
     await provaTelefonOchMörkt(webb);
     await provaLiggaren(webb);
+    await provaBetalaAlla(webb);
+    await provaÅterbetalningarna(webb);
+    await provaUpplagg(webb);
     await provaLiggarenUtan(webb);
     await provaFalskStripe(webb);
   } catch (e) {

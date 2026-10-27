@@ -2123,3 +2123,38 @@ försök kraschade i förhandsvisningen, som saknar rättningen; den säger nu s
   och hälften står ordagrant.
 - **Priser**: Varför priset ser ut så här är borttagen. Den sa att hjälpen "ofta" blir mer begriplig,
   vilket sidan inte kan visa, och "unga hjälper unga" står redan på Vår idé.
+
+## Betala alla, egna upplägg och återbetalningarna i vyerna (2026-10-27)
+
+Leo samma dag: "man ska kunna betala flera saker under samma kassa ... antingen alla eller pass för
+pass", "bygg en återbetalningsfunktion för oss i admin" och "gör en funktion att admin kan skicka
+egna upplägg att köpa". Inte i drift (`DEPLOY-BETALNING.md` 9.28); vyerna tål att migrationerna
+saknas.
+
+**Betala alla** står överst i listan Att betala under Betalning & planer (`#bet-alla`,
+`ritaBetalaAlla`) när minst två pass ska betalas med pengar: antalet, summan och den orange
+knappen Betala nu, och raden "En kassa, med en rad per pass". Med i den är bara pass vars rad
+själv säger Betala nu (`radensVal(b) === 'betala'`): ett pass som går att betala med timmarna står
+utanför, för en familj med timmar ska inte betala dem med kort av misstag, och kortet säger då
+att det som inte är med betalas för sig. Högst 20 pass (`ALLA_MAX`, som databasen). Köpvillkorens
+ruta listar passen med pris och säger att syskontillägget inte ingår. Pass för pass fungerar som
+förut, i listan och på passet.
+
+**Ett eget upplägg** står överst bland planerna (`#erb-upplagg`, `ritaUpplagg`), ett kort per
+upplägg som väntar: "Ett upplägg till er", namnet, timmarna och priset, timpriset (med "med er
+rabatt" när familjen har en), att det gäller i 30 dagar från köpet som en plan och sista dagen att
+köpa det, och Köp, som går till samma kassa som en plan. Utan studiehjälpare (`S.väntar`) eller
+med erbjudandena av är Köp släckt. Ett upplägg som väntar står också bland notiserna. Köp till
+timmar räknar inte ett upplägg som en plan att köpa till (`planFörExtra`).
+
+**I adminvyn** har familjens panel blocket Egna upplägg (`dpUpplagg`, bara superadmin):
+uppläggen med läget (Väntar på familjen, Köpt, Tillbakadraget, Gick ut), Skriv i Gmail och Dra
+tillbaka på ett som väntar, och formuläret Skicka ett upplägg (timmar 1–40, timpris i hela kronor,
+högst det ordinarie, ett namn, dagar att köpa det). Inget mejl går av sig självt: familjen ser
+upplägget i studievyn, och vill vi säga till skriver vi i Gmail.
+Betalningar har fliken **Återbetalningar** (`#ab-lista`): en rad per återbetalning i Stripe, var
+den än gjordes, med vad, hur mycket, vem av oss och varför, och summorna Återbetalat, I adminvyn
+och Utanför adminvyn (en återbetalning i Stripes dashboard, att stämma av). Under Liggaren betalas
+ett pass i en kassa för flera pass tillbaka på sin rad, och övertiden och en betalning utan rad
+har egna knappar (förut bara i Stripes dashboard); beloppet och anledningen frågas i samma ruta
+(`beloppFråga`). `prova-kassan.js` prövar Betala alla, uppläggen och återbetalningarna.

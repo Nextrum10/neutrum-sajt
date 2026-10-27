@@ -22,8 +22,8 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=1ecea07e">
-<link rel="stylesheet" href="nextrum-vy.css?v=f5835352">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=2e5a5f97">
+<link rel="stylesheet" href="nextrum-vy.css?v=2c134c23">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=0ca16687">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -1310,6 +1310,8 @@
                     id="flik-betalningar" aria-controls="panel-betalningar">Alla betalningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="liggaren"
                     id="flik-liggaren" aria-controls="panel-liggaren">Liggaren</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="aterbetalningar"
+                    id="flik-aterbetalningar" aria-controls="panel-aterbetalningar">Återbetalningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="kortdragning"
                     id="flik-kortdragning" aria-controls="panel-kortdragning">Kortet</button>
             <button class="vy-flik" type="button" role="tab" data-flik="tillagg"
@@ -1362,6 +1364,16 @@
                  typen, koden, dagen och raderna betalningen betalade. -->
             <div class="lig-korten" id="lig-lista"><div class="loading">Hämtar</div></div>
             <p class="vy-finstilt" id="lig-fot"></p>
+          </div>
+
+          <!-- Återbetalningarna (2026-10-27, nextrum-admin-liggaren.js): en
+               rad per återbetalning i Stripe, var den än gjordes, med vem och
+               varför. Bara visning: ni betalar tillbaka under Liggaren. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="aterbetalningar"
+               id="panel-aterbetalningar" aria-labelledby="flik-aterbetalningar" hidden>
+            <div class="bet-sam eko-sam" id="ab-sam"></div>
+            <div class="vy-kort"><div class="vy-lista" id="ab-lista"><div class="loading">Hämtar</div></div></div>
+            <p class="vy-finstilt" id="ab-fot"></p>
           </div>
 
           <!-- Syskontillägget (syskontillagg_som_skuld, 2026-10-21,
@@ -2710,7 +2722,7 @@
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=7615cf47"></script>
-<script src="nextrum-admin-detalj.js?v=08360d5d"></script>
+<script src="nextrum-admin-detalj.js?v=f0dda5d0"></script>
 <script src="nextrum-admin-oversikt.js?v=1709e69d"></script>
 <script src="nextrum-admin-kunder.js?v=a197dfc9"></script>
 <script src="nextrum-admin-provet.js?v=0850a22d"></script>
@@ -2719,7 +2731,7 @@
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=b185b3bd"></script>
 <script src="nextrum-admin-ekonomi.js?v=ddbb62a9"></script>
-<script src="nextrum-admin-liggaren.js?v=d27876b8"></script>
+<script src="nextrum-admin-liggaren.js?v=3b2984a8"></script>
 <script src="nextrum-admin-tillagg.js?v=e9af77f1"></script>
 <script src="nextrum-admin-manaden.js?v=51db97c2"></script>
 <script src="nextrum-admin-loner.js?v=8d75813e"></script>

@@ -993,3 +993,34 @@ kassan. Inget får droppas, och ingen migration får ändra eller radera befintl
   inte.
 - Adminvyn: texterna om vad familjerna kan köpa säger planer, och strömbrytaren heter Planer och köpta timmar.
   Listorna över köp och Liggarens typ `timbank` heter som förut, för de visar köp som redan finns.
+
+## Egna upplägg (2026-10-27, `egna_upplagg`)
+
+Leo: "gör en funktion att admin kan skicka egna upplägg att köpa, det är tex så att admin säljer 6 h till familjen
+därför att det är lov och då skickar vi ett upplägg, villkoren är samma men det är bara 6h istället." Samma meddelande
+sa att planerna skulle gälla köpmånaden i stället för 30 dagar; Leo tog tillbaka det samma dag ("skojade, planerna är
+i 30 dagar"), och inget ändrades där.
+
+- **Admin skickar** i familjens panel, under Ekonomi → Egna upplägg (`skicka_eget_upplagg()`, bara `is_admin()`): ett
+  namn som familjen ser och som står på kvittot (högst 60 tecken, hjälptexten ber om inget om barnet), 1–40 timmar, ett
+  timpris i hela kronor från 1 kr till ordinarie (planens 379 kr är förvalet) och hur många dagar familjen kan köpa
+  det (1–60, 14 som förval). Högst fem som väntar per familj. Upplägget står fast när det skickats
+  (`intern.egna_upplagg_vakt`): bara att det köpts eller dragits tillbaka (`aterkalla_eget_upplagg()`) skrivs. Inget
+  mejl går av sig själv: Skriv i Gmail öppnar texten (mejl från adminvyn skrivs i Gmail, 2026-10-11).
+- **Familjen köper** under Betalning & planer, där upplägget står som ett band ovanför planerna (`#erb-upplagg`,
+  `ritaUpplagg`) och i notisrutan, med Köp och köpvillkoren först. `stripe-checkout` (`{ upplagg }`) läser upplägget
+  med familjens token, och databasen skapar köpet (`eget_upplagg_kop()`, bara tjänstekontot): en rad i `klippkort` med
+  erbjudandet `plan_eget`, sorten `plan` och `upplagg_id`, priset timpriset minus familjerabatten gånger timmarna, och
+  ett väntande köp av samma upplägg till samma pris återanvänds i 23 timmar. Katalogens rad `plan_eget` säljs aldrig
+  (`erbjudanden_eget_saljs_inte`), och raden i kassan är `kassaradForUpplagg`.
+- **Det är en plan**: 30 dagar från betalningen (`klippkort_betald`), timbanken och ordningen timmarna dras i, första
+  timmen gratis om det är familjens första plan, påminnelsen tio dagar innan, ångerrätten, Att sluta och återbetalningen
+  under Liggaren. Villkoren säger det (`#eget-upplagg`, version 2026-10-27).
+- **Tre undantag**: ingen rabattkod (`intern.kod_galler_kopet`, och `intern.klippkort_rabatt` tar bort en kod och
+  lämnar priset, som för timmar till en plan), inga timmar till upplägget (`extra_timmar_erbjudande` och vyns
+  `planFörExtra` väljer bara en plan ur katalogen: annars hade ett lovpris följt med till tjugo timmar till), och priset
+  är upplägget, inte katalogens.
+- **Betalt två gånger** (två kassor) eller efter att det drogs tillbaka (kassan stod öppen): köpet står, för pengarna
+  kom, och en uppgift säger vad admin ska avgöra (`eget_upplagg_dubbel:<köp>`, `eget_upplagg_aterkallat:<köp>`).
+- **Provat** i `rls-test.sql` avsnitt 58, `erbjudanden_test.ts` och `prova-kassan.js` (Egna upplägg).
+
