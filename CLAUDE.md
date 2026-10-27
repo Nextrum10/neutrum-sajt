@@ -1094,7 +1094,8 @@ själv (`omradestitel()`). **En ort får en sida** (2026-10-26, Leo: "lägg till
 i Stockholm") bara med lika mycket eget som de första orterna: delområdena, trafiken och biblioteken,
 kontrollerade mot källor, och sina grannar (`grannar`, `region`); en ort som inte gått att kontrollera
 väntar hellre än står med påhittade bibliotek. Varje ort har ett eget par av de allmänna frågorna
-(`prova_fragorna()`, 2026-10-27): samma par gjorde två ortssidor till de mest lika på sajten. Länkar i
+(`prova_fragorna()`, 2026-10-27): samma par gjorde två ortssidor till de mest lika på sajten. Navets `areaServed`
+nämner bara kommuner som har en ortssida (`prova_navets_omraden()`). Länkar i
 löptexten på de genererade sidorna är understrukna (`.nx-text p a` i cinema), annars syns de inte.
 
 Detaljer: `minne/genererat-och-ci.md`.

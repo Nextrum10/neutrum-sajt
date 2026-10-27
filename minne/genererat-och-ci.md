@@ -205,7 +205,11 @@ som varit ute sedan #341. Österåkers adress leder till navets region
 (`/laxhjalp-stockholm#norr-och-vaster`, en permanent omdirigering i
 `vercel.json`), för en adress som stått i kartan blir aldrig en 404; delningsbilden
 och raden i `delning/innehall.json` gick med sidan. Startsidan, intresseanmälan,
-priser, FAQ, navet och villkoren stod låsta i listan. En ny ort läggs in som en post i `OMRADEN` med
+priser, FAQ, navet och villkoren stod låsta i listan. Navets `areaServed`
+(handskriven, i `laxhjalp-stockholm.html`) nämnde ändå alla tre en timme till,
+och sa till Google att vi åker dit (Leo: "österåker ska inte finnas med"); nu
+stannar generatorn om den listan nämner en kommun utan ortssida
+(`prova_navets_omraden()`). En ny ort läggs in som en post i `OMRADEN` med
 `region` och `grannar`; generatorn vägrar en granne som inte finns, en region
 som inte finns, en regionrad som nämner en ort utan sida
 (`prova_regionraderna()`) och två orter med samma par av allmänna frågor

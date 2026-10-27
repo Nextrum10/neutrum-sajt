@@ -4477,6 +4477,19 @@ def prova_regionraderna():
             sys.exit(f'regionen {rid} säger "med flera" men har inga fler orter')
 
 
+def prova_navets_omraden():
+    """Navets areaServed (handskriven i laxhjalp-stockholm.html) får bara
+    nämna kommuner som har en ortssida, utöver Stockholms län. Efter
+    sidrensningen 2026-10-27 stod Österåker, Vaxholm och Norrtälje kvar där
+    och sa till Google att vi åker dit, fast sidorna var borttagna."""
+    s = open(os.path.join(ROT, 'laxhjalp-stockholm.html'), encoding='utf-8').read()
+    namn = re.findall(r'"@type": "AdministrativeArea", "name": "([^"]+)"', s)
+    orter = {a['namn'] for a in OMRADEN if a.get('region')}
+    okanda = [n for n in namn if n != 'Stockholms län' and n not in orter]
+    if okanda:
+        sys.exit('navets areaServed nämner ' + ', '.join(okanda) + ', som inte har någon ortssida')
+
+
 def prova_fragorna():
     """Varje ort har ett eget par av de allmänna frågorna (2026-10-27).
     Spånga och Tensta, Sollentuna och Värmdö hade samma par och var de
@@ -4507,6 +4520,7 @@ def main():
             sys.exit(f'{o["slug"]} har ingen region i REGIONER')
     prova_regionraderna()
     prova_fragorna()
+    prova_navets_omraden()
     prova_bredden([o for o in OMRADEN if not o.get('handskriven')]
                   + AMNEN + STADIER + GUIDER + [ONLINE])
     delar = [a['namn'] for a in OMRADEN if not a.get('hub')]
