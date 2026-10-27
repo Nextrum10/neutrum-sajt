@@ -1012,3 +1012,13 @@ och reklamationen inom två månader. Granskarna är AI och ingen som undervisar
 (företagsekonomi) lästes med facit framme och är svagare prövad. 30 frågor fick nytt id, så ett försök i gång på
 just dem börjar om. Migrationen `20261027150000_uppgiftsbanken_granskningen` är i drift sedan 2026-10-27, ur
 merge-commiten 22a7847 (md5 `a76ce426…`), med 8 762 aktiva frågor före och efter.
+
+## Vägen som i Duolingo och sidopanelen (2026-10-27)
+Leo: "gör den lika fin som duolingo", "när man klarar nivåerna då blir de färg", "något kul vid sidan av nexläx".
+Prickarna är 86 × 78 px med en kant under och en blank gradient överst (ingen animerad skugga), sicksacken är 50 px per
+steg (34 under 380 px), och varje nivå får en färg ur startsidans fyra (`områdesFärg(amne, i + nivåNr)`): delarna i en nivå
+delar färg, nästa nivå tar nästa, klara och nästa prick är fyllda, låsta är grå, Mästarprovet är guld när det är klart.
+Sidopanelen (`sidaHtml`, `.nl-sida`) syns från 1100 px och är bara läget som toppen redan visar (serien, rangen och
+Dagens uppdrag), aldrig något sparat; under 1100 px döljs den, och över döljs kortets uppdrag och statpiller.
+`toggle`-lyssnaren för Dagens uppdrag räknar inte panelens. Ämnet och årskursen minns webbläsaren per barn
+(`NXUppgifter.minnesBana`, `komIhagBana`). `verktyg/prova-nexlax.js` prövar panelen vid 1280 och 1000 px.

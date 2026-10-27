@@ -403,6 +403,26 @@ window.NXUppgifter = (function () {
     return årskurser[0];
   }
 
+  /* Den bana eleven valde senast (2026-10-27, Leo: man ska stanna kvar på ämnet
+     och året man höll på med). Bara ett val man trycker på sparas, i
+     webbläsaren och per barn; saknas lagringen börjar banan som förut. */
+  function minnesBana(nyckel) {
+    try {
+      const v = JSON.parse(localStorage.getItem('nx.nexlax.bana.' + nyckel) || 'null');
+      if (v && typeof v.amne === 'string' && v.amne) {
+        return { amne: v.amne, arskurs: typeof v.arskurs === 'string' ? v.arskurs : '', spar: v.spar === 'np' ? 'np' : 'vag' };
+      }
+    } catch (e) { /* utan lagring börjar banan som förut */ }
+    return null;
+  }
+  function komIhagBana(nyckel, val) {
+    try {
+      if (val && val.amne) {
+        localStorage.setItem('nx.nexlax.bana.' + nyckel, JSON.stringify({ amne: val.amne, arskurs: val.arskurs || '', spar: val.spar || 'vag' }));
+      }
+    } catch (e) { /* inget att göra */ }
+  }
+
   /* spar: 'vag' för vägen, 'np' för NP-sektionen, utelämnat för hela
      banan. En nivå utan spar (barnets katalog före 2026-10-06) står på
      vägen. */
@@ -897,7 +917,8 @@ window.NXUppgifter = (function () {
       + (ämnen.length && valjOppen ? valjHtml(o, finns, ämnen, amne, arskurs, host.dataset.fler === '1') : '')
       + (np && !baraNp ? spårHtml(spar, np) : '')
       + (spar === 'np' ? npHtml(o, np) : väg ? vägHtml(o, väg) + repetitionHtml(o, väg) : tommaVägen(o))
-      + inställningarHtml());
+      + inställningarHtml()
+      + sidaHtml(o));
 
     host.dataset.amne = amne;
     host.dataset.arskurs = arskurs;
@@ -909,6 +930,33 @@ window.NXUppgifter = (function () {
     const vald = host.querySelector('.upg-nod.vald');
     if (vald) placeraKort(vald);
     return { väg, np, nästa, amne, arskurs, spar };
+  }
+
+  /* Sidopanelen (2026-10-27, Leo: "något kul vid sidan av nexläx som täcker
+     sidan"): på en bred skärm står dagen bredvid vägen, som i Duolingo: serien,
+     rangen med vägen till nästa och dagens uppdrag med kistan. Allt är läget
+     som toppen redan visar, inget nytt sparas, och på en smal skärm döljs den
+     (toppen och Dagens uppdrag i kortet finns kvar där). */
+  function sidaHtml(o) {
+    const l = o.läge;
+    if (!l) return '';
+    const s = l.serie;
+    const r = rang(l.xp);
+    const i = r.nr - 1;
+    const dagar = s ? s.nu : 0;
+    return '<aside class="nl-sida" aria-label="Din dag">'
+      + '<section class="nl-sida-kort nl-sida-serie' + (s && s.idag ? ' tand' : '') + '">'
+      + '<span class="nl-sida-lanka" aria-hidden="true">' + IKON.låga + '</span>'
+      + '<div><b>' + dagar + ' ' + dagarText(dagar) + '</b><p>' + esc(serieText(s)) + '</p></div></section>'
+      + '<section class="nl-sida-kort nl-sida-rang" data-rk="' + i + '">'
+      + '<div class="nl-sida-rad"><span class="nl-sida-lanka" aria-hidden="true">' + (IKON[RANGIKON[i]] || IKON.medalj) + '</span>'
+      + '<div><span class="nl-sida-et">Rank ' + r.nr + ' av ' + r.av + '</span><b>' + esc(r.namn) + '</b></div>'
+      + '<span class="nl-sida-xp">' + IKON.blixt + tusen(l.xp) + ' XP</span></div>'
+      + '<span class="nl-sida-mat" role="progressbar" aria-label="Vägen till nästa rank" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'
+        + Math.round(r.andel * 100) + '"><i style="width:' + Math.round(r.andel * 100) + '%"></i></span>'
+      + '<p>' + (r.nästa ? tusen(r.kvar) + ' XP kvar till ' + esc(r.nästa) + '.' : 'Högsta ranken. Ingen gräns för att öva mer.') + '</p></section>'
+      + uppdragHtml(l, { öppen: true }).replace(' id="nl-uppdrag-t"', '').replace(' aria-labelledby="nl-uppdrag-t"', ' aria-label="Dagens uppdrag"')
+      + '</aside>';
   }
 
   /* En remsa till fliken Studiehjälpare när det ligger något där. Själva
@@ -1625,14 +1673,18 @@ window.NXUppgifter = (function () {
   }
 
   function vägHtml(o, väg) {
-    let x = 0;
+    let x = 0, nivåNr = 0;
     const områden = väg.områden.map((a, i) => {
       const förra = i > 0 ? väg.områden[i - 1] : null;
       const ikon = a.klart ? (a.bemästrat ? IKON.krona : IKON.bock) : a.läge === 'last' || a.läge === 'nasta' ? IKON.lås : String(i + 1);
       const visaSteg = a.läge !== 'last';
       const noder = visaSteg ? a.nivåer.concat(a.mästare ? [a.mästare] : []).map(n => {
         const nd = nodensDelar(n, o.katalog);
-        return nd.delar.map((_, j) => nodHtml(n, j, nd, o, väg, XLED[x++ % XLED.length])).join('');
+        /* Varje nivå är ett uppdrag med några delar och en egen färg ur
+           startsidans fyra (2026-10-27, Leo: när man klarar nivåerna blir de
+           färg): delarna i en nivå delar färg, nästa nivå tar nästa. */
+        const färg = områdesFärg(väg.amne, i + nivåNr++);
+        return nd.delar.map((_, j) => nodHtml(n, j, nd, o, väg, XLED[x++ % XLED.length], färg)).join('');
       }).join('') : '';
       return '<li class="nl-omr nl-omr-' + a.läge + (a.bemästrat ? ' nl-omr-bem' : '') + '" data-nl-f="' + områdesFärg(väg.amne, i) + '">'
         + '<div class="nl-omr-huvud">'
@@ -1682,7 +1734,7 @@ window.NXUppgifter = (function () {
      läses som en. Ringen är hur långt man kommit i delen, som ringen runt
      nästa lektion i Duolingo: den står alltid runt den som står på tur,
      också tom, och runt en annan påbörjad del. */
-  function nodHtml(n, j, nd, o, väg, led) {
+  function nodHtml(n, j, nd, o, väg, led, färg) {
     const del = nd.delar[j];
     const antal = nd.delar.length;
     const första = j === 0, sista = j === antal - 1;
@@ -1703,7 +1755,8 @@ window.NXUppgifter = (function () {
     const vad = n.klar ? 'klar, ' + n.stjarnor + ' av 3 stjärnor' : klar ? 'delen är klar'
       : aktuell ? 'nästa steg' : öppenDel ? 'öppen' : 'låst';
     return '<li class="upg-nod ' + läge + (mästare ? ' mastare' : '') + (n.niva.lastext ? ' las' : '') + (ärÖppen ? ' vald' : '')
-      + (nyssKlar ? ' nyss-klar' : '') + (nyss.oppen === n.niva.id && första ? ' nyss-oppen' : '') + '" style="--x:' + led + '">'
+      + (nyssKlar ? ' nyss-klar' : '') + (nyss.oppen === n.niva.id && första ? ' nyss-oppen' : '') + '"'
+      + (färg && !mästare ? ' data-nl-f="' + färg + '"' : '') + ' style="--x:' + led + '">'
       + '<button type="button" class="upg-nod-knapp" data-nl-nod="' + esc(nyckel) + '" aria-expanded="' + (ärÖppen ? 'true' : 'false') + '"'
       + ' aria-label="' + esc(stegTitel(n.niva) + (antal > 1 ? ', del ' + (j + 1) + ' av ' + antal : '') + ', ' + vad) + '">'
       + ikon
@@ -3652,7 +3705,7 @@ window.NXUppgifter = (function () {
   /* Dagens uppdrag är hopfällt; öppnar man dem står de öppna när vägen ritas om. */
   document.addEventListener('toggle', e => {
     const d = e.target;
-    if (!d || !d.matches || !d.matches('details.nl-uppdrag')) return;
+    if (!d || !d.matches || !d.matches('details.nl-uppdrag') || d.closest('.nl-sida')) return;
     const host = d.closest('.nl');
     if (host) host.dataset.upp = d.open ? '1' : '';
   }, true);
@@ -3686,7 +3739,7 @@ window.NXUppgifter = (function () {
 
   return {
     IKON, STJÄRNGRÄNS, BEMÄSTRAD, RANGER, rang, ärNp, harNp, npSpår, uppdragHtml, nyaKlaraUppdrag, ämnesIkon, ämnesOrdning,
-    laddaKatalog, laddaFörsök, laddaPågående, laddaLäge, perNivå, banor, förvaldÅrskurs, efterId,
+    laddaKatalog, laddaFörsök, laddaPågående, laddaLäge, perNivå, banor, förvaldÅrskurs, efterId, minnesBana, komIhagBana,
     vägen, nästaSteg, underlag, märken, perOmråde, stjärnRad, stegTitel, xpText, tusen, ärSant,
     ritaVäg, ritaUtveckling, ritaRank, ritaMärken, ritaProfil, profilHtml, tagFlik, spela, genomgång, förhandsvisa,
     uppgiftsResultat, digitalRad, försöksRad, områdesHtml, sammanfattning

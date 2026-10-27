@@ -2329,3 +2329,79 @@ section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
   .nl-led-streck::after{transition:none}
   .upg-fakta-forst .nl-fakta,.upg-fakta-forst .nl-fakta-del{animation:none}
 }
+
+/* ============================================================
+   VÄGEN SOM I DUOLINGO (2026-10-27, Leo: "gör den lika fin som duolingo")
+   Större, tjockare prickar med blank översida och bred sicksack, varje nivå i
+   en egen färg när den klarats, och dagen i en sidopanel på bred skärm.
+   Djupet är en kant under och glansen en gradient: ingen animerad skugga.
+   ============================================================ */
+.upg-nod{--xs:50px;padding:6px 0}
+.upg-nod > .upg-nod-knapp,
+.upg-nod > .upg-nod-namn,
+.upg-nod > .upg-stj,
+.upg-nod > .upg-nod-given{translate:calc(var(--x) * 50px) 0}
+@media (max-width:380px){
+  .upg-nod{--xs:34px}
+  .upg-nod > .upg-nod-knapp,
+  .upg-nod > .upg-nod-namn,
+  .upg-nod > .upg-stj,
+  .upg-nod > .upg-nod-given{translate:calc(var(--x) * 34px) 0}
+}
+.upg-stig{gap:10px}
+.upg-nod-knapp{
+  width:86px;height:78px;border-radius:50%;
+  box-shadow:0 9px 0 0 color-mix(in srgb,var(--bl) 16%,transparent);
+}
+.upg-nod-knapp::before{
+  content:"";position:absolute;inset:7px 14px auto;height:38%;border-radius:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,0));
+  pointer-events:none;
+}
+.upg-nod-knapp > svg:not(.upg-nod-ring){position:relative;width:36px;height:36px}
+.upg-nod-knapp:active{scale:.94}
+[data-nl-f] .upg-nod.aktuell .upg-nod-knapp,
+[data-nl-f] .upg-nod.klar .upg-nod-knapp{
+  box-shadow:0 9px 0 0 color-mix(in srgb,var(--nl-f) 58%,#000);
+}
+[data-nl-f] .upg-nod.oppen .upg-nod-knapp{box-shadow:0 9px 0 0 color-mix(in srgb,var(--nl-f) 32%,var(--yta))}
+.upg-nod.last .upg-nod-knapp::before{opacity:.5}
+.upg-nod-namn{font-size:.92rem;font-weight:700}
+
+/* Sidopanelen: bara på bred skärm. Vägen och kortet i en kolumn, dagen i
+   en egen som följer med när man rullar. */
+.nl-sida{display:none}
+@media (min-width:1100px){
+  #nl-vag,#bv-nl-vag{
+    display:grid;grid-template-columns:minmax(0,560px) minmax(270px,330px);
+    justify-content:center;column-gap:32px;align-items:start;
+  }
+  #nl-vag > *,#bv-nl-vag > *{grid-column:1}
+  #nl-vag > .nl-sida,#bv-nl-vag > .nl-sida{
+    grid-column:2;grid-row:1 / span 40;display:flex;flex-direction:column;gap:14px;
+    position:sticky;top:104px;
+  }
+  .nl-kort > .nl-uppdrag,.nl-kort .nl-stat{display:none}
+}
+.nl-sida-kort{
+  border-radius:24px;background:var(--yta);padding:16px 18px;
+  display:flex;flex-direction:column;gap:10px;
+  box-shadow:0 0 0 1px var(--ln);
+}
+.nl-sida-kort p{margin:0;font-size:.86rem;line-height:1.45;color:var(--bl-2)}
+.nl-sida-kort b{font-size:1.1rem;font-weight:750;color:var(--bl)}
+.nl-sida-serie{flex-direction:row;align-items:center;gap:14px;
+  background:radial-gradient(90% 140% at 0% 0%,color-mix(in srgb,var(--ockra) 16%,transparent),transparent 65%),var(--yta)}
+.nl-sida-serie.tand{background:radial-gradient(90% 140% at 0% 0%,color-mix(in srgb,#F88740 26%,transparent),transparent 65%),var(--yta)}
+.nl-sida-lanka{display:grid;place-items:center;width:46px;height:46px;flex:none;border-radius:50%;
+  background:color-mix(in srgb,var(--ockra) 18%,var(--yta));color:var(--ockra-text)}
+.nl-sida-serie.tand .nl-sida-lanka{background:#F88740;color:#fff}
+.nl-sida-lanka svg{width:26px;height:26px}
+.nl-sida-rad{display:flex;align-items:center;gap:12px}
+.nl-sida-rad > div{display:flex;flex-direction:column;min-width:0}
+.nl-sida-et{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3)}
+.nl-sida-xp{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:.85rem;color:var(--bl);white-space:nowrap}
+.nl-sida-xp svg{width:15px;height:15px;color:var(--ockra-text)}
+.nl-sida-mat{display:block;height:12px;border-radius:99px;background:var(--pap-3);overflow:hidden}
+.nl-sida-mat i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--amne-ma),var(--amne-en) 60%,var(--amne-ms))}
+.nl-sida .nl-uppdrag{border-radius:24px;background:var(--yta);box-shadow:0 0 0 1px var(--ln);margin:0;overflow:hidden}
