@@ -1718,6 +1718,14 @@ och 09-online-v2, i den ordning de skickades), så inga nya filer.
   och samma prövning när fliken kommer tillbaka); bara bildlagret ritas om.
 - Laddar inte bildregistret står hero-bilden kvar utan film, och dagen står
   där ändå. Vyerna skickar inga bildvägar längre.
+- Fredagen bytte 2026-10-27 från `anpassning` (02) till `forklaringen` (06),
+  Leo: "vissa ser konstiga ut på mobilvy och byt ut en av de bilderna". På
+  en telefon visade 02 bara studiehjälparens tröja, utan huvud; 06 har båda
+  ansiktena i utsnittet. Söndagen bytte samma kväll från `online` (09), med
+  bara ett halvt ansikte vid kanten, till `studiehjalparen` (11), Leo:
+  "söndagen bilden gillar jag ej". Sju stilleben utan människor (skrivbord, block,
+  lampor) skulle stå varannan dag, men Leo ändrade sig samma kväll ("de ska
+  ej vara i studievyn"), så de finns inte i repot.
 - Provat med klockan ställd på varje veckodag, på dator och telefon, och i
   `verktyg/prova-barnkonton.js` (`provaHälsningen`), som har listan en gång
   till med flit: ändras den i registret blir provet rött.
