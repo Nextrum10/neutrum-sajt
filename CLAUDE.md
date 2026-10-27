@@ -1143,8 +1143,10 @@ Detaljer: `minne/grunden.md`.
   (6a20718) efter en provmerge med main där alla kontroller gick igenom, och Vercels driftsättning av merge-commiten
   blev klar med nextrum.se som alias; sidorna är inte hämtade därifrån, för miljön nådde inte nextrum.se. Ingen
   migration och ingen edge-funktion. Kvar: sitemapen på nytt i Search Console (`GOOGLE.md`). **De sista
-  kommunerna** (Sigtuna, Upplands-Bro, Ekerö, Nykvarn, Haninge, Tyresö, Nynäshamn och Värmdö) kom till 2026-10-27 på
-  grenen till PR #342 och är **inte mergade**, med en granskning av alla ortssidor (Leo: "De ska också vara snygga, bra
+  kommunerna** (Sigtuna, Upplands-Bro, Ekerö, Nykvarn, Haninge, Tyresö, Nynäshamn och Värmdö) är i drift sedan
+  morgonen 2026-10-27 (Leo: "Merge"): PR #342 mergades (9c44994) och Vercel lade ut den på nextrum.se, kontrollerat
+  från databasen: de nya sidorna svarar, `/laxhjalp-osteraker` leder till navets region och sitemapen har 83 adresser.
+  Med dem kom en granskning av alla ortssidor (Leo: "De ska också vara snygga, bra
   för SEO och funktionella"): länkarna i löptexten på 53 genererade sidor syntes inte (samma färg, ingen
   understrykning) och är understrukna, och de mest lika ortssidorna fick egna allmänna frågor. Inga konsolfel, trasiga
   länkar eller sidledsrullning på någon av ortssidorna, i mobil och dator. **Sidrensningen** (samma dag, Leo bockade av
