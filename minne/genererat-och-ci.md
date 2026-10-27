@@ -11,7 +11,7 @@ Arkivet för avsnitt 8 och 9 i `CLAUDE.md`, ordagrant. Reglerna står i kärnan,
 |---|---|---|
 | `nextrum-maskot-svar.js` | `verktyg/bygg-maskotsvar.py` | `faq.html`, `en/faq.html` |
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
-| `laxhjalp-*.html` (40 orter, 6 ämnen, 4 stadier, online), de tio guiderna, `404.html` och ämnes-, stadie- och guidekorten och ortskatalogen i `laxhjalp-stockholm.html`, och ortslistan i `nextrum-affisch.js` (2026-10-27, mellan markeringarna `orter`) | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
+| `laxhjalp-*.html` (37 orter, 6 ämnen, 4 stadier, online), de tio guiderna, `404.html` och ämnes-, stadie- och guidekorten och ortskatalogen i `laxhjalp-stockholm.html`, och ortslistan i `nextrum-affisch.js` (2026-10-27, mellan markeringarna `orter`) | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
 | `sitemap.xml` | `verktyg/bygg-sitemap.py` | sidornas canonical, hreflang och noindex |
 | `favicon.svg`, `favicon-48.png`, `favicon-96.png`, `apple-touch-icon.png`, `bilder/nextrum-logo-512.png`, `bilder/nextrum-logo-profil.png`, `bilder/nextrum-logo-bimi.svg` | `verktyg/bygg-logga.js` | märkets två vägar i `bilder/nextrum-logga.svg`, loggan spårad ur Leos bild 2026-10-15. Körs för hand (Chromium), inte i CI. PNG:erna står på papperet ända ut i kanten; profilbilden och BIMI har märket mindre, för Gmail beskär till en cirkel. Sidornas inline-svg skrivs inte härifrån (`CLAUDE.md` avsnitt 3). Ikonlänkarna står på alla sidor och läses av områdesgeneratorn ur `var-ide.html`; `satt-logga.py` (sips, bara på en Mac) togs bort samma dag |
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i `verktyg/bladen/` (en modul per stadium, en per NP-serie: `np_ak6.py`, `np_ak9.py`, `np_gymnasiet.py`, figurerna i `figurer.py`). Körs för hand (kräver Chromium), inte i CI; verktyget mäter varje sida och vägrar ett blad som inte ryms. `python3 verktyg/bygg-banken.py ak4-` ritar bara de bladen. `--sql <mönster>` ger raderna till `biblioteksmaterial`, och ett nytt blad är en NY migration med bara de nya raderna; `--kolla` visar vad som saknar bild, facit eller migration. Facit står i `verktyg/bladen/facit_<modul>.py` (ett svar per uppgift) och ritas med `--facit` till `bank/facit/*.png`, en sida per blad; ryms inte frågorna tas de bort, sedan blir stilen mindre. Länkarna till andras material (provgruppernas sidor) står i `verktyg/bladen/lankar.py`, ritas inte, och kommer med i `--sql` när namnet matchar. Ett blads id kommer ur filnamnet: ändra aldrig `fil` på ett befintligt blad, en rättelse är en ny PNG och ingen ny rad |
@@ -179,28 +179,33 @@ saknade en sida (Kungsholmen, Vasastan, Östermalm, Hägersten och Liljeholmen,
 Älvsjö, Skärholmen, Enskede, Årsta och Vantör, Skarpnäck, Vällingby och
 Hässelby, Spånga och Tensta, Kista och Rinkeby) och de kommuner i länet som
 gick att kontrollera (Sundbyberg, Danderyd, Täby, Lidingö, Sollentuna,
-Vallentuna, Österåker, Huddinge, Botkyrka, Salem, Södertälje, Järfälla och
+Vallentuna, Österåker (borttagen 2026-10-27, nedan), Huddinge, Botkyrka, Salem, Södertälje, Järfälla och
 Upplands Väsby). Varje ort har lika mycket eget som de första: delarna,
 trafiken, biblioteken och två egna frågor, och två av de gemensamma (`F_*`),
 olika för grannar. Trafiken och biblioteken är kontrollerade genom sökträffar
 (kommunernas och bibliotekens egna sidor och Wikipedia), inte öppnade: nätet
 släppte inte fram sidorna. Vasastan nämner inget eget bibliotek (Stadsbiblioteket
 är stängt för renovering).
-**De tio sista kommunerna** (2026-10-27, Leo: "Fixa nya bilder osv om du kan" och
-"De ska också vara snygga, bra för SEO och funktionella"): Vaxholm, Sigtuna,
-Upplands-Bro, Ekerö och Norrtälje i Norr och väster om stan, Nykvarn, Haninge,
-Tyresö, Nynäshamn och Värmdö i Söder och öster om stan, och Österåkers
-huvudbibliotek. Kontrollerade på samma sätt, och det som källorna inte bar står
+**De sista kommunerna** (2026-10-27, Leo: "Fixa nya bilder osv om du kan" och
+"De ska också vara snygga, bra för SEO och funktionella"): Sigtuna, Upplands-Bro
+och Ekerö i Norr och väster om stan, Nykvarn, Haninge, Tyresö, Nynäshamn och
+Värmdö i Söder och öster om stan. Kontrollerade på samma sätt, och det som källorna inte bar står
 inte där: inga linjenummer, restider eller turtätheter (källorna gick isär,
 och de ändras utan att någon säger till), ingen pendelbåt till Ekerö (bara en
 gammal sammanfattning), inget om SL-kortet på Mälartåget till Nykvarn (det var
 ett förslag), och inget meröppet bibliotek som självklar plats för ett pass:
 utan personal kommer bara den som är 18 och registrerad in (Tyresös filialer,
-Hemmesta, Ljusterö). Nykvarns bibliotek står som "biblioteket på
+Hemmesta). Nykvarns bibliotek står som "biblioteket på
 Centrumvägen", för namnet fanns bara i en katalog från 2011. Nynäshamns
 huvudbibliotek renoverades hösten 2026, så sidan ber familjen kolla
-öppettiderna. Bergshamra i Norrtälje står inte bland delarna, för Solnas
-Bergshamra har redan en plats. En ny ort läggs in som en post i `OMRADEN` med
+öppettiderna. **Sidrensningen** (samma dag): Leo bockade av en checklista med
+alla sidor i sitemapen (en artefakt som sparar valen i sig själv) och tog bort
+Vaxholm och Norrtälje, som byggts samma dag och aldrig gått ut, och Österåker,
+som varit ute sedan #341. Österåkers adress leder till navets region
+(`/laxhjalp-stockholm#norr-och-vaster`, en permanent omdirigering i
+`vercel.json`), för en adress som stått i kartan blir aldrig en 404; delningsbilden
+och raden i `delning/innehall.json` gick med sidan. Startsidan, intresseanmälan,
+priser, FAQ, navet och villkoren stod låsta i listan. En ny ort läggs in som en post i `OMRADEN` med
 `region` och `grannar`; generatorn vägrar en granne som inte finns, en region
 som inte finns, en regionrad som nämner en ort utan sida
 (`prova_regionraderna()`) och två orter med samma par av allmänna frågor

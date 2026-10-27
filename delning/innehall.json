@@ -277,12 +277,6 @@
       "rad": "Läxhjälp i Stockholm · 399 kr i timmen",
       "foto": "02-personlig-anpassning"
     },
-    "laxhjalp-norrtalje.html": {
-      "bild": "delning/laxhjalp-norrtalje.jpg",
-      "rubrik": "Läxhjälp i Norrtälje.",
-      "rad": "Hemma eller online · 399 kr i timmen",
-      "foto": "03-digital-laxhjalp"
-    },
     "laxhjalp-nykvarn.html": {
       "bild": "delning/laxhjalp-nykvarn.jpg",
       "rubrik": "Läxhjälp i Nykvarn.",
@@ -300,12 +294,6 @@
       "rubrik": "Läxhjälp online.",
       "rad": "Läxhjälp i Stockholm · 399 kr i timmen",
       "foto": "03-digital-laxhjalp"
-    },
-    "laxhjalp-osteraker.html": {
-      "bild": "delning/laxhjalp-osteraker.jpg",
-      "rubrik": "Läxhjälp i Österåker.",
-      "rad": "Hemma eller online · 399 kr i timmen",
-      "foto": "12-pa-vag"
     },
     "laxhjalp-ostermalm.html": {
       "bild": "delning/laxhjalp-ostermalm.jpg",
@@ -436,12 +424,6 @@
     "laxhjalp-vasastan.html": {
       "bild": "delning/laxhjalp-vasastan.jpg",
       "rubrik": "Läxhjälp i Vasastan.",
-      "rad": "Hemma eller online · 399 kr i timmen",
-      "foto": "07-genombrottet"
-    },
-    "laxhjalp-vaxholm.html": {
-      "bild": "delning/laxhjalp-vaxholm.jpg",
-      "rubrik": "Läxhjälp i Vaxholm.",
       "rad": "Hemma eller online · 399 kr i timmen",
       "foto": "07-genombrottet"
     },

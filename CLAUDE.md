@@ -638,7 +638,7 @@ under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
-som vill jobba (`#bli`) och Nästa steg. **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): ämnena, stadierna och guiderna i var sin grupp med ämnesfärgens prick, och under Område navets regioner (Hela Stockholm, Innerstaden, Söderort, Västerort, Norr och väster om stan, Söder och öster om stan), Online och In English, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp. **Orterna står i navets ortskatalog**, inte en och en i footern (2026-10-26, när stadsdelsområdena och kommunerna fick egna sidor: trettio länkar på varje sida, och fyrtio sedan resten av länet kom till 2026-10-27, hade varken varit snyggt eller sett ut som något annat än en doorway-lista); en ny ämnes-, stadie- eller guidesida läggs in i footern på alla sidor, en ny ort bara i generatorn, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
+som vill jobba (`#bli`) och Nästa steg. **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): ämnena, stadierna och guiderna i var sin grupp med ämnesfärgens prick, och under Område navets regioner (Hela Stockholm, Innerstaden, Söderort, Västerort, Norr och väster om stan, Söder och öster om stan), Online och In English, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp. **Orterna står i navets ortskatalog**, inte en och en i footern (2026-10-26, när stadsdelsområdena och kommunerna fick egna sidor: trettio länkar på varje sida, och trettiosju sedan 2026-10-27, hade varken varit snyggt eller sett ut som något annat än en doorway-lista); en ny ämnes-, stadie- eller guidesida läggs in i footern på alla sidor, en ny ort bara i generatorn, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): fyra blad i
 en rad, två och två på telefon, läxhjälpen, expertisen, erfarenheten och NexLäx, var och en med en NexLäx-ämnesfärg
 i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
@@ -1142,14 +1142,17 @@ Detaljer: `minne/grunden.md`.
   sidor, `kolla-titlar.py` i CI och ämnets, stadiets eller ortens eget foto i delningsbilderna. PR #341 mergades
   (6a20718) efter en provmerge med main där alla kontroller gick igenom, och Vercels driftsättning av merge-commiten
   blev klar med nextrum.se som alias; sidorna är inte hämtade därifrån, för miljön nådde inte nextrum.se. Ingen
-  migration och ingen edge-funktion. Kvar: sitemapen på nytt i Search Console (`GOOGLE.md`). **De tio sista
-  kommunerna** (Vaxholm, Sigtuna, Upplands-Bro, Ekerö, Norrtälje, Nykvarn, Haninge, Tyresö, Nynäshamn och Värmdö) och
-  Österåkers huvudbibliotek kom till 2026-10-27 på grenen till PR #342 och är **inte mergade**, med en granskning av
-  alla ortssidor (Leo: "De ska också vara snygga, bra för SEO och funktionella"): länkarna i löptexten på 53 genererade
-  sidor syntes inte (samma färg, ingen understrykning) och är understrukna, och de mest lika ortssidorna fick egna
-  allmänna frågor. Inga konsolfel, trasiga länkar eller sidledsrullning på någon av de 41 sidorna, i mobil och dator.
-  Inga nya foton: nätet släppte inte fram någon bildtjänst, så sidorna delar på de 14 som finns, och inget foto visar
-  orten. Fyrtio sidor med samma upplägg är vad Google kallar doorway-sidor om de saknar eget innehåll; de har det
+  migration och ingen edge-funktion. Kvar: sitemapen på nytt i Search Console (`GOOGLE.md`). **De sista
+  kommunerna** (Sigtuna, Upplands-Bro, Ekerö, Nykvarn, Haninge, Tyresö, Nynäshamn och Värmdö) kom till 2026-10-27 på
+  grenen till PR #342 och är **inte mergade**, med en granskning av alla ortssidor (Leo: "De ska också vara snygga, bra
+  för SEO och funktionella"): länkarna i löptexten på 53 genererade sidor syntes inte (samma färg, ingen
+  understrykning) och är understrukna, och de mest lika ortssidorna fick egna allmänna frågor. Inga konsolfel, trasiga
+  länkar eller sidledsrullning på någon av ortssidorna, i mobil och dator. **Sidrensningen** (samma dag, Leo bockade av
+  i en checklista med alla sidor): Vaxholm och Norrtälje, byggda samma dag, togs bort innan de gick ut, och Österåker,
+  ute sedan #341, togs bort och leder till navets region (`/laxhjalp-stockholm#norr-och-vaster` i `vercel.json`): en
+  adress som stått i kartan blir aldrig en 404. Inga nya foton: nätet släppte inte fram någon bildtjänst, så sidorna
+  delar på de 14 som finns, och inget foto visar orten. Trettiosju sidor med samma upplägg är vad Google kallar
+  doorway-sidor om de saknar eget innehåll; de har det
   (delarna, trafiken, biblioteken, egna frågor), men följ dem i Search Console när de är ute: en ort som inte visas
   efter några månader slås hellre ihop med sin region än får fler likadana grannar (`minne/genererat-och-ci.md`).
 - **Dokument med bilder, kön i matchningen och papperskorgen** (2026-10-26, `dokument_med_bilder` 20261026140000,

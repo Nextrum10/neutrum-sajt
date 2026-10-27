@@ -54,7 +54,7 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 70
+=== svenska sidor utan engelsk tvilling: 67
   404.html
   admin.html
   affisch.html
@@ -92,11 +92,9 @@
   laxhjalp-moderna-sprak.html
   laxhjalp-nacka.html
   laxhjalp-no.html
-  laxhjalp-norrtalje.html
   laxhjalp-nykvarn.html
   laxhjalp-nynashamn.html
   laxhjalp-online.html
-  laxhjalp-osteraker.html
   laxhjalp-ostermalm.html
   laxhjalp-salem.html
   laxhjalp-sigtuna.html
@@ -119,7 +117,6 @@
   laxhjalp-vallingby-hasselby.html
   laxhjalp-varmdo.html
   laxhjalp-vasastan.html
-  laxhjalp-vaxholm.html
   nationella-prov-ak-6.html
   nationella-prov-ak-9.html
   om-oss.html
