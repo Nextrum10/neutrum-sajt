@@ -2179,7 +2179,6 @@ får glans genom att klassen läggs i listan i `allt()`.
 Hur hjälper vi och Rätt match/Allt på ett ställe ritas upp; bara former med `fill: none`), `etiketter` (strecket framför
 `.nx-et` växer), understrykningen under det orange ordet i rubrikerna (CSS), **ämnesbandet** (`.nx-amnesband`, ny sektion före
 Möt några av våra studiehjälpare, i `index.html` och `en/index.html`; `amnesband()` kopierar raden tills den är två fönster
-bred, driver av sig själv, går fortare med scrollen och vänder uppåt, bara medan det syns) och en tunn orange rad överst som
-följer scrollen (`body::after`, `animation-timeline: scroll()`, finns bara där webbläsaren kan det). **Klassen `nx-ord` är
+bred, driver av sig själv, går fortare med scrollen och vänder uppåt, bara medan det syns) (scrollraden överst togs bort samma kväll, Leo: "ta bort detta") **Klassen `nx-ord` är
 startsidans egen** (`delaOrd` i `nextrum-start.js`, rubriker med `data-ordfyll`); mina ordvisa rubriker heter `nx-ov` och
 hoppar över allt som redan delats. Ämnesbandets ämnen följer footerns lista, och ändras tillsammans med den.

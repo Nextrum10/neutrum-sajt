@@ -4110,16 +4110,3 @@ html[data-motion] [data-ordfyll].nx-fylld em{background-size:100% .055em}
 /* utan rörelse: raden står still och klipps vid kanten */
 html[data-motion="still"] .nx-amnesband-spar{width:auto}
 
-/* ---------- en tunn rad överst som följer scrollen ----------
-   Bara där webbläsaren kan koppla en animation till scrollen; annars
-   finns den inte. Ingen skriptloop. */
-@supports (animation-timeline:scroll()){
-  html[data-motion="full"] body::after,
-  html[data-motion="lite"] body::after{
-    content:"";position:fixed;inset:0 0 auto 0;height:3px;z-index:70;
-    pointer-events:none;background:var(--orange);
-    transform-origin:0 50%;transform:scaleX(0);
-    animation:nx-fram linear both;animation-timeline:scroll(root);
-  }
-  @keyframes nx-fram{to{transform:scaleX(1)}}
-}
