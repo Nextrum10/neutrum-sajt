@@ -1157,10 +1157,11 @@ Detaljer: `minne/grunden.md`.
 ## 11. Vad som inte är byggt
 - **Fas 25** (2026-10-27, Leos lista samma morgon: NexLäx från åk 6, faktabladen och ledet, Betalning & planer i
   en sektion, datumrutans färger, hemskärmen, introduktionen med rörelse, inga hopp, och de öppna sidorna;
-  `minne/nexlax.md` och `minne/vyerna.md`, Fas 25). Merge och Vercel lägger ut sidorna; **migrationen
-  `20261027120000_uppgiftsbanken_fortsattning` är inte körd**: Leo bad om merge, inte migrering, och tills den körs
-  finns de 1 247 nya frågorna bara i repot (facitprovet gick 8 762 av 8 762 lokalt). Kör den som de förra bankerna,
-  hämtad ur merge-commiten, prövad mot sin md5. Ingen edge-funktion och ingen ändring i databasens regler. Frågorna och
+  `minne/nexlax.md` och `minne/vyerna.md`, Fas 25). PR #346 och Fas 25.1 (#347) är mergade och utlagda av Vercel, och
+  **migrationen `20261027120000_uppgiftsbanken_fortsattning` är i drift sedan 2026-10-27 kl. 11.50** (Leo: "Kör"):
+  hämtad ur merge-commiten 0873d83, prövad mot sin md5 (`ee55c1ad…`) och körd och registrerad i ett do-block med
+  vakter före och efter (1 285 nivåer och 7 515 frågor aktiva före, 1 462 och 8 762 efter). Facitprovet mot driften:
+  38 187 prov på alla 8 762 aktiva frågor, 0 fel. Ingen edge-funktion och ingen ändring i databasens regler. Frågorna och
   de 470 faktabladen är skrivna och granskade med AI, inte lästa av någon som undervisar. Trustpilots adress
   (`se.trustpilot.com/review/nextrum.se`) och TikToks handtag (`@nextrum.ab`) är inte kontrollerade, och fotot på
   Instagramkortet är vårt eget, inte ur flödet.
