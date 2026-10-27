@@ -1218,7 +1218,7 @@
     const barn = valtBarnet();
     return {
       katalog: S.katalog, forsok: S.forsok || [], uppgifter: S.laxor || [], pågående: S.nl.pågående || {},
-      läge: S.nl.läge, elevKod: NX.årskursKod(barn && barn.grade), elevNamn: namnPåBarnet(),
+      läge: S.nl.läge, elevKod: U.elevÅrskurs(barn && barn.grade), elevNamn: namnPåBarnet(),
       rapporter: S.rapporter || [], progress: S.progress || [], historik: S.historik || {}, bokningar: (S.bokningar || [])
         .filter(b => b.student_id === S.valtBarn)
     };

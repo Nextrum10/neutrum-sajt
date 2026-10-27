@@ -403,6 +403,16 @@ window.NXUppgifter = (function () {
     return årskurser[0];
   }
 
+  /* Årskursen NexLäx öppnar i, ur barnets årskurs (students.grade är
+     fritext). Bara "Gymnasiet", som intresseanmälan ger utan år, är år 1:
+     förut gav den ingen årskurs alls, och banan öppnade då i åk 1
+     (2026-10-27, Leo: banan ska öppna i elevens årskurs). */
+  function elevÅrskurs(grade) {
+    const kod = NX.årskursKod(grade);
+    if (kod) return kod;
+    return /gymnasi/i.test(String(grade || '')) ? 'gy1' : '';
+  }
+
   /* Den bana eleven valde senast (2026-10-27, Leo: man ska stanna kvar på ämnet
      och året man höll på med). Bara ett val man trycker på sparas, i
      webbläsaren och per barn; saknas lagringen börjar banan som förut. */
@@ -3739,7 +3749,7 @@ window.NXUppgifter = (function () {
 
   return {
     IKON, STJÄRNGRÄNS, BEMÄSTRAD, RANGER, rang, ärNp, harNp, npSpår, uppdragHtml, nyaKlaraUppdrag, ämnesIkon, ämnesOrdning,
-    laddaKatalog, laddaFörsök, laddaPågående, laddaLäge, perNivå, banor, förvaldÅrskurs, efterId, minnesBana, komIhagBana,
+    laddaKatalog, laddaFörsök, laddaPågående, laddaLäge, perNivå, banor, förvaldÅrskurs, elevÅrskurs, efterId, minnesBana, komIhagBana,
     vägen, nästaSteg, underlag, märken, perOmråde, stjärnRad, stegTitel, xpText, tusen, ärSant,
     ritaVäg, ritaUtveckling, ritaRank, ritaMärken, ritaProfil, profilHtml, tagFlik, spela, genomgång, förhandsvisa,
     uppgiftsResultat, digitalRad, försöksRad, områdesHtml, sammanfattning

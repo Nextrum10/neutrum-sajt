@@ -624,7 +624,7 @@
     return {
       katalog: d.katalog || [], forsok: d.forsok || [], uppgifter: d.uppgifter || [],
       pågående: d.pagaende || {}, läge: S.nl.läge,
-      elevKod: NX.årskursKod(d.arskurs), elevNamn: 'du',
+      elevKod: U.elevÅrskurs(d.arskurs), elevNamn: 'du',
       rapporter: nlRapporter(), progress: [], historik: {}, bokningar: []
     };
   }
