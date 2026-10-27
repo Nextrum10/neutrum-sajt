@@ -359,8 +359,8 @@ Områdessidorna och ämnessidorna får inte innehålla något som inte är
 sant: inga antal, inga betyg, inga betygshöjningar, inga okontrollerade
 skolnamn, inga kursnamn med årtal. Sidor som säger samma sak med
 utbytt ortnamn är doorway pages: en ort får en sida bara med egna delar,
-egen trafik och egna bibliotek, kontrollerade (trettiosju orter sedan
-2026-10-27, `minne/genererat-och-ci.md`).
+egen trafik och egna bibliotek, kontrollerade (trettiofyra orter efter
+sidrensningen 2026-10-27, `minne/genererat-och-ci.md`).
 
 ---
 
