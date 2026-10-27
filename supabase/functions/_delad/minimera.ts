@@ -2,12 +2,11 @@
  * Det som skickas till en AI-leverantör, minimerat (GDPR art. 5.1 c
  * och art. 25).
  *
- * Rapportutkasten (generate-feedback) och hälsningarna till ett
- * tidsförslag (generate-message) skickade förut elevens FULLA namn och
- * studiehjälparens råa anteckningar som de stod till Anthropic. För ett
- * utkast till en förälder räcker förnamnet, och ett personnummer, ett
- * telefonnummer eller en e-postadress som hamnat i anteckningarna har
- * ingen plats i en prompt.
+ * Hälsningarna till ett tidsförslag (generate-message) skickade förut
+ * elevens FULLA namn till Anthropic. För ett utkast till en förälder
+ * räcker förnamnet, och ett personnummer, ett telefonnummer eller en
+ * e-postadress har ingen plats i en prompt. (Rapportutkasten,
+ * generate-feedback, togs bort 2026-10-27: rapporten går inte till en AI.)
  *
  * maskera() är samma regler som public.maska_kontakt() i databasen
  * (Fas 8.8), som maskar det drift-agenten läser. Ändras den ena ska den

@@ -1,7 +1,7 @@
 // ============================================================
 // NEXTRUM — delad hjälp: korta AI-svar utan verktyg
 //
-// generate-feedback, generate-message och material-forslag skickar en
+// generate-message och material-forslag skickar en
 // prompt och vill ha en text tillbaka. De läste förut content[0].text
 // och litade på att första blocket var svaret.
 //
