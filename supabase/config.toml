@@ -137,6 +137,11 @@ verify_jwt = false
 [functions.notis-avanmal]
 verify_jwt = false
 
+# Nyhetsbrevet (2026-10-28): den som anmäler sig är inte inloggad.
+# Taket, honungsfällan och tokenen i mejlet skyddar; se funktionen.
+[functions.nyhetsbrev]
+verify_jwt = false
+
 # Kopplingen till Google (Fas 18.1). Google skickar tillbaka
 # webbläsaren hit efter godkännandet, med en vanlig omdirigering, och
 # den bär ingen Supabase-token. Skyddet på den vägen är det signerade

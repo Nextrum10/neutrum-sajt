@@ -642,5 +642,17 @@ const NXSamtycke = (function () {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
+  /* Nyhetsbrevets formulär (2026-10-28). Laddas härifrån för att den här
+     filen står på precis de öppna sidorna, och inte på dem med en nyckel
+     i adressen. Det sätter ingen cookie och sparar inget, så det kräver
+     inget samtycke; det är bara en väg in i footern utan att ändra den i
+     varje sida. */
+  (function () {
+    const s = document.createElement('script');
+    s.src = '/nextrum-nyhetsbrev.js';
+    s.defer = true;
+    document.head.appendChild(s);
+  })();
+
   return { har, konvertering };
 })();
