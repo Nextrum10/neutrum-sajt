@@ -3939,7 +3939,9 @@ window.NXStudie = (function () {
     { typ: 'tillagg_paminnelse', namn: 'Påminnelse om tillägg', om: 'När tillägget för syskon varit obetalt en tid. Högst ett mejl per period.', bara: 'parent' },
     { typ: 'tillagg_kvitto',     namn: 'Kvitto på tillägg',     om: 'När tillägget för syskon är betalt, med passen det gällde.', bara: 'parent' },
     /* Värvningsbonusen (varvningsbonus, 2026-10-21): bara beloppet. */
-    { typ: 'varvningsbonus',     namn: 'Värvningsbonus',        om: 'När bonusen för en kompis du värvat är intjänad.', bara: 'tutor' }
+    { typ: 'varvningsbonus',     namn: 'Värvningsbonus',        om: 'När bonusen för en kompis du värvat är intjänad.', bara: 'tutor' },
+    /* Egna upplägg (egna_upplagg, 2026-10-27): bara familjen köper dem. */
+    { typ: 'eget_upplagg',       namn: 'Egna upplägg',          om: 'När vi har skickat er ett upplägg med timmar att köpa.', bara: 'parent' }
   ];
 
   function notisval(o) {

@@ -59,6 +59,7 @@ import { CORS, db, hemlighetOk, json } from '../_delad/notis.ts';
 import { preflight } from '../_delad/http.ts';
 import { aterbetalningsLage, StripeError, v1 } from '../_delad/stripe.ts';
 import { betalaTillbakaKortare, type KortareRad } from '../_delad/kortare.ts';
+import { raderIo, skrivRaderna } from '../_delad/passkassa.ts';
 import { passpris, standardTjanst, type Tjanst } from '../_delad/pris.ts';
 import type { Passpris } from '../_delad/kortreservation.ts';
 import { gorRad, type Pass, type Rad, type Reservationslage } from '../_delad/reservationen.ts';
@@ -99,6 +100,11 @@ Deno.serve(async (req) => {
     let resultat: string;
     try {
       resultat = await betalaTillbakaKortare(r, v1, async (pass, aterbetalt, betalt, charge) => {
+        /* Ett pass som betalats i en kassa för flera pass (2026-10-27): charge:ns
+           summa är hela kassans, så raderna skrivs om ur Stripes lista och
+           databasen skriver passet ur sin rad. Återbetalningen bär passets id,
+           och det hör till passets rad (fordelaAterbetalningar). */
+        if (charge && await skrivRaderna(r.payment_intent, charge, raderIo(klient, v1))) return;
         const { error } = await klient.from('bookings').update({
           aterbetald_ore: aterbetalt,
           betalning_status: aterbetalningsLage(aterbetalt, betalt),

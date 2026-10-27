@@ -1,5 +1,10 @@
 # Sätta upp AI-återkoppling (generate-feedback)
 
+> **Borttaget 2026-10-27** (Leo): AI-omskrivningen av rapporten till föräldern finns inte
+> längre, och koden i `supabase/functions/generate-feedback/` är raderad. Steg 5 och 6 nedan
+> gäller inte. Edge-funktionen tas bort i Supabases panel (verktygen kan inte ta bort en
+> funktion). Nyckeln används fortfarande av de andra funktionerna.
+
 Detta är det mest tekniska steget hittills. Gör det när du ändå sitter vid datorn
 med lite tid, inte mellan två andra saker. Kräver att du har Node.js installerat
 (samma sak npm/npx kommer från, om `npx --version` funkar i terminalen har du det).
@@ -86,7 +91,6 @@ Agenter och på knappen "skriv om med AI".
 
 | Funktion | Vem får använda den | Vad den gör |
 |---|---|---|
-| `generate-feedback` | rapportens studiehjälpare, och admin | Skriver om passrapporten till familjen |
 | `generate-message` | studiehjälpare | Utkast till hälsningen vid ett tidsförslag |
 | `material-forslag` | admin | Föreslår övningsuppgifter till en elev |
 | `juridik` | admin | Frågor om regelverk, med hämtade källor |

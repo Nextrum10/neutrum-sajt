@@ -47,6 +47,7 @@
 
 import type { Avbokningsskal, MejlbarTyp, RenData, Roll } from './typer.ts';
 import { datumText, narText, paminnelseNar } from './tid.ts';
+import { PLANENS_DAGAR } from '../erbjudanden.ts';
 
 /**
  * Vart knappen går. Hashen läses som #sektion/flik i vyerna.
@@ -55,7 +56,7 @@ import { datumText, narText, paminnelseNar } from './tid.ts';
  * kvittot på en intresseanmälan går till någon som ännu inte har ett
  * konto, och en knapp till en inloggad vy hade mött en inloggning.
  */
-export type Mal = 'pass' | 'meddelanden' | 'boka' | 'betalning' | 'sajten' | 'kortet' | 'varvning';
+export type Mal = 'pass' | 'meddelanden' | 'boka' | 'betalning' | 'sajten' | 'kortet' | 'varvning' | 'planer';
 
 export type Innehall = {
   amne: string;
@@ -83,6 +84,7 @@ export const KATEGORI: Record<MejlbarTyp, string> = {
   tillagg_paminnelse: 'påminnelser om tillägg',
   tillagg_kvitto: 'kvitton på tillägg',
   varvningsbonus: 'värvningsbonus',
+  eget_upplagg: 'egna upplägg',
 };
 
 const SVARA = 'Svara ja eller nej i Nextrum.';
@@ -433,6 +435,32 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
       knapp: 'Se dina värvningar',
       mal: 'varvning',
       fakta: belopp ? [['Värvningsbonus', belopp]] : [],
+    };
+  },
+
+  // egna_upplagg (2026-10-27, Leo: "Mejl ska gå ut när de fått möjlighet
+  // till eget upplägg"). Admin har skickat familjen ett upplägg: timmarna,
+  // priset med familjens rabatt som den var när det skickades, och sista
+  // dagen att köpa det. Namnet admin skrev följer inte med (det är fritext),
+  // och priset med en kod ser familjen i Nextrum. Knappen går till planerna,
+  // där upplägget står överst.
+  eget_upplagg(m) {
+    const timmar = m.d.timmar === null ? null : m.d.timmar === 1 ? '1 timme' : `${m.d.timmar} timmar`;
+    const belopp = m.d.belopp !== null && m.d.belopp > 0 ? kronor(m.d.belopp) : null;
+    const sista = m.d.datum ? datumText(m.d.datum) : null;
+    const fakta: [string, string][] = [];
+    if (timmar) fakta.push(['Timmar', timmar]);
+    if (belopp) fakta.push(['Pris', belopp]);
+    if (sista) fakta.push(['Köp senast', sista]);
+    return {
+      amne: timmar ? `Ett upplägg till er: ${timmar} läxhjälp` : 'Ett upplägg till er från Nextrum',
+      rubrik: 'Ni har fått ett upplägg att köpa',
+      mening: `Vi har lagt in ett upplägg åt er${timmar ? `: ${timmar} läxhjälp` : ''}${belopp ? ` för ${belopp}` : ''}. `
+        + `Ni köper det under Betalning & planer i Nextrum${sista ? `, senast ${sista}` : ''}. Det är en plan: timmarna `
+        + `gäller i ${PLANENS_DAGAR} dagar från köpet, och villkoren är planens.`,
+      knapp: 'Visa upplägget',
+      mal: 'planer',
+      fakta,
     };
   },
 };

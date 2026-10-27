@@ -697,3 +697,30 @@ utgångstid. Därför: en ny typ i `typer.ts` driftsätts med både `notis-ko` o
 med avgiften och leder till betalningen, eller att passet räknas som hållet i halva tiden när timmarna betalade;
 studiehjälparens säger bara att familjen avbokade mindre än 12 timmar före start, aldrig ett belopp. Ingen ny typ, så
 `notis-avanmal` behöver inte följa med; `notis-ko` gör det.
+
+## Mejlet om ett eget upplägg (egna_upplagg, 2026-10-27, inte i drift)
+
+Leo: "Mejl ska gå ut när de fått möjlighet till eget upplägg, dvs eget antal timmar som de vill köpa som vi skickat".
+Typen `eget_upplagg`, den femtonde i `notis_typer()` och den fjortonde mejlbara, i databasen och i
+`_delad/notiser/typer.ts` samtidigt (`typer_test.ts` räknar dem).
+
+- **Var**: triggern `egna_upplagg_notis` på `egna_upplagg` (AFTER INSERT, `intern.eget_upplagg_notis()`), när admin
+  skickat ett upplägg med `skicka_eget_upplagg()`. En notis till familjen och, om familjen inte stängt av typen
+  (`notis_vill`), en rad i `notis_utskick` med nyckeln `eget_upplagg:mejl:<upplägg>`, om fem minuter och senast vid sista
+  dagens slut. Inte när admin skickar till sitt eget konto (ingen notis om sin egen åtgärd), och ett fel hamnar i
+  `notis_fel` i stället för att stoppa upplägget.
+- **Hoppas över** i `notis_utskick_ta` när upplägget inte längre går att köpa (köpt, tillbakadraget eller sista dagen
+  passerad): ett upplägg som dras tillbaka inom fem minuter mejlas aldrig.
+- **Mallen** (`mallar.ts`, `eget_upplagg`): ämnet "Ett upplägg till er: 6 timmar läxhjälp", timmarna, priset med familjens
+  rabatt som den var när upplägget skickades, sista dagen att köpa det och att det är en plan i 30 dagar
+  (`PLANENS_DAGAR`). Aldrig namnet admin skrev, som är fritext; priset med en kod ser familjen i vyn. Knappen går till
+  planerna (`#betalning/planer`, målet `planer` i `rendera.ts`), där upplägget står överst. Foten säger "egna upplägg".
+- **Valet** Egna upplägg under Profil → Notiser (`NOTISVAL` i `nextrum-studie.js`, bara föräldern), och avanmälan i
+  mejlet stänger av typen (`notis-avanmal` prövar den mot `NOTIS_TYPER`).
+- **Driftsättningen**: `notis-ko` och `notis-avanmal` före migrationen, så att kön kan mejla typen och avanmälan tar den
+  (`DEPLOY-BETALNING.md` 9.28).
+- Mejlet är ett erbjudande till en befintlig kund, om något familjen redan köper hos oss, med avanmälan i varje mejl.
+  Juristen har inte läst det.
+- **Provat** i `rls-test.sql` avsnitt 58 (köas, inte till sig själv, hoppas över när upplägget dragits tillbaka) och
+  `rendera_test.ts`.
+

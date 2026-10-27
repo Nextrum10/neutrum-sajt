@@ -4,7 +4,7 @@
 import { assertEquals } from 'jsr:@std/assert@1';
 import {
   fragaOmKoden, KOD_BARA_PLAN, KOD_FINNS_INTE, KOD_GICK_INTE, KOD_GRATIS, type Kodklient, type Kodsvar,
-  kodenGallerKopet, kodPaFelBetalning, normaliseraKod, planensKod, provaKodsvaret, rabattenPa,
+  kodenGallerKopet, kodPaFelBetalning, normaliseraKod, planensKod, provaKodsvaret, rabattenPa, upplaggetsKod,
 } from './koder.ts';
 
 // Standard i katalogen: 8 timmar à 379 kr.
@@ -66,6 +66,10 @@ Deno.test('en kod nekas på ett pass, ett tillägg, kortet och timmar till plane
   assertEquals(kodPaFelBetalning({ pass: 'b1' }), null);
   assertEquals(kodPaFelBetalning({ pass: 'b1', rabattkod: '  ' }), null);
   assertEquals(kodPaFelBetalning({ erbjudande: 'plan_basic', rabattkod: 'ZAYAN10' }), null);
+  // Ett eget upplägg tar en kod (2026-10-27), Betala alla och skulden gör det inte.
+  assertEquals(kodPaFelBetalning({ upplagg: 'u1', rabattkod: 'ZAYAN10' }), null);
+  assertEquals(kodPaFelBetalning({ passen: ['b1', 'b2'], rabattkod: 'ZAYAN10' }), KOD_BARA_PLAN);
+  assertEquals(kodPaFelBetalning({ skuld: true, rabattkod: 'ZAYAN10' }), KOD_BARA_PLAN);
   assertEquals(kodPaFelBetalning(null), null);
 });
 
@@ -74,6 +78,8 @@ Deno.test('bara en plan tar en kod, aldrig Fyll timbanken eller timmar till plan
   assertEquals(kodenGallerKopet({ kod: 'klipp10', sort: 'klippkort' }), false);
   assertEquals(kodenGallerKopet({ kod: 'plan_extra', sort: 'klippkort' }), false);
   assertEquals(kodenGallerKopet({ kod: 'plan_extra', sort: 'plan' }), false);
+  // Ett eget upplägg är en plan (2026-10-27, Leo: "rabattkod gäller också för upplägg").
+  assertEquals(kodenGallerKopet({ kod: 'plan_eget', sort: 'plan' }), true);
   assertEquals(kodenGallerKopet(null), false);
 });
 
@@ -169,4 +175,23 @@ Deno.test('planens kod: före migrationen frågas kolla_rabattkod_kop, och belop
   assertEquals(anrop.map((a) => a.fn), ['kod_pa_planen', 'kolla_rabattkod_kop']);
   const svar = await fragaOmKoden(db, 'ZAYAN10', 'plan_standard');
   assertEquals(svar?.rabatt_typ, undefined);
+});
+
+const UPPLAGG = '00000000-0000-4000-8000-0000000000e1';
+
+Deno.test('uppläggets kod: utan kod frågas inte databasen, och en kod utan form nekas före den', async () => {
+  const { db, anrop } = falskDb({ ZAYAN10: giltig(30320, 'procent', 10) });
+  assertEquals(await upplaggetsKod(db, '', UPPLAGG), { ok: true, kod: null });
+  assertEquals(await upplaggetsKod(db, 'x', UPPLAGG), { ok: false, status: 409, fel: KOD_FINNS_INTE });
+  assertEquals(anrop.length, 0);
+});
+
+Deno.test('uppläggets kod: databasen räknar koden på uppläggets pris, och beloppen prövas', async () => {
+  const { db, anrop } = falskDb({ ZAYAN10: giltig(30320, 'procent', 10), GAMMAL: nej('Koden har gått ut.'), TRASIG: 'fel' });
+  assertEquals(await upplaggetsKod(db, ' zayan10', UPPLAGG),
+               { ok: true, kod: 'ZAYAN10', pris: PRIS, rabatt: 30320, attBetala: 272880 });
+  assertEquals(anrop[0], { fn: 'kod_pa_upplagget', args: { p_kod: 'ZAYAN10', p_upplagg: UPPLAGG } });
+  assertEquals(await upplaggetsKod(db, 'GAMMAL', UPPLAGG), { ok: false, status: 409, fel: 'Koden har gått ut.' });
+  assertEquals(await upplaggetsKod(db, 'TRASIG', UPPLAGG), { ok: false, status: 409, fel: KOD_GICK_INTE });
+  assertEquals(await upplaggetsKod(db, 'OKAND', UPPLAGG), { ok: false, status: 409, fel: KOD_GICK_INTE });
 });

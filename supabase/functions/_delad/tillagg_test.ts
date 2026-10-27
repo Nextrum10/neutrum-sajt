@@ -296,6 +296,18 @@ Deno.test('återbetalning: köpets återbetalning (köpets id i metadata) hör t
   assertEquals(f.ofordelat, 500);
 });
 
+Deno.test('återbetalning: ett kortare pass (passets id i metadata) hör till passets rad i en betalning för flera pass', () => {
+  const rader = [{ id: 'rad-a', beloppOre: 39900, bookingId: 'pass-a' }, { id: 'rad-b', beloppOre: 79800, bookingId: 'pass-b' }];
+  const f = fordelaAterbetalningar(rader, [
+    { id: 're_k', amount: 13300, status: 'succeeded', metadata: { booking_id: 'pass-b', av: 'system' } },
+    { id: 're_r', amount: 39900, status: 'succeeded', metadata: { betalningsrad: 'rad-a', booking_id: 'pass-b' } },
+    { id: 're_x', amount: 700, status: 'succeeded', metadata: { booking_id: 'ett-annat-pass' } },
+  ]);
+  // Raden i metadata går före passet, och ett pass som inte är betalningens är ofördelat.
+  assertEquals(f.perRad, { 'rad-a': 39900, 'rad-b': 13300 });
+  assertEquals(f.ofordelat, 700);
+});
+
 Deno.test('återbetalning: en misslyckad återbetalning räknas inte', () => {
   const f = fordelaAterbetalningar(RADER, [
     { id: 're_1', amount: 6900, status: 'failed', metadata: { betalningsrad: 'rad-t1' } },

@@ -2504,17 +2504,7 @@
         if (lErr) varning += ' Uppgiften kunde inte skapas: ' + felText(lErr);
       }
 
-      if ($('#r-ai').checked) {
-        säg(msg, 'Rapporten är sparad. Formulerar om den åt föräldern…', true);
-        const { error: aiErr } = await supa.functions.invoke('generate-feedback', { body: { report_id: data.id } });
-        if (aiErr) {
-          säg(msg, 'Rapporten är sparad, men AI-omskrivningen gick inte. Föräldern ser dina anteckningar precis som du skrev dem.' + varning, false);
-        } else {
-          säg(msg, '✓ Klart. Rapporten är sparad och omskriven åt föräldern.' + varning, !varning);
-        }
-      } else {
-        säg(msg, '✓ Rapporten är sparad. Föräldern ser den direkt.' + varning, !varning);
-      }
+      säg(msg, '✓ Rapporten är sparad. Föräldern ser den direkt.' + varning, !varning);
 
       nollställRapport();
 
@@ -2592,24 +2582,10 @@
           start: r.start_tid, slut: r.slut_tid,
           bokat: Number(b.duration_min || 60), deb: Number(r.debiterade_min || 0),
           bank: bankÖvertid(b) || 0, skal: r.avvikelse_skal, skalAv: 'Du'
-        } : null,
-        /* Inte omskriven: familjen ser texten som den står, och knappen
-           låter AI:n formulera om den. */
-        fot: r.ai_feedback ? '' : '<div class="rb-fot-rad"><p class="rb-hjalp">Inte omskriven. Familjen ser din text som den står.</p>'
-          + '<div class="rb-fot-knappar"><button class="btn btn-ghost btn-sm" data-ai="' + esc(r.id) + '">Skriv om åt föräldern</button></div></div>'
+        } : null
       });
     }).join('');
   }
-
-  document.addEventListener('click', async e => {
-    const btn = e.target.closest('[data-ai]');
-    if (!btn) return;
-    await medan(btn, 'Skriver om…', async () => {
-      const { error } = await supa.functions.invoke('generate-feedback', { body: { report_id: btn.dataset.ai } });
-      if (error) { alert('Gick inte: ' + felText(error) + '\n\nÄr generate-feedback deployad? Se DEPLOY-AI-FUNKTION.md.'); return; }
-      await laddaMinaRapporter();
-    });
-  });
 
   /* ============================================================
      MATERIAL (Fas 13.3)

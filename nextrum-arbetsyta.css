@@ -2576,6 +2576,10 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 .dp-gratis .btn{min-height:44px;justify-self:start}
 .dp-gratis-not{grid-column:1 / -1;font-size:.8rem;line-height:1.5;color:var(--bl-2)}
 .dp-gratis .ok-msg{grid-column:1 / -1;margin:0}
+/* Skicka ett upplägg (egna_upplagg, 2026-10-27): samma form som
+   gratistimmarna, med timmarna och timpriset i en rad. */
+.dp-upplagg{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dp-upplagg #dp-upp-timmar,.dp-upplagg #dp-upp-pris,.dp-upplagg #dp-upp-dagar{text-align:center}
 /* Familjerabatten under familjens Ekonomi (2026-10-15): koden att välja och
    knappen i en rad, vad den gör under, som gratistimmarna. */
 .dp-rabatt{
@@ -4374,6 +4378,11 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .bet-tillagg-rader li > span:nth-child(2){grid-column:1;grid-row:2;font-size:.8rem}
   .bet-tillagg-rader li b{grid-column:2;grid-row:1 / span 2}
 }
+
+/* BETALA ALLA (2026-10-27): passen under Att betala i en kassa, i samma
+   kort som tillägget, ovanför listan där de betalas pass för pass. */
+.bet-alla{margin:4px 0 12px}
+.bet-alla[hidden]{display:none}
 
 /* Betalsätten som små brickor, så att Klarna syns innan kassan öppnas. */
 .bet-satt{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:14px 4px 2px}
