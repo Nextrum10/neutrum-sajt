@@ -573,7 +573,7 @@ AK6_NP_GEOMETRI = niva('ma-ak6-np-geometri-matning-1', 'Geometri och mätning', 
 ], beskrivning=blad('Nextrums egna uppgifter i provets stil: omkrets, area, vinklar, volym i liter och skala.',
                     'NP-träning: geometri och mätning'))
 
-SKOLVAG = 'En måndag gick 9 elever i klass 6A till skolan, 7 cyklade, 5 åkte buss och 3 åkte bil. Alla svarade.'
+SKOLVAG = 'En måndag gick 9 elever i klass 6A till fots till skolan, 7 cyklade, 5 åkte buss och 3 åkte bil. Alla svarade.'
 TALFOLJD_REGEL = ['3 · n − 1', '3 · n + 2', 'n + 3', '2 · n + 1']
 FOLJD = {1: 2, 2: 5, 3: 8, 4: 11, 10: 29}
 MEDEL_MEDIAN = ['1, 2, 5, 10, 12', '2, 4, 5, 6, 8', '3, 5, 6, 7, 9', '1, 5, 5, 6, 8']

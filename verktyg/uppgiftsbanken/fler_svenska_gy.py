@@ -244,7 +244,7 @@ TILLAGG = [
     bana(SV, 'gy2', [
         niva('sv-gy2-fler-epoker-1', 'Upplysningen, romantiken och realismen', 'Litteraturens epoker', [
             skriv('Vad kallas en tidsperiod vars litteratur har gemensamma drag i tema och stil? Skriv ordet.',
-                  ['epok', 'en epok', 'epoken', 'litterär epok', 'en litterär epok'],
+                  ['epok', 'en epok', 'epoken', 'litterär epok', 'en litterär epok', 'litteraturepok', 'litteraturepoken'],
                   'En epok är en period då många författare skriver med liknande tankar och stil. Gränserna är '
                   'inte skarpa, men indelningen i epoker hjälper oss att se sambanden.'),
             val('Vilket av dessa drag är typiskt för romantiken?',

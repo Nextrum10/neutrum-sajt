@@ -987,3 +987,20 @@ ska ha flera uppgifter som duolingo har här."
    (Starta, Fortsätt eller Gör provet), som spelar delen som står på tur; texterna om delarnas
    ordning, beskrivningen och prickraden är borta. Ett klart kort har kvar stjärnorna och Se
    rättningen.
+
+## Facitgranskningen (2026-10-27)
+Leo: "granska facit så att den inte är fel", och "ja" till hela NexLäx. Alla 8 762 aktiva frågor delades i
+fyrtio delar (de 7 515 äldre) och nio (de 1 247 nya), och en AI-granskare per del löste frågorna utan facit och
+jämförde sedan. Ingen fråga hade ett fel markerat svar. Det som rättades:
+1. En tvetydig parning (faktatextens delar i svenska åk 6): rubriken "säger vad texten handlar om" krockade med
+   frågan om inledningen i samma nivå. Rubriken "står överst och ger texten ett namn" nu.
+2. Förklaringar som sa fel: in- blir im-/ir-, metaforen (inte liknelsen) om museet, 8960 (inte 8900), Emma som
+   subjekt, queréis, bilden som brister i samtidighet, och 12 procent i en valkrets vid spärren.
+3. Rätta svar som inte godtogs: pratminus, vale, grundläggande, t = 2, x = 5, x = 2,30, talord (tjugofyra, åtta,
+   noll, hundra, fjorton, fem), to jump, a door, 's reading, 1/2, 17/20, 1/5, 3*(2x + 3), argumentation,
+   beställare, litteraturepok.
+4. Två formuleringar: skapelseberättelsen (sju dagar som talesätt) och "gick till fots" i skolvägsfrågorna.
+Lämnat med flit: precisionsfrågorna (100 mot 100,1, 0,98 mot "ungefär 1"), kommat mellan huvudsatser (skolregeln)
+och reklamationen inom två månader. Granskarna är AI och ingen som undervisar har läst frågorna. En del
+(företagsekonomi) lästes med facit framme och är svagare prövad. 30 frågor fick nytt id, så ett försök i gång på
+just dem börjar om.

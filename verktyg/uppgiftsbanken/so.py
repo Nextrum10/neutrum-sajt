@@ -220,7 +220,7 @@ BANOR = [
                 'Hur mycket verkligheten är förminskad',
                 'Med skalan kan man räkna ut hur långt det är i verkligheten.'),
             skriv('En karta har skalan 1:100 000. Då är 1 cm på kartan 1 km i verkligheten. '
-                  'Hur många km är %d cm på kartan?' % KARTA_CM, t(KARTA_KM),
+                  'Hur många km är %d cm på kartan?' % KARTA_CM, [t(KARTA_KM), 'fem'],
                   '1 cm är 1 km, så %d cm är %s km.' % (KARTA_CM, t(KARTA_KM))),
             sant('Solen går upp ungefär i öster och ner ungefär i väster.', True,
                  'Jorden snurrar mot öster, och därför ser vi solen stiga i öster och gå ner i väster.'),
@@ -375,7 +375,7 @@ BANOR = [
             val('Vad betyder ordet demokrati?', ['Folkstyre', 'Kungastyre', 'Kyrkostyre', 'Krigsstyre'],
                 'Folkstyre', 'Demokrati kommer från grekiskan och betyder folkstyre: folket bestämmer.'),
             skriv('Klassen har %d elever och alla röstar. Hur många röster behövs minst för att få '
-                  'mer än hälften?' % KLASS, t(majoritet(KLASS)),
+                  'mer än hälften?' % KLASS, [t(majoritet(KLASS)), 'fjorton'],
                   'Hälften av %d är %s. Mer än hälften är %d röster.' % (KLASS, tal(KLASS / 2), majoritet(KLASS))),
             val('14 elever röstar för en utflykt till skogen och 11 för ett museum. Vad blir det om '
                 'majoriteten bestämmer?', ['Skogen', 'Museet', 'Ingenting', 'Båda'], 'Skogen',
@@ -542,7 +542,8 @@ BANOR = [
                 'Riksdagen är den lagstiftande makten. Den bestämmer också hur statens pengar ska användas.'),
             val('Ett parti måste få minst en viss andel av rösterna i hela landet för att komma in i '
                 'riksdagen. Hur stor är den?', ['4 procent', '1 procent', '10 procent', '25 procent'], '4 procent',
-                'Spärren är 4 procent. Den finns för att inte väldigt många små partier ska göra det svårt att fatta beslut.'),
+                'Spärren är 4 procent. Den finns för att inte väldigt många små partier ska göra det svårt att fatta beslut. '
+                '(Ett parti kan också komma in med 12 procent i en valkrets, men det är ovanligt.)'),
             para('Para ihop ordet med vad det betyder.',
                  [('Ledamot', 'person som sitter i riksdagen'), ('Talman', 'leder riksdagens möten'),
                   ('Utskott', 'grupp som förbereder beslut i ett ämne'), ('Votering', 'omröstning i riksdagen')],

@@ -192,7 +192,7 @@ TILLAGG = [
                 'och höja heter raise.'),
             sant("'Listen' betyder titta.", False,
                  'Listen betyder lyssna. Titta heter look.'),
-            skriv("Skriv 'hoppa' på engelska.", 'jump',
+            skriv("Skriv 'hoppa' på engelska.", ['jump', 'to jump'],
                   'Hoppa heter jump. Ordet slutar på mp.'),
             ordna('Bygg meningen: Öppna dörren.', ['Open', 'the', 'door.'],
                   forklaring='Öppna heter open, och dörren heter the door.'),

@@ -629,7 +629,7 @@ BANOR = [
         ], beskrivning='Världsdelarna och de stora haven, och var Sverige ligger.'),
 
         niva('so-ak3-religioner-1', 'Berättelser i Bibeln', 'Religioner och berättelser', [
-            val('Hur många dagar skapade Gud världen på, enligt skapelseberättelsen i Bibeln?', [6, 7, 10], 6,
+            val('Enligt skapelseberättelsen i Bibeln skapade Gud världen och vilade sedan en dag. På hur många dagar skapade han världen?', [6, 7, 10], 6,
                 'Enligt berättelsen skapade Gud världen på sex dagar och vilade på den sjunde dagen.'),
             sant('I berättelsen om Noa är regnbågen ett tecken på ett löfte från Gud.', True,
                  'Efter floden lovar Gud att aldrig mer dränka jorden. Regnbågen är tecknet på löftet.'),

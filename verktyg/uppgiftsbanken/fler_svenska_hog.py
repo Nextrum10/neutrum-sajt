@@ -569,7 +569,7 @@ TILLAGG = [
                 'Reklam vill att vi ska känna något positivt för varan. Glada människor kan få oss att '
                 'förknippa den med glädje.'),
             skriv('Vad kallas den som står bakom en reklam och betalar för den? Skriv ordet.',
-                  ['avsändare', 'avsändaren', 'annonsör', 'annonsören'],
+                  ['avsändare', 'avsändaren', 'annonsör', 'annonsören', 'beställare', 'beställaren'],
                   'Avsändaren är den som står bakom reklamen, ofta ett företag.'),
         ], beskrivning='Tränar reklamens knep: målgrupp, slogan, överdrift, tidspress, känslor och skillnaden '
                        'mellan fakta och åsikt.'),

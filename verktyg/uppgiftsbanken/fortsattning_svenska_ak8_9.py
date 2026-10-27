@@ -11,7 +11,7 @@ engelska årkurs 6 och uppåt."
   och referat” (nyhetsartikelns delar; referat, citat och källhänvisning).
 - åk 9: ”Litteraturhistoria” (antiken och medeltiden; från renässansen till
   modernismen), ”Språkriktighet” (ligga och lägga, att och och, genitiv;
-  kongruens, dubbel supinum och prepositioner) och ”Tala inför publik”
+  kongruens, dubbelsupinum och prepositioner) och ”Tala inför publik”
   (planera ett tal; framföra och övertyga).
 
 Allt står i TILLAGG och läggs sist i banorna (svenska.py och
@@ -535,7 +535,7 @@ TILLAGG = [
                 ['Jag hade velat följa med.', 'Jag hade velat följt med.', 'Jag hade vela följa med.'],
                 'Jag hade velat följa med.',
                 'Efter velat kommer verbet i infinitiv: följa. Två supinum efter varandra, velat följt, kallas '
-                'dubbel supinum. Det är vanligt i tal men räknas som fel i vårdad skrift.'),
+                'dubbelsupinum. Det är vanligt i tal men räknas som fel i vårdad skrift.'),
             para('Para ihop ordet med den preposition som brukar följa efter.',
                  [('intresserad', 'av'), ('rädd', 'för'), ('stolt', 'över'), ('fokusera', 'på')],
                  'Många ord har en fast preposition: intresserad av musik, rädd för hundar, stolt över sitt arbete '
@@ -556,7 +556,7 @@ TILLAGG = [
                   ['De', 'nya', 'cyklarna', 'var', 'dyra.'], extra=['dyrt.'],
                   forklaring='Cyklarna är flera, och då står adjektivet efter var i plural: dyra. Dyrt passar till '
                              'ett ett-ord i singular, som ett hus.'),
-        ], beskrivning='Tränar att adjektiv och particip böjs efter ordet de hör till, att undvika dubbel supinum, '
+        ], beskrivning='Tränar att adjektiv och particip böjs efter ordet de hör till, att undvika dubbelsupinum, '
                        'jämförelse av bra, rätt preposition efter vanliga ord och varken och eller.'),
 
         niva('sv-ak9-tala-1', 'Planera ett tal', 'Tala inför publik', [

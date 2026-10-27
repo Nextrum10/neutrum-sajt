@@ -685,7 +685,7 @@ AK9_NP_ALGEBRA = niva('ma-ak9-blad-np-algebra-1', 'Algebra och funktioner', 'NP-
         'm = 1 eftersom linjen går genom (0, 1). y ökar med 4 när x ökar med 2, så k = 4 / 2 = 2.'),
     skriv('Lös ekvationen 3(x + 2) = 5x − 4.', x_svar(lost(3, 6, 5, -4)),
           '3x + 6 = 5x − 4 ger 10 = 2x, så x = 5. Kontroll: 3 · 7 = 21 och 25 − 4 = 21.'),
-    skriv('Faktorisera 6x + 9.', uttr('3(2x + 3)', '3(3 + 2x)', '3 · (2x + 3)'),
+    skriv('Faktorisera 6x + 9.', uttr('3(2x + 3)', '3(3 + 2x)', '3 · (2x + 3)', '3*(2x + 3)', '3 * (2x + 3)'),
           'Både 6x och 9 är delbara med 3: 6x + 9 = 3 · 2x + 3 · 3 = 3(2x + 3).'),
     skriv('För vilket x är 2x + 5 och 4x − 7 lika stora?', x_svar(SKARN_LIKA),
           '2x + 5 = 4x − 7 ger 12 = 2x, så x = 6. Båda blir då 17.'),

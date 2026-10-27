@@ -485,7 +485,7 @@ T_CELLEN = 'Cellen, livets minsta enhet'
 
 AK7 = bana(AMNE, 'ak7', [
     niva('no-ak7-blad-cellen-1', 'Cellens delar', 'Cellens delar och fotosyntes', [
-        skriv('Fyll i ordet som fattas: Cellen är livets ___ enhet.', 'minsta',
+        skriv('Fyll i ordet som fattas: Cellen är livets ___ enhet.', ['minsta', 'grundläggande'],
               'Alla levande varelser är byggda av celler. Mindre än så kan inget vara och ändå leva.'),
         val('Vilken del av cellen innehåller arvsmassan, DNA?',
             ['Cellkärnan', 'Cellmembranet', 'Vakuolen', 'Cytoplasman'], 'Cellkärnan',

@@ -181,12 +181,12 @@ BANOR = [
                 'Is är vatten i fast form, vanligt vatten är flytande och vattenånga är gas. '
                 'Det är samma ämne i alla tre formerna.'),
             skriv('Vid hur många grader Celsius fryser rent vatten till is? Svara med ett tal.',
-                  tal(0),
+                  [tal(0), 'noll'],
                   'Rent vatten fryser vid 0 °C. Saltvatten fryser först vid en lite lägre '
                   'temperatur.'),
             skriv('Vid hur många grader Celsius kokar rent vatten vid normalt lufttryck? '
                   'Svara med ett tal.',
-                  tal(100),
+                  [tal(100), 'hundra', 'etthundra'],
                   'Vid normalt lufttryck kokar rent vatten vid 100 °C. Högt upp på ett berg, '
                   'där lufttrycket är lägre, kokar det vid en lägre temperatur.'),
             val('Vad heter det när en vattenpöl torkar upp i solen och vattnet blir till gas?',

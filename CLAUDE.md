@@ -1165,7 +1165,11 @@ Detaljer: `minne/grunden.md`.
   hämtad ur merge-commiten 0873d83, prövad mot sin md5 (`ee55c1ad…`) och körd och registrerad i ett do-block med
   vakter före och efter (1 285 nivåer och 7 515 frågor aktiva före, 1 462 och 8 762 efter). Facitprovet mot driften:
   38 187 prov på alla 8 762 aktiva frågor, 0 fel. Ingen edge-funktion och ingen ändring i databasens regler. Frågorna och
-  de 470 faktabladen är skrivna och granskade med AI, inte lästa av någon som undervisar. Trustpilots adress
+  de 470 faktabladen är skrivna och granskade med AI, inte lästa av någon som undervisar. **Facitgranskningen**
+  (2026-10-27, Leo: "granska facit så att den inte är fel"): alla 8 762 frågor lösta av AI-granskare utan facit och
+  jämförda; inget facit var fel, men en parning var tvetydig, sex förklaringar sa fel och ett trettiotal rätta svar
+  godtogs inte ("pratminus", "t = 2", "åtta"). Rättat i `20261027150000_uppgiftsbanken_granskningen` (30 frågor
+  får nytt id), som inte är körd i drift. Trustpilots adress
   (`se.trustpilot.com/review/nextrum.se`) och TikToks handtag (`@nextrum.ab`) är inte kontrollerade, och fotot på
   Instagramkortet är vårt eget, inte ur flödet.
 - **Ortssidorna och sökträffarna** (2026-10-26, Leo: "gör rubrikerna bättre, Bilderna mer passande, fixa små felen
