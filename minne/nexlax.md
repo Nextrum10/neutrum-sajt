@@ -830,7 +830,7 @@ man har kvar av uppgifter på varje sektion som duolingo har."
    sedan 68 banor, 989 vanliga nivåer och 8 762 frågor. Migrationen är
    `20261027120000_uppgiftsbanken_fortsattning.sql` (ur `bygg-uppgifter.py --sql`)
    och körs **efter merge**, som de förra bankerna; vyerna tål att den saknas, och
-   faktabladen för de nya områdena ligger då oanvända. **I drift 2026-10-27 kl. 11.50**
+   faktabladen för de nya områdena ligger då oanvända. **I drift 2026-10-27**
    (Leo: "Kör", efter merge av #347; ingen annan session arbetade då): filen hämtades
    från merge-commiten av #346 (0873d83) genom `extensions.http_get`, prövades mot sin md5
    (`ee55c1ad…`, 3 815 037 byte) och kördes och registrerades i ett do-block (`$kor$`) med
