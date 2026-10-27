@@ -213,6 +213,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   står ovanpå vägen och öppnas på plats (`växlaNod`), aldrig genom att vyn ritar om vägen (Leo: "mer smooth att trycka på").
   Vägens områden har startsidans fyra färger (`OMRÅDESFÄRGER`: blå, grön, lila, rosa, som prickarna i `.hj-nex-bild`), och de
   klara prickarna är fyllda i områdets färg; ändras prickarna på startsidan ändras listan med.
+  Ett klart steg leder vidare med EN knapp, Fortsätt, till nästa del eller nästa steg, och kortet vid en prick har en knapp
+  (Leo 2026-10-27: "som duolingo nu gör du de för komplicerat").
   Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
   (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare och en kampanjkod per

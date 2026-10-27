@@ -573,7 +573,7 @@ async function provaBarnet(webb) {
   await page.click('.upg-spel [data-spel="vidare"]');
   await page.waitForSelector('.upg-spel .upg-delklar', { timeout: 5000 }).catch(() => {});
   prova('spelaren: första delen klar, med delarna och nästa del ett tryck bort',
-    (await text(page, '.upg-spel .upg-delklar')).includes('Första delen klar') && (await page.locator('.upg-spel .upg-delklar .nl-delrad i').count()) === 2
+    (await text(page, '.upg-spel .upg-delklar')).includes('Del 1 av 2 klar') && (await page.locator('.upg-spel .upg-delklar .nl-delrad i').count()) === 2
     && (await page.locator('.upg-spel [data-spel="nasta-del"]').count()) === 1 && (await känt(page)).includes('upplast'),
     await text(page, '.upg-spel .upg-delklar'));
   await page.click('.upg-spel [data-spel="nasta-del"]');
@@ -628,7 +628,7 @@ async function provaBarnet(webb) {
   prova('spelaren: ljudknappen stänger av ljudet', (await page.getAttribute('.upg-spel [data-spel-ljud]', 'aria-pressed')) === 'false'
     && (await page.evaluate(() => localStorage.getItem('nx.nexlax.ljud'))) === 'av');
   await page.click('.upg-spel [data-spel-ljud]');
-  await page.click('.upg-spel [data-spel="klar"]');
+  await page.click('.upg-spel [data-spel-stang]');
   await page.waitForFunction(() => !document.querySelector('.upg-spel'), null, { timeout: 5000 }).catch(() => {});
   prova('spelaren: stängs, och inga ljud spelas efteråt', !(await synlig(page, '.upg-spel')));
 

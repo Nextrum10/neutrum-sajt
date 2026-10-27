@@ -1725,8 +1725,6 @@ window.NXUppgifter = (function () {
     const antal = nd.delar.length;
     const del = nd.delar[j];
     const storlek = del.till - del.från;
-    const iDelen = Math.max(0, Math.min(storlek, nd.gjorda - del.från));
-    const kvar = antal - nd.klara;
     const i = väg.steg.indexOf(n);
     const förra = i > 0 ? väg.steg.slice(0, i).reverse().find(x => x.sort === 'vanlig') : null;
     let text = '', knapp = '';
@@ -1738,31 +1736,18 @@ window.NXUppgifter = (function () {
       text = 'Klarad med ' + n.stjarnor + (n.stjarnor === 1 ? ' stjärna' : ' stjärnor')
         + (mästare ? (n.stjarnor >= BEMÄSTRAD ? '. Området är bemästrat.' : '. Två stjärnor bemästrar området.') : '. Gör om den för fler, det bästa resultatet räknas.');
       knapp = starta('Gör om');
-    } else if (j < nd.klara) {
-      /* En gjord del i en nivå som inte är klar: nästa del är ett tryck bort. */
-      text = 'Den här delen är klar. ' + (kvar === 1 ? 'En del kvar' : kvar + ' delar kvar') + ', sedan är nivån klar.';
-      knapp = starta('Fortsätt med del ' + (nd.nu + 1));
-    } else if (j > nd.nu) {
-      /* Delarna görs i ordning: de gjorda är alltid de första, och det är
-         så vägen kan räkna dem. */
-      text = 'Delarna görs i ordning, så du ' + (nd.gjorda ? 'fortsätter' : 'börjar') + ' med del ' + (nd.nu + 1) + '.';
-      knapp = starta((nd.gjorda ? 'Fortsätt' : 'Börja') + ' med del ' + (nd.nu + 1));
     } else {
-      text = iDelen ? 'Du har börjat: ' + iDelen + ' av ' + storlek + ' uppgifter klara. Det du svarat är sparat.'
-        : nd.gjorda ? 'Del ' + (j + 1) + ' står på tur. Det du gjort förut är sparat.'
-        : n.pågår ? 'Du har börjat. Det du svarat är sparat.'
-        : n.given ? 'Din studiehjälpare har gett dig den här.'
-        : mästare ? 'Blandade frågor ur hela området. Klarar du det med minst två stjärnor är området bemästrat.' : '';
-      knapp = starta(iDelen || nd.gjorda || n.pågår ? 'Fortsätt' : mästare ? 'Gör provet' : 'Starta');
+      /* Inte klar: bara en knapp, som spelar delen som står på tur (2026-10-27,
+         Leo: "nu gör du de för komplicerat"). Delarna görs i ordning. */
+      text = n.given && !nd.gjorda ? 'Din studiehjälpare har gett dig den här.' : '';
+      knapp = starta(nd.gjorda || n.pågår ? 'Fortsätt' : mästare ? 'Gör provet' : 'Starta');
     }
-    const fakta = [antal > 1 ? delOmfattning(niva, storlek, j) : omfattning(niva, o.katalog), niva.lastext ? 'Läsförståelse' : '',
-      n.xp ? 'Du har fått ' + xpText(n.xp) + ' här' : ''].filter(Boolean).join(' · ');
+    const fakta = n.klar ? [omfattning(niva, o.katalog), n.xp ? 'Du har fått ' + xpText(n.xp) + ' här' : ''].filter(Boolean).join(' · ')
+      : antal > 1 ? delOmfattning(niva, storlek, j) : omfattning(niva, o.katalog);
     return '<div class="upg-nod-kort">'
       + (antal > 1 ? '<span class="upg-nod-del">Del ' + (j + 1) + ' av ' + antal + '</span>' : '')
       + '<b>' + esc(stegTitel(niva)) + '</b>'
-      + (niva.beskrivning ? '<p>' + esc(niva.beskrivning) + '</p>' : '')
       + (fakta ? '<span class="upg-nod-fakta">' + esc(fakta) + '</span>' : '')
-      + (antal > 1 ? delRad(antal, nd.klara, nd.nu) : n.framsteg ? prickar(n.framsteg.klara, n.framsteg.totalt) : '')
       + (text ? '<p class="upg-nod-lage">' + esc(text) + '</p>' : '')
       + '<div class="upg-nod-atg">' + knapp
       + (n.första ? '<button type="button" class="upg-lank" data-upg-genomgang="' + esc((n.senast || n.första).id) + '">Se rättningen</button>' : '')
@@ -3052,19 +3037,17 @@ window.NXUppgifter = (function () {
       besked.innerHTML = '';
       const antal = T.delar.length;
       const gjorda = T.delar.filter(d => d.till <= T.klara).length;
-      const kvar = antal - gjorda;
       känn('upplast');
       kropp.innerHTML = '<div class="upg-delklar" data-nl-f="' + nivånsFärg(o.katalog, efterId(o.katalog)[T.niva.id] || T.niva) + '">'
         + '<span class="upg-delklar-ik">' + IKON.bock + '</span>'
-        + '<h2 tabindex="-1">' + esc(antal - kvar === 1 ? 'Första delen klar!' : 'Del ' + (T.del + 1) + ' klar!') + '</h2>'
+        + '<h2 tabindex="-1">' + esc('Del ' + gjorda + ' av ' + antal + ' klar!') + '</h2>'
         + '<p class="upg-delklar-titel">' + esc(stegTitel(T.niva)) + '</p>'
         + delRad(antal, gjorda, gjorda, 'upg-delklar-rad')
         + (T.xp ? '<p class="upg-delklar-xp">' + IKON.blixt + '+' + tusen(T.xp) + ' XP</p>' : '')
-        + '<p class="upg-slut-not">' + esc((kvar === 1 ? 'En del kvar' : kvar + ' delar kvar')
-          + ', sedan är nivån klar och stjärnorna räknas. Det du gjort står kvar i ett dygn.') + '</p>'
         + '</div>';
-      knappar.innerHTML = '<button type="button" class="btn btn-primary btn-block" data-spel="nasta-del">Fortsätt</button>'
-        + '<button type="button" class="btn btn-ghost btn-block" data-spel="klar">Till vägen</button>';
+      /* En knapp, till nästa del (Leo 2026-10-27: "när du genomför ett steg ska du
+         sedan gå vidare till nästa steg. som duolingo"). Krysset uppe stänger. */
+      knappar.innerHTML = '<button type="button" class="btn btn-primary btn-block" data-spel="nasta-del">Fortsätt</button>';
       const h = kropp.querySelector('h2');
       if (h) h.focus({ preventScroll: true });
     }
@@ -3189,8 +3172,9 @@ window.NXUppgifter = (function () {
       }
 
       knappar.innerHTML = r.godkand
-        ? (T.nästa ? '<button type="button" class="btn btn-primary btn-block" data-spel="nasta">Nästa: ' + esc(stegTitel(T.nästa)) + '</button>' : '')
-          + '<button type="button" class="btn ' + (T.nästa ? 'btn-ghost' : 'btn-primary') + ' btn-block" data-spel="klar">Klar</button>'
+        /* Klarad: en knapp, till nästa steg om det finns ett (2026-10-27). */
+        ? (T.nästa ? '<button type="button" class="btn btn-primary btn-block" data-spel="nasta">Fortsätt</button>'
+                   : '<button type="button" class="btn btn-primary btn-block" data-spel="klar">Klar</button>')
         : '<button type="button" class="btn btn-primary btn-block" data-spel="igen">Försök igen</button>'
           + '<button type="button" class="btn btn-ghost btn-block" data-spel="klar">Klar för nu</button>';
 

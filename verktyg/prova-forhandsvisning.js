@@ -283,7 +283,7 @@ async function provaStudievyn(webb) {
   const försök = await värld(page, n => NXForhandsvisning.värld.niva_forsok.filter(f => f.niva_id === n && f.klar_at).length, id(305));
   prova('studievyn: försöket är klart i världen', försök === 1, försök);
   await bild(page, 'studievyn-nexlax-klar', '.upg-spel');
-  await page.click('.upg-spel [data-spel="klar"]').catch(() => {});
+  await page.click('.upg-spel [data-spel-stang]').catch(() => {});
 
   /* En betalning går inte iväg. */
   await page.evaluate(() => { location.hash = '#erbjudanden'; });
