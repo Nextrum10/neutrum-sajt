@@ -3964,3 +3964,90 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
 @media (prefers-reduced-motion:reduce){
   .pr-kalk-seg:active .pr-kalk-tumme{scale:none}
 }
+
+/* ============================================================
+   EFFEKTER (2026-10-27) — se NXFin i nextrum-motion.js
+
+   Ordvis rubriker, glans under muspekaren, norrsken på de mörka
+   avslutningarna, ordet i foten som fylls på och glans över de
+   orange knapparna. Allt gömmer sig bakom html[data-motion]: utan
+   skriptet, och med reducerad rörelse, står sidan som förut.
+   Bara transform, opacity och gradienter; ingen animerad skugga.
+   ============================================================ */
+
+/* ---------- ordvis rubrik ---------- */
+html[data-motion="full"] .nx-ord-h:not(.nx-in) .nx-ord,
+html[data-motion="lite"] .nx-ord-h:not(.nx-in) .nx-ord{
+  opacity:0;transform:translate3d(0,.55em,0);
+}
+html[data-motion="full"] .nx-ord-h:not(.nx-in) .nx-ord{filter:blur(8px)}
+html[data-motion="full"] .nx-ord,
+html[data-motion="lite"] .nx-ord{
+  display:inline-block;
+  transition:opacity .7s var(--e-ut),transform .85s var(--e-ut),filter .7s var(--e-ut);
+  transition-delay:calc(var(--i,0) * 48ms);
+}
+html[data-motion="lite"] .nx-ord{transition-delay:calc(var(--i,0) * 30ms)}
+
+/* ---------- glans under muspekaren ---------- */
+.nx-glans{
+  position:absolute;inset:0;z-index:0;border-radius:inherit;
+  pointer-events:none;opacity:0;
+  transition:opacity .4s var(--e-ut);
+  background:radial-gradient(380px circle at var(--gx,50%) var(--gy,50%),
+    color-mix(in srgb,var(--f,var(--orange)) 22%,transparent),transparent 65%);
+}
+.nx-glans-pa > .nx-glans{opacity:1}
+
+/* ---------- norrsken ---------- */
+.nx-har-norrsken{position:relative;isolation:isolate;overflow:clip}
+.nx-har-norrsken > *:not(.nx-norrsken){position:relative;z-index:1}
+.nx-norrsken{
+  position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  opacity:.9;
+}
+.nx-norrsken i{
+  position:absolute;border-radius:50%;
+  width:min(70vw,900px);aspect-ratio:1;
+  background:radial-gradient(circle,var(--n-f) 0%,transparent 62%);
+  opacity:.34;will-change:transform;
+}
+.nx-norrsken i:nth-child(1){--n-f:var(--orange);left:-12%;top:-30%}
+.nx-norrsken i:nth-child(2){--n-f:var(--lera-l);right:-16%;top:6%;opacity:.28}
+.nx-norrsken i:nth-child(3){--n-f:var(--orange-lugn);left:26%;bottom:-48%;opacity:.24}
+html[data-motion="full"] .nx-norrsken.pa i:nth-child(1){animation:nx-drift-a 19s ease-in-out infinite alternate}
+html[data-motion="full"] .nx-norrsken.pa i:nth-child(2){animation:nx-drift-b 24s ease-in-out infinite alternate}
+html[data-motion="full"] .nx-norrsken.pa i:nth-child(3){animation:nx-drift-c 21s ease-in-out infinite alternate}
+@keyframes nx-drift-a{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(18%,14%,0) scale(1.18)}}
+@keyframes nx-drift-b{from{transform:translate3d(0,0,0) scale(1.1)}to{transform:translate3d(-20%,10%,0) scale(.9)}}
+@keyframes nx-drift-c{from{transform:translate3d(0,0,0) scale(.95)}to{transform:translate3d(-14%,-16%,0) scale(1.15)}}
+
+/* ---------- ordet i foten ---------- */
+html[data-motion="full"] .nx-ftr-ord span,
+html[data-motion="lite"] .nx-ftr-ord span{
+  --ord-bas:color-mix(in srgb,var(--nt-fg) 11%,transparent);
+  --ord-fyll:color-mix(in srgb,var(--nt-fg) 19%,transparent);
+  color:transparent;
+  background-image:linear-gradient(100deg,var(--ord-fyll) 0 40%,var(--ord-bas) 60% 100%);
+  background-size:260% 100%;background-position:100% 0;background-repeat:no-repeat;
+  -webkit-background-clip:text;background-clip:text;
+  transition:background-position 2.4s var(--e-ut);
+}
+html[data-motion="full"] .nx-ftr-ord.nx-in span,
+html[data-motion="lite"] .nx-ftr-ord.nx-in span{background-position:0 0}
+
+/* ---------- glans över den orange knappen ----------
+   Hovringen sätter `background` som förkortning och nollar bilden,
+   så bilden sätts om här med högre vikt. Bara med mus. */
+@media (hover:hover){
+  html[data-motion="full"] .btn-primary{
+    background-image:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.3) 50%,transparent 62%);
+    background-size:260% 100%;background-position:130% 0;background-repeat:no-repeat;
+  }
+  html[data-motion="full"] .btn-primary:hover{
+    background-image:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.3) 50%,transparent 62%);
+    background-size:260% 100%;background-repeat:no-repeat;
+    background-position:-30% 0;
+    transition:background-position .9s var(--e-ut),background-color .2s,box-shadow .2s;
+  }
+}

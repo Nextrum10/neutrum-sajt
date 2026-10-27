@@ -2123,3 +2123,13 @@ försök kraschade i förhandsvisningen, som saknar rättningen; den säger nu s
   och hälften står ordagrant.
 - **Priser**: Varför priset ser ut så här är borttagen. Den sa att hjälpen "ofta" blir mer begriplig,
   vilket sidan inte kan visa, och "unga hjälper unga" står redan på Vår idé.
+
+## Effekter på de öppna sidorna (2026-10-27)
+Fyra effekter i samma anda som React Bits (SplitText, SpotlightCard, Aurora, ShinyText), omskrivna i vanlig JS och CSS
+eftersom sajten saknar React och byggsteg: `NXFin.ordRubriker` (h2 i main kommer in ord för ord med oskärpa; hoppar över
+rubriker med `data-erb`/`data-stat`, som får sin text av data), `glans` (ljuspunkt under muspekaren på korten, ett eget
+barn `.nx-glans`, bara `full` och mus), `norrsken` (tre färgfläckar på `.nx-final-cinema` och `.bli-svart`, går bara medan
+sektionen syns) och `fotOrd` (ordet i foten fylls på en gång), plus glans över `.btn-primary` vid hovring (bara CSS). Stilen
+står sist i `nextrum-cinema.css` (EFFEKTER). Ingen HTML ändrades, så `/en/` följer med; `still` delar ingenting och lägger
+inget, `lite` får inga musglans och ingen oskärpa. Nödbromsen visar ord och fotord som aldrig avslöjats. Ett nytt kort
+får glans genom att klassen läggs i listan i `allt()`.

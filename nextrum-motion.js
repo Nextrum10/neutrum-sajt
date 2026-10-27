@@ -687,7 +687,7 @@ const NXFin = (function () {
      Rörelse är en bonus. Texten är inte förhandlingsbar. */
   function nödbroms() {
     const kolla = () => {
-      const väntar = $$('[data-stig]:not(.nx-in), [data-avslöj]:not(.nx-in)');
+      const väntar = $$('[data-stig]:not(.nx-in), [data-avslöj]:not(.nx-in), .nx-ord-h:not(.nx-in), .nx-ftr-ord:not(.nx-in)');
       if (!väntar.length) return false;
       const h = document.documentElement.clientHeight || window.innerHeight || 0;
       väntar.forEach(el => {
@@ -784,6 +784,147 @@ const NXFin = (function () {
     else window.addEventListener('load', ladda, { once: true });
   }
 
+  /* ============================================================
+     EFFEKTER (2026-10-27)
+
+     Fyra effekter i samma anda som React Bits (SplitText/BlurText,
+     SpotlightCard, Aurora, ShinyText), skrivna om i vanlig JS och CSS:
+     sajten har inget React och inget byggsteg. Ingen av dem rör HTML:en
+     på sidorna eller på /en/. De hittar sina element på klasser som
+     redan finns, och stilen ligger i nextrum-cinema.css (EFFEKTER).
+
+     Reglerna som gäller dem alla:
+       - bara transform, opacity och en gradient som följer muspekaren,
+         aldrig layout och ingen animerad box-shadow
+       - still (reducerad rörelse): ingenting delas, ingenting läggs in
+       - lite (telefon, pekskärm): ingen musglans och ingen oskärpa
+       - texten finns kvar för skärmläsare och går att markera
+     ============================================================ */
+
+  /* ---------- rubriker som kommer in ord för ord ----------
+     Som radAvslöj, fast ord för ord med lite oskärpa. Bara h2 i main som
+     inte redan har radavslöj, och aldrig en rubrik vars text sätts av
+     data (priser och tal), för då delades texten innan den kommit. */
+  const ORD_BORT = '[data-avslöj],[data-erb],[data-stat],[data-erb-rabatterat],[data-erb-spara],[data-erb-mindre]';
+  function ordRubriker(sel) {
+    if (NXMotion.reducerad) return;
+    $$(sel).forEach(el => {
+      if (el.dataset.ord === 'klar' || el.matches(ORD_BORT) || el.querySelector(ORD_BORT)) return;
+      if (el.closest('footer, form, [hidden], [aria-hidden="true"]')) return;
+      const namn = el.textContent.replace(/\s+/g, ' ').trim();
+      if (!namn) return;
+      el.dataset.ord = 'klar';
+
+      /* Orden delas i textnoderna, så <em> och <br> står kvar. */
+      let i = 0;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      const noder = [];
+      while (walker.nextNode()) noder.push(walker.currentNode);
+      noder.forEach(n => {
+        const delar = n.nodeValue.split(/(\s+)/);
+        if (delar.every(d => !d.trim())) return;
+        const frag = document.createDocumentFragment();
+        delar.forEach(d => {
+          if (!d) return;
+          if (!d.trim()) { frag.appendChild(document.createTextNode(d)); return; }
+          const s = document.createElement('span');
+          s.className = 'nx-ord';
+          s.style.setProperty('--i', Math.min(i++, 14));
+          s.textContent = d;
+          frag.appendChild(s);
+        });
+        n.parentNode.replaceChild(frag, n);
+      });
+      el.setAttribute('aria-label', namn);
+      el.classList.add('nx-ord-h');
+      Array.from(el.children).forEach(c => { if (!c.matches('br')) c.setAttribute('aria-hidden', 'true'); });
+      /* Textnoder direkt i rubriken (utan <em>) har blivit spans och
+         döljs för skärmläsare av namnet ovan, inte av aria-hidden. */
+
+      if (iVyn(el)) { requestAnimationFrame(() => el.classList.add('nx-in')); return; }
+      NXMotion.scene(el, {
+        läge: 'enter', once: true,
+        run: p => {
+          if (p <= 0.04) return false;
+          el.classList.add('nx-in');
+        }
+      });
+    });
+  }
+
+  /* ---------- glans som följer muspekaren ----------
+     Ett kort får en ljuspunkt under pekaren. Läggs in som ett eget
+     barn (aldrig ::before eller ::after, som korten redan använder) och
+     bara med mus på stor skärm. Färgen är kortets ämnesfärg (--f) när
+     det har en. */
+  function glans(sel) {
+    if (NXMotion.tier !== 'full') return;
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    $$(sel).forEach(kort => {
+      if (kort.dataset.glans === 'klar') return;
+      kort.dataset.glans = 'klar';
+      if (getComputedStyle(kort).position === 'static') kort.style.position = 'relative';
+      const g = document.createElement('span');
+      g.className = 'nx-glans';
+      g.setAttribute('aria-hidden', 'true');
+      kort.insertBefore(g, kort.firstChild);
+      let rad = 0, x = 0, y = 0;
+      const sätt = () => {
+        rad = 0;
+        g.style.setProperty('--gx', x + 'px');
+        g.style.setProperty('--gy', y + 'px');
+      };
+      kort.addEventListener('pointermove', e => {
+        if (e.pointerType && e.pointerType !== 'mouse') return;
+        const r = kort.getBoundingClientRect();
+        x = e.clientX - r.left;
+        y = e.clientY - r.top;
+        if (!rad) rad = requestAnimationFrame(sätt);
+        kort.classList.add('nx-glans-pa');
+      }, { passive: true });
+      kort.addEventListener('pointerleave', () => kort.classList.remove('nx-glans-pa'));
+    });
+  }
+
+  /* ---------- norrsken på de mörka avslutningarna ----------
+     Tre mjuka färgfläckar som driver långsamt bakom texten. Bara
+     transform, och bara medan sektionen syns (klassen pa). */
+  function norrsken(sel) {
+    if (NXMotion.reducerad) return;
+    $$(sel).forEach(sek => {
+      if (sek.querySelector('.nx-norrsken')) return;
+      const n = document.createElement('div');
+      n.className = 'nx-norrsken';
+      n.setAttribute('aria-hidden', 'true');
+      n.innerHTML = '<i></i><i></i><i></i>';
+      sek.insertBefore(n, sek.firstChild);
+      sek.classList.add('nx-har-norrsken');
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(es => es.forEach(e => n.classList.toggle('pa', e.isIntersecting)),
+          { rootMargin: '10% 0px' }).observe(sek);
+      } else {
+        n.classList.add('pa');
+      }
+    });
+  }
+
+  /* ---------- det stora ordet i foten fylls på ----------
+     Samma ord som förut, men en ljusare färg sveper över det en gång när
+     foten kommer fram. */
+  function fotOrd(sel) {
+    if (NXMotion.reducerad) return;
+    $$(sel).forEach(el => {
+      if (iVyn(el)) { el.classList.add('nx-in'); return; }
+      NXMotion.scene(el, {
+        läge: 'enter', once: true,
+        run: p => {
+          if (p <= 0.05) return false;
+          el.classList.add('nx-in');
+        }
+      });
+    });
+  }
+
   function allt() {
     header();
     tryckbart();
@@ -791,8 +932,13 @@ const NXFin = (function () {
     radAvslöj('[data-avslöj]');
     stiga('[data-stig]');
     parallax('[data-parallax]');
+    ordRubriker('main h2');
+    glans('.hj-del, .nlx-del, .nx-price-card, .pr-erb-plan, .sid-kort, .jn-kort, .dr-kort, .sc-card');
+    norrsken('.nx-final-cinema, .nx-page-hero.bli-svart');
+    fotOrd('.nx-ftr-ord');
     nödbroms();
   }
 
-  return { allt, header, heroVideo, radAvslöj, stiga, parallax, nödbroms, tryckbart };
+  return { allt, header, heroVideo, radAvslöj, stiga, parallax, nödbroms, tryckbart,
+           ordRubriker, glans, norrsken, fotOrd };
 })();
