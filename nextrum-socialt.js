@@ -20,7 +20,7 @@
 
    Instagram: samma sak, ingen inbäddning. Kortet står i markupen med
    ett av våra egna foton, och här poppar det bara fram när bildväggen
-   syns. Krysset stänger det för sidvisningen; inget sparas.
+   syns. Det går inte att stänga (Leo 2026-10-27).
    ============================================================ */
 const NXSocialt = (function () {
   'use strict';
@@ -106,12 +106,6 @@ const NXSocialt = (function () {
   function instagram() {
     const kort = $('[data-ig]');
     if (!kort) return;
-    const stäng = $('[data-ig-stang]', kort);
-    if (stäng) stäng.addEventListener('click', () => {
-      kort.classList.remove('syns');
-      kort.classList.add('stangd');
-      setTimeout(() => { kort.hidden = true; }, lugnt() ? 0 : 320);
-    });
     if (lugnt() || !('IntersectionObserver' in window)) return;
     kort.classList.add('vantar');
     const sek = kort.closest('section') || kort.parentElement;
