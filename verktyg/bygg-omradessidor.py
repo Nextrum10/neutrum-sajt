@@ -4054,6 +4054,35 @@ def mellan(s, start, slut, block, p):
     return s[:s.index(start) + len(start)] + block + s[s.index(slut):]
 
 
+AFF_START = '/* orter: skrivs av verktyg/bygg-omradessidor.py, ändra inte för hand */'
+AFF_SLUT = '/* /orter */'
+
+
+def skriv_affischen():
+    """Affischens ortslista (2026-10-27). Den stod för hand med de sex
+    första orterna och "i" framför alla, så att det blev "Läxhjälp i
+    Södermalm". Nu kommer den härifrån, med prepositionen ur i_namn och
+    orterna region för region som i navet. Nyckeln är sluggen utan
+    laxhjalp-, som förut, så att en tryckt affischs länk fortsätter gälla."""
+    rader = []
+    for rid, namn, _, _ in REGIONER:
+        orter = sorted((a for a in OMRADEN if a.get('region') == rid),
+                       key=lambda a: svensk_ordning(a['namn']))
+        for a in orter:
+            prep, _, plats = a['i_namn'].partition(' ')
+            if prep not in ('i', 'på') or plats != a['namn']:
+                sys.exit(f'{a["slug"]}: i_namn måste vara "i" eller "på" och namnet')
+            for t in (a['namn'], namn):
+                if "'" in t or '\\' in t:
+                    sys.exit(f'{a["slug"]}: tecken som affischens lista inte tål')
+            rader.append(f"    ['{a['slug'].removeprefix('laxhjalp-')}', '{a['namn']}', '{prep}', '{namn}']")
+    p = os.path.join(ROT, 'nextrum-affisch.js')
+    s = open(p, encoding='utf-8').read()
+    block = '\n  var OMRADEN = [\n' + ',\n'.join(rader) + '\n  ];\n  '
+    s = mellan(s, AFF_START, AFF_SLUT, block, p)
+    open(p, 'w', encoding='utf-8').write(s)
+
+
 def skriv_navet():
     p = os.path.join(ROT, 'laxhjalp-stockholm.html')
     s = open(p, encoding='utf-8').read()
@@ -4157,6 +4186,8 @@ def main():
     print('  skrev 404.html')
     skriv_navet()
     print('  skrev ämneskorten och ortskatalogen i laxhjalp-stockholm.html')
+    skriv_affischen()
+    print('  skrev ortslistan i nextrum-affisch.js')
     print(f'{len(OMRADEN)} områdessidor, {len(AMNEN)} ämnessidor, {len(STADIER)} stadiesidor, onlinesidan och {len(GUIDER)} guider byggda.')
     print('Kör sedan verktyg/bygg-sitemap.py och sist verktyg/satt-version.py.')
 

@@ -39,6 +39,7 @@
   overflow-wrap:anywhere;
 }
 .aff-rubrik em{font-style:normal;color:var(--acc)}
+.aff-rubrik-lang{font-size:13mm}
 .aff-lede{margin:0;max-width:165mm;font-size:6mm;line-height:1.4;color:var(--bl-2)}
 
 .aff-fakta{list-style:none;margin:11mm 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5mm}

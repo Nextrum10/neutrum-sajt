@@ -1093,7 +1093,11 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
   Sidan är `noindex`, bara på svenska och tar ingen fritext ur adressen:
   koden prövas mot samma form som i databasen och området ur en fast
   lista, annars hade vem som helst kunnat skriva ut en affisch med vår
-  logga. Raden om vecka 45 försvinner efter `UPPSTART`. QR-koden lästes
+  logga. Listan skrivs sedan 2026-10-27 av `verktyg/bygg-omradessidor.py`
+  ur ortssidorna, region för region, med prepositionen ur ortens
+  `i_namn`: förut stod de sex första orterna för hand med "i" framför
+  alla, och affischen sa "Läxhjälp i Södermalm". Nyckeln är sluggen utan
+  `laxhjalp-`, så en tryckt affischs adress gäller fortfarande. Raden om vecka 45 försvinner efter `UPPSTART`. QR-koden lästes
   av med OpenCV ur en skärmbild i provet. Planen står i
   `AFFISCHKAMPANJ.md`.
 - **Provat** lokalt: 1009 av 1009 i `rls-test.sql`; utan migrationen

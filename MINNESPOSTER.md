@@ -325,10 +325,10 @@ Genererat:
 - `nextrum-maskot-svar.js` byggs av `verktyg/bygg-maskotsvar.py` ur
   `faq.html` och `en/faq.html`
 - FAQPage-märkningen i båda faq-sidorna byggs av `verktyg/bygg-faq-schema.py`
-- Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), onlinesidan,
-  fyra guider och ämnes- och guidekorten i navet byggs av
-  `verktyg/bygg-omradessidor.py`. Skalet läses ur `var-ide.html`,
-  alt-texten ur `nextrum-images.js`
+- Ortssidorna, ämnes- och stadiesidorna (`laxhjalp-*.html`), onlinesidan,
+  guiderna, `404.html`, korten och ortskatalogen i navet och affischens
+  ortslista (2026-10-27) byggs av `verktyg/bygg-omradessidor.py`. Skalet
+  läses ur `var-ide.html`, alt-texten ur `nextrum-images.js`
 - `sitemap.xml` byggs av `verktyg/bygg-sitemap.py` ur sidornas
   canonical och hreflang. `lastmod` flyttas bara när sidans text
   ändras, inte vid varje commit
