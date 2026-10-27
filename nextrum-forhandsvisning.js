@@ -776,6 +776,19 @@ window.NXForhandsvisning = (function () {
                ratt: f[2], forklaring: f[3], ordning: i + 1 };
     });
   }
+  /* Fripassen, som intern.nexlax_fripass räknar dem: fem i veckan, per nivå. */
+  function fripass() {
+    var mandag = new Date(); mandag.setHours(0, 0, 0, 0);
+    mandag.setDate(mandag.getDate() - ((mandag.getDay() + 6) % 7));
+    var hoppade = W.niva_forsok.filter(function (f) { return f.student_id === ALVA && f.fripass; });
+    var veckan = {};
+    hoppade.forEach(function (f) { if (Date.parse(f.startad_at) >= mandag.getTime()) veckan[f.niva_id] = 1; });
+    var alla = {};
+    hoppade.forEach(function (f) { alla[f.niva_id] = 1; });
+    var nya = new Date(mandag); nya.setDate(nya.getDate() + 7);
+    return { per_vecka: 5, kvar: Math.max(0, 5 - Object.keys(veckan).length), nivaer: Object.keys(alla),
+             nya: nya.toISOString().slice(0, 10) };
+  }
   function nexlaxLäge() {
     var mina = W.niva_forsok.filter(function (f) { return f.student_id === ALVA && f.klar_at; });
     var xp = 1040 + mina.length * 50;
@@ -785,7 +798,7 @@ window.NXForhandsvisning = (function () {
       dagar: [-5, -4, -2].map(function (n) { return { dag: dag(n), xp: 60, nivaer: 1, uppgifter: 1, pass: 0 }; }),
       banor: [], nivaer: {}, omraden: [{ amne: 'Matematik', arskurs: 'ak6', omrade: 'Bråk', klart: tid(-9, '16:12') }],
       missade: [], uppgifter: { klara: 24, direkt: 20, forsta: 30, forsta_ratt: 24 },
-      regler: { val: 10, svarare: 20, niva: 50, omrade: 100 }, idag: dag(0),
+      regler: { val: 10, svarare: 20, niva: 50, omrade: 100 }, idag: dag(0), fripass: fripass(),
       uppdrag: { dag: dag(0), idag: [
         { id: 'xp-50', grupp: 'xp', text: 'Samla 50 XP', mal: 50, har: Math.min(50, idag * 90), klart: idag > 0 },
         { id: 'nivaer-1', grupp: 'nivaer', text: 'Klara en nivå', mal: 1, har: Math.min(1, idag), klart: idag > 0 },
@@ -1019,6 +1032,16 @@ window.NXForhandsvisning = (function () {
       return { forsok: f.id, niva: { id: n.id, titel: n.titel, amne: n.amne, omrade: n.omrade, arskurs: n.arskurs,
                sort: n.sort, lastext: n.lastext }, klara: Object.keys(s.rätt),
                fragor: s.frågor.map(function (x) { return { id: x.id, typ: x.typ, fraga: x.fraga, alternativ: x.alternativ }; }) };
+    },
+    niva_hoppa: function (k) {
+      var elev = k.p_elev || ALVA;
+      var hoppad = W.niva_forsok.some(function (f) { return f.niva_id === k.p_niva && f.student_id === elev && f.fripass; });
+      if (!hoppad && fripass().kvar <= 0) return { __fel: [400, 'P0001', 'Veckans fripass är slut. Nya kommer på måndag.'] };
+      var ut = RPC.niva_starta(k);
+      if (ut && ut.__fel) return ut;
+      W.niva_forsok.forEach(function (f) { if (f.id === ut.forsok) f.fripass = true; });
+      ut.fripass = fripass();
+      return ut;
     },
     niva_svara: function (k) {
       var s = spelFör(k.p_forsok);

@@ -1330,11 +1330,11 @@
 
   /* Starta en nivå, ur vägen, ur det primära steget eller ur en
      uppgift från studiehjälparen. */
-  function spelaNivå(niva) {
+  function spelaNivå(niva, hopp) {
     if (!niva || !S.valtBarn) return;
     const barnet = S.valtBarn;
     U.spela({
-      supa, niva, elev: barnet,
+      supa, niva, elev: barnet, hopp: !!hopp,
       katalog: S.katalog || [], forsok: S.forsok || [], uppgifter: S.laxor || [],
       pågående: S.nl.pågående || {}, läge: S.nl.läge,
       hämtaLäge: () => U.laddaLäge(supa, barnet),
@@ -1351,6 +1351,12 @@
     if (k) {
       const niva = (S.katalog || []).find(n => n.id === k.dataset.nlStarta);
       spelaNivå(niva);
+      return;
+    }
+    /* En låst nivå med ett fripass (2026-10-27). */
+    const h = e.target.closest('[data-nl-hoppa]');
+    if (h) {
+      spelaNivå((S.katalog || []).find(n => n.id === h.dataset.nlHoppa), true);
       return;
     }
     const u = e.target.closest('[data-lax-starta]');
