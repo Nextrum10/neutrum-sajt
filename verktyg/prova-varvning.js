@@ -173,6 +173,23 @@ function falskSupabase(o) {
       });
       return n;
     },
+    /* bonusarna_godkanns (2026-10-28): godkänn och tipstimmarna. */
+    varvningsbonus_godkann: k => {
+      const b = W.varvningsbonus.find(x => x.id === k.p_id);
+      if (!b) return { __fel: [400, '22023', 'Bonusen finns inte.'] };
+      if (b.status !== 'att_godkanna') return b.status;
+      Object.assign(b, { status: 'intjanad', intjanad_at: nu(0), godkand_av: 'admin-1', andrad_av: 'admin-1' });
+      return 'intjanad';
+    },
+    tipstimmar_lage: () => (W.tipstimmar || []).map(r => Object.assign({}, r)),
+    tipstimme_besluta: k => {
+      const r = (W.tipstimmar || []).find(x => x.tipsad_id === k.p_tipsad);
+      if (!r) return { __fel: [400, '22023', 'Familjen har inte gett någon tipstimme än.'] };
+      if (r.beslut) return 'redan';
+      Object.assign(r, { beslut: k.p_godkann ? 'godkand' : 'nekad', orsak: k.p_orsak || null, beslutad_at: nu(0),
+        beslutad_av: 'admin-1' });
+      return r.beslut;
+    },
     varvningsbonus_annullera: k => {
       const b = W.varvningsbonus.find(x => x.id === k.p_id);
       if (!b) return { __fel: [400, '22023', 'Bonusen finns inte.'] };
@@ -542,6 +559,82 @@ async function provaAdmin(webb) {
   }
 }
 
+/* ============ 4. Godkänn: värvningsbonusen och tipstimmarna (2026-10-28) ============ */
+async function provaGodkännande(webb) {
+  const { context, page, S, riktiga, konsol } = await öppna(webb, { värld: W => {
+    W.varvningsbonus.push({ id: 'vb-5', varvare_profil_id: 'sh-b', varvad_profil_id: 'sh-v', varvad_ansokan_id: null,
+      brutto_ore: 30000, semester_procent: 12, grundersattning_ore: 26786, semesterersattning_ore: 3214,
+      utlosare: 'konto_skapat', status: 'att_godkanna', skapad_at: nu(-900), uppfylld_at: nu(-60), intjanad_at: null,
+      utbetald_at: null, utbetald_period: null, annullerad_at: null, annullerad_orsak: null, andrad_av: null, godkand_av: null });
+    W.profiles.push(
+      { id: 'fam-p', role: 'parent', full_name: 'Petra Tipsare', email: 'petra@example.se', is_admin: false,
+        created_at: '2026-09-01T10:00:00Z' },
+      { id: 'fam-q', role: 'parent', full_name: ELAK, email: 'q@example.se', is_admin: false,
+        created_at: '2026-10-01T10:00:00Z' },
+      { id: 'fam-r', role: 'parent', full_name: 'Rut Ny', email: 'rut@example.se', is_admin: false,
+        created_at: '2026-10-01T10:00:00Z' });
+    W.tipstimmar = [
+      { tipsare_id: 'fam-p', tipsad_id: 'fam-q', tva_timmar: '2026-10-20', beslut: null, orsak: null, beslutad_at: null,
+        beslutad_av: null },
+      { tipsare_id: 'fam-p', tipsad_id: 'fam-r', tva_timmar: '2026-10-21', beslut: null, orsak: null, beslutad_at: null,
+        beslutad_av: null }
+    ];
+  } });
+  await page.goto(BAS + '/admin#varvning');
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+  await page.waitForSelector('#vb-tips table', { timeout: 8000 }).catch(() => {});
+  await vänta(400);
+  const tips = await innehåll(page, '#vb-tips');
+  prova('godkänn: tipstimmarna står med den som tipsade, den nya familjen och Att godkänna',
+    (await page.locator('#vb-tips tbody tr').count()) === 2 && /Petra Tipsare/.test(tips) && /Rut Ny/.test(tips)
+      && /Att godkänna/.test(tips), tips.slice(0, 300));
+  prova('godkänn: ett namn som är HTML står som text', !(await xss(page)) && tips.includes(ELAK));
+  prova('godkänn: en bonus som väntar på oss har Godkänn',
+    (await page.locator('#vb-lista [data-varv-godkann="vb-5"]').count()) === 1
+      && /Att godkänna\s*300\s*kr/.test(await innehåll(page, '#vb-sam')), await innehåll(page, '#vb-sam'));
+
+  await page.click('#vb-lista [data-varv-godkann="vb-5"]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  await page.click('.nx-fraga-box [data-fr="ja"]');
+  await vänta(800);
+  const gk = S.logg.find(r => r.väg === '/rest/v1/rpc/varvningsbonus_godkann');
+  prova('godkänn: bonusen godkänns genom databasens funktion', gk && gk.kropp.p_id === 'vb-5', JSON.stringify(gk && gk.kropp));
+  prova('godkänn: bonusen står som intjänad med Markera utbetald efteråt',
+    (await page.locator('#vb-lista [data-varv-godkann="vb-5"]').count()) === 0
+      && (await page.locator('#vb-lista [data-varv-utbetald="vb-5"]').count()) === 1);
+
+  await page.click('#vb-tips [data-tips-godkann="fam-q"]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  await page.click('.nx-fraga-box [data-fr="ja"]');
+  await vänta(800);
+  const tg = S.logg.find(r => r.väg === '/rest/v1/rpc/tipstimme_besluta');
+  prova('godkänn: tipstimmen godkänns genom databasens funktion',
+    tg && tg.kropp.p_tipsad === 'fam-q' && tg.kropp.p_godkann === true, JSON.stringify(tg && tg.kropp));
+
+  await page.click('#vb-tips [data-tips-neka="fam-r"]');
+  await page.waitForSelector('.nx-fraga-box #vb-tips-orsak', { timeout: 3000 }).catch(() => {});
+  await page.fill('.nx-fraga-box #vb-tips-orsak', 'x');
+  await page.click('.nx-fraga-box [data-fr="ja"]');
+  await vänta(200);
+  prova('godkänn: ett nej utan skäl nekas', /minst tre tecken/.test(await innehåll(page, '.nx-fraga-box #fr-msg'))
+    && S.logg.filter(r => r.väg === '/rest/v1/rpc/tipstimme_besluta').length === 1);
+  await page.fill('.nx-fraga-box #vb-tips-orsak', 'Samma familj, <b>nytt namn</b>.');
+  await page.click('.nx-fraga-box [data-fr="ja"]');
+  await vänta(800);
+  const tn = S.logg.filter(r => r.väg === '/rest/v1/rpc/tipstimme_besluta')[1];
+  prova('godkänn: ett nej går genom databasens funktion med skälet',
+    tn && tn.kropp.p_tipsad === 'fam-r' && tn.kropp.p_godkann === false && tn.kropp.p_orsak === 'Samma familj, <b>nytt namn</b>.',
+    JSON.stringify(tn && tn.kropp));
+  const efter = await innehåll(page, '#vb-tips');
+  prova('godkänn: besluten står kvar, med skälet som text och inga knappar',
+    /Godkänd/.test(efter) && /Nekad/.test(efter) && /Samma familj, <b>nytt namn<\/b>\./.test(efter)
+      && (await page.locator('#vb-tips [data-tips-godkann], #vb-tips [data-tips-neka]').count()) === 0, efter.slice(0, 300));
+  await bild(page, 'admin-godkann', '[data-sek="varvning"]');
+  prova('godkänn: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('godkänn: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
+}
+
 (async function () {
   const server = spawn('python3', [path.join(ROT, '.claude', 'serve.py'), String(PORT)], { stdio: 'ignore' });
   let klar = false;
@@ -553,6 +646,7 @@ async function provaAdmin(webb) {
     await provaAnsökan(webb);
     await provaStudiehjälparen(webb);
     await provaAdmin(webb);
+    await provaGodkännande(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);
   } finally {

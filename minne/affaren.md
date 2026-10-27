@@ -279,8 +279,8 @@ ingressen överst, före stegen och svaren i markupen, så att formuläret
 kommer först också på en telefon. Inget `data-stig` på remsan och
 formuläret: det man kommer för ska synas direkt. Rubriken och
 ingressen är desamma som förut, så delningsbilden står kvar. Villkoren och
-integritetspolicyn säger redan att Nextrum AB är under bildande; de
-ändras när bolaget är registrerat, vilket inte behöver vara samma dag.
+integritetspolicyn sa att Nextrum AB var under bildande; sedan 2026-10-28
+står bolaget och organisationsnumret där (avsnitt 1 i `DATASKYDD.md`).
 
 ## Bokningen
 
@@ -1463,3 +1463,48 @@ inte hjälpa motsatta könet syns då inte den studiehjälparen i matchning." `k
 - **I drift sedan kvällen 2026-10-26** (Leo: "merge och driftsätt", PR #338, 64d0a90), före juristen: valet syns i
   studiehjälparnas profil och barnets kön i förälderns vy. Ingen har sagt till studiehjälparna att valet finns.
 
+
+## Bonusarna godkänns av oss (2026-10-28, `bonusarna_godkanns`)
+
+Leo: "värvnings bonus och tipsa familj bonus. de registreras på samma sätt,
+men i admin behöver vi godkänna de ifall de ska få de bonusarna".
+
+- **Samma registrering, ett steg till.** Värvningsbonusens rad skrivs och
+  prövas som förut (egen kod, sökt förut, ett konto innan, flaggan,
+  värvaren godkänd). När händelsen i `varvning_installning` inträffat blir
+  den `att_godkanna` i stället för `intjanad`: delningen fryses och
+  `uppfylld_at` säger när, men inget mejl går och den hör inte till någon
+  lön. En superadmin godkänner den under Bonusar
+  (`varvningsbonus_godkann()`): då blir den `intjanad` med `intjanad_at`
+  och `godkand_av`, mejlet till värvaren köas, och lönemånaden är
+  godkännandets (Löner läser `intjanad_at` som förut). Värvaren ska vara
+  godkänd och aktiv när vi godkänner, annars nekar funktionen och bonusen
+  annulleras med ett skäl.
+- **Varför ett nytt läge och inte en kolumn.** Allt som läser `intjanad`
+  (Löner, lönefilen, `mina_tips()`, koderna, raderingen) betyder "vi ska
+  betala den". Med ett läge före behöver inget av det ändras, och det
+  som behöver veta att bonusen lever (en per person, koden står fast,
+  raderingens hinder) räknar `att_godkanna` med. Den gamla unika
+  indexen står kvar; `varvningsbonus_en_levande_per_person` täcker den.
+- **Tipstimmen** räknas fortfarande fram (`intern.tipstimmar_rader`), men
+  `intern.tipstimmar_intjanade` och `_oanvanda` tar bara de med en rad i
+  `tipstimme_beslut` som säger `godkand` (`intern.tipstimmar_godkanda`).
+  En rad per tipsad familj, med den som tipsade, skriven bara av
+  `tipstimme_besluta()` och aldrig ändrad; ett nej kräver skälet. De 60
+  dagarna räknas från det senare av dagen de två timmarna hölls och dagen
+  vi godkände, så att det inte äter familjens dagar att vi väntar.
+  Påminnelsen tio dagar innan följer med av sig själv.
+- **Var det syns.** Adminvyn: sektionen Bonusar (`#varvning`, förut
+  Värvningsbonus) har tipstimmarna överst (`tipstimmar_lage()`) med
+  Godkänn och Neka, och bonusarna med Godkänn; Att göra har posten
+  bonusar att godkänna, och morgonmejlet `bonus_godkann`
+  (`intern.admin_att_gora` och `_delad/notiser/admin.ts`). Familjen ser
+  under Tipsa en familj att en timme väntar på oss (`att_godkanna` i
+  `mina_tips()`), och studiehjälparen läget Vi går igenom den.
+- **Villkoren** (`#tips`, version 2026-10-28) säger att timmen och
+  bonusen registreras av sig själva men ges först när vi godkänt dem, att
+  vi bara prövar det som står där (ny, rätt kod, villkoren uppfyllda) och
+  att ett nej har ett skäl. Ett nej av ett annat skäl än villkoren vore
+  ett avtalsbrott: neka bara med något villkoren säger.
+- Ingen notis till familjen när timmen godkänns eller nekas: den syns i
+  timbanken. Vill vi säga till är det ett eget mejl.

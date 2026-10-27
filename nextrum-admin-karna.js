@@ -76,7 +76,7 @@ const NXAdmin = (function () {
     timbankPass: new Set(), klippkortTest: new Set(),
     /* 2026-10-13: bonusen för tips, och dess strömbrytare. Sedan
        2026-10-21 värvningsbonusen (varvningsbonus), med inställningen. */
-    varvningsbonus: [], varvningFel: null, varvningInst: null, bonusFlagga: null,
+    varvningsbonus: [], varvningFel: null, varvningInst: null, bonusFlagga: null, tipstimmar: [], tipstimmarFel: null,
     /* 2026-10-12: våra egna konton, som statistiken inte räknar. */
     adminkonton: new Set()
   };
@@ -541,7 +541,7 @@ const NXAdmin = (function () {
 
     const [leads, ans, kontakt, bok, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, kk, ansUt, tillagg, bank,
-           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer, intagna, partner, varvInst, senPass] = await Promise.all([
+           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer, intagna, partner, varvInst, senPass, tipsTim] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
       bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
@@ -654,7 +654,11 @@ const NXAdmin = (function () {
          kolumner i passens: före migrationen hade en kolumn som saknas
          tömt hela listan, och nu blir det bara inga sena avbokningar. */
       hämtaAlla('bookings', 'id, sen_avbokning_minuter, sen_avbokning_ore, avbokad_for_familjen',
-        q => q.eq('status', 'cancelled').not('sen_avbokning_minuter', 'is', null))
+        q => q.eq('status', 'cancelled').not('sen_avbokning_minuter', 'is', null)),
+      /* 2026-10-28 (bonusarna_godkanns): varje intjänad tipstimme med vårt
+         beslut. Värvningsbonus godkänner dem, och Att göra räknar de utan
+         beslut. Bara superadmin; före migrationen inga. */
+      bara(() => supa.rpc('tipstimmar_lage'))
     ]);
 
     S.leads = leads.data || [];
@@ -715,6 +719,8 @@ const NXAdmin = (function () {
       manad: b.intjanad_at ? sthlmMånad(b.intjanad_at) : null
     }));
     S.varvningInst = varvInst && !varvInst.error ? (varvInst.data || null) : null;
+    S.tipstimmar = tipsTim && !tipsTim.error ? (tipsTim.data || []) : [];
+    S.tipstimmarFel = tipsTim && tipsTim.error ? felText(tipsTim.error) : null;
     /* Saknas tabellerna (migrationen familjerabatter är inte körd) säger
        fliken och panelen det, och ingen familj har en rabatt. */
     const saknas = fel => fel && (/PGRST205|42P01/.test(String(fel.code))

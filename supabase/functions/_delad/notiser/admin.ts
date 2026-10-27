@@ -62,6 +62,8 @@ export const ADMIN_SORTER = [
   { typ: 'genomfort_utan_rapport', ental: 'genomfört pass utan rapport', flertal: 'genomförda pass utan rapport' },
   { typ: 'rapport_obekraftad', ental: 'rapport som familjen inte bekräftat', flertal: 'rapporter som familjerna inte bekräftat' },
   { typ: 'utbetalning', ental: 'utbetalning att göra', flertal: 'utbetalningar att göra' },
+  // bonusarna_godkanns (2026-10-28): värvningsbonusar och tipstimmar som väntar på oss.
+  { typ: 'bonus_godkann', ental: 'bonus att godkänna', flertal: 'bonusar att godkänna' },
   { typ: 'uppgift', ental: 'uppgift från systemet', flertal: 'uppgifter från systemet' },
 ] as const;
 

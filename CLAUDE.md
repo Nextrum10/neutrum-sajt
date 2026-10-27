@@ -1,6 +1,8 @@
 # Nextrum — projektminne
 Läxhjälpsförmedling i Stockholm: publik sajt på två språk och tre inloggade vyer, statiska filer
-mot Supabase, driftsatt på Vercel (`nextrum.se`). Driften står i `START-HÄR.md` och
+mot Supabase, driftsatt på Vercel (`nextrum.se`). **Nextrum AB** (559609-3269) är avtalspart och
+personuppgiftsansvarigt sedan 2026-10-28 (Leo: "alex och leo ansvarar inte längre för datan"); organisationsnumret
+står sist i footern på varje sida, i villkoren och i policyn. F-skatt, moms och arbetsgivarregistrering väntar. Driften står i `START-HÄR.md` och
 `DEPLOY-*.md`. Det här är kärnan, som läses i varje session: reglerna och fällorna, kort.
 Varför, historien och proven står i `minne/`, som läses när arbetet rör området:
 - `minne/grunden.md`: stacken, hela filkartan, språket, arbetssättet
@@ -283,6 +285,17 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   bonusen är punkten `#tips` i användarvillkoren, omskriven för den i versionen 2026-10-22 (Leo: "Fixa nr 6"; länken i
   `CFG.VARVNING_VILLKOR_URL`), och ändras med händelsen, beloppet och det värvaren ser. Revisorn avgör anställningen,
   avgifterna och semesterersättningen före första utbetalningen.
+- **Bonusarna godkänns av oss** (2026-10-28, `bonusarna_godkanns`, Leo: "värvnings bonus och tipsa familj bonus. de
+  registreras på samma sätt, men i admin behöver vi godkänna de ifall de ska få de bonusarna"): värvningsbonusen och
+  tipstimmen registreras som förut, men ingen får något förrän en superadmin godkänt det under **Bonusar** (sektionen
+  `varvning`) eller Att göra (`bonus_godkann`, också i morgonmejlet). Värvningsbonusen går `vantar` → `att_godkanna`
+  (händelsen har inträffat: delningen fryses, `uppfylld_at`, inget mejl) → `intjanad` bara genom
+  `varvningsbonus_godkann()` (`intjanad_at` och `godkand_av`, mejlet till värvaren går då, och lönemånaden är
+  godkännandets), och kan annulleras med skäl i båda lägena. Tipstimmen räknas bara med en rad i `tipstimme_beslut`
+  (en per tipsad familj, `godkand` eller `nekad` med skälet, bara genom `tipstimme_besluta()`, ändras aldrig), och de 60
+  dagarna räknas från det senare av intjänad och godkänd (`intern.tipstimmar_godkanda`). Familjen ser
+  `att_godkanna` i `mina_tips()`. Villkoren (`#tips`, version 2026-10-28) säger att vi godkänner och bara prövar det
+  som står där, och att ett nej har ett skäl.
 - **Materialbanken** (2026-10-02): bladen är våra egna. Nationella prov och läromedel kopieras aldrig in,
   banken länkar till provgruppernas egna sidor (`verktyg/bladen/lankar.py`), NP-träningen är egna
   uppgifter i provens stil som säger det på bladet, och genomgångarna är egna faktablad, aldrig bokens text.
@@ -931,7 +944,7 @@ Detaljer: `minne/grunden.md`.
   `varvningsbonus`, `passkassor`, `passkassor_pass`, `aterbetalningar` eller `egna_upplagg` (de fyra sista sedan
   2026-10-27): edge-funktionerna läser och skriver genom databasens funktioner (granskningen 2026-10-21).
 - **Värvningsbonusen** (2026-10-21): `varvningsbonus` raderas aldrig (triggrar mot delete och truncate), lägena går
-  bara framåt (`intern.varvningsbonus_vakt`), och bara databasen skriver: raden när ansökan kommer in
+  bara framåt (`intern.varvningsbonus_vakt`, och sedan 2026-10-28 via `att_godkanna`), och bara databasen skriver: raden när ansökan kommer in
   (`applications_varvning`), intjänandet (`intern.varvning_prova`, från triggrarna på `tutor_profiles`,
   `applications.konto_id`, `prov_studiehjalpare` och `lesson_reports`, och för alla väntande när händelsen i
   `varvning_installning` byts) och admins två funktioner. En rad skapas bara som `vantar` eller `annullerad`
@@ -1220,6 +1233,15 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Nextrum AB och bonusarna som godkänns** (2026-10-28, `bonusarna_godkanns` 20261028100000) är inte i drift. Efter
+  merge: Vercel lägger ut sidorna (footern, villkoren och policyn), sedan `admin-paminnelse` (känner `bonus_godkann`; utan
+  den hoppas raden över, inget går sönder), migrationen (md5-vakter mot driften 2026-10-27 för vakten, `varvning_prova`,
+  tipstimmarna och `admin_att_gora`, ett `drop constraint` för statuslistan), och `drift` (agentens fakta). Lokalt:
+  `rls-test.sql` 2275 av 2275, `prova-adminvyn.js` 209 av 209 och `prova-varvning.js` 68 av 68. I driften fanns inga
+  värvningsbonusar eller tipstimmar 2026-10-27. Villkorens version blir 2026-10-28, så alla får frågan igen. Juristen har
+  inte läst övergången från Leo och Alex till bolaget (policyn och villkorens Vem avtalet är med), som är en överföring
+  av personuppgifter, eller den nya punkten om att vi godkänner. Leverantörskontona står fortfarande i Leos och Alex namn
+  (`DATASKYDD.md`, avsnitt 9). Adressen Mönsteråsgränd 4 står kvar som bolagets.
 - **Betala alla, återbetalningarna och egna upplägg** (2026-10-27, `flera_pass_och_aterbetalningar` 20261027160000
   och `egna_upplagg` 20261027170000) är i drift sedan kvällen 2026-10-27 (Leo: "Testa så allt funkar som det ska och sen
   Merge, driftsätt och migrera"). Först en provkörning mot driften före merge, båda migrationerna och hela

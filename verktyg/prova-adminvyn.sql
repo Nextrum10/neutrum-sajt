@@ -203,6 +203,12 @@ insert into public.applications (id, name, email, kod, tjanster, status, created
 insert into auth.users (id, email, raw_user_meta_data) values
   ('a1000000-0000-4000-8000-0000000000a6', 'prov-kompis1@example.invalid', '{"role":"tutor","full_name":"Kalle Kompis"}');
 update public.tutor_profiles set status = 'approved', hourly_rate = 160 where id = 'a1000000-0000-4000-8000-0000000000a6';
+-- bonusarna_godkanns (2026-10-28): Kalles bonus väntar på oss, och Leo
+-- godkänner den, som i vyn.
+select set_config('request.jwt.claims', '{"sub":"a1000000-0000-4000-8000-0000000000ad","role":"authenticated"}', false);
+select public.varvningsbonus_godkann(v.id) from public.varvningsbonus v
+ where v.varvad_ansokan_id = 'a1000000-0000-4000-8000-00000000a006';
+select set_config('request.jwt.claims', '', false);
 
 -- Kön i matchningen och dokument med bilder (2026-10-26). Tove vill bara
 -- hjälpa elever av samma kön; Alva är flicka och Axel pojke, så Axels

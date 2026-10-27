@@ -9069,7 +9069,7 @@ declare
   pb4 constant uuid := '00000000-0000-4000-8000-00000000d1c4';
   idag date := (now() at time zone 'Europe/Stockholm')::date;
   qb2 constant uuid := '00000000-0000-4000-8000-00000000d1b2';
-  jp jsonb; j1 jsonb; j2 jsonb; fore_ny int; efter_gammal int; efter_stangd int; en_timme int;
+  jp jsonb; j1 jsonb; j2 jsonb; fore_ny int; efter_gammal int; efter_stangd int; en_timme int; utan_beslut int;
   r1 record; r2 record; r3 record; r4 record; fal record; pb1_timmar int;
   k_forfalska text; k_andra text; kod_efter text; fel text;
 begin
@@ -9116,6 +9116,9 @@ begin
     values (qb2, q, a, sq, q, idag - 3, '14:00', 60, 'confirmed');
     insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
     values (sq, a, qb2, 'fixtur', idag - 3, 'narvarande');
+    -- bonusarna_godkanns (2026-10-28): timmen räknas först när vi godkänt den.
+    utan_beslut := intern.tipstimmar_intjanade(p);
+    insert into public.tipstimme_beslut (tipsad_id, tipsare_id, beslut) values (q, p, 'godkand');
     fore_ny := intern.tipstimmar_intjanade(p);
 
     -- Anmälan står på i dag och passen hölls före: Q hade redan haft pass
@@ -9185,7 +9188,8 @@ begin
       k_forfalska || ' ' || coalesce(fal.rabattkod, 'null') || '/' || coalesce(fal.rabatt_ore::text, 'null')),
     ('Tips en familj som redan haft pass ger ingen timme', efter_gammal = 0, efter_gammal::text),
     ('Tips en ny familj som haft en timme ger ingen timme än', en_timme = 0, en_timme::text),
-    ('Tips en ny familj som haft två timmar ger en timme', fore_ny = 1, fore_ny::text),
+    ('Tips två timmar ger ingen timme innan vi godkänt den', utan_beslut = 0, utan_beslut::text),
+    ('Tips en ny familj som haft två timmar ger en timme när vi godkänt den', fore_ny = 1, fore_ny::text),
     ('Tips nästa förslag får en timme bjuden',
       r1.startrabatt and r1.rabattkod = 'TIPS' and r1.rabatt_ore = r1.timpris_ore,
       r1.startrabatt || ' ' || coalesce(r1.rabattkod, 'null') || '/' || coalesce(r1.rabatt_ore::text, 'null')),
@@ -14015,6 +14019,8 @@ begin
     insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
     values (EQ, A, QB1, 'fixtur', idag - 2, 'narvarande'),
            (EQ, A, QB2, 'fixtur', idag - 3, 'narvarande');
+    -- bonusarna_godkanns (2026-10-28): vi har godkänt timmen.
+    insert into public.tipstimme_beslut (tipsad_id, tipsare_id, beslut) values (Q, P, 'godkand');
 
     perform pg_temp.bli(P);
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
@@ -14345,6 +14351,9 @@ begin
     insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
     values (EQ, A, QB1, 'fixtur', idag - 71, 'narvarande'),
            (EQ, A, QB2, 'fixtur', idag - 70, 'narvarande');
+    -- bonusarna_godkanns (2026-10-28): godkänd samma dag som den tjänades in.
+    insert into public.tipstimme_beslut (tipsad_id, tipsare_id, beslut, beslutad_at)
+    values (Q, P, 'godkand', now() - interval '70 days');
 
     perform pg_temp.bli(P);
     j1 := public.mina_tips();
@@ -14383,6 +14392,169 @@ begin
       t1 = 'null' and (j1 ->> 'timmar')::int = 1 and (j1 ->> 'kvar')::int = 0, t1 || ' ' || coalesce(j1::text, 'inget svar')),
     ('GT en tipstimme gäller inte ett pass efter sina 60 dagar', t2 = 'null', t2),
     ('GT en tipstimme som tjänades in för tio dagar sedan ges', t3 = 'TIPS', t3);
+end $$;
+
+-- bonusarna_godkanns (2026-10-28): tipstimmen räknas först när vi godkänt
+-- den. Q haft två timmar för 70 dagar sedan, och vi godkänner i dag: de 60
+-- dagarna räknas från godkännandet. Ett nej står fast och ger ingen timme.
+do $$
+declare
+  fel  text;
+  jp   jsonb;
+  j0   jsonb;
+  j1   jsonb;
+  t    text;
+  t2   text;
+  n    integer;
+  n2   integer;
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  E    constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  EQ   constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  LQ   constant uuid := '00000000-0000-4000-8000-00000000eb31';
+  QB1  constant uuid := '00000000-0000-4000-8000-00000000eb32';
+  QB2  constant uuid := '00000000-0000-4000-8000-00000000eb33';
+  PB1  constant uuid := '00000000-0000-4000-8000-00000000eb34';
+begin
+  if to_regclass('public.tipstimme_beslut') is null then
+    return;
+  end if;
+  begin
+    update public.flaggor set aktiv = false where kod = 'erbjudanden';
+    update public.flaggor set aktiv = true where kod = 'tipstimme';
+    perform pg_temp.bli(P);
+    jp := public.mina_tips();
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    perform pg_temp.bli(null);
+    insert into public.leads (id, parent_name, email, kod)
+    values (LQ, 'Test Familj Q', 'rls-q-bg@example.invalid', jp ->> 'kod');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    update public.leads set kund_id = Q, created_at = now() - interval '90 days' where id = LQ;
+    update public.students set matched_tutor_id = A, match_status = 'matched' where id = EQ;
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (QB1, Q, A, EQ, Q, idag - 71, '12:00', 60, 'confirmed'),
+           (QB2, Q, A, EQ, Q, idag - 70, '14:00', 60, 'confirmed');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values (EQ, A, QB1, 'fixtur', idag - 71, 'narvarande'),
+           (EQ, A, QB2, 'fixtur', idag - 70, 'narvarande');
+
+    -- Utan beslut: ingen timme, familjen ser att den väntar, och den står i Att göra.
+    perform pg_temp.bli(P);
+    j0 := public.mina_tips();
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select count(*) into n from intern.admin_att_gora() x where x.typ = 'bonus_godkann' and x.objekt_id = 'tips:' || Q;
+
+    -- Vem som får se och besluta.
+    t := pg_temp.svar_som(P, 'select * from public.tipstimmar_lage()')
+         || ' ' || pg_temp.svar_som(P, format($q$select public.tipstimme_besluta(%L, true)$q$, Q))
+         || ' ' || pg_temp.svar_som(AD, format($q$select public.tipstimme_besluta(%L, false)$q$, Q))
+         || ' ' || pg_temp.svar_som(AD, format($q$select public.tipstimme_besluta(%L, true)$q$, E))
+         || ' ' || pg_temp.svar_som(AD, format($q$insert into public.tipstimme_beslut (tipsad_id, tipsare_id, beslut)
+                                                   values (%L, %L, 'godkand')$q$, Q, P));
+    perform pg_temp.bli(AD);
+    select count(*) into n2 from public.tipstimmar_lage() x where x.tipsad_id = Q and x.tipsare_id = P and x.beslut is null;
+    t2 := public.tipstimme_besluta(Q, true) || ' ' || public.tipstimme_besluta(Q, false, 'Ångrar mig');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    perform pg_temp.bli(P);
+    j1 := public.mina_tips();
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (PB1, P, A, E, P, idag + 50, '19:00', 60, 'requested');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select t || ' ' || coalesce(b.rabattkod, 'null') into t from public.bookings b where b.id = PB1;
+    begin
+      update public.tipstimme_beslut set beslut = 'nekad', orsak = 'Ändrat' where tipsad_id = Q;
+      t := t || ' gick';
+    exception when others then t := t || ' ' || sqlstate;
+    end;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('BG tipstimmen godkänns', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('BG en tipstimme utan vårt beslut ger ingen timme, och familjen ser att den väntar',
+      (j0 ->> 'timmar')::int = 0 and (j0 ->> 'att_godkanna')::int = 1, coalesce(j0::text, 'inget svar')),
+    ('BG en tipstimme utan beslut står i Att göra', n = 1, n::text),
+    ('BG bara admin ser och beslutar, ett nej kräver skälet, och ingen skriver i tabellen',
+      t like '42501 42501 22023 22023 42501 %', t),
+    ('BG admin ser timmen och godkänner den en gång', n2 = 1 and t2 = 'godkand redan', n2 || ' ' || coalesce(t2, '')),
+    ('BG godkänd i dag gäller den 60 dagar från godkännandet, och beslutet ändras inte',
+      (j1 ->> 'timmar')::int = 1 and (j1 ->> 'att_godkanna')::int = 0 and t like '% TIPS 42501',
+      t || ' ' || coalesce(j1::text, ''));
+end $$;
+
+do $$
+declare
+  fel  text;
+  jp   jsonb;
+  j1   jsonb;
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  EQ   constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  LQ   constant uuid := '00000000-0000-4000-8000-00000000eb41';
+  QB1  constant uuid := '00000000-0000-4000-8000-00000000eb42';
+  QB2  constant uuid := '00000000-0000-4000-8000-00000000eb43';
+  r    text;
+begin
+  if to_regclass('public.tipstimme_beslut') is null then
+    return;
+  end if;
+  begin
+    update public.flaggor set aktiv = true where kod = 'tipstimme';
+    perform pg_temp.bli(P);
+    jp := public.mina_tips();
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    perform pg_temp.bli(null);
+    insert into public.leads (id, parent_name, email, kod)
+    values (LQ, 'Test Familj Q', 'rls-q-bn@example.invalid', jp ->> 'kod');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    update public.leads set kund_id = Q, created_at = now() - interval '20 days' where id = LQ;
+    update public.students set matched_tutor_id = A, match_status = 'matched' where id = EQ;
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (QB1, Q, A, EQ, Q, idag - 5, '12:00', 60, 'confirmed'),
+           (QB2, Q, A, EQ, Q, idag - 4, '14:00', 60, 'confirmed');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values (EQ, A, QB1, 'fixtur', idag - 5, 'narvarande'),
+           (EQ, A, QB2, 'fixtur', idag - 4, 'narvarande');
+    perform pg_temp.bli(AD);
+    r := public.tipstimme_besluta(Q, false, 'Samma familj under ett annat namn');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    perform pg_temp.bli(P);
+    j1 := public.mina_tips();
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('BG tipstimmen nekas', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('BG en nekad tipstimme ger ingen timme och väntar inte längre',
+      r = 'nekad' and (j1 ->> 'timmar')::int = 0 and (j1 ->> 'att_godkanna')::int = 0,
+      coalesce(r, '') || ' ' || coalesce(j1::text, ''));
 end $$;
 
 -- gratistimmarna_paminns (2026-10-15): en tipstimme påminns tio dagar
@@ -14429,6 +14601,9 @@ begin
     insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
     values (EQ, A, QB1, 'fixtur', idag - 53, 'narvarande'),
            (EQ, A, QB2, 'fixtur', idag - 52, 'narvarande');
+    -- bonusarna_godkanns (2026-10-28): godkänd samma dag som den tjänades in.
+    insert into public.tipstimme_beslut (tipsad_id, tipsare_id, beslut, beslutad_at)
+    values (Q, P, 'godkand', now() - interval '52 days');
 
     -- P har ingen studiehjälpare: en uppgift till oss, inget mejl.
     update public.profiles set match_status = 'pending', matched_tutor_id = null where id = P;
@@ -15071,12 +15246,29 @@ begin
 
       t := pg_temp.svar_som(ADM, format($q$update public.tutor_profiles set status = 'approved' where id = %L$q$, NY));
       select * into bon from public.varvningsbonus where varvad_ansokan_id = APA;
-      ut := ut || jsonb_build_object('t', 'KB den vars kod den nya sökte med får 300 kr när kontot skapas: 26 786 + 3 214 öre',
-              'ok', t = 'ok' and bon.status = 'intjanad' and bon.varvad_profil_id = NY and bon.brutto_ore = 30000
+      ut := ut || jsonb_build_object('t', 'KB den vars kod den nya sökte med får 300 kr att godkänna när kontot skapas: 26 786 + 3 214 öre',
+              'ok', t = 'ok' and bon.status = 'att_godkanna' and bon.varvad_profil_id = NY and bon.brutto_ore = 30000
                     and bon.grundersattning_ore = 26786 and bon.semesterersattning_ore = 3214
-                    and bon.utlosare = 'konto_skapat' and bon.intjanad_at is not null,
+                    and bon.utlosare = 'konto_skapat' and bon.uppfylld_at is not null and bon.intjanad_at is null,
               'd', t || ' ' || coalesce(bon.status, '') || ' ' || coalesce(bon.grundersattning_ore::text, '') || '+'
                    || coalesce(bon.semesterersattning_ore::text, ''));
+      -- bonusarna_godkanns (2026-10-28): vi godkänner den, och först då blir
+      -- den intjänad och lön.
+      t := pg_temp.svar_som(A, format($q$select public.varvningsbonus_godkann(%L)$q$, bon.id));
+      t := t || ' ' || pg_temp.svar_som(ADM, format($q$update public.varvningsbonus set status = 'intjanad', intjanad_at = now()
+                                                      where id = %L$q$, bon.id));
+      ut := ut || jsonb_build_object('t', 'KB värvaren godkänner inte sin bonus, och admin inte direkt i tabellen',
+              'ok', t = '42501 42501', 'd', t);
+      perform pg_temp.bli(ADM);
+      t := public.varvningsbonus_godkann(bon.id);
+      t := t || ' ' || public.varvningsbonus_godkann(bon.id);
+      reset role;
+      perform set_config('request.jwt.claims', null, true);
+      select * into bon from public.varvningsbonus where varvad_ansokan_id = APA;
+      ut := ut || jsonb_build_object('t', 'KB admin godkänner bonusen: intjänad i dag av admin, en gång',
+              'ok', t = 'intjanad intjanad' and bon.status = 'intjanad' and bon.intjanad_at is not null
+                    and bon.godkand_av = ADM and bon.uppfylld_at is not null,
+              'd', t || ' ' || coalesce(bon.status, '') || ' ' || coalesce(bon.godkand_av::text, 'ingen'));
       perform pg_temp.svar_som(ADM, format($q$update public.tutor_profiles set status = 'pending' where id = %L$q$, NY));
       perform pg_temp.svar_som(ADM, format($q$update public.tutor_profiles set status = 'approved' where id = %L$q$, NY));
       select count(*) into n from public.varvningsbonus where varvare_profil_id = A and status = 'intjanad';
@@ -20796,13 +20988,23 @@ begin
       reset role;
       perform set_config('request.jwt.claims', '', true);
       select * into r from public.varvningsbonus where varvad_ansokan_id = AN1;
-      ut := ut || jsonb_build_object('t', 'VB kontot skapas: bonusen tjänas in med sitt brutto och dagens procent',
-              'ok', t = 'true' and r.status = 'intjanad' and r.varvad_profil_id = V1 and r.brutto_ore = 30000
+      ut := ut || jsonb_build_object('t', 'VB kontot skapas: bonusen väntar på oss med sitt brutto och dagens procent',
+              'ok', t = 'true' and r.status = 'att_godkanna' and r.varvad_profil_id = V1 and r.brutto_ore = 30000
                     and r.semester_procent = 10 and r.grundersattning_ore = 27273 and r.semesterersattning_ore = 2727
                     and r.utlosare = 'konto_skapat',
               'd', concat_ws(' ', t, r.status, r.brutto_ore, r.semester_procent, r.grundersattning_ore, r.semesterersattning_ore));
       select count(*) into n from public.notis_utskick u where u.mottagare = A and u.typ = 'varvningsbonus';
-      ut := ut || jsonb_build_object('t', 'VB värvaren får ett mejl i kön när bonusen tjänas in', 'ok', n = 1, 'd', n::text);
+      ut := ut || jsonb_build_object('t', 'VB inget mejl till värvaren innan vi godkänt bonusen', 'ok', n = 0, 'd', n::text);
+      -- bonusarna_godkanns (2026-10-28): vi godkänner, och då går mejlet.
+      perform pg_temp.bli(AD);
+      t := public.varvningsbonus_godkann(r.id);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select * into r from public.varvningsbonus where varvad_ansokan_id = AN1;
+      select count(*) into n from public.notis_utskick u where u.mottagare = A and u.typ = 'varvningsbonus';
+      ut := ut || jsonb_build_object('t', 'VB godkänd blir bonusen intjänad, och värvaren får ett mejl i kön',
+              'ok', t = 'intjanad' and r.status = 'intjanad' and r.godkand_av = AD and n = 1,
+              'd', concat_ws(' ', t, r.status, n));
 
       update public.varvning_installning set brutto_ore = 50000, semester_procent = 20 where id = 1;
       select * into r from public.varvningsbonus where varvad_ansokan_id = AN1;
@@ -20859,6 +21061,14 @@ begin
       insert into auth.users (id, email, raw_user_meta_data) values
         (V2, 'rls-v2@example.invalid', '{"role":"tutor","full_name":"Vilgot Värvad"}');
       update public.tutor_profiles set status = 'approved' where id = V2;
+      -- Bara en godkänd bonus kan bli utbetald (bonusarna_godkanns).
+      perform pg_temp.bli(AD);
+      n := public.varvningsbonus_utbetald(array(select id from public.varvningsbonus where varvad_ansokan_id = AN3), '2026-11');
+      fel := n::text || ' ' || public.varvningsbonus_godkann((select id from public.varvningsbonus where varvad_ansokan_id = AN3));
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'VB en bonus som väntar på oss blir inte utbetald', 'ok', fel = '0 intjanad', 'd', fel);
+      fel := null;
       t := pg_temp.svar_som(A, 'select public.varvningsbonus_utbetald(array[]::uuid[], ''2026-11'')');
       t := t || ' ' || pg_temp.svar_som(AD, format('select public.varvningsbonus_utbetald(array[(select id from public.varvningsbonus where varvad_ansokan_id = %L)], ''2026-13'')', AN3));
       perform pg_temp.bli(AD);
@@ -20932,7 +21142,7 @@ begin
       on conflict (id) do update set utbildningsprov_godkant_at = now();
       select t || ' ' || status || ':' || utlosare into t from public.varvningsbonus where varvad_ansokan_id = AN2;
       ut := ut || jsonb_build_object('t', 'VB med provet som händelse väntar bonusen tills provet är godkänt',
-              'ok', t = 'vantar intjanad:prov_godkant', 'd', coalesce(t, 'ingen rad'));
+              'ok', t = 'vantar att_godkanna:prov_godkant', 'd', coalesce(t, 'ingen rad'));
 
       update public.varvning_installning set utlosare = 'forsta_pass_genomfort' where id = 1;
       insert into public.applications (id, name, email, kod, created_at)
@@ -20949,7 +21159,7 @@ begin
       values (S1, V4, BK, 'Första passet.', (now() at time zone 'Europe/Stockholm')::date - 1, 'narvarande', 'Matematik', '12:00', '13:00');
       select t || ' ' || status || ':' || utlosare into t from public.varvningsbonus where varvad_ansokan_id = AN5;
       ut := ut || jsonb_build_object('t', 'VB med första passet som händelse tjänas bonusen in när rapporten finns',
-              'ok', t = 'vantar intjanad:forsta_pass_genomfort', 'd', coalesce(t, 'ingen rad'));
+              'ok', t = 'vantar att_godkanna:forsta_pass_genomfort', 'd', coalesce(t, 'ingen rad'));
       raise exception 'delblock';
     exception when others then
       if sqlerrm <> 'delblock' then raise; end if;
@@ -20969,7 +21179,7 @@ begin
       update public.varvning_installning set utlosare = 'konto_skapat' where id = 1;
       select t || ' ' || status || ':' || coalesce(utlosare, '-') into t from public.varvningsbonus where varvad_ansokan_id = AN2;
       ut := ut || jsonb_build_object('t', 'VB byts händelsen prövas de väntande direkt mot den nya',
-              'ok', t = 'vantar intjanad:konto_skapat', 'd', coalesce(t, 'ingen rad'));
+              'ok', t = 'vantar att_godkanna:konto_skapat', 'd', coalesce(t, 'ingen rad'));
       raise exception 'delblock';
     exception when others then
       if sqlerrm <> 'delblock' then raise; end if;
@@ -21053,8 +21263,8 @@ begin
       update public.tutor_profiles set status = 'approved' where id = H1;
       select status into t from public.varvningsbonus where varvad_ansokan_id = AN13;
       t := t || ' ' || pg_temp.svar_som(AD, format('update public.applications set kod = %L where id = %L', kodB, AN13));
-      ut := ut || jsonb_build_object('t', 'VB koden byts inte på en ansökan vars bonus är intjänad',
-              'ok', t = 'intjanad 23514', 'd', t);
+      ut := ut || jsonb_build_object('t', 'VB koden byts inte på en ansökan vars bonus väntar på oss',
+              'ok', t = 'att_godkanna 23514', 'd', t);
 
       -- Gmail: punkter och googlemail.com är samma brevlåda.
       insert into public.applications (id, name, email, created_at)

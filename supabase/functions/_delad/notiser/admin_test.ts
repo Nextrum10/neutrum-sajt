@@ -231,6 +231,7 @@ Deno.test('alla sorter har en etikett i ental och flertal, och inga två är lik
     assertEquals(adminRader({ [s.typ]: 1 })[0].etikett.length > 0, true);
     assertEquals(adminRader({ [s.typ]: 2 })[0].etikett.length > 0, true);
   }
-  assertEquals(typer.size, 8);
+  // bonus_godkann (bonusarna_godkanns, 2026-10-28) är den nionde.
+  assertEquals(typer.size, 9);
   assertEquals(typer.has('ny_lead') || typer.has('ny_ansokan'), false);
 });

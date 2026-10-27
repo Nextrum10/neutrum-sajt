@@ -17,6 +17,14 @@
 
    Skälet är fritext från admin och visas som text. Före migrationen står
    en rad om det.
+
+   Godkänn (bonusarna_godkanns, 2026-10-28, Leo: "i admin behöver vi
+   godkänna de ifall de ska få de bonusarna"): när händelsen inträffat
+   väntar bonusen på oss (att_godkanna), och först Godkänn gör den intjänad
+   och lön och mejlar värvaren (varvningsbonus_godkann). Tipstimmarna står
+   överst i samma sektion: en rad per tipsad familj som haft två timmar,
+   med Godkänn och Neka (tipstimme_besluta, ett nej med skälet), ur
+   tipstimmar_lage(). Ett beslut ändras aldrig.
    ============================================================ */
 (function () {
   'use strict';
@@ -29,11 +37,11 @@
   const V = { status: 'alla', månad: 'alla' };
 
   const LÄGE = {
-    vantar: ['Väntar', 'ar-vantar'], intjanad: ['Intjänad', 'ar-ny'],
+    vantar: ['Väntar', 'ar-vantar'], att_godkanna: ['Att godkänna', 'ar-gor'], intjanad: ['Intjänad', 'ar-ny'],
     utbetald: ['Utbetald', 'ar-klar'], annullerad: ['Annullerad', '']
   };
-  const FILTER = [['alla', 'Alla'], ['vantar', 'Väntar'], ['intjanad', 'Intjänade'], ['utbetald', 'Utbetalda'],
-    ['annullerad', 'Annullerade']];
+  const FILTER = [['alla', 'Alla'], ['att_godkanna', 'Att godkänna'], ['vantar', 'Väntar'], ['intjanad', 'Intjänade'],
+    ['utbetald', 'Utbetalda'], ['annullerad', 'Annullerade']];
   const HÄNDELSE = {
     konto_skapat: 'när kompisen fått sitt konto',
     prov_godkant: 'när kompisen klarat utbildningsprovet',
@@ -66,9 +74,40 @@
       && (V.månad === 'alla' || radensMånad(b) === V.månad));
   }
 
+  /* ---------- tipstimmarna (bonusarna_godkanns, 2026-10-28) ----------
+     En rad per tipsad familj som haft sina två timmar: den som tipsade,
+     den tipsade, dagen och vårt beslut. De utan beslut först. */
+  const familjLänk = id => id ? '<button type="button" class="eko-lank" data-dp="familj:' + esc(id) + '">'
+    + esc(namnFör(id)) + '</button>' : '';
+  const TIPS_LÄGE = { godkand: ['Godkänd', 'ar-klar'], nekad: ['Nekad', ''] };
+
+  function ritaTipstimmar() {
+    const host = $('#vb-tips');
+    if (!host) return;
+    if (S.tipstimmarFel) {
+      host.innerHTML = /PGRST202|could not find the function/i.test(S.tipstimmarFel)
+        ? '<p class="vy-tom">Tipstimmarna godkänns först när migrationen bonusarna_godkanns är körd.</p>'
+        : tomt('Tipstimmarna gick inte att läsa', S.tipstimmarFel);
+      return;
+    }
+    host.innerHTML = tabell([
+      { namn: 'Tipsade', rita: r => familjLänk(r.tipsare_id) },
+      { namn: 'Ny familj', rita: r => familjLänk(r.tipsad_id)
+        + '<span class="adm-und">två timmar ' + esc(r.tva_timmar ? datumText(r.tva_timmar) : '—') + '</span>' },
+      { namn: 'Beslut', rita: r => r.beslut
+        ? pill(TIPS_LÄGE[r.beslut][0], TIPS_LÄGE[r.beslut][1])
+          + '<span class="adm-und">' + esc(dagText(r.beslutad_at)) + (r.beslutad_av ? ' av ' + esc(namnFör(r.beslutad_av)) : '') + '</span>'
+          + (r.orsak ? '<span class="adm-und vb-orsak">' + esc(r.orsak) + '</span>' : '')
+        : pill('Att godkänna', 'ar-gor') },
+      { namn: '', höger: true, rita: r => r.beslut ? ''
+        : knapp('data-tips-godkann', r.tipsad_id, 'Godkänn') + ' ' + knapp('data-tips-neka', r.tipsad_id, 'Neka') }
+    ], S.tipstimmar || [], 'Ingen tipsad familj har haft sina två timmar än.');
+  }
+
   function ritaVarvning() {
     const host = $('#vb-lista');
     if (!ärSuperadmin() || !host) return;
+    ritaTipstimmar();
     const sam = $('#vb-sam'), chips = $('#vb-chips'), man = $('#vb-manad'), summa = $('#vb-summa'), om = $('#vb-om');
     if (S.varvningFel === 'saknas') {
       host.innerHTML = '<p class="vy-tom">Värvningsbonusen finns inte än: migrationen varvningsbonus är inte körd.</p>';
@@ -91,10 +130,13 @@
     const ruta = (klass, rubrik, tal, under) => '<div' + (klass ? ' class="' + klass + '"' : '') + '><small>'
       + esc(rubrik) + '</small><b>' + esc(tal) + '</b><span>' + esc(under) + '</span></div>';
     const väntar = alla.filter(b => b.status === 'vantar');
+    const attGodkänna = alla.filter(b => b.status === 'att_godkanna');
     const intjänade = alla.filter(b => b.status === 'intjanad');
     const utbetalda = alla.filter(b => b.status === 'utbetald');
     if (sam) {
-      sam.innerHTML = ruta('', 'Väntar', String(väntar.length), väntar.length === 1 ? 'ansökan' : 'ansökningar')
+      sam.innerHTML = ruta(attGodkänna.length ? 'ar-gor' : '', 'Att godkänna', kronor(summaAv(attGodkänna, 'brutto_ore')),
+          attGodkänna.length === 1 ? '1 bonus' : attGodkänna.length + ' bonusar')
+        + ruta('', 'Väntar', String(väntar.length), väntar.length === 1 ? 'ansökan' : 'ansökningar')
         + ruta(intjänade.length ? 'ar-gor' : '', 'Intjänade, inte utbetalda', kronor(summaAv(intjänade, 'brutto_ore')),
           intjänade.length === 1 ? '1 bonus' : intjänade.length + ' bonusar')
         + ruta('', 'Utbetalt', kronor(summaAv(utbetalda, 'brutto_ore')),
@@ -131,11 +173,15 @@
           + (b.status === 'utbetald' && b.utbetald_period ? '<span class="adm-und">lönen för ' + esc(b.utbetald_period) + '</span>' : '')
           + (b.status === 'annullerad' && b.annullerad_orsak ? '<span class="adm-und vb-orsak">' + esc(b.annullerad_orsak) + '</span>' : '') },
         { namn: 'Datum', rita: b => '<span class="adm-und">sökte ' + esc(dagText(b.skapad_at)) + '</span>'
-          + (b.intjanad_at ? '<span class="adm-und">intjänad ' + esc(dagText(b.intjanad_at)) + '</span>' : '')
+          + (b.uppfylld_at ? '<span class="adm-und">uppfylld ' + esc(dagText(b.uppfylld_at)) + '</span>' : '')
+          + (b.intjanad_at ? '<span class="adm-und">' + (b.godkand_av ? 'godkänd ' : 'intjänad ')
+            + esc(dagText(b.intjanad_at)) + '</span>' : '')
           + (b.utbetald_at ? '<span class="adm-und">utbetald ' + esc(dagText(b.utbetald_at)) + '</span>' : '')
           + (b.annullerad_at ? '<span class="adm-und">annullerad ' + esc(dagText(b.annullerad_at)) + '</span>' : '') },
-        { namn: '', höger: true, rita: b => (b.status === 'intjanad' ? knapp('data-varv-utbetald', b.id, 'Markera utbetald') : '')
-          + (b.status === 'intjanad' || b.status === 'vantar' ? ' ' + knapp('data-varv-annullera', b.id, 'Annullera') : '') }
+        { namn: '', höger: true, rita: b => (b.status === 'att_godkanna' ? knapp('data-varv-godkann', b.id, 'Godkänn') : '')
+          + (b.status === 'intjanad' ? knapp('data-varv-utbetald', b.id, 'Markera utbetald') : '')
+          + (b.status === 'intjanad' || b.status === 'vantar' || b.status === 'att_godkanna'
+            ? ' ' + knapp('data-varv-annullera', b.id, 'Annullera') : '') }
       ], rader, V.status === 'alla' && V.månad === 'alla' ? 'Ingen har sökt med en studiehjälpares kod än.'
         : 'Inga bonusar som passar.');
 
@@ -178,15 +224,15 @@
   };
   function csv(rader) {
     const huvud = ['id', 'värvare', 'värvad', 'läge', 'brutto_kr', 'grund_kr', 'semester_kr', 'brutto_ore', 'grund_ore',
-      'semester_ore', 'semester_procent', 'händelse', 'sökte', 'intjänad', 'lönemånad', 'utbetald', 'utbetald_lönemånad',
-      'annullerad', 'skäl'];
+      'semester_ore', 'semester_procent', 'händelse', 'sökte', 'uppfylld', 'intjänad', 'lönemånad', 'utbetald',
+      'utbetald_lönemånad', 'annullerad', 'skäl'];
     const rad = b => {
       const a = b.varvad_ansokan_id ? ansökan(b.varvad_ansokan_id) : null;
       return [b.id, namnFör(b.varvare_profil_id), b.varvad_profil_id ? namnFör(b.varvad_profil_id) : (a && a.name) || '',
         (LÄGE[b.status] || [b.status])[0], kr(b.brutto_ore), kr(b.grundersattning_ore), kr(b.semesterersattning_ore),
         b.brutto_ore, b.grundersattning_ore, b.semesterersattning_ore,
         b.semester_procent == null ? '' : String(b.semester_procent).replace('.', ','), b.utlosare || '',
-        sthlmDag(b.skapad_at), sthlmDag(b.intjanad_at),
+        sthlmDag(b.skapad_at), sthlmDag(b.uppfylld_at), sthlmDag(b.intjanad_at),
         b.manad ? b.manad.slice(0, 7) : '', sthlmDag(b.utbetald_at), b.utbetald_period || '',
         sthlmDag(b.annullerad_at), b.annullerad_orsak || ''].map(fält).join(';');
     };
@@ -203,6 +249,13 @@
     }
     ritaVarvning();
     if (NXAdmin.rita.ritaLöner) NXAdmin.rita.ritaLöner();
+  }
+
+  async function laddaOmTips() {
+    const { data, error } = await supa.rpc('tipstimmar_lage');
+    S.tipstimmar = error ? [] : (data || []);
+    S.tipstimmarFel = error ? felText(error) : null;
+    ritaVarvning();
   }
 
   /* Lönemånaden som ÅÅÅÅ-MM, som databasen kräver. Förslaget är månaden
@@ -244,6 +297,61 @@
   document.addEventListener('click', async e => {
     const f = e.target.closest('[data-vb-filter]');
     if (f) { V.status = f.dataset.vbFilter; ritaVarvning(); return; }
+
+    const gk = e.target.closest('[data-varv-godkann]');
+    if (gk) {
+      const b = (S.varvningsbonus || []).find(x => x.id === gk.dataset.varvGodkann);
+      if (!b) return;
+      const ja = await fråga({
+        titel: 'Godkänn bonusen?',
+        text: kronor(b.brutto_ore) + ' till ' + namnFör(b.varvare_profil_id) + ' för ' + namnFör(b.varvad_profil_id)
+          + '. Den blir intjänad i dag och kommer med i lönen för den här månaden, och ' + namnFör(b.varvare_profil_id)
+          + ' får ett mejl om den. Det går inte att ångra, men en intjänad bonus kan annulleras med ett skäl.',
+        innehåll: '', knapp: 'Godkänn', läs: () => ({ värde: true })
+      });
+      if (!ja) return;
+      await medan(gk, 'Godkänner…', async () => {
+        const { data, error } = await supa.rpc('varvningsbonus_godkann', { p_id: b.id });
+        if (error) { alert(felText(error)); return; }
+        if (data !== 'intjanad') alert('Bonusen väntade inte längre på oss: den är ' + ((LÄGE[data] || [data])[0] || '').toLowerCase() + '.');
+        await laddaOm();
+      });
+      return;
+    }
+
+    const tg = e.target.closest('[data-tips-godkann]');
+    const tn = e.target.closest('[data-tips-neka]');
+    if (tg || tn) {
+      const id = (tg || tn).dataset[tg ? 'tipsGodkann' : 'tipsNeka'];
+      const r = (S.tipstimmar || []).find(x => x.tipsad_id === id);
+      if (!r) return;
+      const svar = await fråga(tg ? {
+        titel: 'Godkänn tipstimmen?',
+        text: namnFör(r.tipsare_id) + ' får en timme i sin timbank för att ' + namnFör(r.tipsad_id)
+          + ' blev kund. Den gäller i 60 dagar från i dag. Beslutet går inte att ändra.',
+        innehåll: '', knapp: 'Godkänn', läs: () => ({ värde: true })
+      } : {
+        titel: 'Neka tipstimmen?',
+        text: namnFör(r.tipsare_id) + ' får ingen timme för ' + namnFör(r.tipsad_id) + '. Beslutet går inte att ändra.',
+        innehåll: '<div class="fgroup" style="margin:14px 0 0"><label for="vb-tips-orsak">Skäl (krävs)</label>'
+          + '<textarea class="inp" id="vb-tips-orsak" rows="3" maxlength="500" required></textarea>'
+          + '<span class="tl-orsak-not">Sparas med beslutet och ändras aldrig. Skriv varför, utan namn.</span></div>',
+        knapp: 'Neka',
+        läs: ruta => {
+          const o = ((ruta.querySelector('#vb-tips-orsak') || {}).value || '').trim();
+          return o.length >= 3 ? { värde: o } : { fel: 'Skriv skälet, minst tre tecken.' };
+        }
+      });
+      if (!svar) return;
+      await medan(tg || tn, tg ? 'Godkänner…' : 'Nekar…', async () => {
+        const { data, error } = await supa.rpc('tipstimme_besluta',
+          { p_tipsad: id, p_godkann: !!tg, p_orsak: tg ? null : svar });
+        if (error) { alert(felText(error)); return; }
+        if (data === 'redan') alert('Någon hann besluta om timmen före dig.');
+        await laddaOmTips();
+      });
+      return;
+    }
 
     const ut = e.target.closest('[data-varv-utbetald]');
     if (ut) { await markera(ut, [ut.dataset.varvUtbetald]); return; }

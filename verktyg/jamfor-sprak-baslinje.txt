@@ -1,9 +1,6 @@
 
 === anvandarvillkor.html  ->  en/anvandarvillkor.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 2 stycken:
-      Leo Constantinos Thriskos
-      Alexandar Jovanovic
 
 === avanmal.html  ->  en/avanmal.html
   STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
@@ -22,9 +19,7 @@
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 5 stycken:
-      Leo Constantinos Thriskos
-      Alexandar Jovanovic
+  SVENSKA KVAR i engelskan, 3 stycken:
       Mönsteråsgränd 4
       122 42 Enskede
       Google Analytics

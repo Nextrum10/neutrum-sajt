@@ -166,15 +166,15 @@ SIFFRORNA:
   timbanken. Timmar för tips och gratistimmar räknas inte hit.
 · En familjs kod gäller intresseanmälan och en studiehjälpares kod
   jobbansökan. En familj som tipsat får en timme i sin timbank när en
-  ny familj som anmält sig med dess kod haft två timmar läxhjälp. Den
-  dras först, som en timme på köpet på nästa pass, och gäller i 60
-  dagar från den dagen. Ett pass på en timme kan då kosta noll kronor,
+  ny familj som anmält sig med dess kod haft två timmar läxhjälp och vi
+  godkänt tipset. Den dras först, som en timme på köpet på nästa pass,
+  och gäller i 60 dagar från den senare av de två dagarna. Ett pass på en timme kan då kosta noll kronor,
   och det är inte obetalt.
 · Studiehjälparen får betalt den 25:e, i en klump för månadens
   rapporterade pass. Tar vi in någon som sökt jobb med en
-  studiehjälpares kod får den studiehjälparen 300 kr i bonus med
-  lönen för den månaden, inklusive semesterersättning, som
-  timpenningen.
+  studiehjälpares kod får den studiehjälparen 300 kr i bonus när vi
+  godkänt den, med lönen för den månaden, inklusive
+  semesterersättning, som timpenningen.
 · Belopp räknas i ören. Kronor blir det först när något visas.
 
 VAD SOM INTE ÄR BYGGT ÄN. Föreslå inte något som förutsätter det:
