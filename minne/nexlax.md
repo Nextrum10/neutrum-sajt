@@ -50,7 +50,14 @@ Läxhjälp är fortfarande tjänstens namn; skolan ger läxor, vi ger uppgifter.
   familjen kunde förut peka om en läxa till vilket material som helst
   vars id de kände, och policyn "familj läser bibliotek via läxa" gav dem
   då läsrätt till det.
-- **Allt är öppet sedan 2026-10-06.** Leo: "hela nexläx ska också vara
+- **Ett steg i taget sedan 2026-10-27** (Leo, med en skärmdump där en klarad nivå stod under en som inte var
+  gjord: "Steg i nexläx din väg ska gå steg för steg"). På Din väg är en nivå öppen när den är klarad, given av
+  studiehjälparen eller den första som inte är klarad; resten är låsta, och ett Mästarprov öppnas när områdets nivåer
+  är klara. I en nivå är delarna efter den som står på tur låsta ("Gör del N först"). Ämne och årskurs väljs fritt,
+  NP-spåret är helt öppet, och startsidan och För elever och föräldrar säger "Ett steg i taget" i stället för "Allt
+  är öppet". Det är fortfarande en spelregel och inget skydd: `niva_starta()` startar vilken nivå som helst. Det som
+  klarades i oordning medan allt var öppet står kvar som klart, så en sådan väg har en lucka tills nivån före görs.
+- **Allt var öppet 2026-10-06 till 2026-10-27.** Leo: "hela nexläx ska också vara
   upplåst så att man kan jobba med vad man vill och behöver". Varje nivå
   och varje Mästarprov går att starta, på vägen och i NP-sektionen.
   Vägen har kvar sin ordning och sitt aktuella steg, som ett förslag.
