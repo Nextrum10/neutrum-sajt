@@ -1326,7 +1326,12 @@ window.NXForhandsvisning = (function () {
       var u = W.egna_upplagg.find(function (x) { return x.id === a.upplagg; });
       if (u) { u.kopt_at = nu(); betalt = u.pris_ore; }
     }
-    W.klippkort.push({ id: nyttId(), parent_id: JAG, erbjudande: a.erbjudande, namn: a.namn, sort: 'plan', timmar: a.timmar,
+    /* Den första planen får en timme till, gratis i 60 dagar, som i
+       databasen (intern.planens_forsta_timme); timmar till planen aldrig. */
+    var första = !a.till_plan && !W.klippkort.some(function (k) { return k.sort === 'plan' && !k.till_plan; });
+    W.klippkort.push({ id: nyttId(), parent_id: JAG, erbjudande: a.erbjudande, namn: a.namn, sort: 'plan',
+      timmar: a.timmar + (första ? 1 : 0), timmar_pa_kopet: första ? 1 : 0, gratis_kvar: första ? 1 : 0,
+      gratis_till: första ? dag(60) : null,
       status: 'betald', giltigt_till: a.giltigt_till, begart_ore: betalt, betalt_ore: betalt, timpris_ore: a.timpris_ore,
       betald_at: nu(), created_at: nu(), till_plan: a.till_plan });
   }
