@@ -1,6 +1,6 @@
 /* ============================================================
-   NEXTRUM — webbläsarprov för första inloggningen och introduktionen
-   (2026-10-06)
+   NEXTRUM — webbläsarprov för första inloggningen och rundturen
+   (2026-10-06, rundturen i den riktiga vyn sedan 2026-10-27)
 
        NODE_PATH="$(npm root -g)" node verktyg/prova-introduktion.js [mapp för bilder]
 
@@ -13,11 +13,13 @@
 
    Det som provas: rutan för första lösenordet (inbjudans länk, och
    välkomsten 'losenord' utan länk), att den inte går att hoppa över men
-   att Logga ut finns, introduktionen efter lösenordet och dess Fortsätt,
-   att välkomsten tas bort, introduktionen igen från Profil, knapparna
-   som står stilla mellan bilderna (dator och telefon), bilderna, att en
-   familj som inte är matchad än kommer in och får veta varför bokningen
-   och köpen väntar, och att Senast inloggad stämplas också då. Att kontot skapas utan lösenord provas i
+   att Logga ut finns, rundturen i den färdiga vyn efter lösenordet (att
+   den byter sektion med menyn, att hålet och rutan står på skärmen och
+   inte över varandra, att ett tryck var som helst går vidare och inte
+   trycker på något i vyn), att välkomsten tas bort, rundturen igen från
+   Profil, telefonen i ljust och mörkt, att en familj som inte är matchad
+   än kommer in och får veta varför bokningen och köpen väntar, och att
+   Senast inloggad stämplas också då. Att kontot skapas utan lösenord provas i
    _delad/inbjudan_test.ts; adminvyns del i prova-intag.js.
    ============================================================ */
 'use strict';
@@ -159,10 +161,6 @@ async function öppna(webb, o) {
       .replace(/SUPABASE_URL:\s*'[^']*'/, "SUPABASE_URL: '" + FALSK + "'");
     return route.fulfill({ status: 200, contentType: 'application/javascript', body: t });
   });
-  if (o.utanBilder) {
-    await context.route(/nextrum-images\.js/, route => route.fulfill({ status: 200, contentType: 'application/javascript',
-      body: fs.readFileSync(path.join(ROT, 'nextrum-images.js'), 'utf8').replace('window.NEXTRUM_INTRO =', 'window.NEXTRUM_INTRO_GAMMAL =') }));
-  }
   await context.route(/^https:\/\/supabase\.test\//, S.hantera);
   await context.routeWebSocket(/supabase\.test/, () => {});
   await context.route(url => !String(url).startsWith(BAS) && !/supabase\.test/.test(String(url)), route => route.abort());
@@ -191,47 +189,82 @@ async function bild(page, namn) {
   await page.screenshot({ path: path.join(BILDER, namn + '.png'), fullPage: false });
 }
 
-/* Klickar igenom introduktionen och svarar med vad den såg per bild. */
-async function genomIntro(page) {
+/* Trycker sig igenom rundturen och svarar med vad den såg per ruta.
+   Trycket landar på ett ställe utan något i (o.var, förvalt nere till
+   vänster): ett tryck var som helst ska gå vidare. */
+async function genomTur(page, o) {
+  o = o || {};
   const sett = [];
-  /* Rutan glider fram när den öppnas (.nx-fraga-box, en halv sekund):
-     första mätningen väntar in den. */
-  await vänta(650);
-  for (let i = 0; i < 12; i++) {
-    if (!(await synlig(page, '.nx-intro.open'))) break;
-    sett.push(await page.evaluate(() => {
-      const k = document.querySelector('[data-intro-fram]').getBoundingClientRect();
-      const img = document.querySelector('.nx-intro-bild img');
+  await page.waitForSelector('.nx-tur.open', { timeout: 10000 }).catch(() => {});
+  for (let i = 0; i < 14; i++) {
+    if (!(await page.locator('.nx-tur').count())) break;
+    /* Rutan ploppar upp när hålet glidit klart. */
+    await page.waitForSelector('.nt-ruta.nt-upp', { timeout: 4000 }).catch(() => {});
+    await vänta(450);
+    const ruta = await page.evaluate(() => {
+      const r = el => { if (!el) return null; const b = el.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom }; };
+      const tur = document.querySelector('.nx-tur.open');
+      if (!tur) return null;
+      const nav = document.querySelector('#vy-sido a.ar-har');
+      const pek = document.querySelector('#vy-sido a.nt-pek');
       return {
-        nr: document.querySelector('.nx-intro-nr').textContent,
-        rubrik: document.querySelector('#nx-intro-t').textContent,
-        text: document.querySelector('#nx-intro-text').textContent,
-        knapp: document.querySelector('[data-intro-fram]').textContent,
-        bak: document.querySelector('[data-intro-bak]').disabled,
-        topp: Math.round(k.top), höger: Math.round(k.right), bredd: Math.round(k.width),
-        bild: img ? { src: img.getAttribute('src'), alt: img.getAttribute('alt'), w: img.naturalWidth } : null,
-        typ: document.querySelector('.nx-intro-scen').getAttribute('data-typ'),
-        klar: !!document.querySelector('.nx-intro-klar'),
-        klarText: (document.querySelector('.nx-intro-klar') || {}).textContent || '',
-        väntar: !!document.querySelector('.nx-intro-vantar')
+        rubrik: (document.querySelector('#nt-t') || {}).textContent || '',
+        text: (document.querySelector('#nt-text') || {}).textContent || '',
+        et: (document.querySelector('.nt-et') || {}).textContent || '',
+        sek: nav ? nav.getAttribute('data-sek') : null,
+        pek: pek ? pek.getAttribute('data-sek') : null,
+        hål: tur.classList.contains('har-hal') ? r(document.querySelector('.nt-hal')) : null,
+        ruta: r(document.querySelector('.nt-ruta')),
+        vb: innerWidth, vh: innerHeight,
+        klar: !!document.querySelector('.nt-klar'),
+        klarText: (document.querySelector('.nt-klar') || {}).textContent || '',
+        väntar: !!document.querySelector('.nt-vantar'),
+        stäng: !!document.querySelector('[data-tur-stang]'),
+        vy: !!document.querySelector('#view-app:not([hidden])'),
+        rullar: document.documentElement.scrollWidth > innerWidth
       };
-    }));
-    /* Bilden laddas innan nästa: naturalWidth säger att filen kom fram. */
-    await page.waitForFunction(() => {
-      const img = document.querySelector('.nx-intro-bild img');
-      return !img || img.complete;
-    }, null, { timeout: 4000 }).catch(() => {});
-    sett[sett.length - 1].bild = await page.evaluate(() => {
-      const img = document.querySelector('.nx-intro-bild img');
-      return img ? { src: img.getAttribute('src'), alt: img.getAttribute('alt'), w: img.naturalWidth } : null;
     });
-    await page.click('[data-intro-fram]');
-    await vänta(120);
+    if (!ruta) break;
+    sett.push(ruta);
+    if (o.bild) await bild(page, o.bild + '-' + (i + 1));
+    const vp = page.viewportSize();
+    const [x, y] = o.var || [6, vp.height - 6];
+    await page.mouse.click(x, y);
+    await vänta(150);
   }
+  await vänta(300);
   return sett;
 }
 
-/* ============ 1. Familjen som tagits in: länken, lösenordet, introduktionen ============ */
+const inne = (a, s) => a && a.l >= -1 && a.t >= -1 && a.r <= s.vb + 1 && a.b <= s.vh + 1;
+const krockar = (a, b) => a && b && a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+function provaSett(namn, sett, rubriker, sektioner) {
+  prova(namn + ': ' + rubriker.length + ' rutor i menyns ordning', JSON.stringify(sett.map(s => s.rubrik)) === JSON.stringify(rubriker),
+    sett.map(s => s.rubrik).join(', '));
+  const delar = sett.slice(1, -1);
+  prova(namn + ': varje del byter vyn till sin sektion med menyn', JSON.stringify(delar.map(s => s.sek)) === JSON.stringify(sektioner)
+    && delar.every(s => s.pek === s.sek), delar.map(s => s.sek + '/' + s.pek).join(', '));
+  prova(namn + ': vyn står framme bakom rundturen', sett.every(s => s.vy));
+  prova(namn + ': varje del har ett hål på skärmen, första och sista inget', delar.every(s => s.hål && inne(s.hål, s))
+    && !sett[0].hål && !sett[sett.length - 1].hål, JSON.stringify(delar.map(s => s.hål)));
+  prova(namn + ': rutan står på skärmen och aldrig över hålet', sett.every(s => inne(s.ruta, s) && !krockar(s.ruta, s.hål)),
+    JSON.stringify(sett.map(s => [s.rubrik, s.ruta, s.hål])));
+  prova(namn + ': två meningar i varje del', delar.every(s => (s.text.match(/[.!?](\s|$)/g) || []).length === 2),
+    delar.filter(s => (s.text.match(/[.!?](\s|$)/g) || []).length !== 2).map(s => s.rubrik).join(', '));
+  prova(namn + ': delarna räknas, 1 av ' + delar.length + ' och framåt', delar.every((s, i) => s.et === (i + 1) + ' av ' + delar.length),
+    delar.map(s => s.et).join(', '));
+  prova(namn + ': ingen sidledsrullning', sett.every(s => !s.rullar));
+}
+
+const FAMILJ = ['Vi visar er runt i studievyn', 'Översikt', 'Boka pass', 'Mina lektioner', 'NexLäx', 'Meddelanden',
+  'Betalning & planer', 'Profil & inställningar', 'Nu är ni igång'];
+const FAMILJ_SEK = ['oversikt', 'boka', 'lektioner', 'nexlax', 'meddelanden', 'betalning', 'profil'];
+const HJÄLPARE = ['Vi visar dig runt i studiehjälparvyn', 'Översikt', 'Lektioner & elever', 'Föreslagna tider', 'Skriv rapport',
+  'Uppgifter & material', 'Meddelanden', 'Statistik & ersättning', 'Profil & inställningar', 'Nu är du igång'];
+const HJÄLPARE_SEK = ['oversikt', 'lektioner', 'tider', 'rapporter', 'laxor', 'meddelanden', 'statistik', 'profil'];
+const skickat = S => S.logg.filter(r => r.metod === 'POST' && (r.väg === '/rest/v1/bookings' || /\/functions\/v1\//.test(r.väg)));
+
+/* ============ 1. Familjen som tagits in: länken, lösenordet, rundturen ============ */
 async function provaFamiljenTagenIn(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, { inloggad: 'foralder-1', länk: true,
     metadata: { role: 'parent', full_name: 'Anna Andersson', valkommen: 'losenord' } });
@@ -258,70 +291,43 @@ async function provaFamiljenTagenIn(webb) {
   prova('familj: inget sparas förrän de är lika', !S.logg.some(r => r.väg === '/auth/v1/user' && r.metod === 'PUT'));
   await page.fill('#nylos-2', 'ett-langt-losen');
   await page.click('form[data-nylos] [type="submit"]');
-  await page.waitForSelector('.nx-intro.open', { timeout: 6000 }).catch(() => {});
+  await page.waitForSelector('.nx-tur.open', { timeout: 10000 }).catch(() => {});
   const put = S.logg.find(r => r.väg === '/auth/v1/user' && r.metod === 'PUT' && r.kropp && r.kropp.password);
   prova('familj: lösenordet och välkomsten sparas i ett anrop', put && put.kropp.password === 'ett-langt-losen'
     && put.kropp.data && put.kropp.data.valkommen === 'intro', JSON.stringify(put && put.kropp));
-  prova('familj: lösenordsrutan är borta och introduktionen öppen', !(await synlig(page, '#nylos-t'))
-    && (await synlig(page, '.nx-intro.open')));
-  prova('familj: vyn är inte framme bakom introduktionen', !(await synlig(page, '#view-app')));
-  await bild(page, 'familj-intro-1');
+  prova('familj: lösenordsrutan är borta och rundturen går i vyn', !(await synlig(page, '#nylos-t'))
+    && (await synlig(page, '.nx-tur.open')) && (await synlig(page, '#view-app')));
+  await page.waitForSelector('.nt-ruta.nt-upp', { timeout: 4000 }).catch(() => {});
   await page.keyboard.press('Escape');
-  prova('familj: Escape stänger inte introduktionen första gången', await synlig(page, '.nx-intro.open'));
-  prova('familj: ingen Stäng första gången', (await page.locator('[data-intro-stang]').count()) === 0);
+  prova('familj: Escape stänger inte rundturen första gången', await synlig(page, '.nx-tur.open'));
+  prova('familj: ingen Stäng första gången', (await page.locator('[data-tur-stang]').count()) === 0);
 
-  const sett = await genomIntro(page);
-  /* Sedan 2026-10-27: välkomstkartan först, och Betalning & planer som en del.
-     Hemskärmens steg bara på en telefon (pekskärm), så inte här. */
-  prova('familj: åtta steg, 1 av 8 till 8 av 8', sett.length === 8 && sett[0].nr === '1 av 8' && sett[7].nr === '8 av 8',
-    sett.map(s => s.nr).join(', '));
-  prova('familj: kartan först, sedan delarna i menyns ordning', JSON.stringify(sett.map(s => s.rubrik)) === JSON.stringify(
-    ['Så fungerar studievyn', 'Översikt', 'Boka pass', 'Mina lektioner', 'Betalning & planer', 'NexLäx', 'Meddelanden', 'Profil & inställningar']),
-    sett.map(s => s.rubrik).join(', '));
-  prova('familj: kartan hälsar välkommen, delarna inte', sett[0].typ === 'valkommen' && sett[0].klar && sett.slice(1).every(s => !s.klar && s.typ === 'del'));
-  /* Lösenordet sparades flera steg tidigare (villkoren, och för en studiehjälpare
-     provet, kommer emellan), så raden säger inte längre det (2026-10-21). */
-  prova('familj: välkomstraden säger inget om lösenordet',
-    sett[0].klarText === 'Välkommen till Nextrum!', sett[0].klarText);
-  prova('familj: Tillbaka går inte på första bilden', sett[0].bak && sett.slice(1).every(s => !s.bak));
-  prova('familj: Nästa, och Fortsätt sist', sett.slice(0, 7).every(s => s.knapp === 'Nästa') && sett[7].knapp === 'Fortsätt',
-    sett.map(s => s.knapp).join(', '));
-  prova('familj: varje del har en bild som kom fram, med alt-text', sett.slice(1).every(s => s.bild && s.bild.w === 780 && s.bild.alt.length > 30),
-    JSON.stringify(sett.map(s => s.bild && [s.bild.src, s.bild.w])));
-  prova('familj: knappen står still mellan bilderna, också när den blir Fortsätt (dator)',
-    new Set(sett.map(s => s.topp + ':' + s.höger + ':' + s.bredd)).size === 1,
-    sett.map(s => s.topp + '/' + s.höger + '/' + s.bredd).join(', '));
-  prova('familj: sista steget säger att vi matchar dem först', sett[7].väntar && sett.slice(0, 7).every(s => !s.väntar));
-  prova('familj: sista steget säger var familjen och barnet loggar in nästa gång',
-    /Logga in på nextrum\.se/.test(sett[7].text) && /barnet på samma ställe med sitt användarnamn/.test(sett[7].text),
-    sett[7].text);
-  await page.waitForSelector('#view-app:not([hidden])', { timeout: 6000 }).catch(() => {});
-  /* Före matchningen är vyn öppen (2026-10-07): inget väntläge, men
-     bokningen och köpen väntar på studiehjälparen. */
-  prova('familj: Fortsätt leder in i vyn, också före matchningen', await synlig(page, '#view-app') && !(await synlig(page, '.nx-intro')));
+  /* Trycket landar mitt på skärmen, där vyn har knappar: det ska gå
+     vidare och inte trycka på något under. */
+  const vp = page.viewportSize();
+  const sett = await genomTur(page, { var: [vp.width / 2, vp.height / 2], bild: BILDER ? 'familj-tur' : null });
+  provaSett('familj', sett, FAMILJ, FAMILJ_SEK);
+  prova('familj: första rutan hälsar välkommen, de andra inte', sett[0].klar && sett[0].klarText === 'Välkommen till Nextrum!'
+    && sett.slice(1).every(s => !s.klar), sett[0].klarText);
+  prova('familj: sista rutan säger att vi matchar dem först', sett[sett.length - 1].väntar && sett.slice(0, -1).every(s => !s.väntar));
+  prova('familj: sista rutan säger var de loggar in nästa gång', /Logga in på nextrum\.se/.test(sett[sett.length - 1].text),
+    sett[sett.length - 1].text);
+  prova('familj: rundturen är borta efter sista trycket, och Översikt står framme',
+    !(await synlig(page, '.nx-tur')) && (await page.evaluate(() => (document.querySelector('#vy-sido a.ar-har') || {}).dataset.sek)) === 'oversikt');
+  prova('familj: menyn är tillbaka som förut', await page.evaluate(() => !document.querySelector('.nt-lyft, .nt-pek')));
+  prova('familj: trycken under rundturen tryckte inte på något i vyn', skickat(S).length === 0, skickat(S).map(r => r.väg).join(', '));
   await page.waitForSelector('#ov-gora .vy-rad', { timeout: 6000 }).catch(() => {});
   prova('familj: Översikt säger att vi letar studiehjälpare, och leder till barnen',
     /Vi letar studiehjälpare åt er/.test(await text(page, '#ov-gora'))
     && (await page.locator('#ov-gora a[href="#profil/barn"]').count()) === 1, await text(page, '#ov-gora'));
-  await bild(page, 'familj-oversikt-fore-matchning');
   await page.goto(BAS + '/foralder#boka');
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 6000 }).catch(() => {});
   await page.waitForFunction(() => /Bokningen öppnas när ni är matchade/.test(document.querySelector('#boka-inner').textContent),
     null, { timeout: 6000 }).catch(() => {});
   prova('familj: Boka pass säger att bokningen öppnas när de är matchade',
     /Bokningen öppnas när ni är matchade/.test(await text(page, '#boka-inner')), await text(page, '#boka-inner'));
-  await bild(page, 'familj-boka-fore-matchning');
-  await page.goto(BAS + '/foralder#erbjudanden');
-  await page.waitForSelector('#view-app:not([hidden])', { timeout: 6000 }).catch(() => {});
-  await page.waitForFunction(() => /matchat er/.test(document.querySelector('#erb-msg').textContent), null, { timeout: 6000 }).catch(() => {});
-  prova('familj: inget går att köpa före matchningen, och raden säger varför',
-    (await page.locator('[data-kop]').count()) === 0 && /Timmarna köper ni när vi matchat er/.test(await text(page, '#erb-msg')),
-    await text(page, '#erb-msg'));
-  await bild(page, 'familj-erbjudanden-fore-matchning');
-  prova('familj: ingen bokning eller kassa skickades', !S.logg.some(r => r.metod === 'POST'
-    && (r.väg === '/rest/v1/bookings' || /\/functions\/v1\//.test(r.väg))), S.logg.filter(r => r.metod === 'POST').map(r => r.väg).join(', '));
   await vänta(300);
-  prova('familj: välkomsten tas bort efter Fortsätt', sattes(S, 'valkommen', null));
+  prova('familj: välkomsten tas bort efter sista trycket', sattes(S, 'valkommen', null));
   prova('familj: Senast inloggad stämplas också före matchningen', S.logg.some(r => r.metod === 'PATCH'
     && r.väg === '/rest/v1/profiles' && r.kropp && r.kropp.last_seen_at));
   prova('familj: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
@@ -338,9 +344,6 @@ async function provaUtanLänken(webb) {
     await page.goto(BAS + '/foralder');
     await page.waitForSelector('.nx-fraga.open #nylos-t', { timeout: 8000 }).catch(() => {});
     prova('utan länk: välkomsten losenord ger rutan', (await text(page, '#nylos-t')) === 'Skapa ditt lösenord', await text(page, '#nylos-t'));
-    /* Provets inloggning läggs tillbaka vid varje sidladdning
-       (addInitScript), så det som syns efteråt säger inget här: att
-       utloggningen gick och att sidan laddades om gör det. */
     const omladdad = page.waitForEvent('load', { timeout: 8000 }).then(() => true, () => false);
     await page.click('[data-nylos-ut]');
     prova('utan länk: Logga ut loggar ut, lokalt', (await omladdad) && S.logg.some(r => r.väg === '/auth/v1/logout'
@@ -348,46 +351,50 @@ async function provaUtanLänken(webb) {
     prova('utan länk: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     await context.close();
   }
-  /* Lösenordet valt, introduktionen inte sedd: bara introduktionen. */
+  /* Lösenordet valt, rundturen inte gjord: bara rundturen. */
   {
     const { context, page, S, konsol } = await öppna(webb, { inloggad: 'foralder-1', matchad: true,
       metadata: { valkommen: 'intro' } });
     await page.goto(BAS + '/foralder');
-    await page.waitForSelector('.nx-intro.open', { timeout: 8000 }).catch(() => {});
+    await page.waitForSelector('.nx-tur.open', { timeout: 10000 }).catch(() => {});
     prova('intro kvar: ingen lösenordsruta', !(await synlig(page, '#nylos-t')));
-    const sett = await genomIntro(page);
-    prova('intro kvar: introduktionen, utan välkomstraden', sett.length === 8 && !sett[0].klar);
+    prova('intro kvar: notisrutan väntar tills rundturen är klar', !(await synlig(page, '.nx-notisruta')));
+    const sett = await genomTur(page);
+    provaSett('intro kvar', sett, FAMILJ, FAMILJ_SEK);
+    prova('intro kvar: utan välkomstraden', !sett[0].klar);
     prova('intro kvar: en matchad familj får ingen rad om matchningen', sett.every(s => !s.väntar));
-    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova('intro kvar: Fortsätt leder in i vyn', await synlig(page, '#view-app'));
     await vänta(300);
     prova('intro kvar: välkomsten tas bort, och inget lösenord skickas', sattes(S, 'valkommen', null)
       && !S.logg.some(r => r.metod === 'PUT' && r.kropp && r.kropp.password));
     prova('intro kvar: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
-    /* Motprovet till familjen före matchningen: här går det att köpa. */
-    await page.goto(BAS + '/foralder#erbjudanden');
-    await page.waitForSelector('[data-kop]', { timeout: 6000 }).catch(() => {});
-    prova('intro kvar: en matchad familj kan köpa timmar', (await page.locator('[data-kop]').count()) === 1);
 
-    /* Igen från Profil: Stäng finns, Escape stänger, inget sparas. */
+    /* Igen från Profil: Stäng finns, pilarna går, Escape stänger, inget sparas,
+       och vyn står kvar på Profil. */
+    await page.evaluate(() => { const n = document.querySelector('.nx-notisruta [data-notis-stang], .nx-notisruta .btn'); if (n) n.click(); });
+    await page.keyboard.press('Escape');
     const före = S.logg.filter(r => r.metod === 'PUT').length;
     await page.goto(BAS + '/foralder#profil');
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
-    await vänta(400);
-    await page.click('[data-intro="foralder"]');
-    await page.waitForSelector('.nx-intro.open', { timeout: 4000 }).catch(() => {});
-    prova('Profil: Visa introduktionen öppnar den', (await text(page, '.nx-intro-nr')) === '1 av 8');
-    prova('Profil: öppnad igen har den Stäng', await synlig(page, '[data-intro-stang]'));
-    await page.keyboard.press('ArrowRight');
-    prova('Profil: pilen åt höger går framåt', (await text(page, '.nx-intro-nr')) === '2 av 8', await text(page, '.nx-intro-nr'));
-    await page.keyboard.press('ArrowLeft');
-    prova('Profil: pilen åt vänster går tillbaka', (await text(page, '.nx-intro-nr')) === '1 av 8', await text(page, '.nx-intro-nr'));
-    await page.click('[data-intro-ga="4"]');
-    prova('Profil: ett tryck på en del i kartan går till den', (await text(page, '#nx-intro-t')) === 'Betalning & planer', await text(page, '#nx-intro-t'));
+    await vänta(1500);
     await page.keyboard.press('Escape');
-    await vänta(150);
-    prova('Profil: Escape stänger den', !(await synlig(page, '.nx-intro')));
-    prova('Profil: att se den igen sparar ingenting', S.logg.filter(r => r.metod === 'PUT').length === före);
+    await page.evaluate(() => document.querySelector('[data-intro="foralder"]').click());
+    await page.waitForSelector('.nt-ruta.nt-upp', { timeout: 4000 }).catch(() => {});
+    prova('Profil: Gå rundturen igen startar den', (await text(page, '#nt-t')) === 'Vi visar er runt i studievyn', await text(page, '#nt-t'));
+    prova('Profil: gången igen har den Stäng', await synlig(page, '[data-tur-stang]'));
+    await page.keyboard.press('ArrowRight');
+    await page.waitForFunction(() => (document.querySelector('#nt-t') || {}).textContent === 'Översikt', null, { timeout: 4000 }).catch(() => {});
+    prova('Profil: pilen åt höger går framåt', (await text(page, '#nt-t')) === 'Översikt', await text(page, '#nt-t'));
+    await page.keyboard.press('ArrowLeft');
+    await page.waitForFunction(() => /Vi visar/.test((document.querySelector('#nt-t') || {}).textContent), null, { timeout: 4000 }).catch(() => {});
+    prova('Profil: pilen åt vänster går tillbaka', /Vi visar/.test(await text(page, '#nt-t')), await text(page, '#nt-t'));
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
+    await vänta(900);
+    await page.keyboard.press('Escape');
+    await vänta(400);
+    prova('Profil: Escape stänger den', !(await synlig(page, '.nx-tur')));
+    prova('Profil: vyn står på Profil igen', (await page.evaluate(() => (document.querySelector('#vy-sido a.ar-har') || {}).dataset.sek)) === 'profil');
+    prova('Profil: att gå den igen sparar ingenting', S.logg.filter(r => r.metod === 'PUT').length === före);
     await context.close();
   }
   /* Ett konto i bruk: ingenting. */
@@ -395,22 +402,10 @@ async function provaUtanLänken(webb) {
     const { context, page, S, konsol } = await öppna(webb, { inloggad: 'foralder-1', matchad: true, metadata: {} });
     await page.goto(BAS + '/foralder');
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
-    await vänta(500);
-    prova('i bruk: varken ruta eller introduktion', !(await synlig(page, '.nx-fraga.open')) && (await synlig(page, '#view-app')));
+    await vänta(1500);
+    prova('i bruk: ingen rundtur', !(await page.locator('.nx-tur').count()) && (await synlig(page, '#view-app')));
     prova('i bruk: inget skrivs till Auth', !S.logg.some(r => r.väg === '/auth/v1/user' && r.metod === 'PUT'));
     prova('i bruk: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
-    await context.close();
-  }
-  /* En gammal nextrum-images.js i cachen: texten utan bilder. */
-  {
-    const { context, page, konsol } = await öppna(webb, { inloggad: 'foralder-1', matchad: true,
-      metadata: { valkommen: 'intro' }, utanBilder: true });
-    await page.goto(BAS + '/foralder');
-    await page.waitForSelector('.nx-intro.open', { timeout: 8000 }).catch(() => {});
-    await page.click('[data-intro-fram]');
-    prova('utan bildregistret: texten står, utan bild', !(await synlig(page, '.nx-intro-bild'))
-      && (await text(page, '#nx-intro-t')) === 'Översikt');
-    prova('utan bildregistret: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     await context.close();
   }
 }
@@ -427,21 +422,19 @@ async function provaStudiehjälparen(webb) {
     await page.fill('#nylos-1', 'sara-forsta-losen');
     await page.fill('#nylos-2', 'sara-forsta-losen');
     await page.click('form[data-nylos] [type="submit"]');
-    await page.waitForSelector('.nx-intro.open', { timeout: 6000 }).catch(() => {});
-    if (godkand) await bild(page, 'studiehjalpare-intro-1');
-    const sett = await genomIntro(page);
-    prova(v + ': nio steg', sett.length === 9 && sett[8].nr === '9 av 9', sett.map(s => s.nr).join(', '));
-    prova(v + ': kartan först, sedan delarna i menyns ordning', JSON.stringify(sett.map(s => s.rubrik)) === JSON.stringify(
-      ['Så fungerar studiehjälparvyn', 'Översikt', 'Föreslagna tider', 'Lektioner & elever', 'Skriv rapport', 'Uppgifter & material', 'Meddelanden',
-       'Statistik & ersättning', 'Profil & inställningar']), sett.map(s => s.rubrik).join(', '));
-    prova(v + ': varje del har en bild som kom fram', sett.slice(1).every(s => s.bild && s.bild.w === 780), JSON.stringify(sett.map(s => s.bild && s.bild.w)));
-    prova(v + ': sista steget säger att profilen väntar bara när den gör det', sett[8].väntar === !godkand);
-    prova(v + ': sista steget säger var du loggar in nästa gång', /Logga in på nextrum\.se/.test(sett[8].text), sett[8].text);
-    const vy = godkand ? '#view-app' : '#view-pending';
-    await page.waitForSelector(vy + ':not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova(v + ': Fortsätt leder in i vyn', await synlig(page, vy));
-    await vänta(300);
-    prova(v + ': välkomsten tas bort', sattes(S, 'valkommen', null));
+    if (godkand) {
+      const sett = await genomTur(page, { bild: BILDER ? 'studiehjalpare-tur' : null });
+      provaSett(v, sett, HJÄLPARE, HJÄLPARE_SEK);
+      prova(v + ': sista rutan säger var du loggar in nästa gång', /Logga in på nextrum\.se/.test(sett[sett.length - 1].text));
+      await vänta(300);
+      prova(v + ': välkomsten tas bort', sattes(S, 'valkommen', null));
+    } else {
+      /* Ingen vy att gå runt i: väntläget, och rundturen när profilen är godkänd. */
+      await page.waitForSelector('#view-pending:not([hidden])', { timeout: 8000 }).catch(() => {});
+      await vänta(800);
+      prova(v + ': väntläget, utan rundtur', (await synlig(page, '#view-pending')) && !(await page.locator('.nx-tur').count()));
+      prova(v + ': välkomsten står kvar till dess', !sattes(S, 'valkommen', null));
+    }
     prova(v + ': inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     await context.close();
   }
@@ -449,37 +442,14 @@ async function provaStudiehjälparen(webb) {
 
 /* ============ 4. Telefonen ============ */
 async function provaTelefonen(webb) {
-  /* Den lilla telefonen (360 × 740) är där den längsta texten tar mest
-     plats: knappen ska stå still också där. */
   for (const [namn, mörkt, bredd, höjd] of [['telefon', false, 390, 844], ['telefon mörkt', true, 390, 844],
-                                            ['liten telefon', false, 360, 740]]) {
+                                            ['liten telefon', false, 360, 640]]) {
     const { context, page, konsol } = await öppna(webb, { inloggad: 'foralder-1', matchad: true, metadata: { valkommen: 'intro' },
       context: { viewport: { width: bredd, height: höjd }, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
                  colorScheme: mörkt ? 'dark' : 'light' } });
     await page.goto(BAS + '/foralder');
-    await page.waitForSelector('.nx-intro.open', { timeout: 8000 }).catch(() => {});
-    const mått = await page.evaluate(() => {
-      const boxEl = document.querySelector('.nx-intro-box');
-      const box = boxEl.getBoundingClientRect();
-      /* Rutan glider in med transform: bredderna mäts i layouten, inte på skärmen. */
-      const st = getComputedStyle(boxEl);
-      const inne = boxEl.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight);
-      document.querySelector('[data-intro-fram]').click();
-      const fig = { width: document.querySelector('.nx-intro-bild').offsetWidth };
-      const kn = [...document.querySelectorAll('.nx-intro-knappar .btn')].map(b => b.getBoundingClientRect().height);
-      return { vänster: box.left, höger: box.right, bredd: innerWidth, fig: fig.width, inne, kn,
-               rullar: document.documentElement.scrollWidth > innerWidth };
-    });
-    prova(namn + ': rutan ryms i bredden', mått.vänster >= 0 && mått.höger <= mått.bredd && !mått.rullar, JSON.stringify(mått));
-    /* Bilden har sina proportioner och en högsta höjd (46 % av skärmen), så
-       på en låg telefon är den smalare än rutan; den ska ändå vara stor nog att läsa. */
-    prova(namn + ': bilden är stor nog att läsa', mått.fig > 260 && mått.fig <= mått.inne + 1, mått.fig + ' av ' + mått.inne);
-    prova(namn + ': knapparna är minst 44 px', mått.kn.every(h => h >= 44), mått.kn.join(', '));
-    await bild(page, namn.replace(/ /g, '-') + '-intro');
-    if (!mörkt) {
-      const sett = await genomIntro(page);
-      prova(namn + ': knappen står still mellan bilderna', new Set(sett.map(s => s.topp)).size === 1, sett.map(s => s.topp).join(', '));
-    }
+    const sett = await genomTur(page, { bild: BILDER ? namn.replace(/ /g, '-') + '-tur' : null });
+    provaSett(namn, sett, FAMILJ, FAMILJ_SEK);
     prova(namn + ': inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     await context.close();
   }

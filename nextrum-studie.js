@@ -3707,9 +3707,10 @@ window.NXStudie = (function () {
   }
 
   /* roll är 'foralder' eller 'studiehjalpare'. o.sparat och o.väntar
-     går till NXIntro. Välkomsten tas bort när Fortsätt tryckts; går det
-     inte visas introduktionen en gång till nästa gång, vilket är bättre
-     än att vyn väntar på det. */
+     går till NXIntro, som går runt i den färdiga vyn (2026-10-27): den
+     ropas när vyn står och allt är hämtat. Välkomsten tas bort när sista
+     trycket är gjort; går det inte visas rundturen en gång till nästa
+     gång, vilket är bättre än att vyn väntar på det. */
   async function introduktion(supa, user, roll, o) {
     if (välkomstläge(user) !== 'intro' || typeof NXIntro === 'undefined') return;
     await NXIntro.visa({ roll: roll, sparat: !!(o && o.sparat), väntar: !!(o && o.väntar) });
