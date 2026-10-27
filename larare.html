@@ -72,13 +72,15 @@
       <div class="auth-card">
         <span class="nx-et acc">Logga in</span>
         <h1 id="auth-title" style="margin-top:16px">Välkommen tillbaka</h1>
-        <p class="nx-lede" id="auth-sub">Med din e-post eller ditt användarnamn. Kontot avgör vilken vy du hamnar i.</p>
+        <p class="nx-lede" id="auth-sub">Med din e-post eller ditt användarnamn. Välj kortet som stämmer med ditt konto.</p>
 
         <!-- EN INLOGGNING (2026-10-07). Leo: "föräldrar och elev ska vara en
              knapp när man loggar in, spelar egentligen ingen roll vart man
-             klickar i inlogg, är man studiehjälpare loggas man in dit". Korten
-             säger vilken sida det här är, men inloggningen är densamma på båda,
-             och vyn skickar vidare efter kontots roll. -->
+             klickar i inlogg, är man studiehjälpare loggas man in dit". Sedan
+             2026-10-27 gäller kortet (Leo: "trycker jag som studiehjälpare och
+             loggar in som familj så kommer jag in utan problem som familj. fixa
+             det"): fel konto under ett kort loggas ut med ett besked
+             (NXStudie.loggaInHär). -->
         <div class="vy-roller">
           <a class="vy-roll" href="/foralder">
             <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>Familj och elev</b>
@@ -1334,7 +1336,7 @@
 <script src="nextrum-app.js?v=9c8ce04d"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=8423ea85"></script>
-<script src="nextrum-studie.js?v=ccf4d404"></script>
+<script src="nextrum-studie.js?v=28510da8"></script>
 <script src="nextrum-images.js?v=1bcb27bb"></script>
 <script src="nextrum-arbetsyta.js?v=977105ae"></script>
 <script src="nextrum-media.js?v=eb6a8952"></script>
@@ -1345,6 +1347,6 @@
 <script src="nextrum-hemskarm.js?v=e239d6b2"></script>
 <script src="nextrum-provet.js?v=a8310910"></script>
 <script src="nextrum-modulvakt.js?v=544e71de"></script>
-<script src="nextrum-larare-vy.js?v=8fe24635"></script>
+<script src="nextrum-larare-vy.js?v=0b81017d"></script>
 </body>
 </html>

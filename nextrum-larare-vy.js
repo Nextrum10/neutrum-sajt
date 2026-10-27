@@ -50,7 +50,7 @@
   function ritaAuth() {
     NXStudie.inloggningsruta(läge, {
       titel: 'Välkommen tillbaka',
-      under: 'Med din e-post eller ditt användarnamn. Kontot avgör vilken vy du hamnar i.',
+      under: 'Med din e-post eller ditt användarnamn. Välj kortet som stämmer med ditt konto.',
       etikett: 'E-post eller användarnamn'
     });
   }
@@ -74,7 +74,7 @@
       { fel: !lösen, text: 'Fyll i ditt lösenord.', falt: $('#a-pass') }
     ]);
     if (fel) { säg(msg, fel, false); return; }
-    await NXStudie.loggaInHär(supa, epost, lösen);
+    await NXStudie.loggaInHär(supa, epost, lösen, 'studiehjalpare');
   });
 
   /* ============================================================

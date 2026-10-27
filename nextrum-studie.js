@@ -3361,16 +3361,49 @@ window.NXStudie = (function () {
     return { user: v.user, barn: NX.ärBarn(v.user) };
   }
 
+  /* KORTET MAN VALT GÄLLER (2026-10-27). Leo: "trycker jag som
+     studiehjälpare och loggar in som familj så kommer jag in utan problem
+     som familj. fixa det". Det river 2026-10-07 ("spelar egentligen ingen
+     roll vart man klickar"): ett familjekonto under Studiehjälpare och ett
+     studiehjälparkonto under Familj och elev loggas ut igen med ett
+     besked om rätt kort. Bara i själva inloggningen: en session som redan
+     finns skickas fortfarande till sin vy (länkarna i mejlen), och admin
+     loggar in var som helst. Det skyddar inget, det gör RLS; det säger
+     bara åt den som valt fel. Går rollen inte att läsa släpps man in, och
+     vyn dirigerar som förut. */
+  var FEL_KORT = {
+    familj: 'Det här är ett studiehjälparkonto. Välj Studiehjälpare ovanför och logga in där.',
+    studiehjalpare: 'Det här är inget studiehjälparkonto. Välj Familj och elev ovanför och logga in där.'
+  };
+  async function rättKort(supa, svar, kort) {
+    if (!kort) return true;
+    if (svar.barn) return kort === 'familj';
+    var r;
+    try {
+      r = await supa.from('profiles').select('role').eq('id', svar.user.id).maybeSingle();
+    } catch (_) { return true; }
+    var roll = r && !r.error && r.data && r.data.role;
+    if (!roll || roll === 'admin') return true;
+    return kort === 'studiehjalpare' ? roll === 'tutor' : roll !== 'tutor';
+  }
+
   /* Inloggningen i studievyn, studiehjälparvyn och adminvyn: knappen,
      beskedet och vart man hamnar. Ett barn går till /barn, och en vuxen
-     laddar om vyn, som dirigerar efter rollen som förut. */
-  async function loggaInHär(supa, text, lösen) {
+     laddar om vyn, som dirigerar efter rollen som förut. kort är det valda
+     kortet ('familj' eller 'studiehjalpare'); adminvyn har inget. */
+  async function loggaInHär(supa, text, lösen, kort) {
     var msg = NX.$('#auth-msg'), lösenfält = NX.$('#a-pass');
     await medan(NX.$('#auth-submit'), 'Loggar in…', async function () {
       var svar = await loggaIn(supa, text, lösen);
       if (svar.fel) {
         NX.säg(msg, svar.fel, false);
         if (svar.barn) { lösenfält.value = ''; lösenfält.focus(); }
+        return;
+      }
+      if (!(await rättKort(supa, svar, kort))) {
+        await supa.auth.signOut({ scope: 'local' });
+        NX.säg(msg, FEL_KORT[kort], false);
+        lösenfält.value = '';
         return;
       }
       if (svar.barn) location.replace('/barn');

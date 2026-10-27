@@ -574,7 +574,8 @@ villkor, ingen ruta för den som godkänt eller när funktionen saknas, och
 (sedan 2026-10-07) att Skapa konto är borta i båda vyerna, att inloggningen
 är densamma där, och att kontot avgör vyn: en studiehjälpare på
 `/foralder` hamnar på `/larare` och en förälder på `/larare` på
-`/foralder`, utan att studsa. Tryckytorna mäts med `offsetHeight`: rutan glider fram med en skala.
+`/foralder`, utan att studsa; och (sedan 2026-10-27) att kortet gäller i
+inloggningen: fel konto under ett kort loggas ut med ett besked, rätt kommer in. Tryckytorna mäts med `offsetHeight`: rutan glider fram med en skala.
 `prova-intag.js` provar raden i adminvyns panel.
 
 ### Webbläsarprovet för familjens faktura (2026-10-06, borttaget 2026-10-21)
