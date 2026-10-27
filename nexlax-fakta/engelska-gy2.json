@@ -1,0 +1,337 @@
+{
+ "Läsa och analysera": {
+  "mal": [
+   "Analysera miljö, berättare, stämning och symbolik i en kort text.",
+   "Använda begrepp som setting, narrator, symbol, tone och theme, och stödja påståenden med citat.",
+   "Följa innehåll, ton och struktur i en essä och en åsiktstext.",
+   "Känna igen självironi, direkt tilltal och citattecken som visar distans."
+  ],
+  "fakta": [
+   "Setting är tid, plats och stämning. Narrator är rösten som berättar: i första person säger berättaren I, i tredje person he, she eller ett namn.",
+   "En symbol är en sak som står för en idé. Theme är huvudtanken eller budskapet, och tone är skribentens inställning till ämnet.",
+   "Stöd varje påstående i en analys med ett kort citat. Skiftar stämningen: citera något från före och något från efter skiftet.",
+   "En åsiktstext (opinion piece) argumenterar för skribentens syn. Självironi och direkt tilltal (you) ger en lätt, informell ton, men ämnet kan ändå vara allvarligt.",
+   "Citattecken runt ett enstaka ord kan visa att skribenten inte helt godtar ordet. Ett stycke som nyanserar visar att saken inte är svart eller vit."
+  ],
+  "exempel": [
+   [
+    "What kind of image is 'The city breathed slowly in the heat'?",
+    "Personification: staden får en mänsklig handling, att andas."
+   ]
+  ],
+  "ord": [
+   [
+    "simile",
+    "liknelse med like eller as"
+   ],
+   [
+    "personification",
+    "besjälning, en sak får mänskliga egenskaper"
+   ],
+   [
+    "mood",
+    "stämningen i en text"
+   ],
+   [
+    "nuance",
+    "nyans, att visa att något inte är svart eller vitt"
+   ]
+  ],
+  "tips": "Fortsätter du en text: behåll samma person, samma tempus och samma ton."
+ },
+ "Argumentera": {
+  "mal": [
+   "Skriva en diskuterande text med fördelar, nackdelar och en slutsats.",
+   "Formulera en tes och topic sentences.",
+   "Presentera ett motargument rättvist och bemöta det.",
+   "Mildra påståenden med hedging och skriva formellt och sammanhängande."
+  ],
+  "fakta": [
+   "En diskuterande text belyser ämnet från mer än ett håll. Inledningen presenterar ämnet, varför det är viktigt nu och vad texten tar upp.",
+   "Tesen (thesis) är din ståndpunkt i en tydlig mening. En topic sentence står först i ett stycke och säger vad stycket handlar om.",
+   "Ett starkt motargumentstycke återger den andra sidan rättvist (Some people claim that …) och svarar med ett skäl (However, …).",
+   "Hedging betyder att du inte överdriver: ord som might, can, arguably och tends to gör ett påstående försiktigare och svårare att avfärda.",
+   "Sammanhang (cohesion) skapar du med pronomen som syftar bakåt, synonymer i stället för upprepning och bindeord. Formella ord: purchase (buy), require (need), assist (help)."
+  ],
+  "exempel": [
+   [
+    "Hedge the claim: 'Homework improves results.'",
+    "Till exempel: 'Homework may improve results for some students.'"
+   ]
+  ],
+  "ord": [
+   [
+    "counterargument",
+    "motargument"
+   ],
+   [
+    "rebuttal",
+    "bemötande av ett motargument"
+   ],
+   [
+    "In conclusion",
+    "sammanfattningsvis; inleder en slutsats"
+   ],
+   [
+    "cohesion",
+    "hur meningarna hänger ihop så att läsaren kan följa med"
+   ]
+  ],
+  "tips": "Ett motargument som du bemöter gör din text starkare, inte svagare."
+ },
+ "Ord och nyanser": {
+  "mal": [
+   "Använda kollokationer, ord som hör ihop på engelska.",
+   "Skilja på ord med nästan samma betydelse men olika klang.",
+   "Välja ett starkare eller mer exakt ord, som furious i stället för very angry."
+  ],
+  "fakta": [
+   "Kollokationer är ord som ofta står tillsammans, och de följer inte alltid svenskan: man säger strong coffee, inte powerful coffee.",
+   "Make används ofta om att skapa något (make a cake, make a plan), do om uppgifter och arbete (do the dishes, do research). Många kombinationer måste du ändå lära dig en och en.",
+   "Ord kan ha samma grundbetydelse men olika klang: slim är positivt, skinny ofta negativt. De kan också skilja i styrka: angry och furious.",
+   "Exakta verb målar en bild: whisper (viska), mutter (muttra) och yell (vråla) säger mer än say."
+  ],
+  "exempel": [
+   [
+    "Välj verb: Can you ___ me a favour?",
+    "do: do someone a favour är en fast kombination."
+   ],
+   [
+    "Vilket ord är beröm: 'confident' eller 'arrogant'?",
+    "confident. Båda handlar om att tro på sig själv, men arrogant är negativt."
+   ]
+  ],
+  "ord": [
+   [
+    "collocation",
+    "kollokation, ord som brukar stå tillsammans"
+   ],
+   [
+    "connotation",
+    "klang, den känsla ett ord väcker utöver betydelsen"
+   ]
+  ],
+  "tips": "Slå upp hela uttrycket, inte bara ordet: exempelmeningar visar vilka ord som hör ihop."
+ },
+ "Engelskans varieteter": {
+  "mal": [
+   "Skilja på accent, dialekt och jargong.",
+   "Förklara varför samma person talar olika i olika situationer.",
+   "Förstå vad en skribent menar och hur hen ser på olika sätt att tala engelska."
+  ],
+  "fakta": [
+   "Engelska är förstaspråk i bland annat Storbritannien, Irland, USA, Kanada, Australien och Nya Zeeland, och varje land har sina varieteter. Ingen av dem är mer rätt än någon annan.",
+   "En accent är hur man uttalar orden. En dialekt omfattar också ordförråd och grammatik.",
+   "Jargong är fackord inom ett yrke eller en grupp och kan vara svår att förstå för den som står utanför. Slang är vardagliga ord som ofta hör till en viss grupp eller tid.",
+   "Brittisk och amerikansk engelska skiljer sig i ord (flat och apartment, lift och elevator) och i stavning (colour och color).",
+   "Samma person byter register efter situation och mottagare, till exempel med kompisar och i ett möte med rektorn."
+  ],
+  "exempel": [
+   [
+    "Vad heter 'autumn' och 'mobile phone' på amerikansk engelska?",
+    "fall och cell phone."
+   ]
+  ],
+  "ord": [
+   [
+    "accent",
+    "uttal"
+   ],
+   [
+    "dialect",
+    "dialekt: uttal, ord och grammatik"
+   ],
+   [
+    "jargon",
+    "jargong, fackord inom ett yrke"
+   ],
+   [
+    "register",
+    "språklig stil som passar en viss situation, formell eller informell"
+   ]
+  ],
+  "tips": "Skilj på vad skribenten berättar att hen har upplevt och vad hen drar för slutsats av det."
+ },
+ "Betoning och inversion": {
+  "mal": [
+   "Betona en del av meningen med It was … who/that och What … is.",
+   "Använda betonande do, does och did för att säga emot eller understryka.",
+   "Använda omvänd ordföljd efter nekande uttryck som never, not only, hardly och no sooner."
+  ],
+  "fakta": [
+   "It was plus det som ska betonas plus who eller that: It was the coach who decided.",
+   "En mening som börjar med What … lägger det viktiga sist: What we need is more time.",
+   "Do, does och did plus grundform betonar: I did call you. She does care.",
+   "Står ett nekande eller begränsande uttryck först byter hjälpverb och subjekt plats: Never have I …, Not only was she …, Only then did we …",
+   "Fasta par: Hardly … when och No sooner … than. Inversion är formell eller dramatisk och hör mest till skrift och tal inför publik."
+  ],
+  "exempel": [
+   [
+    "Skriv om med inversion: I have seldom heard such a good speech.",
+    "Seldom have I heard such a good speech. Seldom står först, och hjälpverbet have kommer före subjektet I."
+   ]
+  ],
+  "ord": [
+   [
+    "cleft sentence",
+    "kluven mening, som It was … who"
+   ],
+   [
+    "emphasis",
+    "betoning, eftertryck"
+   ],
+   [
+    "inversion",
+    "omvänd ordföljd: hjälpverbet före subjektet"
+   ],
+   [
+    "auxiliary verb",
+    "hjälpverb, som have, be, do och de modala verben"
+   ]
+  ],
+  "tips": "Finns inget hjälpverb i meningen? Lägg till do, does eller did: She rarely smiles blir Rarely does she smile."
+ },
+ "Villkor och konjunktiv": {
+  "mal": [
+   "Bygga blandade villkorssatser där villkoret och följden hör till olika tider.",
+   "Använda formella villkor utan if: Had I known, Should you need och Were it not for.",
+   "Använda konjunktiv och dåtid efter till exempel It is essential that, It’s time och I’d rather."
+  ],
+  "fakta": [
+   "Förfluten orsak, följd nu: If I had saved money, I would be rich now.",
+   "Orsak nu eller alltid, följd i det förflutna: If I were braver, I would have said something.",
+   "I formell engelska kan if strykas och verbet flyttas först: Had we known …, Should you need …, Were it not for …",
+   "Efter recommend, suggest, insist och essential that kan verbet stå i grundform, konjunktiv: It is vital that she be informed. Det går också att skriva should: that she should be informed.",
+   "Efter It’s time, It’s high time och I’d rather plus en person står dåtid fast det gäller nu: It’s time we left."
+  ],
+  "exempel": [
+   [
+    "Fyll i: If I ___ (not/break) my leg last month, I would be playing in the final today.",
+    "hadn’t broken. Benbrottet hände förra månaden, så villkoret står i past perfect. Följden gäller i dag: would be playing."
+   ]
+  ],
+  "ord": [
+   [
+    "mixed conditional",
+    "blandad villkorssats, där delarna hör till olika tider"
+   ],
+   [
+    "subjunctive",
+    "konjunktiv: verbets grundform efter till exempel insist that"
+   ],
+   [
+    "should you need",
+    "om du skulle behöva"
+   ],
+   [
+    "were it not for",
+    "om det inte vore för"
+   ]
+  ],
+  "tips": "Ta en del i taget och fråga: gäller den här delen då eller nu? Det avgör verbformen."
+ },
+ "Syfte och mottagare": {
+  "mal": [
+   "Avgöra om en text vill informera, övertyga, instruera eller underhålla.",
+   "Se vem en text vänder sig till och hur språket anpassas efter mottagaren.",
+   "Jämföra två texter om samma sak: syfte, stilnivå och ton."
+  ],
+  "fakta": [
+   "Syftet är vad texten vill att läsaren ska göra: veta något, tycka något, kunna något eller ha roligt. En text kan ha flera syften, men oftast ett huvudsyfte.",
+   "Formellt språk: hela ord, passiv form och fasta fraser som We would be grateful if. Informellt: förkortningar, frågor till läsaren och vardagsord.",
+   "Instruktioner har imperativ och steg i ordning. Rapporter och broschyrer har rubriker och punktlistor. Debattexter har en tes och en uppmaning.",
+   "Ton är skribentens attityd: neutral, ironisk, arg, entusiastisk. Leta efter ordval, frågor och humor."
+  ],
+  "exempel": [
+   [
+    "Vem vänder sig texten till? Dear residents, from Monday the car park on Hill Road will be closed for six weeks.",
+    "Till dem som bor i området. Dear residents, exakta uppgifter om när och hur länge och en saklig ton visar att det är ett formellt meddelande som ska informera."
+   ]
+  ],
+  "ord": [
+   [
+    "purpose",
+    "syfte"
+   ],
+   [
+    "audience",
+    "mottagare, publik"
+   ],
+   [
+    "register",
+    "stilnivå, hur formellt språket är"
+   ],
+   [
+    "tone",
+    "ton, skribentens attityd"
+   ],
+   [
+    "call to action",
+    "uppmaning till läsaren att göra något"
+   ]
+  ],
+  "tips": "Fråga dig efter varje text: vem skrev den, till vem, och vad vill avsändaren att läsaren ska göra?"
+ },
+ "Läsa: NP-träning": {
+  "mal": [
+   "Hitta kravet, beläggen och bemötandet av motargument i en debattartikel.",
+   "Förklara varför en skribent tar med en viss uppgift eller jämförelse.",
+   "Tolka berättare, liknelser och symboler i en novell, och vad slutet antyder.",
+   "Hitta ord och uttryck i texten utifrån en förklaring."
+  ],
+  "fakta": [
+   "En debattartikel har ett krav eller en tes, belägg som visar att idén fungerar, svar på invändningar och ofta en uppmaning till läsaren.",
+   "Frågar någon varför skribenten nämner något: tänk på vad uppgiften gör för argumentet. Bygger den trovärdighet, ger den belägg eller bemöter den en invändning?",
+   "En liknelse (like, as) säger något om hur något sker eller känns. En symbol står för något större, som en känsla eller en idé.",
+   "Slutet på en novell antyder ofta hur huvudpersonen har förändrats. Läs sista meningen noga och jämför med början.",
+   "Find an expression that means …: läs stycket frågan pekar på och leta efter ord med samma ordklass och betydelse."
+  ],
+  "ord": [
+   [
+    "objection",
+    "invändning"
+   ],
+   [
+    "evidence",
+    "belägg, stöd för ett påstående"
+   ],
+   [
+    "call to action",
+    "uppmaning till läsaren att göra något"
+   ]
+  ],
+  "tips": "Läs påståenden med not och only extra noga: ett enda ord kan göra dem falska."
+ },
+ "NP-träning: ord och stil": {
+  "mal": [
+   "Förstå och använda akademiska ord i en formell text.",
+   "Bilda substantiv av verb och adjektiv, och använda grekisk och latinsk plural.",
+   "Välja sambandsord för kontrast, tillägg och följd.",
+   "Förstå idiom som är vanliga i debatter och artiklar."
+  ],
+  "fakta": [
+   "Akademisk engelska väljer ofta längre och mer exakta ord: approximately (about), indicate (show), obtain (get).",
+   "Många verb och adjektiv får substantiv på -sion, -tion eller -ance: decide – decision, describe – description, relevant – relevance.",
+   "Några ord har grekisk eller latinsk plural: criterion – criteria, analysis – analyses, thesis – theses.",
+   "By contrast och in contrast jämför två saker. On the contrary betyder tvärtom och avvisar något som just sagts. Furthermore lägger till, och hence visar följd.",
+   "Idiom i debatter beskriver ofta något i bild: a slippery slope är ett första steg som sägs leda till något värre."
+  ],
+  "exempel": [
+   [
+    "Make it formal: 'The number of cars went down a lot.'",
+    "The number of cars decreased considerably."
+   ]
+  ],
+  "ord": [
+   [
+    "academic",
+    "akademisk, som i en utredning eller ett vetenskapligt arbete"
+   ],
+   [
+    "linking word",
+    "sambandsord"
+   ]
+  ],
+  "tips": "Formellt betyder inte krångligt: välj det exakta ordet, inte det längsta."
+ }
+}

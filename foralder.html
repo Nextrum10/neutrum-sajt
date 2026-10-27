@@ -8,6 +8,8 @@
 <link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
 <link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/studievy.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Studievy">
 <link rel="mask-icon" href="/favicon.svg" color="#643820">
 <title>Studievy — Nextrum</title>
 <meta name="robots" content="noindex">
@@ -27,12 +29,12 @@
      jordpaletten — utan den blir vyn vit och främmande. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=39f762c5">
-<link rel="stylesheet" href="nextrum-vy.css?v=28bd9b9c">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ecea07e">
+<link rel="stylesheet" href="nextrum-vy.css?v=f5835352">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=714f2c7e">
-<link rel="stylesheet" href="nextrum-uppgifter.css?v=f9716512">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=2e5a5f97">
+<link rel="stylesheet" href="nextrum-uppgifter.css?v=02e2627f">
 </head>
 <body class="vy">
 
@@ -204,8 +206,7 @@
         <a href="#meddelanden" data-sek="meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>Meddelanden</a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Konto</span>
-        <a href="#erbjudanden" data-sek="erbjudanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3.5 13.5V3.5h10l7.1 7.1a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.4"/></svg>Erbjudanden</a>
-        <a href="#betalning" data-sek="betalning"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg>Betalning</a>
+        <a href="#betalning" data-sek="betalning"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg>Betalning &amp; planer</a>
         <a href="#profil" data-sek="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8"/></svg>Profil &amp; inställningar</a>
       </nav>
 
@@ -563,98 +564,38 @@
         </div>
       </section>
       <!-- ============================================================
-           ERBJUDANDEN (Fas 16.1)
-           Planer och klippkort: timmar som köps i förväg till ett lägre
-           timpris och dras när familjen föreslår ett pass (Fas 22.4;
-           förut när det bekräftades). Priserna ritas av
-           ritaErbjudanden() ur erbjudanden_pris, samma vy som prissidan
-           och stripe-checkout läser. Ett köp går genom samma kassa som
-           ett pass; dragningen genom klippkort-betala.
-
-           Klippkorten var en kolumn bredvid planerna som fälls ut, som
-           på prissidan (2026-09-27), och hette Fyll timbanken från
-           2026-10-12. De säljs inte sedan 2026-10-22 (Leo: tre planer,
-           4, 8 och 12 timmar): ritaErbjudanden() visar bara planerna, och
-           stripe-checkout nekar ett nytt köp. Köpta timmar står kvar
-           under Er timbank och betalar passen till sin sista dag.
+           BETALNING & PLANER (Fas 14.2, Betala nu sedan 2026-10-21, och
+           ihop med Erbjudanden sedan 2026-10-27)
+           Leo 2026-10-27: "Betalning och erbjudanden ska struktureras om,
+           de är de fulaste sidorna på studievyn så de måste se bättre ut,
+           finare och mer finslipen design på de planerna som visas upp de
+           ska säljas in på studievyn bättre. Och de ska också bli en.
+           Erbjudanden kan du integrera med betalning", och familjen betalar
+           "antingen ... direkt med stripe med kort eller med klarna, på
+           enskilda lektioner samt planer".
+           En sektion, i den ordning familjen behöver den: summan, det som
+           ska betalas (ritaAttBetala), timbanken (ritaTillgängliga),
+           planerna (ritaErbjudanden, ur erbjudanden_pris, samma vy som
+           prissidan och stripe-checkout läser), eget upplägg och sist det
+           betalda (ritaBetalda). Adressen #erbjudanden leder hit, till
+           planerna (ALIAS i nextrum-studie-vy.js): den står i gamla mejl och
+           i kassans återvändsadress. Fyll timbanken säljs inte sedan
+           2026-10-22; köpta timmar står kvar under Er timbank.
            ============================================================ -->
-      <section class="vy-sek vy-sek-smal" data-sek="erbjudanden" hidden>
+      <section class="vy-sek vy-sek-smal bet-sek" data-sek="betalning" hidden>
         <div class="vy-sek-topp">
           <div>
-            <h2>Erbjudanden</h2>
-            <p>Fyll er timbank i förväg med en plan, som gör timmen billigare och gäller i 30 dagar. När ni föreslår ett pass betalar timmarna det av sig själva, i stället för kortet, och säger er studiehjälpare nej kommer de tillbaka. Betalar ni pass för pass används inte timbanken.</p>
-          </div>
-        </div>
-        <div class="stack">
-          <p class="ok-msg" id="erb-msg"></p>
-
-          <!-- 2026-10-15 (Leo: "det ska stå som erbjudande i deras erbjudanden.
-               sen när de köpt sin plan för första gången så ändras synen på
-               erbjudande och man får inte längre gratis timme", och samma
-               kväll: "har man en rabattkod får man ändå gratis timmen",
-               "alltså den första"). Rutan står när forsta_timmen_lage() säger
-               att timmen inte är tagen, och går när den första planen fått den. -->
-          <div class="dbox erb-erbjudande" id="erb-forsta-box" hidden>
-            <h5>Erbjudande</h5>
-            <b class="erb-erbjudande-rubrik">Första timmen gratis</b>
-            <p>Köp er första plan, så får den en timme till, gratis: köper ni en plan med 8 timmar får ni 9. Timmen dras först och gäller i 60 dagar från köpet.</p>
-            <p class="erb-erbjudande-not">Gäller er första plan, en gång.</p>
-          </div>
-
-          <div class="dbox" id="erb-mina-box" hidden>
-            <h5>Er timbank</h5>
-            <div id="erb-mina"></div>
-          </div>
-
-          <div class="dbox">
-            <h5>Planer</h5>
-            <!-- 2026-10-13, och bara planerna sedan 2026-10-21 (koder_for_planer,
-                 Leo: "Båda gäller ENBART planköp, aldrig enskilda pass"). Koden
-                 prövas av kolla_rabattkod_kop och dras av stripe-checkout; priset
-                 räknas i databasen. Raden visas bara när familjen kan köpa en plan. -->
-            <div class="erb-kod" id="erb-kod-rad" hidden>
-              <label class="erb-kod-et" for="erb-kod">Kod till en plan</label>
-              <input class="inp" id="erb-kod" maxlength="40" autocomplete="off" autocapitalize="characters"
-                     spellcheck="false" enterkeyhint="done" placeholder="Rabattkod eller partnerkod, om ni har en">
-              <button type="button" class="btn btn-ghost btn-sm" id="erb-kod-anvand">Använd</button>
-              <p class="erb-kod-svar" id="erb-kod-svar" aria-live="polite"></p>
-            </div>
-            <div class="erb-grid" id="erb-planer"><div class="loading">Hämtar</div></div>
-          </div>
-
-          <!-- 2026-10-22 (Leo: "Behöver ni ett eget upplägg? Kontakta oss."),
-               samma ruta som på prissidan. Knappen går till
-               kontaktformuläret på FAQ-sidan, i en ny flik så att vyn står
-               kvar, och formuläret börjar meddelandet med Eget upplägg. -->
-          <div class="dbox erb-eget">
-            <h5>Eget upplägg</h5>
-            <p class="erb-eget-fraga">Behöver ni ett eget upplägg? Kontakta oss.</p>
-            <p>Fler timmar i veckan, flera barn eller ett upplägg inför ett prov? Berätta vad ni behöver, så hör vi av oss.</p>
-            <a class="btn btn-ghost" id="erb-kontakt" href="/faq?amne=eget-upplagg#kontakt" target="_blank" rel="noopener">Kontakta oss</a>
-          </div>
-
-          <p class="erb-finstilt">Timmarna gäller pass med ett barn. <a href="/anvandarvillkor#prisgaranti" target="_blank" rel="noopener">Se våra villkor för prisgaranti</a> och <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">för erbjudandena</a>.</p>
-        </div>
-      </section>
-
-      <!-- ============================================================
-           BETALNING (Fas 14.2; Betala nu sedan 2026-10-21)
-           Leo 2026-10-21: familjen betalar "när man fått de bekräftat att
-           man kan boka lektionen", med kort eller Klarna, och alla
-           betalknappar är orange och heter Betala nu. Överst summan, sedan
-           allt som ska betalas (bekräftade pass, genomförda pass och
-           tillägg) och sist det betalda, ritat ur passen av
-           ritaAttBetala() och ritaBetalda().
-           ============================================================ -->
-      <section class="vy-sek vy-sek-smal" data-sek="betalning" hidden>
-        <div class="vy-sek-topp">
-          <div>
-            <h2>Betalning</h2>
+            <h2>Betalning &amp; planer</h2>
             <p>Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir passet kortare än bokat betalar vi tillbaka mellanskillnaden. Tryck Betala nu, så öppnas kassan här på sidan. Kortuppgifterna skriver ni in hos Stripe, aldrig hos oss. Ett förslag som inte blivit ett pass kostar ingenting.</p>
           </div>
         </div>
         <p class="ok-msg" id="bet-msg"></p>
         <div class="bet-sam" id="bet-sam"></div>
+        <div class="bet-satt" aria-label="Betalsätt">
+          <span class="bet-satt-et">Pass och planer betalar ni med</span>
+          <span class="bet-satt-chip">Kort</span><span class="bet-satt-chip">Apple Pay</span><span class="bet-satt-chip">Google Pay</span><span class="bet-satt-chip bet-satt-klarna">Klarna</span>
+          <span class="bet-satt-stripe"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Kassan sköts av Stripe</span>
+        </div>
         <!-- Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21):
              kortet Upplupet tillägg med Betala tillägg nu, och raderna om
              spärren och en betalning som pågår. Dolt utan skuld;
@@ -663,15 +604,78 @@
 
         <div class="vy-grupp"><h3>Att betala</h3><span class="vy-antal ar-gor" id="bet-att-antal"></span></div>
         <div class="vy-kort vy-lista" id="bet-att-betala"><div class="loading">Hämtar</div></div>
-        <!-- Fas 21.3: vägen till köpta timmar där familjen betalar.
-             Syns bara när erbjudandena går att köpa och familjen
-             inte redan har timmar att betala med; ritaErbjudanden()
-             avgör det. -->
-        <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Med en plan blir timmen billigare, och timmarna betalar passen av sig själva. <a href="#erbjudanden">Se planerna</a></p>
+        <!-- Fas 21.3: vägen till planerna där familjen betalar. Syns bara
+             när planerna går att köpa och familjen inte redan har timmar
+             att betala med; ritaErbjudanden() avgör det. -->
+        <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Med en plan blir timmen billigare, och timmarna betalar passen av sig själva. <a href="#betalning/planer">Se planerna</a></p>
 
-        <div class="bet-satt" aria-label="Betalsätt">
-          <span class="bet-satt-et">Ni kan betala med</span>
-          <span class="bet-satt-chip">Kort</span><span class="bet-satt-chip">Apple Pay</span><span class="bet-satt-chip">Google Pay</span><span class="bet-satt-chip bet-satt-klarna">Klarna</span>
+        <div class="dbox bet-bank" id="erb-mina-box" hidden>
+          <h5>Er timbank</h5>
+          <div id="erb-mina"></div>
+        </div>
+
+        <!-- Planerna. Rubriken och fördelarna säljer, korten säger priset
+             och knappen köper (orange, som allt som betalar). Inga tal i
+             markupen: priserna kommer ur erbjudanden_pris. -->
+        <div class="bet-planer" id="bet-planer">
+          <div class="bet-planer-topp">
+            <span class="bet-planer-et">Planer</span>
+            <h3>Billigare timmar, och passen betalar sig själva</h3>
+            <p>Fyll er timbank med en plan, så blir varje timme billigare. När ni föreslår ett pass betalar timmarna det av sig själva, och säger er studiehjälpare nej kommer de tillbaka. Planen gäller i 30 dagar från köpet, och ni betalar den med kort eller Klarna.</p>
+          </div>
+          <ul class="bet-planer-fordelar">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5.5-5.5 3.5 3.5L20 8M15 8h5v5"/></svg>Lägre timpris</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Inget att betala per pass</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 0 1 12.8-5.3L19.5 9M19.5 4.5V9H15"/></svg>Timmen tillbaka vid ett nej</li>
+          </ul>
+          <p class="ok-msg" id="erb-msg"></p>
+
+          <!-- 2026-10-15 (Leo: "det ska stå som erbjudande i deras erbjudanden.
+               sen när de köpt sin plan för första gången så ändras synen på
+               erbjudande och man får inte längre gratis timme", och samma
+               kväll: "har man en rabattkod får man ändå gratis timmen",
+               "alltså den första"). Rutan står när forsta_timmen_lage() säger
+               att timmen inte är tagen, och går när den första planen fått den. -->
+          <div class="erb-erbjudande" id="erb-forsta-box" hidden>
+            <span class="erb-erbjudande-ik" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 10h15v10h-15zM3.5 7h17v3h-17zM12 7v13M12 7c-1.6 0-4.5-.6-4.5-2.4C7.5 3.4 8.6 3 9.4 3 11.2 3 12 7 12 7zm0 0c1.6 0 4.5-.6 4.5-2.4 0-1.2-1.1-1.6-1.9-1.6C12.8 3 12 7 12 7z"/></svg></span>
+            <div>
+              <h5>Erbjudande</h5>
+              <b class="erb-erbjudande-rubrik">Första timmen gratis</b>
+              <p>Köp er första plan, så får den en timme till, gratis: köper ni en plan med 8 timmar får ni 9. Timmen dras först och gäller i 60 dagar från köpet.</p>
+              <p class="erb-erbjudande-not">Gäller er första plan, en gång.</p>
+            </div>
+          </div>
+
+          <div class="erb-grid" id="erb-planer"><div class="loading">Hämtar</div></div>
+
+          <!-- 2026-10-13, och bara planerna sedan 2026-10-21 (koder_for_planer,
+               Leo: "Båda gäller ENBART planköp, aldrig enskilda pass"). Koden
+               prövas av kolla_rabattkod_kop och dras av stripe-checkout; priset
+               räknas i databasen. Raden visas bara när familjen kan köpa en plan,
+               och står hopfälld under korten (2026-10-27): de flesta har ingen kod. -->
+          <details class="erb-kod-ruta" id="erb-kod-rad" hidden>
+            <summary>Har ni en rabattkod eller partnerkod?</summary>
+            <div class="erb-kod">
+              <label class="erb-kod-et" for="erb-kod">Kod till en plan</label>
+              <input class="inp" id="erb-kod" maxlength="40" autocomplete="off" autocapitalize="characters"
+                     spellcheck="false" enterkeyhint="done" placeholder="Skriv koden">
+              <button type="button" class="btn btn-ghost btn-sm" id="erb-kod-anvand">Använd</button>
+              <p class="erb-kod-svar" id="erb-kod-svar" aria-live="polite"></p>
+            </div>
+          </details>
+          <p class="erb-finstilt">Timmarna gäller pass med ett barn. <a href="/anvandarvillkor#prisgaranti" target="_blank" rel="noopener">Se våra villkor för prisgaranti</a> och <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">för planerna</a>.</p>
+        </div>
+
+        <!-- 2026-10-22 (Leo: "Behöver ni ett eget upplägg? Kontakta oss."),
+             samma ruta som på prissidan. Knappen går till
+             kontaktformuläret på FAQ-sidan, i en ny flik så att vyn står
+             kvar, och formuläret börjar meddelandet med Eget upplägg. -->
+        <div class="erb-eget">
+          <div>
+            <b class="erb-eget-fraga">Behöver ni ett eget upplägg?</b>
+            <p>Fler timmar i veckan, flera barn eller ett upplägg inför ett prov? Berätta vad ni behöver, så hör vi av oss.</p>
+          </div>
+          <a class="btn btn-ghost" id="erb-kontakt" href="/faq?amne=eget-upplagg#kontakt" target="_blank" rel="noopener">Kontakta oss</a>
         </div>
 
         <div class="vy-grupp"><h3>Betalda pass</h3><span class="vy-antal" id="bet-antal"></span></div>
@@ -784,6 +788,16 @@
                   <div class="vy-knapprad">
                     <button class="btn btn-ghost btn-sm" type="button" data-intro="foralder">Visa introduktionen</button>
                   </div>
+                </div>
+
+                <!-- ============ APPEN PÅ HEMSKÄRMEN (2026-10-27) ============
+                     Guiden för att lägga vyn på hemskärmen, ritad av
+                     NXHemskarm.profil (nextrum-hemskarm.js). Rutan i hörnet
+                     som visar samma sak går bort för gott med krysset (Leo:
+                     "denna info finns istället på inställningar"). -->
+                <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+                  <h5>Appen på hemskärmen <em>studievyn som en app</em></h5>
+                  <div id="hem-profil" data-hemskarm-roll="foralder"></div>
                 </div>
         </div>
 
@@ -1088,18 +1102,19 @@
 <script src="nextrum-config.js?v=085fa9d6"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-forhandsvisning.js?v=888a4330"></script>
-<script src="nextrum-app.js?v=23460dda"></script>
+<script src="nextrum-app.js?v=9c8ce04d"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-kontakt.js?v=c30f9d7e"></script>
-<script src="nextrum-studie.js?v=44db37fd"></script>
-<script src="nextrum-images.js?v=d1aa8fea"></script>
+<script src="nextrum-kontakt.js?v=8423ea85"></script>
+<script src="nextrum-studie.js?v=b7d07a3b"></script>
+<script src="nextrum-images.js?v=1bcb27bb"></script>
 <script src="nextrum-arbetsyta.js?v=977105ae"></script>
 <script src="nextrum-media.js?v=eb6a8952"></script>
 <script src="nextrum-betalning.js?v=eb4a85db"></script>
 <script src="nextrum-ljud.js?v=6df8ca84"></script>
-<script src="nextrum-uppgifter.js?v=c552f00e"></script>
-<script src="nextrum-introduktion.js?v=1a07de96"></script>
-<script src="nextrum-modulvakt.js?v=0af1bb13"></script>
-<script src="nextrum-studie-vy.js?v=4bc91c13"></script>
+<script src="nextrum-uppgifter.js?v=1a25c3c6"></script>
+<script src="nextrum-introduktion.js?v=0edecad8"></script>
+<script src="nextrum-hemskarm.js?v=e239d6b2"></script>
+<script src="nextrum-modulvakt.js?v=544e71de"></script>
+<script src="nextrum-studie-vy.js?v=7320ae09"></script>
 </body>
 </html>

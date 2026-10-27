@@ -1,0 +1,294 @@
+{
+ "Argumenterande text": {
+  "mal": [
+   "Skriva en tydlig thesis statement som går att argumentera om.",
+   "Skriva topic sentences och undvika cirkelresonemang.",
+   "Presentera ett motargument och bemöta det med en rebuttal.",
+   "Avsluta en essä utan nya argument."
+  ],
+  "fakta": [
+   "En thesis statement säger din ståndpunkt som ett påstående någon kan säga emot, gärna med skälen i korthet. Den är ingen fråga och inget faktum, och står oftast sist i inledningen.",
+   "Varje body paragraph driver en huvudpoäng, och topic sentence säger den i början av stycket.",
+   "Ett cirkelresonemang upprepar påståendet i stället för att ge ett skäl. Ge ett konkret skäl: varför, och hur märks det?",
+   "Counterargument är den andra sidans syn, återgiven rättvist, och rebuttal ditt svar på den. Det visar att du har tänkt på andra synsätt och gör texten mer övertygande.",
+   "Avslutningen sammanfattar och upprepar tesen med nya ord, utan nya argument, och kan sluta med en tanke som stannar kvar hos läsaren."
+  ],
+  "exempel": [
+   [
+    "What is wrong with 'Homework is pointless because it has no point'?",
+    "Det är ett cirkelresonemang. Bättre: 'Homework should be limited because it leaves students less time for sleep and hobbies.'"
+   ]
+  ],
+  "ord": [
+   [
+    "thesis statement",
+    "tes, din ståndpunkt i en mening"
+   ],
+   [
+    "body paragraph",
+    "stycke i textens huvuddel"
+   ],
+   [
+    "rebuttal",
+    "bemötande av ett motargument"
+   ]
+  ],
+  "tips": "Testa din tes: kan någon rimligen säga emot den? Om inte är den ett faktum och ingen tes."
+ },
+ "Språket i en essä": {
+  "mal": [
+   "Välja sambandsord för kontrast, följd, exempel och tillägg.",
+   "Skilja på hur although, however och whereas används i en mening.",
+   "Skriva formellt utan kortformer och slang.",
+   "Välja exakta och akademiska formuleringar."
+  ],
+  "fakta": [
+   "Sambandsord har olika uppgifter: kontrast (however, nevertheless), följd (therefore, as a result), exempel (for instance) och tillägg (furthermore, moreover).",
+   "Although inleder en bisats och binder ihop två satser i samma mening: Although it rained, we played. However står ofta först i en ny mening, följt av komma: It rained. However, we played.",
+   "Whereas ställer två saker mot varandra inne i en mening: Tom likes tea, whereas Ann prefers coffee.",
+   "Formell stil: inga kortformer (it is, inte it's), ingen slang (gonna, stuff) och opersonliga fraser som It can be argued that i stället för I think.",
+   "Välj exakta ord: improve, considerable, harmful. Affect är ett verb (påverka) och effect oftast ett substantiv (effekt)."
+  ],
+  "exempel": [
+   [
+    "Join with although: 'The test was hard. Most students passed.'",
+    "Although the test was hard, most students passed."
+   ]
+  ],
+  "ord": [
+   [
+    "connector",
+    "sambandsord"
+   ],
+   [
+    "contraction",
+    "kortform, som don't och it's"
+   ]
+  ],
+  "tips": "Byt inte sambandsord bara för variationens skull: välj det som visar rätt samband."
+ },
+ "Retoriska grepp": {
+  "mal": [
+   "Känna igen retorisk fråga, hyperbole, understatement, upprepning, anafor och alliteration.",
+   "Skilja på ethos, pathos och logos.",
+   "Känna igen ironi och antites och förklara vilken effekt ett grepp har.",
+   "Bygga upp ett kort övertygande tal."
+  ],
+  "fakta": [
+   "Ethos vädjar till talarens trovärdighet, pathos till publikens känslor och logos till förnuft, fakta och logik. Pathos är inte att ljuga, utan att väcka känslor.",
+   "En retorisk fråga ställs för effekten, inte för att få svar. Hyperbole är en medveten överdrift, understatement en medveten förminskning.",
+   "Repetition upprepar för eftertryck, och anaphora är när samma ord inleder flera meningar. Rule of three är tre led i rad. Alliteration är ord i rad som börjar med samma ljud.",
+   "Ironi säger motsatsen till vad som menas. Antites ställer två motsatta delar mot varandra i en balanserad mening.",
+   "Ett övertygande tal börjar med något som fångar publiken (a hook), säger huvudpoängen, stöder den med skäl och belägg och slutar med en uppmaning (a call to action)."
+  ],
+  "exempel": [
+   [
+    "Which device is used in 'I have told you a million times'?",
+    "Hyperbole: en överdrift som ingen tar bokstavligt."
+   ],
+   [
+    "Which devices are used in 'Big dreams, brave hearts, bright futures'?",
+    "Alliteration (b-ljudet) och rule of three: tre led i rad."
+   ]
+  ],
+  "ord": [
+   [
+    "anaphora",
+    "anafor, samma ord inleder flera meningar"
+   ],
+   [
+    "antithesis",
+    "antites, två motsatser i balans"
+   ],
+   [
+    "understatement",
+    "medveten förminskning"
+   ],
+   [
+    "call to action",
+    "uppmaning till publiken att göra något"
+   ]
+  ],
+  "tips": "Fråga dig inte bara vilket grepp det är, utan vad det gör med publiken: överdriver talaren hela tiden sjunker trovärdigheten."
+ },
+ "Engelskans historia": {
+  "mal": [
+   "Förklara varför engelskan har ord från germanska språk, fornnordiska och franska.",
+   "Följa hur en essä förklarar och tolkar ordens ursprung.",
+   "Förstå bildspråk och skribentens slutsats om lånord."
+  ],
+  "fakta": [
+   "Fornengelskan var ett germanskt språk som anglosaxarna förde till England på 400-talet. Många vardagsord kommer därifrån.",
+   "Vikingarna kom till England från slutet av 700-talet, och fornnordiskan gav engelskan många ord, också vardagliga.",
+   "Efter den normandiska erövringen på 1000-talet var franska språket hos dem som styrde England i flera hundra år. Därför finns ofta ett germanskt och ett franskt ord för liknande saker: calf och veal.",
+   "Engelskan har fortsatt att låna ord från språk över hela världen genom handel och andra kontakter.",
+   "Läs efter hur skribenten resonerar: ord som probably och perhaps visar att en förklaring inte är säker."
+  ],
+  "exempel": [
+   [
+    "Which word in each pair came into English through French: 'house – mansion' and 'ask – inquire'?",
+    "mansion och inquire. House och ask är germanska ord från fornengelskan."
+   ]
+  ],
+  "ord": [
+   [
+    "Old English",
+    "fornengelska"
+   ],
+   [
+    "Old Norse",
+    "fornnordiska, vikingarnas språk"
+   ],
+   [
+    "Germanic",
+    "germansk"
+   ],
+   [
+    "loanword",
+    "lånord"
+   ]
+  ],
+  "tips": "Ett bildspråk som 'words are travellers' ska tolkas: fråga dig vad bilden säger om språket."
+ },
+ "Litterära begrepp": {
+  "mal": [
+   "Känna igen hur en berättelse är byggd: förebådande, tillbakablick, in medias res och handlingens delar.",
+   "Beskriva berättaren: första person, allvetande eller opålitlig.",
+   "Skilja mellan tre sorters ironi och förklara satir, allegori, parodi, motiv och tema."
+  ],
+  "fakta": [
+   "Foreshadowing antyder vad som kommer. Flashback visar något som har hänt tidigare. In medias res börjar mitt i handlingen.",
+   "En allvetande berättare vet vad alla tänker. En opålitlig berättare går inte helt att lita på, för att hen ljuger, minns fel eller inte förstår.",
+   "Verbal irony: man säger motsatsen till det man menar. Situational irony: motsatsen till det väntade händer. Dramatic irony: publiken vet mer än personen.",
+   "Satir kritiserar med humor. En allegori är en berättelse där allt står för något annat. En parodi härmar och överdriver för att roa.",
+   "Ett motiv är något konkret som återkommer. Temat är den stora frågan texten handlar om."
+  ],
+  "exempel": [
+   [
+    "En flicka berättar en novell i jagform. Hon säger att hon aldrig är rädd, men berättar också att hon sover med lampan tänd varje natt. Vad säger det om henne som berättare?",
+    "Hon är en opålitlig berättare. Det hon påstår stämmer inte med det hon gör, och läsaren förstår mer än hon säger."
+   ]
+  ],
+  "ord": [
+   [
+    "protagonist",
+    "huvudperson"
+   ],
+   [
+    "antagonist",
+    "motståndare, den eller det som står emot huvudpersonen"
+   ],
+   [
+    "epiphany",
+    "plötslig insikt, ofta en vändpunkt"
+   ],
+   [
+    "climax",
+    "höjdpunkten i handlingen"
+   ],
+   [
+    "motif",
+    "något konkret som återkommer i en text"
+   ],
+   [
+    "theme",
+    "det en text handlar om på djupet"
+   ]
+  ],
+  "tips": "Stöd alltid ett begrepp med ett kort citat: säg inte bara att det är ironi, visa var och förklara varför."
+ },
+ "Akademisk stil": {
+  "mal": [
+   "Välja referatverb som visar hur du och källan ser på ett påstående.",
+   "Skilja mellan citat och referat, och ange källan i båda fallen.",
+   "Skriva kompakt och sakligt med nominaliseringar, opersonliga formuleringar och participfraser som syftar rätt."
+  ],
+  "fakta": [
+   "Referatverb har olika klang: show och demonstrate säger att något är visat, claim håller ofta avstånd, suggest är försiktigt, admit och concede medger.",
+   "Ett citat är källans exakta ord inom citattecken. Ett referat är idén med dina egna ord. Båda behöver en hänvisning, annars är det plagiat.",
+   "Nominalisering gör verb till substantiv: decide blir decision, fail blir failure. Det ger täta och sakliga meningar, men för många blir tunga.",
+   "Opersonliga formuleringar som It can be argued that och The results suggest gör texten saklig utan I.",
+   "En participfras först i meningen syftar på subjektet: Having read the report, the committee changed its mind."
+  ],
+  "exempel": [
+   [
+    "Gör om till en akademisk mening: People started using phones more, so they read fewer newspapers.",
+    "Till exempel: The increase in phone use led to a decline in newspaper reading. Verben blir substantiv, increase och decline, och led to visar orsaken."
+   ]
+  ],
+  "ord": [
+   [
+    "reporting verb",
+    "referatverb, som argue, claim och suggest"
+   ],
+   [
+    "paraphrase",
+    "referat: källans idé med egna ord"
+   ],
+   [
+    "quotation",
+    "citat: källans exakta ord"
+   ],
+   [
+    "plagiarism",
+    "plagiat: att ge ut någon annans text eller idé som sin egen"
+   ],
+   [
+    "et al.",
+    "och andra, när en källa har flera författare"
+   ],
+   [
+    "nominalisation",
+    "att göra ett verb eller adjektiv till ett substantiv"
+   ]
+  ],
+  "tips": "Läs din participfras och fråga: vem gör det här? Svaret ska vara meningens subjekt."
+ },
+ "Granska argument": {
+  "mal": [
+   "Känna igen vanliga argumentationsfel och kunna deras engelska namn.",
+   "Skilja mellan samband och orsak, och mellan en anekdot och belägg.",
+   "Granska en debattext: tes, belägg, medgivanden och svagheter i resonemanget."
+  ],
+  "fakta": [
+   "Ad hominem angriper personen. Straw man förvränger motståndarens åsikt. False dilemma låtsas att det bara finns två val.",
+   "Slippery slope påstår att ett litet steg leder till en kedja av katastrofer. Hasty generalisation drar en stor slutsats ur få fall.",
+   "Att två saker hänger ihop betyder inte att den ena orsakar den andra. Leta efter en tredje förklaring.",
+   "En anekdot fångar intresset men bevisar lite. Starka belägg är undersökningar som är tillräckligt stora och har granskats.",
+   "Ett medgivande, To be fair …, gör en text trovärdigare. Ett argument med fel kan ändå ha en sann slutsats."
+  ],
+  "exempel": [
+   [
+    "Vilket fel? Everyone I know loves the new timetable, so all pupils must love it.",
+    "Hasty generalisation. Skribentens vänner är för få och inget representativt urval av alla elever."
+   ]
+  ],
+  "ord": [
+   [
+    "fallacy",
+    "argumentationsfel"
+   ],
+   [
+    "correlation",
+    "samband"
+   ],
+   [
+    "causation",
+    "orsakssamband"
+   ],
+   [
+    "anecdote",
+    "kort berättelse om ett enskilt fall"
+   ],
+   [
+    "concession",
+    "medgivande"
+   ],
+   [
+    "claim",
+    "påstående"
+   ]
+  ],
+  "tips": "Fråga vid varje påstående: hur vet skribenten det? Är svaret en enda historia eller ett starkt ord som clearly, granska extra noga."
+ }
+}

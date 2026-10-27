@@ -1161,6 +1161,38 @@ const NXStart = (function () {
     });
   }
 
+  /* ============================================================
+     BOKNINGEN PÅ SÅ FUNGERAR NEXTRUM (2026-10-27)
+     Passet i scenen går igenom fyra lägen medan det syns: ni föreslår,
+     studiehjälparen bekräftar, ni betalar, ni flyttar. Skriptet byter
+     bara data-steg; färgerna, tiderna och knappen följer i CSS
+     (nextrum-sidor.css avsnitt 5d). Högst tre varv, sedan står det på
+     betalt, som markupen. Pausat utanför bild och i en dold flik.
+     ============================================================ */
+  function bokscen() {
+    const sc = $('[data-bokscen]');
+    if (!sc || !rörelse) return;
+    const TID = [2600, 2900, 2300, 2700];
+    let i = 0, varv = 0, timer = null, synlig = false, klar = false;
+    sc.setAttribute('data-steg', '0');
+    function nästa() {
+      clearTimeout(timer);
+      if (klar || !synlig || document.hidden) return;
+      timer = setTimeout(() => {
+        i = (i + 1) % TID.length;
+        if (i === 0 && ++varv >= 3) { klar = true; sc.setAttribute('data-steg', '2'); return; }
+        sc.setAttribute('data-steg', String(i));
+        nästa();
+      }, TID[i]);
+    }
+    if (!('IntersectionObserver' in window)) { sc.setAttribute('data-steg', '2'); return; }
+    new IntersectionObserver(p => {
+      synlig = p.some(x => x.isIntersecting);
+      if (synlig) nästa(); else clearTimeout(timer);
+    }, { threshold: 0.4 }).observe(sc);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(timer); else nästa(); });
+  }
+
   function allt() {
     if (rörelse) document.documentElement.classList.add('nx-sr');
     prova('ordfyll', ordfyll);
@@ -1174,6 +1206,7 @@ const NXStart = (function () {
     prova('studievy', studievy);
     prova('sidhuvud', sidhuvud);
     prova('stegFoton', stegFoton);
+    prova('bokscen', bokscen);
   }
 
   allt();

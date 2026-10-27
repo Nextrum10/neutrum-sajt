@@ -136,6 +136,8 @@
          && typeof NXStudie.villkorFörst === 'function' && typeof NXStudie.notisruta === 'function',
        'nextrum-studie.js'],
       [typeof NXIntro !== 'undefined' && typeof NXIntro.visa === 'function', 'nextrum-introduktion.js'],
+      /* Studievyn på hemskärmen (2026-10-27): guiden under Profil och rutan i hörnet. */
+      [typeof NXHemskarm !== 'undefined' && typeof NXHemskarm.profil === 'function', 'nextrum-hemskarm.js'],
       /* Bokningsytan: studievyn läser ämnena ur den sedan barnets förslag
          (2026-10-12), och granskningen av ett förslag finns bara i den nya. */
       [typeof NXArbete !== 'undefined' && Array.isArray(NXArbete.BOKA_AMNEN), 'nextrum-arbetsyta.js'],

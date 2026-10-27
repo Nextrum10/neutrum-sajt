@@ -1,0 +1,329 @@
+{
+ "Stavning": {
+  "mal": [
+   "Stava ng-ljudet med ng, med n före k och med gn.",
+   "Stava j-ljudet med j, g, hj, lj, dj eller gj.",
+   "Rätta felstavade ord i en mening."
+  ],
+  "fakta": [
+   "Ng-ljudet stavas oftast ng: lång, gunga.",
+   "Före k skrivs ng-ljudet bara med n: tanke, länk.",
+   "I några ord stavas ng-ljudet gn: lugn, ugn, dygn.",
+   "J-ljudet stavas oftast j: jacka, jul. Före e, i, y, ä och ö kan det stavas g: ge, gärna, gissa.",
+   "J-ljudet kan också stavas hj (hjälm), lj (ljud), dj (djungel) och gj (gjort). De orden lär du dig ett och ett."
+  ],
+  "exempel": [
+   [
+    "Ska det stå ”hjort” eller ”jort”?",
+    "”Hjort”. Det är ett av orden där j-ljudet stavas hj."
+   ],
+   [
+    "Ska det stå ”lugn” eller ”lungn”?",
+    "”Lugn”. I det ordet stavas ng-ljudet gn."
+   ]
+  ],
+  "ord": [
+   [
+    "ng-ljud",
+    "ljudet sist i ”lång”"
+   ],
+   [
+    "j-ljud",
+    "ljudet först i ”jul”"
+   ],
+   [
+    "mjuka vokaler",
+    "e, i, y, ä och ö"
+   ]
+  ],
+  "tips": "Ord i samma familj stavas likadant: lugn, lugnt och lugna har alla gn."
+ },
+ "Ordklasser": {
+  "mal": [
+   "Välja en eller ett framför ett substantiv.",
+   "Skriva substantiv i singular och plural, i obestämd och bestämd form.",
+   "Jämföra med adjektiv: stor, större, störst.",
+   "Böja adjektiv som inte följer regeln."
+  ],
+  "fakta": [
+   "Substantiv är en-ord eller ett-ord: en penna, ett bord.",
+   "Ett substantiv har fyra former: en hatt, hatten, hattar, hattarna. Det är obestämd och bestämd form, i singular och plural.",
+   "Några substantiv ändras mer i plural: en fot blir fötter, en gås blir gäss.",
+   "Adjektiv jämförs i tre steg: mjuk, mjukare, mjukast. När du jämför två saker säger du ”än”: Tröjan är mjukare än jackan.",
+   "Några adjektiv följer inte regeln: ung, yngre, yngst; dålig, sämre, sämst; låg, lägre, lägst."
+  ],
+  "exempel": [
+   [
+    "Skriv de fyra formerna av ”ett lejon”.",
+    "Ett lejon, lejonet, lejon, lejonen. I plural obestämd form ändras inte ordet."
+   ],
+   [
+    "Fortsätt: tung, tyngre, …",
+    "Tyngst. Tung byter vokal: tung, tyngre, tyngst."
+   ]
+  ],
+  "ord": [
+   [
+    "singular",
+    "en av något: en hatt"
+   ],
+   [
+    "plural",
+    "flera av något: hattar"
+   ],
+   [
+    "obestämd form",
+    "en hatt, hattar"
+   ],
+   [
+    "bestämd form",
+    "hatten, hattarna"
+   ],
+   [
+    "komparation",
+    "när ett adjektiv jämförs: mjuk, mjukare, mjukast"
+   ]
+  ],
+  "tips": "Osäker på en eller ett? Säg ordet med både ”en” och ”ett” framför och lyssna efter vilket som låter rätt."
+ },
+ "Meningar och skiljetecken": {
+  "mal": [
+   "Välja punkt, frågetecken eller utropstecken sist i en mening.",
+   "Känna igen en uppmaning.",
+   "Binda ihop meningar med och, men, eller, för och så.",
+   "Förklara vad bindeorden visar."
+  ],
+  "fakta": [
+   "Punkt står efter en mening som berättar, frågetecken efter en fråga och utropstecken efter något man ropar eller känner starkt.",
+   "En uppmaning säger åt någon att göra något: Ta på dig jackan! Den kan sluta med utropstecken eller punkt.",
+   "”Och” lägger till: Jag har en hund och en katt. ”Men” säger emot: Det var soligt men kallt.",
+   "”Eller” ger ett val: Vill du ha te eller saft?",
+   "”För” ger ett skäl: Jag tar paraply, för det regnar. ”Så” ger en följd: Det regnar, så jag tar paraply."
+  ],
+  "exempel": [
+   [
+    "Vilket ord passar? ”Jag var trött, … jag gick och lade mig.”",
+    "”Så”. Att jag gick och lade mig är en följd av att jag var trött."
+   ],
+   [
+    "Vilket tecken passar sist? ”Vilken fin teckning du har ritat”",
+    "Utropstecken. Meningen börjar med ”vilken” men är ingen fråga: den som säger det känner något starkt."
+   ]
+  ],
+  "ord": [
+   [
+    "uppmaning",
+    "en mening som säger åt någon att göra något"
+   ],
+   [
+    "konjunktion",
+    "ett bindeord som binder ihop ord eller meningar: och, men, eller, för, så"
+   ]
+  ],
+  "tips": "”För” och ”så” är lätta att blanda ihop: efter ”för” kommer skälet, efter ”så” kommer följden."
+ },
+ "Ordförråd": {
+  "mal": [
+   "Hitta synonymer, ord som betyder nästan samma sak.",
+   "Byta ett ord mot ett annat som passar i meningen.",
+   "Dela ett sammansatt ord i förled och efterled.",
+   "Förstå vad ett sammansatt ord betyder utifrån efterleden."
+  ],
+  "fakta": [
+   "Synonymer är ord som betyder nästan samma sak: kasta och slänga, smal och tunn.",
+   "Motsatser är inga synonymer: blöt och torr betyder tvärtom.",
+   "Ett sammansatt ord har en förled och en efterled. I ”bokhylla” är ”bok” förled och ”hylla” efterled.",
+   "Efterleden säger vad det är, och förleden säger vilken sort: en fiskmat är mat för fiskar, men en matfisk är en fisk som man äter.",
+   "Ibland kommer ett s mellan delarna: tidning + bud = tidningsbud."
+  ],
+  "exempel": [
+   [
+    "Vilket ord betyder nästan samma sak som ”stark”: kraftig, svag eller långsam?",
+    "Kraftig. Svag är motsatsen, och långsam betyder något helt annat."
+   ],
+   [
+    "Vad är ett ”sommarlov”?",
+    "Ett lov. Efterleden ”lov” säger vad det är, och förleden ”sommar” säger när det är."
+   ]
+  ],
+  "ord": [
+   [
+    "synonym",
+    "ett ord som betyder nästan samma sak som ett annat"
+   ],
+   [
+    "sammansatt ord",
+    "ett ord som är byggt av två ord"
+   ],
+   [
+    "förled",
+    "den första delen i ett sammansatt ord"
+   ],
+   [
+    "efterled",
+    "den sista delen, som säger vad det är"
+   ]
+  ],
+  "tips": "Pröva synonymen i meningen: låter meningen fortfarande rätt och betyder samma sak?"
+ },
+ "Läsförståelse": {
+  "mal": [
+   "Hitta ledtrådar i en berättelse och dra slutsatser av dem.",
+   "Läsa en faktatext och hitta fakta och viktiga ord i den.",
+   "Säga vad en text vill, alltså textens syfte."
+  ],
+  "fakta": [
+   "Ibland står svaret rakt ut i texten. Ibland får du lägga ihop ledtrådar och dra en slutsats.",
+   "En ledtråd är en detalj som hjälper dig att förstå, som spår i snön som visar vart någon har gått.",
+   "En faktatext vill informera, alltså ge kunskap. En berättelse vill underhålla, alltså vara spännande eller rolig att läsa.",
+   "Viktiga ord i en faktatext förklaras ofta i texten. Läs meningen där ordet står första gången.",
+   "Läs noga vad frågan ber om. ”Räkna inte …” och ”Skriv ordet ur texten” är en del av uppgiften."
+  ],
+  "exempel": [
+   [
+    "Läs: ”Det var lera på Elins stövlar, och hennes jacka var blöt.” Vad har Elin nog gjort?",
+    "Varit ute när det regnade. Det står inte i texten, men leran och den blöta jackan är ledtrådar."
+   ]
+  ],
+  "ord": [
+   [
+    "ledtråd",
+    "en detalj i texten som hjälper dig att förstå"
+   ],
+   [
+    "slutsats",
+    "det du tänker ut med hjälp av ledtrådarna"
+   ],
+   [
+    "syfte",
+    "varför texten är skriven"
+   ],
+   [
+    "informera",
+    "berätta fakta så att någon lär sig något"
+   ]
+  ],
+  "tips": "När du drar en slutsats, peka ut ledtrådarna i texten som visar att du har rätt."
+ },
+ "Synonymer och motsatsord": {
+  "mal": [
+   "Hitta synonymer, ord som betyder ungefär samma sak.",
+   "Hitta motsatsord, också till verb.",
+   "Bygga sammansatta ord och dela upp dem i sina delar."
+  ],
+  "fakta": [
+   "Synonymer betyder ungefär samma sak: smart och klok, tyst och stilla.",
+   "Motsatsord betyder tvärtom: hög och låg, tjock och smal.",
+   "Också verb har motsatsord: köpa och sälja, komma och gå.",
+   "Ett sammansatt ord är byggt av två ord: mat + sal = matsal.",
+   "Ibland tappar det första ordet sin sista bokstav: flicka + rum = flickrum."
+  ],
+  "exempel": [
+   [
+    "Skriv motsatsen till verbet ”fråga”.",
+    "”Svara”. Den ena frågar och den andra svarar."
+   ],
+   [
+    "Vilka två ord är ”gatlampa” byggt av?",
+    "Gata och lampa. Gata tappar sitt sista a när orden sätts ihop."
+   ]
+  ],
+  "ord": [
+   [
+    "synonym",
+    "ett ord som betyder ungefär samma sak som ett annat"
+   ],
+   [
+    "motsatsord",
+    "ett ord som betyder tvärtom"
+   ],
+   [
+    "sammansatt ord",
+    "ett ord som är byggt av två ord"
+   ]
+  ],
+  "tips": "Tänk på ordklassen: en synonym eller en motsats till ett verb är också ett verb."
+ },
+ "Fakta och berättelser": {
+  "mal": [
+   "Läsa en faktatext och förklara de viktiga orden i den.",
+   "Ordna det som händer i en förklaring eller en berättelse.",
+   "Förstå hur en person känner sig och varför hen gör något.",
+   "Förklara vad ett ord betyder utifrån texten."
+  ],
+  "fakta": [
+   "En faktatext förklarar hur något är eller fungerar. Den har ofta egna ord för saker, och de förklaras i texten.",
+   "Vid sant eller falskt: leta upp stället i texten och svara efter vad texten säger.",
+   "En berättelse har personer och händelser. Hur någon känner sig förstår du ofta av vad hen gör och säger.",
+   "Ett ord du inte känner till kan du ofta förstå av meningarna runt omkring."
+  ],
+  "exempel": [
+   [
+    "Läs: ”Leo smög nerför trappan för att inte väcka någon.” Vad betyder ”smög”?",
+    "Gick tyst och försiktigt. Det förstår du av att han inte ville väcka någon."
+   ]
+  ],
+  "ord": [
+   [
+    "faktatext",
+    "en text som förklarar hur något är eller fungerar"
+   ],
+   [
+    "berättelse",
+    "en text om personer och något som händer"
+   ],
+   [
+    "sammanhang",
+    "meningarna runt ett ord, som hjälper dig att förstå det"
+   ]
+  ],
+  "tips": "När du ordnar händelser, leta efter tidsord som först, sedan, efter en tid och till slut."
+ },
+ "Berättelsens delar": {
+  "mal": [
+   "Säga vem som är huvudperson och var och när berättelsen utspelar sig.",
+   "Känna igen en jag-berättare.",
+   "Dela upp en berättelse i inledning, problem, lösning och avslutning."
+  ],
+  "fakta": [
+   "Huvudpersonen är den viktigaste personen, den som berättelsen följer mest.",
+   "Miljön är platsen och tiden där berättelsen utspelar sig. Den står ofta redan i första meningen.",
+   "En jag-berättare är en person i berättelsen som berättar själv: ”Jag sprang ut på gården.”",
+   "En berättelse har ofta en inledning, ett problem som blir svårt för huvudpersonen, en lösning och en avslutning.",
+   "Rubriken, eller titeln, är berättelsens namn och står överst."
+  ],
+  "exempel": [
+   [
+    "”En varm sommardag satt Malte på bryggan vid badplatsen.” Vem är huvudperson, och var och när händer det?",
+    "Huvudpersonen är Malte. Platsen är bryggan vid badplatsen, och tiden är en varm sommardag."
+   ]
+  ],
+  "ord": [
+   [
+    "huvudperson",
+    "den som berättelsen mest handlar om"
+   ],
+   [
+    "miljö",
+    "platsen och tiden där berättelsen utspelar sig"
+   ],
+   [
+    "jag-berättare",
+    "en person i berättelsen som berättar själv"
+   ],
+   [
+    "inledning",
+    "berättelsens början"
+   ],
+   [
+    "problem",
+    "det som blir svårt för huvudpersonen"
+   ],
+   [
+    "lösning",
+    "hur det svåra ordnar sig"
+   ]
+  ],
+  "tips": "Leta först efter problemet: det är oftast där berättelsen blir spännande."
+ }
+}

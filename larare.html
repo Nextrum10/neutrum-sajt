@@ -8,6 +8,8 @@
 <link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
 <link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/studiehjalparvy.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Nextrum">
 <link rel="mask-icon" href="/favicon.svg" color="#643820">
 <title>Studiehjälparvy — Nextrum</title>
 <meta name="robots" content="noindex">
@@ -24,12 +26,12 @@
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=39f762c5">
-<link rel="stylesheet" href="nextrum-vy.css?v=28bd9b9c">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ecea07e">
+<link rel="stylesheet" href="nextrum-vy.css?v=f5835352">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      veckorutnätet för tider. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=714f2c7e">
-<link rel="stylesheet" href="nextrum-uppgifter.css?v=f9716512">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=2e5a5f97">
+<link rel="stylesheet" href="nextrum-uppgifter.css?v=02e2627f">
 </head>
 <body class="vy">
 
@@ -1239,6 +1241,16 @@
                   </p>
                   <button class="btn btn-ghost btn-sm btn-block" type="button" data-intro="studiehjalpare">Visa introduktionen</button>
                 </div>
+
+                <!-- ============ APPEN PÅ HEMSKÄRMEN (2026-10-27) ============
+                     Guiden för att lägga vyn på hemskärmen, ritad av
+                     NXHemskarm.profil (nextrum-hemskarm.js). Rutan i hörnet
+                     som visar samma sak går bort för gott med krysset (Leo:
+                     "denna info finns istället på inställningar"). -->
+                <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+                  <h5>Appen på hemskärmen <em>studiehjälparvyn som en app</em></h5>
+                  <div id="hem-profil" data-hemskarm-roll="studiehjalpare"></div>
+                </div>
         </div>
         <!-- ============ DOKUMENTEN (2026-09-29) ============
              Ett avtal och annat Nextrum delat med studiehjälparen. Admin
@@ -1322,19 +1334,20 @@
 <script src="nextrum-config.js?v=085fa9d6"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-forhandsvisning.js?v=888a4330"></script>
-<script src="nextrum-app.js?v=23460dda"></script>
+<script src="nextrum-app.js?v=9c8ce04d"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-kontakt.js?v=c30f9d7e"></script>
-<script src="nextrum-studie.js?v=44db37fd"></script>
-<script src="nextrum-images.js?v=d1aa8fea"></script>
+<script src="nextrum-kontakt.js?v=8423ea85"></script>
+<script src="nextrum-studie.js?v=b7d07a3b"></script>
+<script src="nextrum-images.js?v=1bcb27bb"></script>
 <script src="nextrum-arbetsyta.js?v=977105ae"></script>
 <script src="nextrum-media.js?v=eb6a8952"></script>
 <script src="nextrum-betalning.js?v=eb4a85db"></script>
 <script src="nextrum-ljud.js?v=6df8ca84"></script>
-<script src="nextrum-uppgifter.js?v=c552f00e"></script>
-<script src="nextrum-introduktion.js?v=1a07de96"></script>
+<script src="nextrum-uppgifter.js?v=1a25c3c6"></script>
+<script src="nextrum-introduktion.js?v=0edecad8"></script>
+<script src="nextrum-hemskarm.js?v=e239d6b2"></script>
 <script src="nextrum-provet.js?v=a8310910"></script>
-<script src="nextrum-modulvakt.js?v=0af1bb13"></script>
-<script src="nextrum-larare-vy.js?v=7a11e954"></script>
+<script src="nextrum-modulvakt.js?v=544e71de"></script>
+<script src="nextrum-larare-vy.js?v=44237d9b"></script>
 </body>
 </html>

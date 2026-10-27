@@ -1,0 +1,136 @@
+{
+ "Hej och färger": {
+  "mal": [
+   "Säga hej, hej då och tack på engelska.",
+   "Säga vad färgerna heter på engelska.",
+   "Bygga korta meningar med I am och I like."
+  ],
+  "fakta": [
+   "Hej heter hello eller hi. Hej då heter goodbye eller bye.",
+   "Tack heter thank you, och snälla heter please. Ja är yes, och nej är no.",
+   "Färger: red är röd, blue är blå, green är grön och yellow är gul.",
+   "Jag är heter I am. Jag tycker om heter I like."
+  ],
+  "exempel": [
+   [
+    "Vilken färg har en banan? Säg det på engelska.",
+    "Yellow. En banan är gul."
+   ],
+   [
+    "Hur säger du 'Jag tycker om grönt'?",
+    "I like green."
+   ]
+  ],
+  "ord": [
+   [
+    "colour",
+    "färg"
+   ],
+   [
+    "good morning",
+    "god morgon"
+   ],
+   [
+    "good evening",
+    "god kväll"
+   ]
+  ],
+  "tips": "Hi och bye är kortare och lite mer vardagliga än hello och goodbye."
+ },
+ "Tal och djur": {
+  "mal": [
+   "Räkna från ett till tio på engelska.",
+   "Säga vad några djur heter på engelska.",
+   "Bygga korta meningar om djur."
+  ],
+  "fakta": [
+   "Ett till fem: one, two, three, four, five.",
+   "Sex till tio: six, seven, eight, nine, ten.",
+   "Några djur: dog är hund, cat är katt och bird är fågel.",
+   "En hund heter a dog. Ordet a betyder en eller ett."
+  ],
+  "exempel": [
+   [
+    "Hur mycket är one + one? Svara på engelska.",
+    "Two. Ett plus ett är två."
+   ],
+   [
+    "Hur säger du 'Jag ser en ko'?",
+    "I see a cow."
+   ]
+  ],
+  "ord": [
+   [
+    "animal",
+    "djur"
+   ],
+   [
+    "number",
+    "tal"
+   ]
+  ],
+  "tips": "Många djur heter nästan som på svenska, som giraffe och giraff."
+ },
+ "Familjen och kroppen": {
+  "mal": [
+   "Säga vad de i familjen heter på engelska.",
+   "Säga vad kroppens delar heter på engelska.",
+   "Bygga korta meningar om din familj och din kropp."
+  ],
+  "fakta": [
+   "Mamma heter mum, pappa heter dad, syster heter sister och bror heter brother.",
+   "Grandma är både mormor och farmor. Grandpa är både morfar och farfar.",
+   "Kroppen: head är huvud, eye är öga, nose är näsa och mouth är mun.",
+   "Min heter my: my head, my nose."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'Min näsa är liten'?",
+    "My nose is small."
+   ]
+  ],
+  "tips": "Säg ordet och peka: säg head och peka på huvudet, så minns du det."
+ },
+ "Lek och mat": {
+  "mal": [
+   "Säga vad leksaker och fordon heter på engelska.",
+   "Säga vad några former heter på engelska.",
+   "Säga vad mat och dryck heter på engelska."
+  ],
+  "fakta": [
+   "Leksaker och fordon: ball är boll, car är bil och train är tåg.",
+   "Former: circle är cirkel, square är kvadrat och star är stjärna.",
+   "Mat och dryck: milk är mjölk, water är vatten och bread är bröd.",
+   "Det här är heter This is: This is a ball."
+  ],
+  "exempel": [
+   [
+    "Hur många hörn har en square? Svara på engelska.",
+    "Four. En kvadrat har fyra hörn."
+   ],
+   [
+    "Hur säger du 'Det här är en stjärna'?",
+    "This is a star."
+   ]
+  ],
+  "ord": [
+   [
+    "toy",
+    "leksak"
+   ],
+   [
+    "shape",
+    "form"
+   ],
+   [
+    "food",
+    "mat"
+   ],
+   [
+    "drink",
+    "dryck, eller att dricka"
+   ]
+  ],
+  "tips": "Ice cream är två ord på engelska men ett ord på svenska: glass."
+ }
+}

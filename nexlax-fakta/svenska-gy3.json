@@ -1,0 +1,328 @@
+{
+ "Referera och citera": {
+  "mal": [
+   "Skilja på att citera, parafrasera och sammanfatta.",
+   "Skriva ett referat i presens, med referatmarkörer och utan egna åsikter.",
+   "Hänvisa till källor i löptexten och i en källförteckning.",
+   "Formulera en avgränsad forskningsfråga."
+  ],
+  "fakta": [
+   "Ett citat är ordagrant och står inom citattecken. En parafras säger samma idé med egna ord och är ungefär lika utförlig. En sammanfattning tar bara med det viktigaste och är kortare.",
+   "Ett referat skrivs i presens och innehåller inga egna åsikter. Referatmarkörer som enligt, menar och skriver visar att tankarna är någon annans.",
+   "Neutrala verb som ”skriver” och ”beskriver” tar inte ställning till det källan säger. Ett verb som ”påstår” kan visa att du tvivlar.",
+   "Alla lånade idéer kräver källhänvisning, också parafraser och sammanfattningar. I löptexten skriver du till exempel upphovspersonens efternamn och år inom parentes.",
+   "I källförteckningen står upphovsperson, år, titel och var texten är publicerad. En bra forskningsfråga är avgränsad och går att undersöka."
+  ],
+  "exempel": [
+   [
+    "Parafrasera: ”Den som läser mycket får ett större ordförråd.”",
+    "Till exempel: ”Läser man mycket lär man sig fler ord.” Idén är densamma, orden är dina egna, och källan ska ändå anges."
+   ],
+   [
+    "Gör frågan ”Hur påverkar läsning unga?” mer avgränsad.",
+    "Till exempel: ”Läser elever i årskurs 9 fler böcker om skolan har en daglig lässtund?” Den säger vilka, vad och hur det kan undersökas."
+   ]
+  ],
+  "ord": [
+   [
+    "parafras",
+    "samma idé med egna ord, ungefär lika utförligt"
+   ],
+   [
+    "löptext",
+    "den vanliga brödtexten, till skillnad från rubriker och källförteckning"
+   ]
+  ],
+  "tips": "Byter du bara ut några ord i en mening blir det varken citat eller parafras: skriv om helt, eller citera ordagrant."
+ },
+ "Utredande text": {
+  "mal": [
+   "Bygga en utredande text med inledning, avhandling och avslutning.",
+   "Formulera en frågeställning som går att utreda från flera håll.",
+   "Jämföra och värdera källornas perspektiv och hålla isär dem från din egen slutsats.",
+   "Skriva sakligt med bindeord som visar hur tankarna hänger ihop."
+  ],
+  "fakta": [
+   "Inledningen presenterar ämne, syfte och frågeställning. Avhandlingen redovisar olika perspektiv med stöd i källor. Avslutningen sammanfattar och drar en egen slutsats.",
+   "En utredande text undersöker en fråga från flera håll i stället för att driva en tes. En öppen fråga med hur eller varför passar bättre än en ja- eller nej-fråga.",
+   "Håll isär vad källorna säger och vad du själv drar för slutsats, till exempel med ”min slutsats är att”. För en högre nivå jämför och värderar du perspektiven och avsändarna.",
+   "Bindeord visar hur tankarna hänger ihop: följd (därför, alltså), motsättning (men, å andra sidan) och omformulering (det vill säga).",
+   "Skriv sakligt, utan talspråk och värderingar, och förklara ämnets fackord när det behövs."
+  ],
+  "exempel": [
+   [
+    "Gör om till en öppen frågeställning: ”Är läxor bra?”",
+    "Till exempel: ”Hur påverkar läxor elevers lärande och fritid?” Den bjuder in till flera perspektiv."
+   ]
+  ],
+  "ord": [
+   [
+    "avhandling",
+    "textens huvuddel, där perspektiven redovisas"
+   ],
+   [
+    "perspektiv",
+    "ett sätt att se på frågan, ofta en viss källas"
+   ],
+   [
+    "avsändare",
+    "den som står bakom en text"
+   ]
+  ],
+  "tips": "Två källor som verkar oense kan båda ha rätt om de talar om olika saker: läs noga vad var och en påstår."
+ },
+ "Läsa: NP-träning": {
+  "mal": [
+   "Hitta huvudbudskapet och viktiga detaljer i en saklig text.",
+   "Jämföra två texter: huvudtanke, likheter, skillnader och avsändare.",
+   "Tolka en liknelse och se vad ett argument bygger på.",
+   "Skriva ett sakligt referat och en egen slutsats som bygger på flera källor."
+  ],
+  "fakta": [
+   "Läs texten först och leta upp huvudbudskapet. Leta sedan efter de detaljer frågorna gäller, och svara utifrån texten, inte utifrån det du redan vet.",
+   "Huvudbudskapet är det texten vill säga i sin helhet. En detalj stämmer bara om texten säger just det.",
+   "När du jämför två texter: ta reda på vem avsändaren är, vad var och en tycker, var de är överens och var de skiljer sig åt.",
+   "Ett argument kan bygga på fakta, på forskning eller på egen erfarenhet. Textsorten, som debattartikel, blogg eller intervju, säger något om avsändarens syfte.",
+   "Ett sakligt referat återger med referatmarkörer och utan värderingar. En egen slutsats väger ihop källorna och säger något mer än var och en gör."
+  ],
+  "ord": [
+   [
+    "avsändare",
+    "den som står bakom texten"
+   ],
+   [
+    "liknelse",
+    "en jämförelse med ”som”"
+   ],
+   [
+    "huvudbudskap",
+    "det viktigaste texten vill säga"
+   ]
+  ],
+  "tips": "Se efter om texten anger vilka källor den bygger på: det säger något om hur säkra uppgifterna är."
+ },
+ "Vetenskaplig metod": {
+  "mal": [
+   "Förklara hypotes, population, urval, bortfall och kontrollgrupp.",
+   "Skilja på kvalitativa och kvantitativa metoder och förklara validitet.",
+   "Skilja på samband och orsak, och känna igen skensamband.",
+   "Granska en undersökning och formulera en försiktig slutsats."
+  ],
+  "fakta": [
+   "En hypotes är ett antagande som en undersökning ska pröva. Den måste gå att pröva, till exempel genom att jämföra två grupper.",
+   "Populationen är alla som undersökningen vill säga något om, urvalet de som väljs ut och bortfallet de i urvalet som inte deltar. Ett slumpmässigt urval är bättre än ett stort men skevt.",
+   "Hög validitet betyder att undersökningen mäter det den ska mäta. Kvantitativa metoder räknar och mäter många svar, kvalitativa går på djupet, till exempel med intervjuer.",
+   "Att två saker varierar tillsammans bevisar inte att den ena orsakar den andra. Påverkar en bakomliggande faktor båda är det ett skensamband.",
+   "Svarar bara de som vill, eller uppger alla själva sina svar, kan resultatet bli skevt. Skriv att resultatet ”tyder på” något, och generalisera försiktigt."
+  ],
+  "exempel": [
+   [
+    "Av en skolas 400 elever svarar 50 på en enkät. Hur stor del svarade, och vad betyder det?",
+    "50 av 400 är en åttondel, 12,5 %. Bortfallet är stort, så resultatet säger lite om skolans alla elever."
+   ],
+   [
+    "Städer med många brandmän har fler bränder. Orsakar brandmännen bränderna?",
+    "Nej. Stora städer har både fler brandmän och fler bränder: stadens storlek är den bakomliggande faktorn."
+   ]
+  ],
+  "ord": [
+   [
+    "kontrollgrupp",
+    "en jämförelsegrupp som inte får det som prövas"
+   ],
+   [
+    "korrelation",
+    "att två saker varierar tillsammans"
+   ],
+   [
+    "representativt urval",
+    "ett urval som liknar hela populationen"
+   ],
+   [
+    "reliabilitet",
+    "att undersökningen ger samma resultat om den görs om"
+   ]
+  ],
+  "tips": "Fråga alltid: vilka svarade, hur många, och kan något annat förklara resultatet?"
+ },
+ "Retorisk analys": {
+  "mal": [
+   "Beskriva den retoriska situationen och talets kairos.",
+   "Känna igen stilfigurer som anafor, antites, trikolon och retorisk fråga.",
+   "Använda den klassiska dispositionen och talets tre syften i en analys.",
+   "Analysera hur ett tal försöker påverka och var det har svagheter."
+  ],
+  "fakta": [
+   "Den retoriska situationen: vem talar, till vem, om vad, när och varför. Kairos är det rätta tillfället.",
+   "Talets tre syften: docere (undervisa), delectare (behaga) och movere (beröra så att publiken handlar).",
+   "Klassisk disposition: exordium (inledning), narratio (bakgrund), tes och argument, refutatio (bemöta motargument) och peroratio (avslutning).",
+   "Stilfigurer: anafor (upprepning i början), epifor (i slutet), antites (motsatser), trikolon (tretal), hyperbol (överdrift) och ironi.",
+   "En analys räknar inte bara upp greppen. Den visar hur de verkar på publiken och om talet når sitt syfte."
+  ],
+  "exempel": [
+   [
+    "Vilken stilfigur är ”Vi vill ha mindre prat och mer handling”?",
+    "En antites: motsatserna mindre och mer, prat och handling, ställs mot varandra."
+   ]
+  ],
+  "ord": [
+   [
+    "retorisk situation",
+    "sammanhanget talet hålls i: talare, publik, ämne, tid och syfte"
+   ],
+   [
+    "kairos",
+    "det rätta tillfället att säga något"
+   ],
+   [
+    "anafor",
+    "samma ord upprepas i början av flera meningar"
+   ],
+   [
+    "antites",
+    "motsatser ställs mot varandra"
+   ],
+   [
+    "trikolon",
+    "ett tretal, tre led i rad"
+   ],
+   [
+    "refutatio",
+    "den del av talet där motargument bemöts"
+   ]
+  ],
+  "tips": "Fråga dig alltid varför talaren använder ett grepp just där, inte bara vad det heter."
+ },
+ "Litteraturvetenskapliga begrepp": {
+  "mal": [
+   "Använda begrepp som in medias res, ramberättelse och opålitlig berättare.",
+   "Skilja på allegori, symbol, parodi och pastisch.",
+   "Känna igen olika litteraturvetenskapliga läsarter.",
+   "Stödja en tolkning med exempel ur texten."
+  ],
+  "fakta": [
+   "In medias res: berättelsen börjar mitt i handlingen. En ramberättelse rymmer andra berättelser. En opålitlig berättare ger en version som läsaren har skäl att tvivla på.",
+   "Intertextualitet: texten anspelar på andra texter. En parodi härmar för att göra komiskt, en pastisch härmar en stil utan att håna.",
+   "En symbol är en konkret sak som också står för något abstrakt. I en allegori står hela berättelsen för något annat.",
+   "Läsarter: biografisk (författarens liv), genus (kön), postkolonial, marxistisk (klass), psykoanalytisk (det omedvetna) och närläsning (bara texten).",
+   "Samma text kan tolkas på flera sätt, men en tolkning måste stödjas med exempel ur texten."
+  ],
+  "exempel": [
+   [
+    "En roman om djur som gör uppror på en gård kan läsas som en bild av en verklig revolution. Vilket begrepp passar?",
+    "Allegori: berättelsen om djuren står för något annat, här politiska händelser och personer."
+   ]
+  ],
+  "ord": [
+   [
+    "in medias res",
+    "berättelsen börjar mitt i handlingen"
+   ],
+   [
+    "opålitlig berättare",
+    "en berättare vars version läsaren har skäl att tvivla på"
+   ],
+   [
+    "intertextualitet",
+    "att en text samspelar med andra texter"
+   ],
+   [
+    "allegori",
+    "en berättelse där allt står för något annat"
+   ],
+   [
+    "närläsning",
+    "att granska texten noggrant, ord för ord"
+   ],
+   [
+    "kontext",
+    "sammanhanget: tiden och samhället där texten skrevs"
+   ]
+  ],
+  "tips": "Välj läsart efter texten: en roman om fattigdom öppnar för klass, en om könsroller för genus."
+ },
+ "Satslära": {
+  "mal": [
+   "Hitta predikativ, agent och formellt och egentligt subjekt.",
+   "Förklara att svenskan har det finita verbet på andra plats i huvudsatser.",
+   "Hitta fundament och satsadverbial och skilja finita från infinita verbformer.",
+   "Analysera en bisats som satsdel i en längre mening."
+  ],
+  "fakta": [
+   "Predikativ säger något om subjektet eller objektet, ofta efter vara, bli och heta: Han är lärare. Filmen gjorde mig ledsen.",
+   "I ”Det ligger en bok på bordet” är det formellt subjekt och en bok egentligt subjekt. I passiv form visar agenten vem som gör något: av grannen.",
+   "I en huvudsats står det finita verbet på andra plats (V2). Det som står före kallas fundament: I kväll spelar vi match.",
+   "Det finita verbet är tidsböjt (har, kom). Infinitiv (läsa) och supinum (läst) är infinita former.",
+   "Satsadverbial som inte och kanske står efter det finita verbet i en huvudsats men före det i en bisats."
+  ],
+  "exempel": [
+   [
+    "Vilka satsdelar finns i ”I morse var vägarna hala”?",
+    "I morse är adverbial och står i fundamentet, var är predikat, vägarna är subjekt och hala är predikativ, som säger något om vägarna."
+   ]
+  ],
+  "ord": [
+   [
+    "predikativ",
+    "satsdel som beskriver subjektet eller objektet"
+   ],
+   [
+    "agent",
+    "den som utför handlingen i en passiv sats, ofta efter av"
+   ],
+   [
+    "formellt subjekt",
+    "det som fyller subjektets plats utan egen betydelse"
+   ],
+   [
+    "fundament",
+    "platsen före det finita verbet i en huvudsats"
+   ],
+   [
+    "satsadverbial",
+    "ord som säger något om hela satsen, som inte och kanske"
+   ],
+   [
+    "finit verb",
+    "verbet som är böjt i tempus eller är imperativ"
+   ]
+  ],
+  "tips": "Hitta det finita verbet först: allt annat i satsen går att ordna runt det."
+ },
+ "NP-träning: vetenskapligt skrivande": {
+  "mal": [
+   "Skilja på syfte och frågeställning, och ordna inledningen i ett vetenskapligt arbete.",
+   "Skilja på att sammanfatta, analysera och tolka.",
+   "Belägga en tolkning med citat och kommentera citatet.",
+   "Skriva objektivt och ordna en källförteckning."
+  ],
+  "fakta": [
+   "Syftet säger vad arbetet ska uppnå, frågeställningen vad som ska besvaras och metoden hur undersökningen går till. Inledningen går ofta från bakgrund till syfte och frågeställning.",
+   "En sammanfattning återger innehållet. En analys undersöker hur texten är gjord och vad det får för verkan. En tolkning föreslår vad något i texten kan betyda.",
+   "En tolkning behöver stöd i texten. Följ ett citat med en kommentar som förklarar vad det visar.",
+   "Hänvisar du med efternamn och år i texten ska källan också stå i källförteckningen, ordnad i bokstavsordning efter efternamn.",
+   "Skriv objektivt: håll isär fakta och värderingar, och skriv ”tyder på” eller ”pekar på” när resultatet inte bevisar något."
+  ],
+  "exempel": [
+   [
+    "Gör meningen objektiv: ”Den här studien är helt fantastisk och bevisar allt.”",
+    "Till exempel: ”Studien ger stöd för hypotesen.” Värderingen är borta, och påståendet är inte starkare än resultatet."
+   ]
+  ],
+  "ord": [
+   [
+    "belägg",
+    "det i texten eller materialet som stöder ett påstående, till exempel ett citat"
+   ],
+   [
+    "metod",
+    "hur undersökningen går till"
+   ],
+   [
+    "objektiv",
+    "saklig, utan att ta parti"
+   ]
+  ],
+  "tips": "Välj det citat som tydligast visar det du påstår, och låt det aldrig stå utan kommentar."
+ }
+}

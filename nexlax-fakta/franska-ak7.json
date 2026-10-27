@@ -1,0 +1,212 @@
+{
+ "Hälsa och presentera dig": {
+  "mal": [
+   "Hälsa och säga hej då på franska, till en kompis och till en vuxen.",
+   "Fråga hur någon mår och svara.",
+   "Säga vad du heter och fråga vad någon annan heter.",
+   "Välja mellan tu och vous."
+  ],
+  "fakta": [
+   "Bonjour passar till alla, och au revoir säger du när du går. Salut säger du till kompisar, både när ni ses och när ni skiljs.",
+   "Tu säger du till en kompis, ett barn eller någon i familjen. Vous säger du till en vuxen du inte känner, och till flera.",
+   "Ça va ? frågar hur det är, och ça va utan frågetecken betyder att det är bra.",
+   "Je m'appelle betyder jag heter, ordagrant jag kallar mig. Me blir m' framför en vokal.",
+   "På franska står det ett mellanslag före frågetecknet och utropstecknet: Ça va ? Salut !"
+  ],
+  "exempel": [
+   [
+    "Hur säger du hej då, vi ses i kväll, till en kompis?",
+    "Salut, à ce soir ! Salut kan betyda hej då till en kompis, och à ce soir betyder vi ses i kväll."
+   ],
+   [
+    "Hur säger du god kväll till en kvinna du inte känner?",
+    "Bonsoir, madame. Bonsoir är god kväll, och madame säger du artigt till en kvinna."
+   ]
+  ],
+  "ord": [
+   [
+    "madame",
+    "frun, artigt till en kvinna"
+   ],
+   [
+    "monsieur",
+    "herrn, artigt till en man"
+   ],
+   [
+    "merci beaucoup",
+    "tack så mycket"
+   ],
+   [
+    "pardon",
+    "förlåt, ursäkta"
+   ],
+   [
+    "très bien",
+    "mycket bra"
+   ]
+  ],
+  "tips": "Bonne nuit säger du bara när någon ska sova, inte som en hälsning på kvällen."
+ },
+ "Siffror och ålder": {
+  "mal": [
+   "Känna igen, skriva och räkna med de franska talen från 0 till 20.",
+   "Säga hur gammal du är med avoir: j'ai … ans.",
+   "Fråga en kompis hur gammal hen är."
+  ],
+  "fakta": [
+   "Talen 0–10: zéro, un, deux, trois, quatre, cinq, six, sept, huit, neuf, dix.",
+   "Talen 11–16 har egna ord: onze, douze, treize, quatorze, quinze, seize.",
+   "17–19 är tio och entalet med bindestreck: dix-sept, dix-huit, dix-neuf. Tjugo heter vingt.",
+   "Åldern har man på franska, med avoir (ha): j'ai … ans, ordagrant jag har … år. Ordet ans ska alltid vara med.",
+   "Tu as quel âge ? frågar en kompis hur gammal hen är, ordagrant du har vilken ålder?"
+  ],
+  "exempel": [
+   [
+    "Räkna på franska: trois + trois.",
+    "Trois är 3. 3 + 3 = 6, och sex heter six."
+   ],
+   [
+    "Säg att du är elva år.",
+    "J'ai onze ans. Åldern säger du med avoir, och ans ska vara med."
+   ]
+  ],
+  "ord": [
+   [
+    "un an, deux ans",
+    "ett år, två år"
+   ],
+   [
+    "l'âge",
+    "åldern"
+   ]
+  ],
+  "tips": "Glöm inte bindestrecket i dix-sept, dix-huit och dix-neuf."
+ },
+ "Familjen och artiklarna": {
+  "mal": [
+   "Använda ord för familjen.",
+   "Välja bestämd artikel: le, la, l' eller les.",
+   "Välja obestämd artikel: un, une eller des.",
+   "Säga min och din med mon, ma, mes och ton, ta, tes."
+  ],
+  "fakta": [
+   "Alla substantiv är maskulinum eller femininum. Le och un står före maskulina ord, la och une före feminina.",
+   "Framför en vokal eller ett stumt h blir både le och la till l': l'avion, l'histoire.",
+   "I plural är artikeln les eller des, oavsett genus: les frères, des cousines.",
+   "Min heter mon, ma och mes, och din ton, ta och tes. Ordet efter avgör formen, och framför vokal blir ma till mon.",
+   "Franskan har inget genitiv-s: Toms bror blir le frère de Tom, brodern till Tom."
+  ],
+  "exempel": [
+   [
+    "Le, la eller l'? ___ fille (dottern)",
+    "Fille är femininum och börjar inte på vokal, så det blir la fille."
+   ],
+   [
+    "Säg min klocka och min idé. (la montre, l'idée)",
+    "Ma montre, men mon idée. Båda är femininum, men framför vokal blir ma till mon."
+   ]
+  ],
+  "ord": [
+   [
+    "maskulinum",
+    "ord med le eller un, till exempel le père"
+   ],
+   [
+    "femininum",
+    "ord med la eller une, till exempel la mère"
+   ],
+   [
+    "le fils",
+    "sonen"
+   ],
+   [
+    "les grands-parents",
+    "mor- och farföräldrarna"
+   ]
+  ],
+  "tips": "Lär dig varje substantiv med artikeln, så vet du om det är maskulinum eller femininum."
+ },
+ "Être och avoir": {
+  "mal": [
+   "Böja être (vara) i presens.",
+   "Böja avoir (ha) i presens.",
+   "Använda uttryck med avoir, som j'ai faim och j'ai … ans.",
+   "Skilja ils sont (de är) från ils ont (de har)."
+  ],
+  "fakta": [
+   "être: je suis, tu es, il/elle est, nous sommes, vous êtes, ils/elles sont.",
+   "avoir: j'ai, tu as, il/elle a, nous avons, vous avez, ils/elles ont.",
+   "Hunger, törst, rädsla och åldern har man på franska, med avoir: j'ai faim, j'ai … ans. På svenska är man hungrig.",
+   "Ett adjektiv efter être böjs: en flicka skriver contente och fatiguée, och flera får -s: ils sont contents.",
+   "Il a (han har) skrivs utan accent. À med accent är ett annat ord, som betyder till eller i."
+  ],
+  "exempel": [
+   [
+    "Fyll i être: Léa ___ triste. (ledsen)",
+    "Léa kan bytas mot elle, och efter elle kommer est: Léa est triste."
+   ],
+   [
+    "Fyll i avoir: Mes amis ___ un chien.",
+    "Mes amis kan bytas mot ils, och efter ils kommer ont: Mes amis ont un chien."
+   ]
+  ],
+  "ord": [
+   [
+    "être",
+    "vara"
+   ],
+   [
+    "avoir",
+    "ha"
+   ],
+   [
+    "triste",
+    "ledsen"
+   ]
+  ],
+  "tips": "Ils sont (de är) och ils ont (de har) är lätta att blanda ihop: sont börjar med s."
+ },
+ "Skolan och fritiden": {
+  "mal": [
+   "Böja regelbundna -er-verb i presens.",
+   "Säga att du inte gör något med ne … pas.",
+   "Använda ord för skolan och fritiden."
+  ],
+  "fakta": [
+   "Ett -er-verb tappar -er och får en ändelse: je -e, tu -es, il/elle -e, nous -ons, vous -ez, ils/elles -ent.",
+   "Ändelserna -e, -es och -ent hörs inte, så je parle och ils parlent låter likadant. De ska ändå skrivas.",
+   "Ne står före verbet och pas efter: je ne danse pas. Framför vokal blir ne till n': je n'écoute pas.",
+   "Efter aimer står nästa verb i infinitiv: j'aime danser, jag tycker om att dansa.",
+   "Språk skrivs med liten bokstav på franska: l'anglais, le suédois."
+  ],
+  "exempel": [
+   [
+    "Böj danser (dansa) efter nous och vous.",
+    "nous dansons, vous dansez: stammen dans- och ändelserna -ons och -ez."
+   ],
+   [
+    "Säg: Jag tycker inte om att dansa.",
+    "Je n'aime pas danser. Ne blir n' framför aime, pas står efter aime och danser står i infinitiv."
+   ]
+  ],
+  "ord": [
+   [
+    "le foot",
+    "fotboll, kort för le football"
+   ],
+   [
+    "la télé",
+    "tv, kort för la télévision"
+   ],
+   [
+    "les devoirs",
+    "läxorna"
+   ],
+   [
+    "le sport",
+    "idrott, sport"
+   ]
+  ],
+  "tips": "I en nekande mening i skrift ska både ne och pas vara med: ingen av dem räcker ensam."
+ }
+}

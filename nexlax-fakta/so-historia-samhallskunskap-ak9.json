@@ -1,0 +1,305 @@
+{
+ "Industrialiseringen": {
+  "mal": [
+   "Förklara hur den industriella revolutionen började och vad den förändrade.",
+   "Skilja på liberalism, konservatism och socialism.",
+   "Ordna Sveriges väg mot demokrati, från folkskolan till kvinnors rösträtt.",
+   "Läsa ett brev från en utvandrare och dra slutsatser om varför människor emigrerade."
+  ],
+  "fakta": [
+   "Den industriella revolutionen började i Storbritannien i slutet av 1700-talet. Textilindustrin kom först, och James Watts förbättrade ångmaskin drev fabrikerna.",
+   "Samhället delades i en arbetarklass, som sålde sin arbetskraft, och kapitalister, som ägde fabrikerna. Barnarbete var vanligt.",
+   "Liberalism: individens frihet och fri handel. Konservatism: bevara traditioner och ändra försiktigt. Socialism: arbetarna ska gemensamt äga fabrikerna.",
+   "Sverige: folkskolan 1842, Socialdemokraterna 1889, allmän rösträtt för män 1909, och 1921 röstade kvinnor för första gången i ett riksdagsval.",
+   "Skog, järnmalm och vattenkraft gjorde industrin möjlig. Fattigdom, missväxt och brist på jord fick över en miljon svenskar att emigrera till Nordamerika 1850–1930."
+  ],
+  "exempel": [
+   [
+    "Folkskolan infördes 1842 och Socialdemokraterna bildades 1889. Hur många år är det emellan?",
+    "1889 − 1842 = 47. Det är 47 år."
+   ]
+  ],
+  "ord": [
+   [
+    "ideologi",
+    "en samling idéer om hur samhället ska se ut"
+   ],
+   [
+    "arbetarklass",
+    "de som säljer sin arbetskraft, till exempel i fabrikerna"
+   ],
+   [
+    "kapitalist",
+    "den som äger fabriker och maskiner"
+   ],
+   [
+    "folkrörelse",
+    "en rörelse av många vanliga människor, som väckelse-, nykterhets- och arbetarrörelsen"
+   ],
+   [
+    "allmän rösträtt",
+    "att alla vuxna medborgare får rösta, inte bara de rika"
+   ]
+  ],
+  "tips": "I brevet: fråga dig vad Johan har fått i Amerika som han saknade hemma. Där står orsaken till att han reste."
+ },
+ "Världskrigen": {
+  "mal": [
+   "Förklara vad som utlöste första världskriget och vad freden krävde av Tyskland.",
+   "Beskriva hur andra världskriget började och slutade, och vad Förintelsen var.",
+   "Ordna viktiga händelser från 1914 till 1945 i tidsordning.",
+   "Berätta vilka organisationer som bildades efter krigen för att bevara freden."
+  ],
+  "fakta": [
+   "Första världskriget 1914–1918 utlöstes av skotten i Sarajevo mot Österrike-Ungerns tronföljare. Centralmakterna stod mot ententen.",
+   "Vid fronten blev det ställningskrig i skyttegravar. Ryssland lämnade kriget efter revolutionen 1917, och samma år gick USA med på ententens sida.",
+   "Versaillesfreden 1919 krävde att Tyskland betalade krigsskadestånd och lämnade ifrån sig områden. Nationernas förbund bildades för att bevara freden. Efter andra världskriget bildades FN 1945.",
+   "Andra världskriget varade 1939–1945. Hitlers nazistiska parti styrde Tyskland, och nazisterna mördade omkring sex miljoner judar i Förintelsen. Sverige var neutralt i båda krigen.",
+   "De allierade leddes av USA, Storbritannien och Sovjetunionen. Tyskland kapitulerade i maj 1945 och Japan i september, efter atombomberna över Hiroshima och Nagasaki."
+  ],
+  "exempel": [
+   [
+    "Hur många år gick det mellan första världskrigets slut 1918 och andra världskrigets början 1939?",
+    "1939 − 1918 = 21. Det gick 21 år."
+   ]
+  ],
+  "ord": [
+   [
+    "allians",
+    "ett förbund mellan länder som lovar att hjälpa varandra i krig"
+   ],
+   [
+    "ententen",
+    "Storbritannien, Frankrike och Ryssland i första världskriget"
+   ],
+   [
+    "centralmakterna",
+    "Tyskland och Österrike-Ungern med allierade i första världskriget"
+   ],
+   [
+    "ställningskrig",
+    "ett krig där fronten knappt rör sig på lång tid"
+   ],
+   [
+    "ockupera",
+    "när ett land tar militär kontroll över ett annat land"
+   ],
+   [
+    "kapitulera",
+    "att ge upp i ett krig"
+   ]
+  ],
+  "tips": "När årtalet står först i ordna-frågorna räcker det att jämföra årtalen."
+ },
+ "Ekonomi och privatekonomi": {
+  "mal": [
+   "Förklara utbud och efterfrågan, inflation och vad Riksbanken gör.",
+   "Räkna med procent på priser, ränta och ränta på ränta.",
+   "Göra en enkel budget och förklara ord som bruttolön och amortering.",
+   "Förklara varför lån och köp på kredit kan bli dyra."
+  ],
+  "fakta": [
+   "Ökar efterfrågan när det inte finns fler varor stiger oftast priset. Inflation betyder att priserna stiger och pengarna blir mindre värda.",
+   "Riksbankens viktigaste uppgift är stabila priser, och det främsta verktyget är styrräntan. Skatterna är den största inkomsten för stat, regioner och kommuner.",
+   "Procent: 1 % = 0,01. Räntan för ett år = beloppet · räntan i decimalform. 4 % ränta på 2 000 kr är 0,04 · 2 000 = 80 kr.",
+   "Ränta på ränta: står räntan kvar räknas nästa års ränta på det nya beloppet. Med 4 % ränta multiplicerar du med 1,04 för varje år.",
+   "Budget: inkomster − utgifter = det som blir över. Bruttolön är lön före skatt och nettolön lön efter skatt. Hög ränta och avgifter gör lån och kredit dyra."
+  ],
+  "exempel": [
+   [
+    "Du sätter in 5 000 kr på ett konto med 2 % ränta, och räntan får stå kvar. Hur mycket finns det efter två år?",
+    "År 1: 5 000 · 1,02 = 5 100 kr. År 2: 5 100 · 1,02 = 5 202 kr."
+   ],
+   [
+    "En jacka kostar 800 kr och priset höjs med 10 %. Vad kostar den nu?",
+    "10 % av 800 kr är 80 kr. 800 + 80 = 880 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "BNP",
+    "värdet av allt ett land producerar under ett år"
+   ],
+   [
+    "styrränta",
+    "räntan som Riksbanken sätter, och som påverkar bankernas räntor"
+   ],
+   [
+    "lågkonjunktur",
+    "när ekonomin krymper och arbetslösheten ofta ökar"
+   ],
+   [
+    "ekonomiska kretsloppet",
+    "hur pengarna går runt: hushållen arbetar och får lön av företagen och köper företagens varor"
+   ],
+   [
+    "amortering",
+    "att betala tillbaka på ett lån"
+   ],
+   [
+    "kontantinsats",
+    "egna pengar som man betalar när man köper en bostad"
+   ]
+  ],
+  "tips": "Ränta på ränta blir mer än samma ränta två gånger. Räkna år för år."
+ },
+ "Mänskliga rättigheter": {
+  "mal": [
+   "Berätta om FN:s förklaring om de mänskliga rättigheterna och om barnkonventionen.",
+   "Förklara friheter som yttrandefrihet, religionsfrihet, mötesfrihet och föreningsfrihet.",
+   "Förklara vad diskriminering är och vilket skydd lagen ger.",
+   "Förklara varför en fri press är viktig i en demokrati."
+  ],
+  "fakta": [
+   "FN antog den allmänna förklaringen om de mänskliga rättigheterna 1948. Den har 30 artiklar, och rättigheterna är universella.",
+   "FN antog barnkonventionen 1989, och den blev svensk lag 2020. Staten, alltså regering och myndigheter, ansvarar för att rättigheterna följs.",
+   "Diskrimineringslagen har sju grunder: kön, könsöverskridande identitet eller uttryck, etnisk tillhörighet, religion eller annan trosuppfattning, funktionsnedsättning, sexuell läggning och ålder.",
+   "Diskriminering är att missgynnas på grund av en diskrimineringsgrund. Diskrimineringsombudsmannen, DO, är myndigheten som arbetar mot den.",
+   "Europakonventionen gäller som lag i Sverige, och tryckfrihetsförordningen är en grundlag. En fri press granskar makthavarna och ger medborgarna information."
+  ],
+  "exempel": [
+   [
+    "En arbetsgivare säger nej till en sökande bara för att hon är 58 år. Kan det vara diskriminering?",
+    "Ja. Ålder är en av de sju diskrimineringsgrunderna, och hon missgynnas på grund av den."
+   ]
+  ],
+  "ord": [
+   [
+    "universell",
+    "som gäller för alla människor överallt"
+   ],
+   [
+    "konvention",
+    "en överenskommelse mellan länder som de lovar att följa"
+   ],
+   [
+    "religionsfrihet",
+    "rätten att ha en religion, byta religion eller inte ha någon"
+   ],
+   [
+    "makthavare",
+    "de som har makt, som politiker och myndigheter"
+   ]
+  ],
+  "tips": "Lär dig de sju grunderna som en lista. Då ser du direkt vilket alternativ som inte hör dit."
+ },
+ "NP-träning": {
+  "mal": [
+   "Öva på frågor i samma stil som på ett prov, i historia, geografi, religionskunskap och samhällskunskap.",
+   "Förklara orsaker och följder, till exempel till första världskriget och till urbaniseringen.",
+   "Använda begrepp som källkritik, befolkningspyramid, karma och marknadsekonomi.",
+   "Läsa frågorna noga och välja det svar som förklarar bäst."
+  ],
+  "fakta": [
+   "Läs hela frågan och alla alternativ innan du väljer. Ofta är flera nästan rätt, men ett förklarar bäst.",
+   "Orsaker kan vara långsiktiga, sådant som byggs upp under många år, eller en utlösande händelse som sätter igång det hela. Skilj på dem.",
+   "Källkritik: fråga vem som skrev källan, när och varför. Den som vill vinna något på saken kan ha överdrivit eller dolt något.",
+   "Väder är hur det är nu, klimat det genomsnittliga vädret under lång tid. Hållbar utveckling har ett ekologiskt, ett ekonomiskt och ett socialt perspektiv.",
+   "Konsekvensetik ser till följderna, pliktetik till regler och plikter oavsett följderna, och dygdetik till vad en god människa skulle ha gjort."
+  ],
+  "exempel": [
+   [
+    "En reklamfilm från en glassfabrik säger att deras glass är bäst i världen. Hur ska du se på den källan?",
+    "Med försiktighet. Fabriken vill sälja glass, så källan har en tendens. Leta efter en källa som inte tjänar något på saken."
+   ]
+  ],
+  "ord": [
+   [
+    "kalla kriget",
+    "konflikten mellan USA och Sovjetunionen, ungefär 1947–1991, där de aldrig krigade direkt mot varandra"
+   ],
+   [
+    "befolkningspyramid",
+    "ett diagram som visar hur många män och kvinnor det finns i olika åldrar"
+   ],
+   [
+    "marknadsekonomi",
+    "ett system där utbud och efterfrågan styr priserna och vad som tillverkas"
+   ],
+   [
+    "blandekonomi",
+    "marknadsekonomi tillsammans med en stor offentlig sektor som betalas med skatt"
+   ],
+   [
+    "rättsstat",
+    "ett land där lagarna gäller alla lika och domstolarna dömer oberoende av politikerna"
+   ],
+   [
+    "karma",
+    "att alla handlingar får följder, som påverkar återfödelsen"
+   ]
+  ],
+  "tips": "Stryk först de alternativ som är fel, och kontrollera sedan ditt svar mot frågan en gång till."
+ },
+ "Läsa: källor och genomgångar": {
+  "mal": [
+   "Pröva en källa: vilken sorts källa det är, vad den kan berätta och vad den inte kan.",
+   "Hitta fakta och årtal i genomgångar om 1900-talet, religionerna, demokratin och klimatet.",
+   "Räkna ut tiden mellan två årtal ur en tidslinje.",
+   "Skilja på det som står i en text och det man kan dra slutsatser om."
+  ],
+  "fakta": [
+   "En primärkälla kommer från någon som var med, eller från tiden då det hände. En sekundärkälla bygger på andra källor.",
+   "Källkritikens frågor: äkthet (är källan vad den säger sig vara?), samtidighet (hur nära händelsen?), beroende (har den hämtat från andra?) och tendens (vill den påverka?).",
+   "En dagbok eller ett brev visar främst det som den som skrev såg och upplevde. Två personer kan beskriva samma händelse olika, för de har olika perspektiv.",
+   "I en genomgång står svaren under rubrikerna. Läs rubrikerna först och leta under den som passar frågan.",
+   "Tiden mellan två årtal är det senare årtalet − det tidigare."
+  ],
+  "exempel": [
+   [
+    "En soldat skrev ett brev dagen efter ett slag. Vilken sorts källa är brevet?",
+    "En primärkälla: den som skrev var med, och det skrevs nära i tid. Men soldaten såg bara sin egen del av slaget."
+   ],
+   [
+    "Ett fotbollslag bildades 1957 och lades ner 2004. Hur många år fanns laget?",
+    "2004 − 1957 = 47. Laget fanns i 47 år."
+   ]
+  ],
+  "ord": [
+   [
+    "perspektiv",
+    "hur någon ser på något, utifrån vem hen är och vad hen har varit med om"
+   ],
+   [
+    "sekundärkälla",
+    "en källa som bygger på andra källor, till exempel en lärobok"
+   ]
+  ],
+  "tips": "Står det INTE i frågan söker du det enda alternativet som inte passar. Läs frågan två gånger innan du väljer."
+ },
+ "Läsa: Andra världskriget": {
+  "mal": [
+   "Hitta årtal, länder och händelser i en text om andra världskriget.",
+   "Skilja på de allierade och axelmakterna.",
+   "Förklara vad neutralitet betyder och varför Sveriges läge var svårt."
+  ],
+  "fakta": [
+   "Läs texten först och leta sedan efter frågans nyckelord, som ett årtal, ett land eller ”enligt texten”.",
+   "Gäller frågan en ordning, som ”vad hände innan”, leta efter tidsord i texten: när, efter att, samtidigt.",
+   "Läs meningen före och efter det ställe där svaret står. Ofta står orsaken i meningen bredvid.",
+   "Skilj på det som står i texten och det du vet sedan förut. Svara efter texten när frågan säger ”enligt texten”.",
+   "Andra världskriget var ett krig mellan två sidor, de allierade och axelmakterna. Texten säger vilka länder som hörde till vilken sida."
+  ],
+  "exempel": [
+   [
+    "Texten: ”Efter att hamnen hade bombats gav staden upp.” Vad hände först?",
+    "Hamnen bombades först. ”Efter att” visar att det som står efter orden hände före resten av meningen."
+   ]
+  ],
+  "ord": [
+   [
+    "neutral",
+    "när ett land inte tar ställning för någon sida och inte deltar i kriget"
+   ],
+   [
+    "ockupera",
+    "när ett land tar militär kontroll över ett annat land"
+   ],
+   [
+    "kapitulera",
+    "att ge upp i ett krig"
+   ]
+  ],
+  "tips": "Frågar man vilka länder som var med, kontrollera att varje land i alternativet står i texten."
+ }
+}

@@ -1,0 +1,161 @@
+{
+ "Kemi": {
+  "mal": [
+   "Beskriva atomens delar och deras laddningar och använda atomnumret.",
+   "Skilja på atom, molekyl, grundämne, kemisk förening, blandning och jon.",
+   "Räkna atomerna i en formel och laddningen på en jon.",
+   "Använda pH-skalan och förklara neutralisation."
+  ],
+  "fakta": [
+   "Atomkärnan består av protoner, som är positiva, och neutroner, som är oladdade. Runt kärnan finns elektroner, som är negativa. Atomnumret är antalet protoner.",
+   "En neutral atom har lika många elektroner som protoner. En jon har en laddning: fler elektroner än protoner ger en negativ jon, färre ger en positiv.",
+   "Ett grundämne har ett slags atomer, och en kemisk förening två eller flera olika grundämnen som sitter ihop. I en blandning är ämnena bara blandade.",
+   "Kemiska tecken: O syre, C kol, H väte och Fe järn. I en formel visar den lilla siffran hur många av atomen före den: NH₃ har en kväveatom och tre väteatomer.",
+   "pH 7 är neutralt, under 7 surt och över 7 basiskt. Vätejoner, H⁺, gör en lösning sur. En syra och en bas i lagom mängder tar ut varandra."
+  ],
+  "exempel": [
+   [
+    "En jon har 16 protoner och 18 elektroner. Vilken laddning har den?",
+    "16 − 18 = −2. Jonen har laddningen 2−."
+   ],
+   [
+    "Hur många atomer finns i en molekyl etanol, C₂H₆O?",
+    "2 + 6 + 1 = 9 atomer."
+   ]
+  ],
+  "ord": [
+   [
+    "molekyl",
+    "två eller flera atomer som sitter ihop"
+   ],
+   [
+    "jon",
+    "en atom eller atomgrupp som har en elektrisk laddning"
+   ],
+   [
+    "kemisk förening",
+    "ett ämne av två eller flera olika grundämnen som sitter ihop"
+   ]
+  ],
+  "tips": "Räkna laddningen som protoner minus elektroner: blir det minus är jonen negativ."
+ },
+ "Biologi": {
+  "mal": [
+   "Säga var DNA finns och vad cellmembranet, cellväggen, kloroplasterna och mitokondrierna gör.",
+   "Ordna livets nivåer, från cell till organism.",
+   "Förklara fotosyntesen och cellandningen med ordformler."
+  ],
+  "fakta": [
+   "Det mesta av DNA:t finns i cellkärnan. Cellmembranet bestämmer vad som går in och ut. Växtceller har också cellvägg och kloroplaster med grönt klorofyll.",
+   "Celler av samma slag bildar en vävnad, vävnader bildar organ, organ samarbetar i organsystem, och tillsammans blir de en organism.",
+   "Fotosyntesen sker i kloroplasterna: koldioxid + vatten → glukos + syre, med energi från solljuset.",
+   "Cellandningen sker mest i mitokondrierna: glukos + syre → koldioxid + vatten, och energi frigörs. Både växter och djur gör cellandning.",
+   "Encelliga organismer, som bakterier, består av en enda cell. Människan består av väldigt många celler."
+  ],
+  "exempel": [
+   [
+    "Är ett blad ett organ eller en vävnad?",
+    "Ett organ. Bladet är byggt av flera sorters vävnad som samarbetar."
+   ]
+  ],
+  "ord": [
+   [
+    "vävnad",
+    "många likadana celler som gör samma sak"
+   ],
+   [
+    "organism",
+    "en levande varelse"
+   ],
+   [
+    "mitokondrie",
+    "den del av cellen där det mesta av cellandningen sker"
+   ]
+  ],
+  "tips": "Fotosyntesens och cellandningens formler är varandras spegelbilder: det som bildas i den ena behövs i den andra."
+ },
+ "Fysik": {
+  "mal": [
+   "Använda enheterna volt, ampere och ohm.",
+   "Räkna med Ohms lag, U = R · I, och koppla en amperemeter rätt.",
+   "Förklara vad krafter gör och skillnaden mellan massa och tyngd.",
+   "Räkna ut medelfart och förklara varför en bil inte stannar på en gång."
+  ],
+  "fakta": [
+   "Spänning mäts i volt (V), ström i ampere (A) och resistans i ohm (Ω). Resistans är hur mycket något hindrar strömmen.",
+   "Ohms lag: U = R · I. Då är I = U / R och R = U / I. Vid samma spänning ger större resistans mindre ström.",
+   "En amperemeter kopplas i serie med det du mäter strömmen genom. En voltmeter kopplas parallellt.",
+   "Massan, i kg, är densamma överallt. Tyngden är kraften från gravitationen: F = m · g, med g = 9,8 N/kg på jorden.",
+   "Medelfart = sträcka / tid. Det som ingenting bromsar fortsätter rakt fram i samma fart. Trycker du på något trycker det tillbaka lika mycket."
+  ],
+  "exempel": [
+   [
+    "Ett motstånd på 40 Ω kopplas till 6 V. Hur stor blir strömmen?",
+    "I = U / R = 6 / 40 = 0,15 A."
+   ],
+   [
+    "En löpare springer 6 km på 30 minuter. Vilken är medelfarten?",
+    "30 minuter = 0,5 h. Medelfarten är 6 / 0,5 = 12 km/h."
+   ]
+  ],
+  "ord": [
+   [
+    "amperemeter",
+    "en mätare för ström"
+   ],
+   [
+    "voltmeter",
+    "en mätare för spänning"
+   ],
+   [
+    "normalkraft",
+    "kraften från ett underlag som trycker uppåt på det som står på det"
+   ],
+   [
+    "reaktionstid",
+    "tiden från att föraren ser något tills hen trycker på bromsen"
+   ]
+  ],
+  "tips": "Skriv upp vad du vet och vad du söker, U, R eller I, och lös ut det sökta ur U = R · I."
+ },
+ "Atomens byggnad och formler": {
+  "mal": [
+   "Säga vilka laddningar protoner, neutroner och elektroner har och var de finns.",
+   "Använda atomnumret för att räkna protoner och elektroner i en neutral atom.",
+   "Läsa kemiska tecken och formler och räkna atomerna i en molekyl.",
+   "Skilja på grundämnen och kemiska föreningar."
+  ],
+  "fakta": [
+   "Protoner är positiva och neutroner oladdade, och de sitter i atomkärnan. Elektronerna är negativa och finns runt kärnan, i skal.",
+   "Atomnumret är antalet protoner, och det bestämmer vilket grundämne atomen är. En neutral atom har lika många elektroner som protoner.",
+   "Ett kemiskt tecken har en eller två bokstäver, och den första är alltid stor: H väte, O syre, C kol, Na natrium och Fe järn.",
+   "I en formel gäller den lilla siffran atomen före den, och utan siffra är det en atom. NH₃ har 1 kväveatom och 3 väteatomer, alltså 4 atomer.",
+   "Ett grundämne har en sorts atomer. En kemisk förening har flera sorters atomer som sitter ihop, som natriumklorid, NaCl."
+  ],
+  "exempel": [
+   [
+    "Aluminium har atomnummer 13. Hur många elektroner har en neutral aluminiumatom?",
+    "13. Atomnumret är antalet protoner, och en neutral atom har lika många elektroner."
+   ],
+   [
+    "Hur många syreatomer finns i en molekyl svavelsyra, H₂SO₄?",
+    "Fyra. Siffran 4 står efter O."
+   ]
+  ],
+  "ord": [
+   [
+    "atomkärna",
+    "atomens mitt, med protoner och neutroner"
+   ],
+   [
+    "elektronskal",
+    "lagren runt kärnan där elektronerna finns"
+   ],
+   [
+    "kemisk formel",
+    "visar vilka atomer och hur många av varje som finns i ett ämne"
+   ]
+  ],
+  "tips": "Neutronerna påverkar inte laddningen: räkna bara protoner och elektroner när det gäller laddning."
+ }
+}

@@ -1,0 +1,90 @@
+{
+ "BNP och inflation": {
+  "mal": [
+   "Förklara vad BNP och BNP per invånare mäter och räkna ut dem.",
+   "Räkna ut förändringen i procent av BNP och priser.",
+   "Skilja på nominell och real förändring, och förklara köpkraft och reallön.",
+   "Beskriva hög- och lågkonjunktur, inflation och deflation."
+  ],
+  "fakta": [
+   "BNP är värdet av alla varor och tjänster som produceras i ett land under ett år. BNP per invånare = BNP delat med antalet invånare. Obetalt hemarbete räknas inte in.",
+   "Förändring i procent = (nytt värde − gammalt värde) / gammalt värde · 100. Real tillväxt är tillväxten när prisökningarna har räknats bort.",
+   "BNP säger inget om hur inkomsterna fördelas eller hur miljön påverkas. I en högkonjunktur är efterfrågan hög och arbetslösheten låg; i en lågkonjunktur tvärtom.",
+   "Inflation är att priserna i allmänhet stiger, deflation att de sjunker. KPI mäter hur priserna på en korg av varor och tjänster förändras.",
+   "Reallönens ökning ≈ lönens ökning i kronor − inflationen. Riksbankens mål för inflationen är 2 procent. Sparpengar med låg ränta förlorar värde när inflationen är hög."
+  ],
+  "exempel": [
+   [
+    "Ett land har en BNP på 900 miljarder kronor och 15 miljoner invånare. Hur stor är BNP per invånare?",
+    "900 miljarder delat med 15 miljoner är 60 000. BNP per invånare är 60 000 kr."
+   ],
+   [
+    "Lönen höjs med 5 % och inflationen är 3 %. Ungefär hur mycket ökar reallönen?",
+    "5 − 3 = 2, alltså ungefär 2 %. Exakt är det 1,05 / 1,03 ≈ 1,019, en ökning med 1,9 %."
+   ]
+  ],
+  "ord": [
+   [
+    "nominell",
+    "räknad i kronor, utan hänsyn till att priserna ändras"
+   ],
+   [
+    "real",
+    "räknad med prisökningarna borträknade"
+   ],
+   [
+    "köpkraft",
+    "hur mycket man kan köpa för sina pengar"
+   ],
+   [
+    "KPI",
+    "konsumentprisindex, som mäter hur konsumentpriserna förändras"
+   ],
+   [
+    "konjunktur",
+    "hur ekonomin svänger mellan goda och dåliga tider"
+   ]
+  ],
+  "tips": "Dela alltid med det gamla värdet när du räknar ut förändringen i procent."
+ },
+ "Riksbanken och staten": {
+  "mal": [
+   "Förklara hur Riksbanken använder styrräntan för att påverka inflationen.",
+   "Skilja på penningpolitik och finanspolitik.",
+   "Förklara statens inkomster och utgifter, direkt och indirekt skatt och progressiv skatt.",
+   "Räkna ut skatt med två skattesatser och väga argument för och emot progressiv skatt."
+  ],
+  "fakta": [
+   "Sänkt styrränta: bankernas räntor sjunker, det blir billigare att låna och mindre lönsamt att spara, och hushåll och företag köper mer. En höjd styrränta verkar åt andra hållet.",
+   "Riksbanken är självständig: regeringen får inte bestämma över styrräntan. Målet är låg och stabil inflation, inte noll, bland annat för att minska risken för deflation.",
+   "Penningpolitik är Riksbankens styrning av räntan. Finanspolitik är när riksdag och regering ändrar skatter och utgifter. En starkare krona gör importen billigare.",
+   "Direkt skatt dras på inkomsten, som inkomstskatt. Indirekt skatt ingår i priset, som moms. Underskott i budgeten betyder att utgifterna är större än inkomsterna.",
+   "Progressiv skatt: ju högre inkomst, desto större andel i skatt. Kommunalskatten är samma procentsats oavsett hur mycket man tjänar."
+  ],
+  "exempel": [
+   [
+    "Skatten är 25 % upp till 500 000 kr och 45 % på det som är över. Hur mycket skatt betalar den som tjänar 640 000 kr?",
+    "0,25 · 500 000 = 125 000 kr. Det som är över är 140 000 kr, och 0,45 · 140 000 = 63 000 kr. Totalt 125 000 + 63 000 = 188 000 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "styrränta",
+    "räntan som Riksbanken sätter, och som bankernas räntor följer"
+   ],
+   [
+    "moms",
+    "mervärdesskatt, en skatt som ingår i priset på varor och tjänster"
+   ],
+   [
+    "arbetsgivaravgift",
+    "en avgift som arbetsgivaren betalar till staten utöver lönen"
+   ],
+   [
+    "deflation",
+    "att priserna i allmänhet sjunker"
+   ]
+  ],
+  "tips": "Med två skattesatser gäller den högre bara på den del som är över gränsen, aldrig på hela inkomsten."
+ }
+}

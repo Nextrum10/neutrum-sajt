@@ -1,0 +1,199 @@
+{
+ "Sveriges landskap och kartan": {
+  "mal": [
+   "Nämna Sveriges tre landsdelar i ordning från söder till norr.",
+   "Placera landskap i rätt landsdel och känna till Sveriges största ö, största sjö och högsta berg.",
+   "Använda väderstreck, skala och teckenförklaring på en karta."
+  ],
+  "fakta": [
+   "Sverige har tre landsdelar: Götaland i söder, Svealand i mitten och Norrland i norr.",
+   "Sverige har 25 landskap. Skåne hör till Götaland, Dalarna och Uppland till Svealand, och Lappland, det största landskapet, till Norrland.",
+   "Gotland är Sveriges största ö, Vänern största sjön och Kebnekaise högsta berget. Stockholm är huvudstaden.",
+   "Sverige har landgräns mot Norge och Finland. Öster om Sverige ligger Östersjön.",
+   "Skalan 1:100 000 betyder att 1 cm på kartan är 100 000 cm, alltså 1 km, i verkligheten."
+  ],
+  "exempel": [
+   [
+    "En karta har skalan 1:100 000. Hur långt är 3 cm på kartan i verkligheten?",
+    "1 cm är 1 km, så 3 cm är 3 km."
+   ],
+   [
+    "Vilket väderstreck ligger mellan söder och öster?",
+    "Sydost. Mellanväderstreckens namn börjar med norr eller söder: syd + ost."
+   ]
+  ],
+  "ord": [
+   [
+    "landsdel",
+    "en av Sveriges tre stora delar: Götaland, Svealand och Norrland"
+   ],
+   [
+    "landskap",
+    "ett av de 25 gamla områden som Sverige delas in i"
+   ],
+   [
+    "teckenförklaring",
+    "rutan som säger vad kartans färger och tecken betyder"
+   ],
+   [
+    "skala",
+    "hur mycket verkligheten är förminskad på kartan"
+   ]
+  ],
+  "tips": "Medsols betyder samma håll som klockans visare: norr, öster, söder, väster."
+ },
+ "Vikingatiden": {
+  "mal": [
+   "Berätta när vikingatiden var och hur vikingarna levde, skrev och reste.",
+   "Para ihop asagudarna med det de var kända för.",
+   "Förklara hur kristendomen kom och ordna tiderna från stenåldern till medeltiden.",
+   "Läsa en berättelse om en runsten och svara på frågor om den."
+  ],
+  "fakta": [
+   "Vikingatiden var ungefär år 800–1050. De flesta vikingar var bönder, och många reste med skepp för att handla, plundra eller kriga.",
+   "Samhället hade jarlar, som var rika hövdingar, karlar, som var fria bönder, och trälar, som var ofria. På tinget löste de fria männen tvister.",
+   "Vikingarna skrev med runor. En runsten restes ofta till minne av någon. Birka på Björkö i Mälaren var en viktig handelsstad.",
+   "Asatron hade många gudar, som Oden, Tor, Frej och Freja. Gudarna bodde i Asgård och människorna i Midgård.",
+   "Kristendomen kom långsamt. Munken Ansgar kom till Birka omkring år 830. Efter vikingatiden kom medeltiden."
+  ],
+  "ord": [
+   [
+    "stenåldern",
+    "den äldsta tiden, då verktygen gjordes av sten"
+   ],
+   [
+    "bronsåldern",
+    "tiden efter stenåldern, då man började göra saker av brons"
+   ],
+   [
+    "Miklagård",
+    "vikingarnas namn på staden Konstantinopel"
+   ],
+   [
+    "Valhall",
+    "dit den som dog i strid kom, enligt asatron"
+   ],
+   [
+    "runristare",
+    "en person som ristade in runor i sten"
+   ]
+  ],
+  "tips": "I berättelsen: leta upp stället där svaret står och läs det en gång till innan du väljer."
+ },
+ "Religioner i Sverige": {
+  "mal": [
+   "Berätta om kristendomens bok, högtider och byggnader.",
+   "Para ihop judendom, kristendom och islam med sina heliga skrifter och byggnader.",
+   "Nämna högtider och vilodagar i de tre religionerna."
+  ],
+  "fakta": [
+   "Kristendomens heliga bok är Bibeln, med Gamla och Nya testamentet. Kristna har gudstjänst i kyrkan, oftast på söndagar.",
+   "Kristna högtider: på jul föds Jesus, på påsk dör han och uppstår, på Kristi himmelsfärd far han upp till himlen och på pingst kommer den heliga anden.",
+   "Jesus hade tolv lärjungar. Den mest kända kristna bönen börjar med orden Fader vår.",
+   "Judendomens viktigaste skrift är Toran. Judar samlas i synagogan, vilar på sabbaten och minns uttåget ur Egypten på pesach.",
+   "Islams heliga bok är Koranen, som profeten Muhammed tog emot enligt islam. Muslimer samlas i moskén och fastar under ramadan. Alla tre religionerna ser Abraham som stamfar."
+  ],
+  "ord": [
+   [
+    "gudstjänst",
+    "en samling där man ber, sjunger och lyssnar till texter ur den heliga boken"
+   ],
+   [
+    "lärjunge",
+    "en som följer och lär av en lärare, som Jesus"
+   ],
+   [
+    "synagoga",
+    "judendomens byggnad för gudstjänst"
+   ],
+   [
+    "moské",
+    "islams byggnad för bön"
+   ],
+   [
+    "stamfar",
+    "en person som ett helt folk räknar som sin förfader"
+   ]
+  ],
+  "tips": "Gör en egen tabell med religion, bok och byggnad på varje rad. Då blir parfrågorna lätta."
+ },
+ "Demokrati i vardagen": {
+  "mal": [
+   "Förklara vad demokrati och majoritetsbeslut betyder.",
+   "Räkna ut hur många röster som behövs för mer än hälften.",
+   "Berätta vem som sköter vad i samhället: kommunen, regionen och riksdagen.",
+   "Nämna Sveriges urfolk och de nationella minoriteterna."
+  ],
+  "fakta": [
+   "Demokrati betyder folkstyre. Du får tycka annat än de som bestämmer och säga det. I riksdagsvalet får man rösta från 18 år, och rösten är hemlig.",
+   "Mer än hälften: dela antalet med 2 och ta närmaste hela tal som är större.",
+   "Kommunen sköter skolan och fritidshemmet, regionen sjukhusen och riksdagen Sveriges lagar. Det betalas med skatt.",
+   "Barnkonventionen är FN:s överenskommelse om barns rättigheter. Den gäller alla under 18 och är lag i Sverige.",
+   "Samerna är Sveriges urfolk. Sverige har fem nationella minoriteter."
+  ],
+  "exempel": [
+   [
+    "25 elever röstar. Hur många röster behövs för mer än hälften?",
+    "25 delat med 2 är 12,5. Närmaste hela tal som är större är 13, så det behövs 13 röster."
+   ]
+  ],
+  "ord": [
+   [
+    "majoritetsbeslut",
+    "när det förslag som får flest röster gäller"
+   ],
+   [
+    "diktatur",
+    "när en ledare eller en liten grupp styr och folket inte kan välja bort dem i fria val"
+   ],
+   [
+    "lag",
+    "en regel som gäller i hela landet och bestäms av riksdagen"
+   ],
+   [
+    "urfolk",
+    "ett folk som har bott i ett område sedan långt innan dagens länder och gränser fanns"
+   ],
+   [
+    "nationell minoritet",
+    "en grupp som har bott länge i Sverige: judar, romer, samer, sverigefinnar och tornedalingar"
+   ]
+  ],
+  "tips": "Exakt hälften räcker inte. Av 30 röster är 15 bara hälften, så det behövs 16."
+ },
+ "Väderstreck och grannländer": {
+  "mal": [
+   "Använda väderstrecken och mellanväderstrecken på kompassrosen.",
+   "Säga vilket väderstreck som ligger mitt emot ett annat.",
+   "Beskriva var städer och grannländer ligger på Sverigekartan."
+  ],
+  "fakta": [
+   "Kompassrosen har N, Ö, S och V för norr, öster, söder och väster. Mitt emot norr är söder, och mitt emot öster är väster.",
+   "Mellanväderstrecken är nordost, sydost, sydväst och nordväst. Namnet börjar alltid med norr eller söder: nord + ost.",
+   "Solen går upp ungefär i öster och står i söder mitt på dagen i Sverige.",
+   "Sverige har landgräns mot Norge i väster och Finland i öster. Danmark ligger sydväst om Sverige, på andra sidan Öresund.",
+   "Kiruna ligger långt uppe i norr, Malmö längst ner i söder och Göteborg på västkusten."
+  ],
+  "exempel": [
+   [
+    "Du går västerut och svänger till höger. Åt vilket håll går du nu?",
+    "När du går mot väster pekar din högra hand mot norr. Du går nu norrut."
+   ]
+  ],
+  "ord": [
+   [
+    "kompassros",
+    "en figur på kartan som visar väderstrecken"
+   ],
+   [
+    "mellanväderstreck",
+    "hållet mitt emellan två väderstreck, som sydväst"
+   ],
+   [
+    "landgräns",
+    "en gräns på land mellan två länder"
+   ]
+  ],
+  "tips": "Vänd dig i tankarna åt samma håll som i frågan innan du bestämmer vad som är höger och vänster."
+ }
+}

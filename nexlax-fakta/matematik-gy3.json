@@ -1,0 +1,294 @@
+{
+ "Derivata": {
+  "mal": [
+   "Derivera polynom och potenser, också med negativa exponenter och bråk i exponenten.",
+   "Räkna ut derivatans värde och tolka det som tangentens lutning eller som en hastighet.",
+   "Hitta punkter där f′(x) = 0 och avgöra om de är maximi-, minimi- eller terrasspunkter."
+  ],
+  "fakta": [
+   "Om f(x) = xⁿ är f′(x) = n · xⁿ⁻¹. Derivera term för term; en konstant har derivatan 0 och k · x har derivatan k.",
+   "Skriv om bråk och rötter som potenser innan du deriverar: 1/x = x⁻¹ och √x = x^(1/2).",
+   "f′(a) är lutningen på tangenten till y = f(x) där x = a, och hur snabbt f ändras där.",
+   "I en extrempunkt är f′(x) = 0. Byter f′ där tecken från + till − är det en maximipunkt, från − till + en minimipunkt. Utan teckenbyte är det en terrasspunkt, ingen extrempunkt.",
+   "Andraderivatan avgör också: f′(a) = 0 och f″(a) > 0 ger en minimipunkt, och f″(a) < 0 en maximipunkt."
+  ],
+  "exempel": [
+   [
+    "Derivera f(x) = 2x⁴ − 5x² + 4/x.",
+    "4/x = 4x⁻¹ har derivatan −4x⁻². Alltså är f′(x) = 8x³ − 10x − 4/x²."
+   ],
+   [
+    "Bestäm extrempunkten till f(x) = x² − 10x + 4.",
+    "f′(x) = 2x − 10 = 0 ger x = 5, och f(5) = 25 − 50 + 4 = −21. f′ byter tecken från − till +, så (5, −21) är en minimipunkt."
+   ]
+  ],
+  "ord": [
+   [
+    "derivata",
+    "funktionens lutning, eller förändringshastighet, i en punkt"
+   ],
+   [
+    "tangent",
+    "en rät linje som nuddar kurvan i en punkt och har samma lutning där"
+   ],
+   [
+    "terrasspunkt",
+    "en punkt där f′(x) = 0 men funktionen fortsätter åt samma håll"
+   ]
+  ],
+  "tips": "Skilj på f(a) och f′(a): f(a) är kurvans höjd, f′(a) är dess lutning."
+ },
+ "Integraler": {
+  "mal": [
+   "Bestämma primitiva funktioner till polynom och potenser.",
+   "Bestämma konstanten C när ett funktionsvärde är känt.",
+   "Beräkna bestämda integraler och använda dem för arean under en kurva och mellan två kurvor."
+  ],
+  "fakta": [
+   "F är en primitiv funktion till f om F′(x) = f(x). Till xⁿ är xⁿ⁺¹ / (n + 1) en primitiv funktion, när n ≠ −1.",
+   "Alla primitiva funktioner till f skiljer sig bara med en konstant, därför + C. C bestäms om du vet ett funktionsvärde.",
+   "Den bestämda integralen av f från a till b är F(b) − F(a).",
+   "Är f(x) ≥ 0 mellan a och b är integralen arean mellan kurvan och x-axeln. Ligger kurvan under x-axeln blir integralen negativ.",
+   "Arean mellan två kurvor är integralen av (övre kurvan − undre kurvan) mellan skärningspunkterna."
+  ],
+  "exempel": [
+   [
+    "Beräkna integralen av (3x² − 2) från x = 1 till x = 3.",
+    "F(x) = x³ − 2x. F(3) − F(1) = (27 − 6) − (1 − 2) = 21 + 1 = 22."
+   ],
+   [
+    "Bestäm f(x) om f′(x) = 6x + 2 och f(0) = 4.",
+    "f(x) = 3x² + 2x + C, och f(0) = C = 4. Alltså är f(x) = 3x² + 2x + 4."
+   ]
+  ],
+  "ord": [
+   [
+    "primitiv funktion",
+    "en funktion F vars derivata är f"
+   ],
+   [
+    "bestämd integral",
+    "talet F(b) − F(a); skrivs ∫ f(x) dx från a till b"
+   ],
+   [
+    "integrationsgränser",
+    "talen a och b som integralen räknas mellan"
+   ]
+  ],
+  "tips": "Derivera din primitiva funktion som kontroll: du ska få tillbaka f(x)."
+ },
+ "Trigonometriska ekvationer": {
+  "mal": [
+   "Växla mellan grader och radianer.",
+   "Läsa av sinus och cosinus på enhetscirkeln och använda exakta värden.",
+   "Bestämma amplitud och period för funktioner som y = a sin bx.",
+   "Lösa trigonometriska ekvationer i ett intervall och allmänt."
+  ],
+  "fakta": [
+   "π radianer = 180°. Från grader till radianer multiplicerar du med π/180, och från radianer till grader med 180/π.",
+   "Punkten för vinkeln v på enhetscirkeln är (cos v, sin v): cosinus är x-koordinaten och sinus y-koordinaten.",
+   "y = a sin bx har amplituden |a| och perioden 360°/b, eller 2π/b i radianer.",
+   "sin x = c ger x = v + n · 360° eller x = 180° − v + n · 360°, där v = sin⁻¹ c. cos x = c ger x = ±v + n · 360°, där v = cos⁻¹ c.",
+   "tan x = c ger x = v + n · 180°, där v = tan⁻¹ c. I ett intervall väljer du de heltal n som ger lösningar där."
+  ],
+  "exempel": [
+   [
+    "Lös sin x = 0,4 för 0° ≤ x ≤ 360°.",
+    "v = sin⁻¹ 0,4 ≈ 23,6°. Den andra lösningen är 180° − 23,6° = 156,4°."
+   ],
+   [
+    "Skriv 135° i radianer.",
+    "135 · π/180 = 3π/4."
+   ]
+  ],
+  "ord": [
+   [
+    "radian",
+    "ett vinkelmått där ett helt varv är 2π"
+   ],
+   [
+    "enhetscirkeln",
+    "en cirkel med radien 1 och medelpunkten i origo"
+   ],
+   [
+    "amplitud",
+    "största avståndet från grafens mittlinje"
+   ],
+   [
+    "period",
+    "hur långt det är innan grafen upprepar sig"
+   ]
+  ],
+  "tips": "Räknaren ger bara en lösning: rita enhetscirkeln för att hitta den andra."
+ },
+ "Provträning": {
+  "mal": [
+   "Lösa blandade uppgifter med derivator, primitiva funktioner, integraler och rationella uttryck.",
+   "Räkna med komplexa tal och lösa trigonometriska ekvationer exakt.",
+   "Derivera med kedjeregeln och produktregeln, också funktioner med e.",
+   "Lösa optimeringsproblem med definitionsmängd och andraderivata."
+  ],
+  "fakta": [
+   "Kedjeregeln: derivatan av f(g(x)) är f′(g(x)) · g′(x). Därför har eᵏˣ derivatan k · eᵏˣ och sin kx derivatan k · cos kx.",
+   "Produktregeln: om f(x) = g(x) · h(x) är f′(x) = g′(x) · h(x) + g(x) · h′(x).",
+   "Optimering: ställ upp funktionen, bestäm definitionsmängden, sök x där f′(x) = 0 och avgör med teckentabell eller f″ om det är ett största eller minsta värde.",
+   "Ett rationellt uttryck förenklar du genom att faktorisera täljare och nämnare och förkorta bort gemensamma faktorer.",
+   "i² = −1, och eˣ = a löses med x = ln a."
+  ],
+  "exempel": [
+   [
+    "Derivera f(x) = x² · e³ˣ.",
+    "Produktregeln: f′(x) = 2x · e³ˣ + x² · 3e³ˣ = e³ˣ(2x + 3x²)."
+   ],
+   [
+    "Förenkla (x² − 16) / (x + 4), där x ≠ −4.",
+    "Konjugatregeln: (x + 4)(x − 4) / (x + 4) = x − 4."
+   ]
+  ],
+  "ord": [
+   [
+    "definitionsmängd",
+    "de x-värden som funktionen får ha"
+   ],
+   [
+    "ln",
+    "den naturliga logaritmen, med basen e"
+   ],
+   [
+    "optimering",
+    "att hitta det största eller minsta värdet i ett problem"
+   ]
+  ],
+  "tips": "Läs om frågan vill ha x-värdet eller själva största värdet: i optimering är det lätt att svara på fel sak."
+ },
+ "Komplexa tal": {
+  "mal": [
+   "Räkna med den imaginära enheten i och skriva komplexa tal på formen a + bi.",
+   "Addera, multiplicera och dividera komplexa tal och räkna ut konjugat och absolutbelopp.",
+   "Lösa andragradsekvationer som har komplexa lösningar.",
+   "Skriva komplexa tal på polär form och multiplicera och upphöja dem med de Moivres formel."
+  ],
+  "fakta": [
+   "i² = −1. Potenserna av i upprepar sig i en cykel om fyra: i, −1, −i, 1.",
+   "z = a + bi har realdelen a och imaginärdelen b. Du adderar del för del och multiplicerar som parenteser, med i² = −1.",
+   "Konjugatet till a + bi är a − bi, och |a + bi| = √(a² + b²). (a + bi)(a − bi) = a² + b², som är reellt.",
+   "Division: förläng bråket med nämnarens konjugat, så att nämnaren blir reell.",
+   "Polär form: z = r(cos v + i sin v), där r = |z| och v är argumentet. Vid multiplikation multipliceras beloppen och argumenten adderas, och zⁿ = rⁿ(cos nv + i sin nv)."
+  ],
+  "exempel": [
+   [
+    "Beräkna (4 + 7i) / (2 + i).",
+    "Förläng med 2 − i: (4 + 7i)(2 − i) / (2² + 1²) = (8 − 4i + 14i − 7i²) / 5 = (15 + 10i) / 5 = 3 + 2i."
+   ],
+   [
+    "Lös z² − 6z + 13 = 0.",
+    "pq-formeln: z = 3 ± √(9 − 13) = 3 ± √(−4) = 3 ± 2i."
+   ]
+  ],
+  "ord": [
+   [
+    "imaginär enhet",
+    "talet i, där i² = −1"
+   ],
+   [
+    "konjugat",
+    "a − bi är konjugatet till a + bi"
+   ],
+   [
+    "absolutbelopp",
+    "talets avstånd från origo i det komplexa talplanet"
+   ],
+   [
+    "argument",
+    "vinkeln från den positiva reella axeln till talet i det komplexa talplanet"
+   ]
+  ],
+  "tips": "Rita talet i det komplexa talplanet innan du bestämmer argumentet: då ser du vilken kvadrant det ligger i."
+ },
+ "Rationella uttryck": {
+  "mal": [
+   "Faktorisera täljare och nämnare och förkorta rationella uttryck.",
+   "Avgöra för vilka x ett rationellt uttryck inte är definierat.",
+   "Addera, subtrahera och multiplicera rationella uttryck."
+  ],
+  "fakta": [
+   "Ett rationellt uttryck är ett bråk med polynom i täljare och nämnare. Det är inte definierat där nämnaren är 0.",
+   "Man får förkorta med en faktor, men aldrig stryka en term: (x + 3)/x är inte 3.",
+   "Konjugatregeln a² − b² = (a + b)(a − b) och kvadreringsreglerna hjälper dig att faktorisera.",
+   "Addera och subtrahera med gemensam nämnare, som med vanliga bråk."
+  ],
+  "exempel": [
+   [
+    "Förenkla (x² − 6x)/(x² − 36), där x ≠ 6 och x ≠ −6.",
+    "Faktorisera: x(x − 6)/((x + 6)(x − 6)). Förkorta med x − 6, och svaret är x/(x + 6)."
+   ]
+  ],
+  "ord": [
+   [
+    "faktor",
+    "en del som multipliceras, som x och x − 6 i x(x − 6)"
+   ],
+   [
+    "term",
+    "en del som adderas eller subtraheras, som x² och −6x i x² − 6x"
+   ]
+  ],
+  "tips": "Faktorisera först och förkorta sedan. Finns ingen gemensam faktor går uttrycket inte att förkorta."
+ },
+ "Gränsvärden och derivatans definition": {
+  "mal": [
+   "Räkna ut ändringskvoter och tolka dem som en sekants lutning.",
+   "Bestämma gränsvärden, också när x växer mot oändligheten.",
+   "Använda derivatans definition för att bestämma f′(a)."
+  ],
+  "fakta": [
+   "Ändringskvoten Δy/Δx = (f(b) − f(a))/(b − a) är lutningen på sekanten mellan två punkter på grafen.",
+   "Ett gränsvärde är det värde uttrycket närmar sig. Ger insättning 0/0 ska du förenkla först.",
+   "När x → ∞ går 1/x mot 0.",
+   "Derivatans definition: f′(a) är gränsvärdet av (f(a + h) − f(a))/h när h → 0."
+  ],
+  "exempel": [
+   [
+    "Bestäm f′(1) för f(x) = 2x² med derivatans definition.",
+    "f(1 + h) − f(1) = 2(1 + 2h + h²) − 2 = 4h + 2h². Delat med h blir det 4 + 2h, och när h → 0 går det mot 4. Alltså är f′(1) = 4."
+   ]
+  ],
+  "ord": [
+   [
+    "sekant",
+    "en rät linje genom två punkter på en kurva"
+   ],
+   [
+    "tangent",
+    "en rät linje som nuddar kurvan i en punkt och har samma lutning som kurvan där"
+   ]
+  ],
+  "tips": "Sätt inte in h = 0 för tidigt: förkorta bort h först, och låt sedan h gå mot 0."
+ },
+ "Triangelsatserna": {
+  "mal": [
+   "Räkna ut arean av en triangel med areasatsen.",
+   "Räkna ut sidor och vinklar med sinussatsen och cosinussatsen.",
+   "Välja rätt sats efter det du vet om triangeln."
+  ],
+  "fakta": [
+   "Areasatsen: T = (a · b · sin C)/2, där C är vinkeln mellan sidorna a och b.",
+   "Sinussatsen: sin A/a = sin B/b = sin C/c. Den används när du vet en sida och vinkeln mitt emot den.",
+   "Cosinussatsen: c² = a² + b² − 2ab · cos C. Den används med två sidor och vinkeln mellan dem, eller med tre sidor.",
+   "sin v = sin(180° − v), så sinussatsen kan ge två vinklar som passar."
+  ],
+  "exempel": [
+   [
+    "En triangel har sidorna 4 cm, 5 cm och 6 cm. Hur stor är vinkeln mitt emot sidan 6 cm?",
+    "Cosinussatsen: 36 = 16 + 25 − 40 · cos C, så cos C = 5/40 = 0,125 och C ≈ 82,8°."
+   ]
+  ],
+  "ord": [
+   [
+    "motstående vinkel",
+    "vinkeln mitt emot en sida: sidan a står mitt emot vinkeln A"
+   ]
+  ],
+  "tips": "Vet du en sida och vinkeln mitt emot den, använd sinussatsen. Annars är det oftast cosinussatsen."
+ }
+}

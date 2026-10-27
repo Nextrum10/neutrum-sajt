@@ -1,0 +1,160 @@
+{
+ "Djur och växter": {
+  "mal": [
+   "Förklara hur olika djur klarar vintern.",
+   "Ordna livet hos en fjäril och en groda, från början.",
+   "Förklara att växter gör sin egen mat med ljus, men att djur måste äta."
+  ],
+  "fakta": [
+   "Flyttfåglar flyger söderut på hösten, för då försvinner maten, som insekterna. Stannfåglar stannar i Sverige hela vintern.",
+   "Djur klarar vintern på olika sätt. Vissa sover i ide, andra ligger stilla i dvala, får vit päls eller äter mat som de gömt.",
+   "En fjäril börjar som ett ägg. Sedan blir den en larv som äter blad, därefter en puppa och till sist en fjäril.",
+   "En groda börjar som rom i vattnet. Grodynglet andas med gälar och växer till en groda.",
+   "Växter gör sin egen mat med hjälp av ljus. Djur kan inte det, utan äter växter eller andra djur."
+  ],
+  "exempel": [
+   [
+    "Hur klarar ett rådjur vintern?",
+    "Det stannar kvar och är vaket hela vintern. Det får en tjockare vinterpäls och letar mat, också under snön."
+   ]
+  ],
+  "ord": [
+   [
+    "ide",
+    "en gömd plats där ett djur sover hela vintern"
+   ],
+   [
+    "dvala",
+    "när ett djur ligger stilla och nästan inte rör sig på hela vintern"
+   ],
+   [
+    "larv",
+    "en ung fjäril som ser ut som en mask och äter blad"
+   ],
+   [
+    "puppa",
+    "skalet där larven förvandlas till en fjäril"
+   ]
+  ],
+  "tips": "Fundera på vad djuret äter: försvinner maten på vintern måste det flytta, sova eller spara mat."
+ },
+ "Kroppen och sinnena": {
+  "mal": [
+   "Para ihop de fem sinnena med kroppsdelarna.",
+   "Förklara att sinnena skickar signaler till hjärnan.",
+   "Berätta vad kroppen behöver: sömn, mat, vatten, rörelse och rena tänder."
+  ],
+  "fakta": [
+   "Vi brukar säga att vi har fem sinnen: syn, hörsel, lukt, smak och känsel.",
+   "Ögonen ser, öronen hör, näsan luktar, tungan smakar och huden känner. Sinnena skickar signaler till hjärnan.",
+   "Lukten och smaken hjälps åt. Därför smakar maten mindre när näsan är täppt.",
+   "Kroppen behöver mat för att få energi och växa, vatten att dricka, sömn för att vila och rörelse för starka muskler.",
+   "Ett barn behöver sova ungefär 10 timmar. Borsta tänderna två gånger om dagen, för socker kan ge hål i tänderna."
+  ],
+  "exempel": [
+   [
+    "Med vilket sinne märker du att det luktar nybakat bröd?",
+    "Med lukten. Det är näsan som känner doften."
+   ]
+  ],
+  "ord": [
+   [
+    "sinne",
+    "ett sätt för kroppen att märka saker, som att se eller höra"
+   ],
+   [
+    "pupill",
+    "det svarta hålet mitt i ögat där ljuset kommer in"
+   ],
+   [
+    "punktskrift",
+    "skrift med små upphöjda prickar som man läser med fingrarna"
+   ]
+  ],
+  "tips": "Tänk på vilken kroppsdel du använder: känner du något med huden är det känseln."
+ },
+ "Vatten och material": {
+  "mal": [
+   "Säga vattnets tre former och när vatten fryser och kokar.",
+   "Ordna vattnets kretslopp från havet till regnet.",
+   "Säga vad några material görs av och vad de klarar.",
+   "Förklara varför vi sorterar avfall."
+  ],
+  "fakta": [
+   "Vatten finns i tre former: fast (is), flytande (vatten) och gas (vattenånga).",
+   "Vatten fryser till is vid 0 grader och kokar vid ungefär 100 grader.",
+   "Vatten kan avdunsta utan att koka. Ångan stiger, kyls av högt upp, blir moln och faller som regn.",
+   "Glas görs av sand, papper av trä och plast oftast av olja. Trä och plast leder värme dåligt, men metall leder värme bra.",
+   "Vi sorterar sopor för att materialet ska kunna återvinnas. Batterier lämnas där batterier samlas in."
+  ],
+  "exempel": [
+   [
+    "Du tar in en snöboll i ett varmt rum. Vad händer?",
+    "Den smälter och blir vatten, för inne är det varmare än 0 grader."
+   ]
+  ],
+  "ord": [
+   [
+    "avdunsta",
+    "när vatten blir vattenånga utan att koka"
+   ],
+   [
+    "kretslopp",
+    "något som går runt och börjar om igen, som vattnet"
+   ],
+   [
+    "återvinna",
+    "göra nya saker av gamla material"
+   ],
+   [
+    "genomskinlig",
+    "släpper igenom ljus, så att man ser igenom"
+   ]
+  ],
+  "tips": "När du sorterar: titta på vad saken är gjord av, inte vad den har använts till."
+ },
+ "Ljus, magneter och rymden": {
+  "mal": [
+   "Känna igen ljuskällor och säga var en skugga hamnar.",
+   "Säga vad en magnet drar till sig och vad som händer när två magneter möts.",
+   "Förklara dag och natt och hur månen ändrar form.",
+   "Säga vad ett dygn, en månad och ett år är."
+  ],
+  "fakta": [
+   "En ljuskälla sänder ut eget ljus, som solen, en lampa eller ett tänt ljus. Skuggan hamnar på andra sidan från ljuset.",
+   "Mitt på dagen står solen högt och skuggorna är korta. På morgonen och kvällen är de långa.",
+   "En magnet drar till sig järn, men inte alla metaller. Lika poler stöter bort varandra, och olika poler dras till varandra.",
+   "Jorden snurrar ett varv på ett dygn. Det är dag på den sida som är vänd mot solen och natt på den andra.",
+   "Månen lyser inte själv: solens ljus studsar på den. Månen går runt jorden på ungefär en månad, och jorden går runt solen på ett år."
+  ],
+  "exempel": [
+   [
+    "Du håller en magnet nära en sked av trä. Händer något?",
+    "Nej. En magnet drar bara till sig vissa metaller, som järn, och trä är ingen metall."
+   ]
+  ],
+  "ord": [
+   [
+    "pol",
+    "en ände på en magnet: nordpol eller sydpol"
+   ],
+   [
+    "dygn",
+    "en dag och en natt tillsammans"
+   ],
+   [
+    "nymåne",
+    "när månen inte syns alls, för solen lyser på den sida som är vänd bort från oss"
+   ],
+   [
+    "fullmåne",
+    "när hela månen syns som en rund skiva"
+   ],
+   [
+    "stjärna",
+    "en himlakropp som lyser av sig själv"
+   ]
+  ],
+  "tips": "Skuggan pekar alltid bort från ljuset."
+ }
+}

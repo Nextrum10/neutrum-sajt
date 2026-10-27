@@ -1,0 +1,177 @@
+{
+ "Medeltiden": {
+  "mal": [
+   "Beskriva de fyra stånden och hur människor levde på medeltiden.",
+   "Förklara vad Hansan och digerdöden var.",
+   "Ordna händelserna från Stockholms grundande till Gustav Vasa och räkna år mellan dem.",
+   "Läsa en berättelse från Visby och dra slutsatser ur den."
+  ],
+  "fakta": [
+   "Medeltiden i Sverige var ungefär 1050–1520. Samhället delades i fyra stånd: adel, präster, borgare och bönder. Bönderna var flest.",
+   "Hansan var ett förbund av tyska handelsstäder. Visby på Gotland var en viktig handelsstad, och många av köpmännen där var tyskar.",
+   "Digerdöden var en pest som nådde Sverige omkring 1350 och dödade en stor del av befolkningen.",
+   "Birger jarl räknas som Stockholms grundare. Drottning Margareta samlade Danmark, Norge och Sverige i Kalmarunionen 1397.",
+   "Kristian II lät avrätta många vid Stockholms blodbad 1520. Gustav Vasa valdes till kung 1523, och Sverige lämnade unionen."
+  ],
+  "exempel": [
+   [
+    "Hur många år gick det från digerdöden 1350 till att Gustav Vasa blev kung 1523?",
+    "1523 − 1350 = 173. Det gick 173 år."
+   ]
+  ],
+  "ord": [
+   [
+    "stånd",
+    "en grupp i samhället med egna rättigheter och plikter"
+   ],
+   [
+    "union",
+    "när flera länder går samman under en gemensam kung"
+   ],
+   [
+    "borgare",
+    "en köpman eller hantverkare som bodde i en stad"
+   ],
+   [
+    "Birgitta",
+    "en svensk kvinna på 1300-talet som grundade en klosterorden i Vadstena och blev helgon"
+   ]
+  ],
+  "tips": "Skriv årtalen på en tidslinje innan du ordnar. Det minsta årtalet kommer först."
+ },
+ "Riksdag och regering": {
+  "mal": [
+   "Förklara vad riksdagen gör och hur den väljs.",
+   "Räkna ut hur många ledamöter som är mer än hälften av riksdagen.",
+   "Beskriva vad regeringen, statsministern och domstolarna gör.",
+   "Säga vad kommunen, regionen och staten sköter."
+  ],
+  "fakta": [
+   "Riksdagen har 349 ledamöter och väljs vart fjärde år. Den stiftar lagar och bestämmer om statens budget.",
+   "Spärren till riksdagen är 4 procent av rösterna i hela landet. Rösta får svenska medborgare som har fyllt 18 år senast på valdagen.",
+   "Talmannen föreslår statsminister, och statsministern leder regeringen. Regeringen styr landet och lämnar förslag, propositioner, till riksdagen.",
+   "Makten är delad: riksdagen stiftar lagar, regeringen verkställer och domstolarna dömer. Kungen är statschef men har ingen politisk makt.",
+   "Sverige har fyra grundlagar, och regeringsformen säger hur landet styrs. En grundlag ändras bara av riksdagen, med två beslut och ett val emellan."
+  ],
+  "exempel": [
+   [
+    "En kommun har 61 ledamöter i fullmäktige. Hur många är mer än hälften?",
+    "Hälften av 61 är 30,5. Närmaste hela tal som är större är 31, så det behövs 31 ledamöter."
+   ]
+  ],
+  "ord": [
+   [
+    "utskott",
+    "en grupp ledamöter som förbereder riksdagens beslut i ett ämne"
+   ],
+   [
+    "votering",
+    "omröstning i riksdagen"
+   ],
+   [
+    "kommun",
+    "sköter bland annat skolan och äldreomsorgen"
+   ],
+   [
+    "region",
+    "sköter bland annat sjukvården"
+   ],
+   [
+    "staten",
+    "hela landets gemensamma ledning och myndigheter, som sköter till exempel polisen och försvaret"
+   ]
+  ],
+  "tips": "Mer än hälften av ett udda tal: halvera och avrunda uppåt till närmaste hela tal."
+ },
+ "Världsdelar och klimat": {
+  "mal": [
+   "Placera länder i rätt världsdel och para ihop dem med sina huvudstäder.",
+   "Nämna världens största hav och högsta berg.",
+   "Förklara skillnaden mellan väder och klimat och ordna klimatzonerna.",
+   "Förklara varför det är varmare vid ekvatorn än vid polerna."
+  ],
+  "fakta": [
+   "Världsdelarna är Europa, Asien, Afrika, Nordamerika, Sydamerika, Oceanien och Antarktis, som ligger runt sydpolen. Asien är störst till ytan.",
+   "Ekvatorn delar jorden i ett norra och ett södra halvklot. Den går genom Afrika, så Afrika ligger på båda halvorna.",
+   "Stilla havet är störst, och Atlanten ligger mellan Europa och Nordamerika. Mount Everest i Asien är världens högsta berg.",
+   "Väder är hur det är just nu, klimat hur det brukar vara under många år. Från ekvatorn mot polen: tropisk, subtropisk, tempererad och polar zon.",
+   "Vid polerna träffar solens strålar marken snett och sprids över en större yta. Därför är det kallare där än vid ekvatorn."
+  ],
+  "exempel": [
+   [
+    "Vad heter Spaniens huvudstad, och i vilken världsdel ligger Spanien?",
+    "Huvudstaden heter Madrid, och Spanien ligger i Europa."
+   ]
+  ],
+  "ord": [
+   [
+    "halvklot",
+    "en av jordens två halvor, norra eller södra"
+   ],
+   [
+    "klimatzon",
+    "ett bälte runt jorden med ungefär samma klimat"
+   ],
+   [
+    "Golfströmmen",
+    "en varm havsström som gör klimatet i Norden mildare"
+   ],
+   [
+    "monsun",
+    "vindar som ger mycket regn under en del av året, till exempel i Indien"
+   ],
+   [
+    "öken",
+    "ett område där det regnar mycket lite"
+   ],
+   [
+    "tropisk regnskog",
+    "tät skog nära ekvatorn, där det är varmt och regnar mycket"
+   ]
+  ],
+  "tips": "Den största staden är inte alltid huvudstaden. Turkiets huvudstad är Ankara, inte Istanbul."
+ },
+ "Världsreligionerna": {
+  "mal": [
+   "Para ihop judendom, kristendom och islam med sina heliga skrifter och viktiga begrepp.",
+   "Beskriva islams fem pelare och kristendomens tre största inriktningar.",
+   "Förklara hinduismens och buddhismens begrepp, som karma, reinkarnation och nirvana."
+  ],
+  "fakta": [
+   "Judendom, kristendom och islam tror på en enda Gud. Deras skrifter är Toran, Bibeln och Koranen, och Jerusalem är heligt för alla tre.",
+   "Islams fem pelare är trosbekännelsen, bönen, allmosan, fastan under ramadan och vallfärden till Mecka.",
+   "De flesta kristna tror på treenigheten: Gud är Fadern, Sonen och den heliga Anden. De tre största inriktningarna är katolska, ortodoxa och protestantiska kyrkor.",
+   "De flesta hinduer bor i Indien. Floden Ganges och kon är heliga för många, och Vedaskrifterna är de äldsta heliga texterna.",
+   "Buddha hette Siddharta Gautama, och ordet betyder den upplyste. Han lärde ut de fyra ädla sanningarna om lidandet och den åttafaldiga vägen bort från det."
+  ],
+  "exempel": [
+   [
+    "Vilken av islams fem pelare handlar om att ge till dem som har det svårt?",
+    "Allmosan: att ge en del av det man har till de fattiga."
+   ]
+  ],
+  "ord": [
+   [
+    "reformationen",
+    "när de protestantiska kyrkorna bröt sig loss från den katolska, efter Martin Luthers teser 1517"
+   ],
+   [
+    "karma",
+    "att det man gör får följder, i detta liv eller nästa"
+   ],
+   [
+    "reinkarnation",
+    "tron att själen föds på nytt i en ny kropp"
+   ],
+   [
+    "nirvana",
+    "buddhismens mål: att bli fri från lidandet och återfödelserna"
+   ],
+   [
+    "chanukka",
+    "judisk högtid då man tänder ljus under åtta dagar"
+   ]
+  ],
+  "tips": "Karma och reinkarnation hör ihop: det man gör i ett liv påverkar nästa."
+ }
+}

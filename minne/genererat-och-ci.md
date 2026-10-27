@@ -339,7 +339,10 @@ Körs på varje push och PR. Ska vara grön före merge.
    väljer meningen efter strömbrytaren `kortreservation`. Fakturameningen, meningen om de obetalda
    passen och "tio dagar" står bland det gamla sedan 2026-10-21, då fakturan togs bort)
 4. `verktyg/kolla-migrationer.py`, och `verktyg/bygg-uppgifter.py --kolla`
-   (uppgiftsbankens form, och att den har sin migration)
+   (uppgiftsbankens form, och att den har sin migration); sedan 2026-10-27 också
+   `verktyg/bygg-faktablad.py --kolla`: ett faktablad per område i banken, inget blad
+   utan område, längdgränserna, och att `nexlax-fakta/*.json` är det verktyget skriver nu
+   (ändras ett blad: kör `--skriv` och checka in filen; `minne/nexlax.md`, Fas 25)
 5. `verktyg/kolla-csp.py` (fyra vyer sedan `/barn`, och `/lank` sedan
    2026-10-01), och
    `verktyg/kolla-behorigheter.py`: adminbehörigheterna står lika i
@@ -437,7 +440,9 @@ eller en trigger.
 
 **Docker Hub kan svara 429** på `supabase/postgres`; samma bild finns som
 `public.ecr.aws/supabase/postgres:15.8.1.085` (samma id), och `PORT=… NAMN=…`
-låter två sessioner bygga var sin databas samtidigt (2026-10-07).
+låter två sessioner bygga var sin databas samtidigt (2026-10-07). 2026-10-27 svarade
+ECR också nej ("Data limit exceeded"); Googles spegel av Docker Hub gick:
+`BILD=mirror.gcr.io/supabase/postgres:15.8.1.085 verktyg/lokal-databas.sh bygg`.
 
 **Sviten går att köra lokalt** (2026-09-30): `verktyg/lokal-databas.sh`
 bygger databasen i Docker (`supabase/postgres`) ur arkivet och alla

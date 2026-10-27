@@ -1,0 +1,217 @@
+{
+ "Redovisning och bokslut": {
+  "mal": [
+   "Föra intäkter och kostnader till rätt år och skilja på utgift, utbetalning och kostnad.",
+   "Räkna ut linjära avskrivningar och en tillgångs bokförda värde.",
+   "Räkna ut kostnaden för sålda varor och värdera varulagret.",
+   "Följa resultaträkningen från nettoomsättning till årets resultat."
+  ],
+  "fakta": [
+   "Periodisering: en intäkt eller kostnad hör till den period den gäller, inte till den då pengarna betalas.",
+   "Utgift är när företaget köper och åtar sig att betala, utbetalning när pengarna lämnar kontot, och kostnad när det köpta förbrukas eller slits.",
+   "Linjär avskrivning per år = (inköpspris − restvärde) / antal år. Bokfört värde = inköpspris − gjorda avskrivningar. Avskrivningen är en kostnad men ingen utbetalning.",
+   "Kostnad för sålda varor = ingående lager + inköp − utgående lager. Lagret tas upp till inköpspriset, eller till det lägre värde varorna kan säljas för när försäljningskostnaderna dragits av.",
+   "Resultaträkningen: nettoomsättning − rörelsens kostnader = rörelseresultat. Finansiella poster, som räntor, ger resultat efter finansiella poster, och sist kommer årets resultat."
+  ],
+  "exempel": [
+   [
+    "En maskin köps för 120 000 kr, ska användas i 5 år och kan sedan säljas för 20 000 kr. Hur stor är den linjära avskrivningen per år?",
+    "(120 000 − 20 000) / 5 = 20 000 kr per år."
+   ],
+   [
+    "Ingående lager 30 000 kr, inköp 150 000 kr och utgående lager 25 000 kr. Vad var kostnaden för sålda varor?",
+    "30 000 + 150 000 − 25 000 = 155 000 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "periodisering",
+    "att föra intäkter och kostnader till den period de hör till"
+   ],
+   [
+    "restvärde",
+    "vad en tillgång kan säljas för när den inte ska användas längre"
+   ],
+   [
+    "inventering",
+    "att räkna och värdera varorna i lagret"
+   ],
+   [
+    "bokslut",
+    "när årets räkenskaper avslutas och resultat- och balansräkningen görs"
+   ]
+  ],
+  "tips": "Avskrivningen minskar både resultatet och tillgångens värde i balansräkningen, men inte pengarna på banken."
+ },
+ "Nyckeltal": {
+  "mal": [
+   "Räkna ut soliditet, balanslikviditet och kassalikviditet och förklara vad de visar.",
+   "Räkna ut rörelsemarginal och räntabilitet på eget kapital.",
+   "Avgöra vad nyckeltalen säger om ett företags lönsamhet och betalningsförmåga."
+  ],
+  "fakta": [
+   "Soliditet = eget kapital / totalt kapital, där totalt kapital = eget kapital + skulder. Soliditeten säger något om den långsiktiga betalningsförmågan.",
+   "Balanslikviditet = omsättningstillgångar / kortfristiga skulder. Kassalikviditet = (omsättningstillgångar − varulager) / kortfristiga skulder. De visar den kortsiktiga betalningsförmågan.",
+   "Varulagret räknas bort i kassalikviditeten, för varorna måste säljas innan de blir pengar.",
+   "Rörelsemarginal = rörelseresultat / nettoomsättning. Räntabilitet på eget kapital = resultat / eget kapital. Båda mäter lönsamhet.",
+   "Nyckeltalen anges oftast i procent: multiplicera kvoten med 100."
+  ],
+  "exempel": [
+   [
+    "Ett företag har eget kapital på 450 000 kr och skulder på 1 050 000 kr. Vad är soliditeten?",
+    "Totalt kapital: 450 000 + 1 050 000 = 1 500 000 kr. 450 000 / 1 500 000 = 0,30, alltså 30 %."
+   ],
+   [
+    "Omsättningstillgångarna är 360 000 kr, varav varulager 120 000 kr, och de kortfristiga skulderna 300 000 kr. Vad är kassalikviditeten?",
+    "(360 000 − 120 000) / 300 000 = 0,8, alltså 80 %."
+   ]
+  ],
+  "ord": [
+   [
+    "likviditet",
+    "förmågan att betala sina skulder i tid"
+   ],
+   [
+    "lönsamhet",
+    "hur mycket vinst företaget får i förhållande till försäljningen eller kapitalet"
+   ],
+   [
+    "totalt kapital",
+    "eget kapital plus skulder, lika mycket som tillgångarna"
+   ],
+   [
+    "nettoomsättning",
+    "försäljningen under perioden, utan moms och lämnade rabatter"
+   ]
+  ],
+  "tips": "Titta på vad som står under bråkstrecket: soliditeten delas med det totala kapitalet, inte med skulderna."
+ },
+ "Budget": {
+  "mal": [
+   "Förklara vad resultatbudget, likviditetsbudget och budgeterad balansräkning visar.",
+   "Avgöra om en händelse syns i resultatbudgeten, i likviditetsbudgeten eller i båda.",
+   "Räkna ut ett budgeterat resultat och hur mycket pengar som finns kvar enligt likviditetsbudgeten.",
+   "Följa upp en budget, räkna ut avvikelserna och föreslå åtgärder."
+  ],
+  "fakta": [
+   "Resultatbudgeten visar om företaget väntas gå med vinst, likviditetsbudgeten om pengarna räcker till betalningarna och den budgeterade balansräkningen tillgångar och skulder när perioden slutar.",
+   "En försäljning syns i resultatbudgeten när den görs och i likviditetsbudgeten när kunden betalar.",
+   "Avskrivningar är kostnader men inga utbetalningar. Ett lån och en amortering är in- och utbetalningar men ingen intäkt eller kostnad. Räntan är en kostnad.",
+   "Pengar kvar = ingående saldo + inbetalningar − utbetalningar.",
+   "Budgetuppföljning: jämför utfallet med budgeten. Högre intäkter eller lägre kostnader än budgeterat gör resultatet bättre, och tvärtom."
+  ],
+  "exempel": [
+   [
+    "Banken har 30 000 kr den 1 april. I april väntas inbetalningar på 120 000 kr och utbetalningar på 135 000 kr. Hur mycket finns den 30 april?",
+    "30 000 + 120 000 − 135 000 = 15 000 kr."
+   ],
+   [
+    "Det budgeterade resultatet var 200 000 kr. Intäkterna blev 40 000 kr lägre och kostnaderna 10 000 kr lägre än budgeterat. Vilket blev resultatet?",
+    "200 000 − 40 000 + 10 000 = 170 000 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "utfall",
+    "det som faktiskt blev"
+   ],
+   [
+    "avvikelse",
+    "skillnaden mellan utfallet och budgeten"
+   ],
+   [
+    "amortering",
+    "en avbetalning som gör lånet mindre"
+   ],
+   [
+    "saldo",
+    "hur mycket pengar som finns på kontot"
+   ]
+  ],
+  "tips": "Fråga dig om pengar rör sig eller om något förbrukas: pengar hör till likviditetsbudgeten, förbrukning till resultatbudgeten."
+ },
+ "Investering och finansiering": {
+  "mal": [
+   "Förklara vad en investering är och räkna ut återbetalningstiden med pay-back-metoden.",
+   "Räkna ut nuvärden och avgöra när en investering är lönsam med nuvärdesmetoden.",
+   "Skilja på eget och främmande kapital och olika sätt att skaffa pengar till företaget.",
+   "Räkna ut ränta och amortering på ett lån som amorteras lika mycket varje år."
+  ],
+  "fakta": [
+   "Återbetalningstid = grundinvestering / inbetalningsöverskott per år, när överskottet är lika stort varje år. Pay-back-metoden bryr sig inte om åren efter.",
+   "Nuvärde: ett belopp B om n år är värt B / (1 + r)ⁿ i dag, där r är kalkylräntan i decimalform.",
+   "Kapitalvärde = nuvärdet av alla inbetalningsöverskott och restvärdet − grundinvesteringen. Är kapitalvärdet större än noll är investeringen lönsam.",
+   "Eget kapital kommer från ägarna: insatser, nyemission och vinst som stannar kvar. Främmande kapital är skulder, som banklån och leverantörsskulder.",
+   "Räntan är priset för att låna och räknas på den skuld som är kvar. Amorteringen minskar skulden. Vid leasing hyr företaget i stället för att köpa."
+  ],
+  "exempel": [
+   [
+    "En maskin kostar 210 000 kr och ger ett inbetalningsöverskott på 70 000 kr per år. Hur lång är återbetalningstiden?",
+    "210 000 / 70 000 = 3 år."
+   ],
+   [
+    "Kalkylräntan är 8 %. Vad är nuvärdet av 58 320 kr som kommer om två år?",
+    "58 320 / 1,08² = 58 320 / 1,1664 = 50 000 kr."
+   ]
+  ],
+  "ord": [
+   [
+    "grundinvestering",
+    "det investeringen kostar när den görs"
+   ],
+   [
+    "inbetalningsöverskott",
+    "inbetalningarna minus utbetalningarna som investeringen ger under ett år"
+   ],
+   [
+    "kalkylränta",
+    "den ränta som en investering minst ska ge"
+   ],
+   [
+    "nyemission",
+    "när ett aktiebolag säljer nya aktier för att få in mer eget kapital"
+   ]
+  ],
+  "tips": "Räntan det andra året räknas på skulden efter den första amorteringen, inte på hela lånet."
+ },
+ "Organisation och ledarskap": {
+  "mal": [
+   "Beskriva linjeorganisation, linje-stab, matrisorganisation och platt organisation med för- och nackdelar.",
+   "Skilja på den formella och den informella organisationen.",
+   "Beskriva auktoritärt, demokratiskt och låt gå-ledarskap och när de passar.",
+   "Förklara Maslows behovstrappa och Herzbergs hygien- och motivationsfaktorer."
+  ],
+  "fakta": [
+   "Linjeorganisation: varje anställd har en chef, och order går uppifrån och ner. Linje-stab: en stab med experter ger råd men leder ingen. Matris: en anställd kan ha två chefer.",
+   "En platt organisation har få nivåer mellan ledningen och de anställda. Organisationsschemat visar den formella organisationen; kontakter och vänskap utanför det är den informella.",
+   "Den auktoritära ledaren bestämmer själv, den demokratiska låter gruppen vara med, och låt gå-ledaren lägger sig inte i. Situationsanpassat ledarskap väljer stil efter medarbetarna och läget.",
+   "Maslows behovstrappa, nerifrån och upp: fysiologiska behov, trygghet, gemenskap, uppskattning och självförverkligande.",
+   "Herzberg: hygienfaktorer, som lön och arbetsmiljö, gör folk missnöjda om de är dåliga men motiverar inte i sig. Motivationsfaktorer är till exempel erkännande, ansvar och utveckling."
+  ],
+  "exempel": [
+   [
+    "Ett bygge har en platschef, arbetsledare och snickare, och en säkerhetsexpert som ger platschefen råd. Vilken organisationsform är det?",
+    "Linje-stab. Platschefen, arbetsledarna och snickarna är linjen, och säkerhetsexperten är stab: hen ger råd men leder ingen."
+   ]
+  ],
+  "ord": [
+   [
+    "stab",
+    "experter som stöder ledningen med råd"
+   ],
+   [
+    "informell organisation",
+    "kontakterna och relationerna som inte syns i organisationsschemat"
+   ],
+   [
+    "hygienfaktor",
+    "något som gör de anställda missnöjda om det saknas, men som inte motiverar i sig"
+   ],
+   [
+    "motivationsfaktor",
+    "något i själva arbetet som gör de anställda motiverade"
+   ]
+  ],
+  "tips": "Tänk på läget: i en kris behövs tydliga order, medan ett kreativt projekt ofta blir bättre när gruppen får vara med och bestämma."
+ }
+}

@@ -1647,7 +1647,7 @@
     if (S.klippkortFel) {
       kop.innerHTML = tomt('Köpen gick inte att läsa', S.klippkortFel);
     } else if (!köp.length) {
-      kop.innerHTML = tomt('Inga köpta timmar än', 'Familjerna köper planer i studievyn, under Erbjudanden.');
+      kop.innerHTML = tomt('Inga köpta timmar än', 'Familjerna köper planer i studievyn, under Betalning & planer.');
     } else {
       kop.innerHTML = köp.map(k => {
         const betald = k.status === 'betald';

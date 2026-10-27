@@ -692,6 +692,22 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
     padding-right:.05em;
   }
 }
+/* Etiketten är namnet, utan strecket framför och i NexLäx färger
+   (2026-10-27, Leo: "Ta bort strecket runt nexläx och skriv nexläx med
+   nexläx blå/lila färg istället"): samma gradient som "spel.", blå till
+   lila, och matematikens blå utan stöd för background-clip:text. */
+.nlx-huvud .nx-et{
+  font-family:var(--f-sans);font-size:clamp(1.05rem,1.3vw,1.25rem);font-weight:800;
+  letter-spacing:-.02em;text-transform:none;color:var(--amne-ma);
+}
+.nlx-huvud .nx-et::before{display:none}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .nlx-huvud .nx-et{
+    background:linear-gradient(96deg,var(--amne-ma) 10%,var(--amne-en) 90%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+  }
+}
 .nlx-lede{margin-top:clamp(20px,2.2vw,28px);max-width:50ch}
 
 /* ---------- stigen: fyra delar som följer telefonen ----------
@@ -3274,14 +3290,21 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   background:linear-gradient(90deg,transparent,var(--bli-kant) 22%,var(--bli-kant) 78%,transparent);
 }
 :is(#bli,.bli-svart) .nx-et{color:var(--lera-l)}
-#bli .nx-split-bild .nx-fig,
 .bli-svart .nx-page-hero-foto{
   outline:1px solid var(--bli-kant);outline-offset:7px;
 }
-#bli .nx-punkter li{border-color:var(--bli-linje)}
+/* Färre streck av lera på startsidan (2026-10-27, Leo: "De oranga
+   strecken på vill du hjälpa någon att jobb blev några för många ta bort
+   vissa och gör den sektionen mer clean"). Kvar står linjen i överkanten,
+   som markerar gränsen i mörkt läge, och stegens siffror. Fotot står utan
+   ram, punkterna utan linjer emellan och bockarna utan ring, och ansökans
+   fyra steg är ytor utan kant. Bli studiehjälpare-sidan (.bli-svart)
+   behåller sina kanter. */
+#bli .nx-punkter li,
+#bli .nx-punkter li:last-child{border:0;padding:11px 0}
 #bli .nx-punkter .pk{
-  border-color:var(--bli-kant);
-  background:color-mix(in srgb,var(--lera-l) 12%,transparent);
+  border:0;
+  background:color-mix(in srgb,var(--lera-l) 16%,transparent);
 }
 #bli .nx-punkter .pk svg{stroke:var(--lera-l)}
 :is(#bli,.bli-svart) .nx-apply-flow > .nx-apply-step,
@@ -3291,6 +3314,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
     rgba(239,230,214,.03);
   border-color:var(--bli-kant);
 }
+#bli .nx-apply-flow > .nx-apply-step{border-color:transparent}
 :is(#bli,.bli-svart) .nx-apply-step em{color:var(--f,var(--lera-l))}
 @media (hover:hover) and (pointer:fine){
   :is(#bli,.bli-svart) .nx-apply-flow > .nx-apply-step:hover,
@@ -3298,6 +3322,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
     background-color:rgba(239,230,214,.07);
     border-color:color-mix(in srgb,var(--lera-l) 70%,transparent);
   }
+  #bli .nx-apply-flow > .nx-apply-step:hover{border-color:transparent}
 }
 
 /* ============================================================
@@ -3369,6 +3394,139 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   font-size:clamp(1.14rem,1.9vw,1.5rem);
   line-height:1.46;letter-spacing:-.02em;font-weight:500;
   max-width:58ch;
+}
+
+/* ---------- Trustpilot under brevet (2026-10-27, nextrum-socialt.js) ----------
+   Betyget i ett kort, och omdömena på ett band som rullar när de finns.
+   Inget från Trustpilots servrar: siffrorna står i omdomen.json. Grönt
+   är Trustpilots, bara i stjärnorna och märket, så att det syns vems
+   betyget är. Stjärnorna är två lager med samma fem, och det fyllda
+   klipps vid --fyll, så att 4,6 ser ut som 4,6. */
+.nx-tp{--tp-gron:#00B67A;margin-top:clamp(18px,2.2vw,28px);display:grid;gap:clamp(14px,1.6vw,20px)}
+.nx-tp-kort{
+  display:flex;flex-wrap:wrap;align-items:center;gap:14px clamp(18px,2.4vw,30px);
+  padding:clamp(18px,2.2vw,26px) clamp(20px,2.8vw,34px);
+  border-radius:clamp(22px,2.2vw,28px);
+  background:var(--kort);box-shadow:var(--kort-sk);
+  border:1px solid color-mix(in srgb,var(--bl) 8%,transparent);
+}
+.nx-tp-logga{
+  display:inline-flex;align-items:center;gap:7px;
+  font-weight:700;font-size:1.05rem;letter-spacing:-.02em;color:var(--bl);text-decoration:none;
+}
+.nx-tp-logga svg{width:22px;height:22px;fill:var(--tp-gron)}
+.nx-tp-stjarnor{position:relative;display:inline-block;line-height:0;flex:none}
+.nx-tp-tom,.nx-tp-full{display:inline-flex;gap:3px}
+.nx-tp-full{position:absolute;inset:0 auto 0 0;overflow:hidden;width:var(--fyll,0%)}
+.nx-tp-stjarnor i{display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:4px}
+.nx-tp-tom i{background:color-mix(in srgb,var(--bl) 12%,transparent)}
+.nx-tp-full i{background:var(--tp-gron)}
+.nx-tp-stjarnor svg{width:19px;height:19px;fill:var(--kort)}
+.nx-tp-full svg{fill:#fff}
+.nx-tp-betyg{display:grid;gap:2px;margin:0;min-width:0;flex:1 1 220px}
+.nx-tp-betyg b{font-size:1.05rem;font-weight:700;letter-spacing:-.02em;color:var(--bl)}
+.nx-tp-betyg span{font-size:.95rem;color:var(--bl-2)}
+.nx-tp-knapp{flex:none;gap:8px}
+.nx-tp-knapp svg{width:14px;height:14px}
+.nx-tp-not{margin:0;font-size:.88rem;line-height:1.5;color:var(--bl-3);max-width:70ch}
+.nx-tp-not a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+
+/* Bandet: kanterna tonas med gradienter, aldrig mask-image (Safari,
+   CLAUDE.md avsnitt 3). Skriptet klonar korten tills raden räcker och
+   sätter --tp-langd (en uppsättnings bredd) och --tp-tid; CSS flyttar
+   raden exakt en uppsättning, så att slutet möter början. Muspekaren
+   stannar det. Med rörelse bortvald står raden still och går att svepa. */
+.nx-tp-band{position:relative;overflow:hidden;margin-inline:calc(-1 * clamp(4px,1vw,12px))}
+.nx-tp-band::before,.nx-tp-band::after{
+  content:"";position:absolute;top:0;bottom:0;width:clamp(24px,5vw,70px);z-index:1;pointer-events:none;
+}
+.nx-tp-band::before{left:0;background:linear-gradient(90deg,var(--pap),transparent)}
+.nx-tp-band::after{right:0;background:linear-gradient(270deg,var(--pap),transparent)}
+.nx-tp-rad{display:flex;gap:clamp(12px,1.4vw,18px);width:max-content;margin:0;padding:6px clamp(4px,1vw,12px) 14px;list-style:none}
+.nx-tp-rad.rullar{animation:nx-tp-rull var(--tp-tid,40s) linear infinite}
+.nx-tp-band:hover .nx-tp-rad.rullar{animation-play-state:paused}
+@keyframes nx-tp-rull{to{transform:translateX(calc(-1 * var(--tp-langd,0px)))}}
+.nx-tp-omd{
+  width:clamp(250px,26vw,320px);flex:none;display:flex;flex-direction:column;gap:8px;
+  padding:18px 20px;border-radius:20px;background:var(--kort);box-shadow:var(--kort-sk);
+  border:1px solid color-mix(in srgb,var(--bl) 7%,transparent);
+}
+.nx-tp-omd .nx-tp-stjarnor i{width:18px;height:18px;border-radius:3px}
+.nx-tp-omd .nx-tp-stjarnor svg{width:12px;height:12px}
+.nx-tp-omd .nx-tp-tom,.nx-tp-omd .nx-tp-full{gap:2px}
+.nx-tp-omd b{font-size:.98rem;font-weight:700;letter-spacing:-.018em;color:var(--bl)}
+.nx-tp-omd p{
+  margin:0;font-size:.93rem;line-height:1.5;color:var(--bl-2);
+  display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;
+}
+.nx-tp-vem{margin-top:auto;font-size:.82rem;color:var(--bl-3)}
+@media (prefers-reduced-motion:reduce){
+  .nx-tp-band{overflow-x:auto;scroll-snap-type:x mandatory}
+  .nx-tp-omd{scroll-snap-align:start}
+  .nx-tp-rad.rullar{animation:none}
+}
+@media (max-width:560px){
+  .nx-tp-kort{display:grid;grid-template-columns:auto 1fr;align-items:center}
+  .nx-tp-logga{grid-column:1/-1}
+  .nx-tp-stjarnor i{width:24px;height:24px}
+  .nx-tp-stjarnor svg{width:16px;height:16px}
+  .nx-tp-betyg{grid-column:1/-1}
+  .nx-tp-knapp{grid-column:1/-1;justify-content:center}
+}
+
+/* ---------- Följ oss på Instagram, vid bildväggen (2026-10-27) ----------
+   Ett litet kort som hänger i bildväggens övre högra hörn på en bred
+   skärm, mitt emot rubriken där väggen har luft (längre ned skymde det
+   ett foto), och poppar fram när väggen syns (nextrum-socialt.js sätter .vantar
+   och sedan .syns). På en smal skärm står det sist i väggen, i flödet.
+   Utan skript, och med rörelse bortvald, står det bara där. Krysset
+   stänger det för sidvisningen. Lutningen sitter på kortet med rotate,
+   och rörelsen är scale och opacity, aldrig transform på trycket. */
+.nx-ig{
+  position:relative;z-index:2;
+  display:flex;align-items:center;gap:10px;
+  width:min(100%,340px);margin:clamp(36px,5vw,56px) auto 0;
+}
+.nx-ig-kort{
+  flex:1;min-width:0;display:flex;align-items:center;gap:12px;
+  padding:9px 14px 9px 9px;border-radius:20px;
+  background:var(--kort);box-shadow:var(--kort-sk),0 24px 50px -30px rgba(46,42,32,.45);
+  border:1px solid color-mix(in srgb,var(--bl) 8%,transparent);
+  color:var(--bl);text-decoration:none;
+  transition:scale .25s var(--e);
+}
+.nx-ig-kort:active{scale:.97}
+.nx-ig-bild{display:block;width:74px;aspect-ratio:1;flex:none;border-radius:14px;overflow:hidden;background:var(--tint)}
+.nx-ig-bild img{display:block;width:100%;height:100%;object-fit:cover}
+.nx-ig-text{display:grid;gap:3px;min-width:0}
+.nx-ig-text b{font-size:1rem;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.nx-ig-namn{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;color:var(--bl-3)}
+.nx-ig-namn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+.nx-ig-namn svg .fylld{fill:currentColor;stroke:none}
+.nx-ig-stang{
+  display:grid;place-items:center;width:44px;height:44px;flex:none;border:0;border-radius:50%;
+  background:transparent;color:var(--bl-3);cursor:pointer;
+}
+.nx-ig-stang svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+@media (hover:hover) and (pointer:fine){
+  .nx-ig-kort:hover{scale:1.02}
+  .nx-ig-stang:hover{color:var(--bl)}
+}
+@media (min-width:1240px){
+  .nx-ig{
+    position:absolute;right:clamp(18px,3vw,48px);top:clamp(70px,10vw,150px);margin:0;
+    width:auto;flex-direction:column;align-items:flex-end;gap:6px;rotate:2deg;
+  }
+  .nx-ig-kort{flex-direction:column;align-items:stretch;width:210px;padding:9px 9px 14px;border-radius:22px}
+  .nx-ig-bild{width:100%;aspect-ratio:4/5;border-radius:15px}
+  .nx-ig-text{padding:2px 6px 0}
+  .nx-ig-stang{order:-1;width:36px;height:36px;background:var(--kort);box-shadow:var(--kort-sk)}
+}
+.nx-ig.vantar{opacity:0;scale:.82;transition:opacity .45s var(--e),scale .6s var(--vy-fjader,cubic-bezier(.3,1.5,.5,1))}
+.nx-ig.vantar.syns{opacity:1;scale:1}
+.nx-ig.stangd{opacity:0;scale:.9;transition:opacity .3s var(--e),scale .3s var(--e)}
+@media (prefers-reduced-motion:reduce){
+  .nx-ig.vantar{opacity:1;scale:1;transition:none}
 }
 
 /* ============================================================

@@ -1,0 +1,258 @@
+{
+ "Rättssystemet": {
+  "mal": [
+   "Förklara vem som stiftar lagar och vad regeringens förordningar är.",
+   "Känna igen de fyra grundlagarna och vad de handlar om.",
+   "Beskriva de allmänna domstolarna och förvaltningsdomstolarna, och vad ett prejudikat är.",
+   "Skilja på civilrätt och offentlig rätt, och på rättskällorna."
+  ],
+  "fakta": [
+   "Riksdagen stiftar lagarna. Regeringen styr landet och beslutar förordningar, regler under lagarna, som inte får gå emot en lag.",
+   "Grundlagarna är fyra: regeringsformen, successionsordningen, tryckfrihetsförordningen och yttrandefrihetsgrundlagen. De ändras med två likadana beslut och ett riksdagsval emellan.",
+   "Civilrätten gäller mellan enskilda, som avtal och arv. Offentlig rätt, där straffrätten ingår, gäller mellan det allmänna och den enskilde.",
+   "De allmänna domstolarna är tingsrätten, hovrätten och Högsta domstolen. En myndighets beslut överklagas till förvaltningsrätten, sedan kammarrätten och Högsta förvaltningsdomstolen.",
+   "Ett prejudikat är en dom, främst från de högsta domstolarna, som visar hur lagen ska tolkas. Högsta domstolen tar bara upp mål som får prövningstillstånd."
+  ],
+  "exempel": [
+   [
+    "Skatteverket beslutar att du ska betala mer skatt, och du vill gå till domstol. Var börjar målet?",
+    "I förvaltningsrätten, för det är en myndighets beslut. Därefter kan det gå till kammarrätten och Högsta förvaltningsdomstolen."
+   ],
+   [
+    "Två grannar är oense om vem som ska betala för ett staket. Vilken domstol prövar tvisten först?",
+    "Tingsrätten. Den dömer i första instans i tvister mellan enskilda, och i brottmål."
+   ]
+  ],
+  "ord": [
+   [
+    "talmannen",
+    "leder riksdagen och föreslår en ny statsminister, som riksdagen röstar om"
+   ],
+   [
+    "nämndemän",
+    "vanliga medborgare, valda av kommunen, som dömer med en lagfaren domare i många brottmål i tingsrätten"
+   ],
+   [
+    "JO",
+    "Justitieombudsmannen: väljs av riksdagen och granskar att myndigheterna följer lagarna"
+   ],
+   [
+    "rättskällor",
+    "det jurister stöder sig på: lag, förarbeten, prejudikat och doktrin"
+   ],
+   [
+    "förarbeten",
+    "utredningar och propositioner som visar vad lagen ska betyda"
+   ],
+   [
+    "doktrin",
+    "det forskare i juridik skriver om rätten"
+   ]
+  ],
+  "tips": "Lagen väger tyngst bland rättskällorna; förarbeten, prejudikat och doktrin hjälper till att tolka den."
+ },
+ "Avtal": {
+  "mal": [
+   "Förklara hur ett avtal kommer till med anbud och accept.",
+   "Avgöra när ett svar blir ett nytt anbud i stället för ett avtal.",
+   "Känna igen när ett avtal är ogiltigt eller kan jämkas.",
+   "Förklara vad en fullmakt är och vad som gäller för omyndiga."
+  ],
+  "fakta": [
+   "Ett avtal kommer till när ett anbud möter en accept som stämmer med anbudet. Huvudregeln är att ett muntligt avtal är lika bindande som ett skriftligt.",
+   "Löftesprincipen: den som lämnat ett anbud är bunden av det så länge mottagaren har rätt att svara. Ett ja med ändringar, eller ett svar efter tidsfristen, blir ett nytt anbud.",
+   "En annons med ett pris är normalt en uppmaning att lämna anbud, inte ett bindande anbud.",
+   "Svek, ocker och tvång gör ett avtal ogiltigt. Ett oskäligt villkor kan jämkas, alltså ändras så att det blir skäligt.",
+   "Den som är under 18 år är omyndig och behöver som regel vårdnadshavarens ja. Från 16 år råder en omyndig själv över det hon eller han tjänat på eget arbete."
+  ],
+  "exempel": [
+   [
+    "Mira erbjuder Ali att köpa hennes gamla dator. Ali svarar: ”Ja, om du lägger till musen.” Har de ett avtal?",
+    "Nej, inte än. Ett ja med ändringar är en oren accept och räknas som ett nytt anbud, som Mira kan anta eller avböja."
+   ],
+   [
+    "Nora ger sin bror fullmakt att sälja hennes cykel, och han säljer den till en granne. Vem är bunden av avtalet med grannen?",
+    "Nora, som är fullmaktsgivare. Avtalet blir som om hon hade ingått det själv, så länge brodern höll sig inom fullmakten."
+   ]
+  ],
+  "ord": [
+   [
+    "anbud",
+    "ett erbjudande om att ingå ett avtal"
+   ],
+   [
+    "accept",
+    "ett ja till ett anbud"
+   ],
+   [
+    "fullmakt",
+    "rätt att ingå avtal i någon annans namn"
+   ],
+   [
+    "fullmaktsgivare",
+    "den som ger fullmakten; den som får den kallas fullmäktig"
+   ],
+   [
+    "omyndig",
+    "den som är under 18 år; vårdnadshavaren kan godkänna ett avtal i efterhand"
+   ],
+   [
+    "jämka",
+    "ändra ett villkor så att det blir skäligt"
+   ]
+  ],
+  "tips": "Vissa avtal måste vara skriftliga: köp av ett hus kräver ett kontrakt som både köparen och säljaren skriver under."
+ },
+ "Köp och konsument": {
+  "mal": [
+   "Avgöra vilken lag som gäller vid ett köp: konsumentköplagen, köplagen, konsumenttjänstlagen eller distansavtalslagen.",
+   "Förklara hur du reklamerar och vad du kan kräva när en vara har ett fel.",
+   "Skilja på ångerrätt, öppet köp, reklamationsrätt och garanti.",
+   "Beskriva vad Allmänna reklamationsnämnden gör."
+  ],
+  "fakta": [
+   "Konsumentköplagen gäller när en privatperson köper en vara av ett företag, och köplagen mellan två privatpersoner. Bygger en snickare om ditt kök gäller konsumenttjänstlagen, för det är en tjänst.",
+   "Reklamera betyder att säga till säljaren att varan har ett fel. Gör det inom skälig tid efter att du märkt felet; två månader är alltid i tid.",
+   "Säljaren svarar som huvudregel för fel som visar sig inom tre år. Ett fel som visar sig inom två år antas ha funnits vid köpet, och då ska butiken visa motsatsen.",
+   "Först kan du kräva att felet lagas eller att du får en ny vara. Går det inte, eller tar det för lång tid, kan du få prisavdrag eller häva köpet.",
+   "Vid köp på nätet från ett företag har du 14 dagars ångerrätt enligt distansavtalslagen. I en butik finns ingen ångerrätt i lagen: öppet köp är butikens frivilliga löfte."
+  ],
+  "exempel": [
+   [
+    "Elsa köper hörlurar i en butik. Efter ett år slutar de fungera, och hon säger till butiken direkt. Vad gäller?",
+    "Felet visade sig inom två år, så det antas ha funnits vid köpet, och Elsa har reklamerat i tid. Hon kan i första hand kräva att felet lagas eller att hon får nya hörlurar."
+   ]
+  ],
+  "ord": [
+   [
+    "konsument",
+    "en privatperson som köper främst för privat bruk"
+   ],
+   [
+    "garanti",
+    "ett extra löfte från säljaren eller tillverkaren, som kan ge mer men aldrig mindre"
+   ],
+   [
+    "ARN",
+    "Allmänna reklamationsnämnden: prövar tvister mellan konsumenter och företag och ger en rekommendation"
+   ],
+   [
+    "avhjälpande",
+    "felet lagas"
+   ],
+   [
+    "omleverans",
+    "du får en ny, felfri vara"
+   ],
+   [
+    "hävning",
+    "köpet går tillbaka och du får pengarna"
+   ]
+  ],
+  "tips": "Reklamationsrätten har du alltid enligt lag, med eller utan garanti."
+ },
+ "Familj och arv": {
+  "mal": [
+   "Förklara vad som delas vid en bodelning, för makar och för sambor.",
+   "Beskriva vem som ärver enligt lag, i vilken ordning, och vad laglotten är.",
+   "Förklara vad ett testamente, ett äktenskapsförord och ett samboavtal kan göra.",
+   "Beskriva föräldrarnas ansvar för sina barn."
+  ],
+  "fakta": [
+   "Det mesta makar äger är giftorättsgods, som delas lika vid en bodelning sedan skulderna dragits av. Med ett äktenskapsförord, registrerat hos Skatteverket, blir viss egendom enskild.",
+   "Sambolagen delar bara bostad och bohag som skaffats för att användas tillsammans, och det går att avtala bort i ett samboavtal. Sambor ärver inte varandra utan testamente.",
+   "Arvsklasserna: först bröstarvingarna, barn och barnbarn, sedan föräldrar och syskon, sist far- och morföräldrar och deras barn. Kusiner ärver inte.",
+   "Laglotten är hälften av arvslotten. Den kan ett barn alltid kräva, vad ett testamente än säger.",
+   "Har den avlidne en make och bara gemensamma barn ärver maken först. Särkullbarn kan få ut sitt arv direkt. Finns ingen arvinge eller testamente går arvet till Allmänna arvsfonden."
+  ],
+  "exempel": [
+   [
+    "Karin dör. Hon var inte gift och hade inga barn och inget testamente, men hennes föräldrar lever. Vem ärver?",
+    "Föräldrarna. De hör till andra arvsklassen, och i den första, barn och barnbarn, finns ingen."
+   ],
+   [
+    "Två sambor har köpt en soffa till bostaden för att använda den tillsammans. De gör slut. Ingår soffan i det som sambolagen delar?",
+    "Ja, den är bohag som skaffats för att användas tillsammans, om de inte har avtalat bort delningen i ett samboavtal."
+   ]
+  ],
+  "ord": [
+   [
+    "enskild egendom",
+    "egendom som inte delas vid en bodelning"
+   ],
+   [
+    "testamente",
+    "skriftligt besked om vem som ska få ens egendom, underskrivet inför två vittnen"
+   ],
+   [
+    "dödsbo",
+    "den avlidnes egendom och skulder innan arvet är fördelat"
+   ],
+   [
+    "särkullbarn",
+    "ett barn som den ena maken har med någon annan"
+   ],
+   [
+    "vårdnadshavare",
+    "ansvarar för att barnet får omvårdnad, trygghet och en god fostran"
+   ],
+   [
+    "underhållsskyldighet",
+    "föräldrarnas plikt att försörja barnet, till 18 år och längre om barnet går i skolan, som längst till 21"
+   ]
+  ],
+  "tips": "Bodelning delar egendom när ett förhållande tar slut eller en make dör; när ett arv fördelas heter det arvskifte."
+ },
+ "Brott och straff": {
+  "mal": [
+   "Förklara vad som krävs för att en handling ska vara ett brott, och vad legalitetsprincipen säger.",
+   "Skilja på uppsåt och oaktsamhet, och på böter och skadestånd.",
+   "Förklara vad nödvärn är och var gränsen går.",
+   "Beskriva stegen i ett brottmål och vem som gör vad i rättegången."
+  ],
+  "fakta": [
+   "Ett brott är en handling som står beskriven i brottsbalken eller en annan lag, med ett straff. Legalitetsprincipen: ingen får straffas för något som inte var ett brott när det hände.",
+   "Huvudregeln är att ett brott kräver uppsåt, att man gör något med flit. Oaktsamhet, slarv, räcker bara när lagen säger det.",
+   "Böter är ett straff och betalas till staten. Skadestånd är inget straff utan betalas till den som har skadats.",
+   "Nödvärn är rätten att försvara sig, eller hjälpa någon, mot ett pågående angrepp. Försvaret får inte vara uppenbart oförsvarligt.",
+   "Ett brottmål går från anmälan till förundersökning, åtal, huvudförhandling och dom. För att någon ska dömas måste brottet vara ställt utom rimligt tvivel."
+  ],
+  "exempel": [
+   [
+    "Någon knuffar Jonna och försöker ta hennes väska. Hon knuffar tillbaka för att komma loss. Är det nödvärn?",
+    "Ja, troligen: hon försvarar sig mot ett pågående angrepp, och försvaret är inte uppenbart oförsvarligt. Att fortsätta slå någon som redan har gett upp hade inte varit nödvärn."
+   ],
+   [
+    "Tim döms till böter för ett brott och ska också betala skadestånd till den han skadade. Vem får pengarna?",
+    "Böterna går till staten, för de är straffet. Skadeståndet går till den skadade och ersätter skadan."
+   ]
+  ],
+  "ord": [
+   [
+    "målsägande",
+    "den som har utsatts för brottet"
+   ],
+   [
+    "tilltalad",
+    "den som är åtalad"
+   ],
+   [
+    "åklagare",
+    "leder ofta förundersökningen, avgör om det blir åtal och för talan mot den tilltalade"
+   ],
+   [
+    "offentlig försvarare",
+    "försvarar den misstänkte och betalas av staten"
+   ],
+   [
+    "oskuldspresumtion",
+    "den misstänkte ska behandlas som oskyldig tills domen har vunnit laga kraft"
+   ],
+   [
+    "laga kraft",
+    "domen kan inte längre överklagas"
+   ]
+  ],
+  "tips": "Det är åklagaren som ska bevisa att den misstänkte är skyldig, inte den misstänkte som ska bevisa att hen är oskyldig."
+ }
+}

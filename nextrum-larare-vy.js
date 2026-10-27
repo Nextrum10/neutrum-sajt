@@ -4637,6 +4637,11 @@
     /* Notiserna vid inloggningen (2026-10-12): passen, förslagen och de
        olästa är hämtade, och det är allt klockan räknar. */
     NXStudie.notisruta({ user: S.user, poster: notisposter(), rubrik: 'Det här väntar på dig' });
+    /* Studiehjälparvyn på hemskärmen (2026-10-27), som i studievyn. */
+    if (typeof NXHemskarm !== 'undefined') {
+      NXHemskarm.profil(document.getElementById('hem-profil'), 'studiehjalpare');
+      setTimeout(() => NXHemskarm.ruta('studiehjalpare'), 6000);
+    }
     await Promise.all([ritaÖvSamtal(), laddaErsattning(), laddaBarnchatt()]);
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');

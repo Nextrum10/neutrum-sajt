@@ -1,0 +1,202 @@
+{
+ "Grundlagarna": {
+  "mal": [
+   "Förklara offentlighetsprincipen, censurförbudet och meddelarfriheten.",
+   "Beskriva fri- och rättigheterna i regeringsformen och hur de kan begränsas.",
+   "Beskriva hur en lag stiftas, från utredning till beslut i riksdagen.",
+   "Förklara EU-rättens företräde och domstolarnas självständighet."
+  ],
+  "fakta": [
+   "Offentlighetsprincipen står i tryckfrihetsförordningen: alla får ta del av allmänna handlingar som inte omfattas av sekretess, som huvudregel utan att säga vem de är eller varför.",
+   "Censurförbudet: ingen myndighet får granska en skrift innan den ges ut. Meddelarfriheten och efterforskningsförbudet skyddar den som lämnar uppgifter till medierna.",
+   "Regeringsformens andra kapitel skyddar fri- och rättigheter som yttrandefrihet, mötesfrihet och religionsfrihet. Några får begränsas genom lag, som yttrandefriheten genom brottet förtal.",
+   "En lag stiftas i steg: utredning, remiss, regeringens proposition, behandling i ett utskott och beslut i riksdagen. Lagrådet granskar förslagen innan riksdagen beslutar.",
+   "EU-rätten har företräde framför svensk lag. En EU-förordning gäller direkt, medan ett direktiv först ska föras in i svensk lag."
+  ],
+  "exempel": [
+   [
+    "En journalist ber kommunen om ett mejl som kommunen har fått in. Kommunen frågar varför hon vill ha det. Får kommunen fråga det?",
+    "Som huvudregel inte. Mejlet är en allmän handling, och den som begär ut den behöver inte säga vem hon är eller varför. Bara om kommunen måste pröva om det är hemligt får den fråga, och då kan hon låta bli att svara."
+   ]
+  ],
+  "ord": [
+   [
+    "proposition",
+    "regeringens förslag till riksdagen; en riksdagsledamots förslag heter motion"
+   ],
+   [
+    "misstroendeförklaring",
+    "riksdagens besked att en minister inte har dess förtroende; röstar mer än hälften av ledamöterna för den måste ministern avgå"
+   ],
+   [
+    "lagprövning",
+    "en domstol eller myndighet låter bli att tillämpa en regel som strider mot grundlag"
+   ],
+   [
+    "Europakonventionen",
+    "konventionen om de mänskliga rättigheterna, svensk lag sedan 1995"
+   ],
+   [
+    "riksdagen",
+    "349 ledamöter, valda för fyra år i taget"
+   ],
+   [
+    "sekretess",
+    "ett förbud att lämna ut vissa uppgifter"
+   ]
+  ],
+  "tips": "Ingen, inte ens riksdagen eller regeringen, får bestämma hur en domstol ska döma i ett enskilt mål."
+ },
+ "Arbetsrätt": {
+  "mal": [
+   "Beskriva anställningsformerna och vad som gäller vid en provanställning.",
+   "Förklara skälen för uppsägning, turordningen och skillnaden mellan uppsägning och avsked.",
+   "Förklara vad ett kollektivavtal är och vad fredsplikt, strejk och lockout innebär.",
+   "Känna igen diskrimineringsgrunderna och vem som ansvarar för arbetsmiljön."
+  ],
+  "fakta": [
+   "Huvudregeln i lagen om anställningsskydd är tillsvidareanställning, utan slutdatum. En provanställning får vara högst sex månader och går över i en tillsvidareanställning om inget besked ges i tid.",
+   "En arbetsgivare kan säga upp en tillsvidareanställd på grund av arbetsbrist eller av personliga skäl. Vid arbetsbrist gäller som huvudregel turordning: sist in, först ut.",
+   "Ett kollektivavtal är ett avtal mellan en arbetsgivare och ett fackförbund, till exempel om löner och arbetstider. I frågor som det reglerar råder fredsplikt medan det gäller.",
+   "Diskrimineringslagen har sju grunder: kön, könsöverskridande identitet eller uttryck, etnisk tillhörighet, religion eller annan trosuppfattning, funktionsnedsättning, sexuell läggning och ålder.",
+   "Arbetsgivaren har huvudansvaret för arbetsmiljön. Semesterlagen ger 25 semesterdagar per år, och ett muntligt anställningsavtal gäller också, men arbetsgivaren ska ge skriftlig information om de viktigaste villkoren."
+  ],
+  "exempel": [
+   [
+    "Ett lager har för lite arbete och måste säga upp en av två lagerarbetare. Ida har jobbat där i fem år och Erik i ett. Vem har som huvudregel bäst skydd?",
+    "Ida. Vid arbetsbrist gäller turordning, och den som har arbetat längst hos arbetsgivaren har bäst skydd. Arbetsgivaren får göra vissa undantag, och ett kollektivavtal kan ha andra regler."
+   ]
+  ],
+  "ord": [
+   [
+    "avsked",
+    "anställningen upphör direkt, efter att den anställde grovt brutit mot sina skyldigheter"
+   ],
+   [
+    "fredsplikt",
+    "parterna får som huvudregel inte strejka eller ha lockout"
+   ],
+   [
+    "strejk",
+    "de anställda lägger ner arbetet"
+   ],
+   [
+    "lockout",
+    "arbetsgivaren stänger ute de anställda från jobbet"
+   ],
+   [
+    "skyddsombud",
+    "företräder de anställda i frågor om arbetsmiljön"
+   ],
+   [
+    "DO",
+    "Diskrimineringsombudsmannen: tar emot anmälningar och kan driva en sak i domstol"
+   ]
+  ],
+  "tips": "Många regler i arbetsrätten är huvudregler som ett kollektivavtal kan komplettera, till exempel med fler semesterdagar."
+ },
+ "Hyra och skulder": {
+  "mal": [
+   "Förklara besittningsskydd, andrahandsuthyrning och vad hyresnämnden gör.",
+   "Skilja på hyresrätt och bostadsrätt.",
+   "Förklara skuldebrev, borgen, ränta och amortering.",
+   "Beskriva stegen när en räkning inte betalas, från inkasso till utmätning."
+  ],
+  "fakta": [
+   "Med ett förstahandskontrakt har du som huvudregel besittningsskydd: rätt att bo kvar när hyresvärden säger upp avtalet. Hyresvärden behöver ett godtagbart skäl, som obetald hyra.",
+   "Att hyra ut i andra hand kräver hyresvärdens samtycke eller hyresnämndens tillstånd. Hyresgästens uppsägningstid är som huvudregel tre månader, från månadsskiftet efter uppsägningen.",
+   "Med en hyresrätt hyr du av en hyresvärd. Med en bostadsrätt köper du en andel i en förening och rätten att bo i lägenheten.",
+   "Ränta är priset för att låna pengar och räknas i procent av lånet. Amortering är att betala av på själva lånet, och bara den minskar skulden.",
+   "Betalas inte en räkning kan ett inkassokrav följa, sedan betalningsföreläggande och utslag hos Kronofogden, och sist utmätning av lön eller egendom."
+  ],
+  "exempel": [
+   [
+    "Sofia hyr en lägenhet i första hand och ska plugga ett år i en annan stad. Hyresvärden säger nej när hon vill hyra ut den till en kompis. Vad kan hon göra?",
+    "Hon kan söka tillstånd hos hyresnämnden, som avgör sådana tvister. Hyr hon ut utan lov kan hon förlora sitt eget hyreskontrakt."
+   ],
+   [
+    "Moa går i borgen för sin brors lån, och brodern slutar betala. Vad kan hända Moa?",
+    "Hon kan få betala det som brodern inte betalar, i värsta fall hela skulden. Det var det hon tog på sig med borgen."
+   ]
+  ],
+  "ord": [
+   [
+    "deposition",
+    "pengar som hyresgästen betalar i förväg som säkerhet och får tillbaka vid flytten, om inget är skadat och hyran är betald"
+   ],
+   [
+    "hyresnämnden",
+    "medlar och avgör vissa tvister om hyra"
+   ],
+   [
+    "skuldebrev",
+    "ett skriftligt löfte att betala tillbaka en skuld"
+   ],
+   [
+    "kreditprövning",
+    "bankens prövning av om en konsument har råd att betala tillbaka ett lån"
+   ],
+   [
+    "betalningsanmärkning",
+    "syns hos kreditupplysningsföretagen och gör det svårare att få lån eller hyra en bostad"
+   ],
+   [
+    "Kronofogden",
+    "hjälper den som ska ha betalt att driva in skulder, och den som har skulder med skuldsanering"
+   ]
+  ],
+  "tips": "Hyresvärden får komma in i lägenheten för tillsyn och reparationer, men ska som regel säga till i förväg."
+ },
+ "Skadestånd och försäkring": {
+  "mal": [
+   "Förklara när någon blir skyldig att betala skadestånd, och vem som ansvarar när en anställd orsakar en skada.",
+   "Skilja på personskada, sakskada, ren förmögenhetsskada och kränkning.",
+   "Förklara självrisk, rättsskydd och regress, och vad olika försäkringar täcker.",
+   "Skilja på skadestånd och böter."
+  ],
+  "fakta": [
+   "Huvudregeln i skadeståndslagen är ansvar för vållande, culpa: den som orsakat en skada med uppsåt eller av vårdslöshet ska ersätta den. Också barn kan bli skadeståndsskyldiga.",
+   "Arbetsgivaren svarar för skador som de anställda orsakar i arbetet: principalansvar. Har den skadade själv varit vårdslös kan skadeståndet jämkas, alltså sättas ned.",
+   "Skadan ska vara en rimligt väntad följd av handlingen, adekvat kausalitet. Ett långsökt orsakssamband räcker inte.",
+   "Skadestånd ersätter skadan och betalas till den skadade. Böter är ett straff och betalas till staten.",
+   "Trafikförsäkringen måste finnas för ett fordon i trafik och ersätter personskador, oavsett vem som var vållande. Hemförsäkringens ansvarsdel kan betala när du blir skadeståndsskyldig."
+  ],
+  "exempel": [
+   [
+    "En målare som är anställd av ett företag spiller färg på en kunds matta under jobbet. Vem ansvarar i första hand mot kunden?",
+    "Företaget, alltså arbetsgivaren. Den svarar för skador som de anställda orsakar i arbetet: principalansvar."
+   ],
+   [
+    "En skada som Linns hemförsäkring täcker kostar mer än hennes självrisk. Vad betalar försäkringen?",
+    "Det som blir över självrisken. Självrisken betalar Linn själv."
+   ]
+  ],
+  "ord": [
+   [
+    "självrisk",
+    "den del av skadan som du själv betalar"
+   ],
+   [
+    "premie",
+    "det du betalar för försäkringen"
+   ],
+   [
+    "rättsskydd",
+    "den del av hemförsäkringen som betalar en del av kostnaden för ombud i vissa tvister"
+   ],
+   [
+    "regress",
+    "försäkringsbolaget kräver den som orsakade skadan på det bolaget har betalat ut"
+   ],
+   [
+    "ren förmögenhetsskada",
+    "en ekonomisk förlust utan att någon person eller sak har skadats"
+   ],
+   [
+    "kränkning",
+    "ett brott mot någons frihet, frid eller ära"
+   ]
+  ],
+  "tips": "Ett skadestånd ska försätta den skadade i samma ekonomiska läge som om skadan inte hade hänt."
+ }
+}

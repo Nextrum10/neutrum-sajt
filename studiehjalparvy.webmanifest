@@ -1,0 +1,16 @@
+{
+  "name": "Studiehjälparvy — Nextrum",
+  "short_name": "Nextrum",
+  "description": "Nextrums studiehjälparvy: passen, eleverna, rapporterna och meddelandena.",
+  "lang": "sv",
+  "start_url": "/larare",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F1EDE6",
+  "theme_color": "#F1EDE6",
+  "icons": [
+    { "src": "/bilder/nextrum-logo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/bilder/nextrum-logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}

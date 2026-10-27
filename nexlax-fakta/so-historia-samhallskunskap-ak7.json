@@ -1,0 +1,233 @@
+{
+ "Stormaktstiden": {
+  "mal": [
+   "Ordna stormaktstidens krig, fredsslut och regenter i tidsordning.",
+   "Förklara hur Sverige vann och förlorade landområden.",
+   "Beskriva hur stormakten styrdes och betalades, med begrepp som envälde och reduktion.",
+   "Berätta hur vanliga människor levde under stormaktstiden."
+  ],
+  "fakta": [
+   "Stormaktstiden räknas från 1611, när Gustav II Adolf blev kung, till 1718, när Karl XII dog. Riket omfattade också Finland, och de flesta var bönder.",
+   "Regenterna i ordning: Gustav II Adolf, Kristina, Karl X Gustav, Karl XI och Karl XII. Rikskanslern Axel Oxenstierna styrde medan Kristina var barn.",
+   "Sverige deltog i trettioåriga kriget 1630–1648, som slutade med westfaliska freden. Gustav II Adolf stupade vid Lützen 1632.",
+   "Efter tåget över de frusna Bälten fick Sverige Skåne, Blekinge, Halland och Bohuslän i freden i Roskilde 1658. Efter nederlaget vid Poltava 1709 och stora nordiska kriget förlorade riket stora områden.",
+   "Krigen betalades med skatter och utskrivning av soldater, och sjukdomar dödade fler soldater än striderna. Koppar från Falun och tullar i Östersjön gav inkomster."
+  ],
+  "exempel": [
+   [
+    "Hur många år gick det från westfaliska freden 1648 till freden i Roskilde 1658?",
+    "1658 − 1648 = 10. Det gick 10 år."
+   ]
+  ],
+  "ord": [
+   [
+    "stormakt",
+    "ett land med stor makt över andra länder"
+   ],
+   [
+    "envälde",
+    "när kungen styr ensam"
+   ],
+   [
+    "reduktion",
+    "när kronan tar tillbaka jord från adeln, för att staten behöver jordens inkomster"
+   ],
+   [
+    "indelningsverket",
+    "systemet där bönderna höll och betalade soldater"
+   ],
+   [
+    "karolin",
+    "soldat under Karl XI och Karl XII"
+   ],
+   [
+    "utskrivning",
+    "när staten tvingar unga män att bli soldater"
+   ]
+  ],
+  "tips": "Lägg 1611 och 1718 på en tidslinje först, och placera sedan de andra årtalen emellan."
+ },
+ "Befolkning och resurser": {
+  "mal": [
+   "Förklara begrepp som urbanisering, migration och befolkningstäthet.",
+   "Räkna med befolkningstal: täthet, ökning och förändring i procent.",
+   "Skilja på förnybara och ändliga resurser.",
+   "Beskriva hållbar utvecklings tre delar."
+  ],
+  "fakta": [
+   "Befolkningstäthet är antalet invånare delat med ytan i km², alltså invånare per km².",
+   "Om ingen flyttar ändras befolkningen med antalet födda − antalet döda. De flesta i Sverige bor i städer och tätorter.",
+   "Pushfaktorer får människor att lämna en plats, till exempel förföljelse eller torka. Pullfaktorer lockar, till exempel trygghet eller utbildning.",
+   "Förnybara resurser tar inte slut, som sol, vind och vatten. Fossila bränslen som olja och kol är ändliga och ger koldioxid när de eldas.",
+   "Hållbar utveckling har tre delar: ekologisk, social och ekonomisk. Sveriges viktiga naturresurser är bland annat skog, järnmalm och vattenkraft."
+  ],
+  "exempel": [
+   [
+    "En kommun är 400 km² och har 18 000 invånare. Hur många bor det per km²?",
+    "18 000 delat med 400 är 45. Det bor 45 invånare per km²."
+   ],
+   [
+    "En by växer från 200 till 230 invånare. Med hur många procent ökade den?",
+    "Ökningen är 230 − 200 = 30. 30 delat med 200 är 0,15, alltså 15 %."
+   ]
+  ],
+  "ord": [
+   [
+    "urbanisering",
+    "att fler flyttar från landsbygden till städer"
+   ],
+   [
+    "migration",
+    "att människor flyttar mellan länder eller platser"
+   ],
+   [
+    "födelsetal",
+    "antal födda per 1 000 invånare och år"
+   ],
+   [
+    "befolkningspyramid",
+    "ett diagram som visar hur många kvinnor och män det finns i varje åldersgrupp"
+   ],
+   [
+    "ändlig resurs",
+    "en resurs som tar slut om vi använder upp den"
+   ],
+   [
+    "fossila bränslen",
+    "kol, olja och naturgas, bildade av växter och djur för miljontals år sedan"
+   ]
+  ],
+  "tips": "Dela med värdet före förändringen, inte efter, när du räknar ut procenten."
+ },
+ "Rättssamhället": {
+  "mal": [
+   "Beskriva rättskedjan från anmälan till dom.",
+   "Förklara vad åklagare, försvarare, domare och nämndemän gör.",
+   "Ordna de allmänna domstolarna och förklara vad det betyder att överklaga.",
+   "Skilja på brottmål och tvistemål och förklara vad rättssäkerhet är."
+  ],
+  "fakta": [
+   "Rättskedjan: brottet anmäls, polisen utreder, åklagaren väcker åtal, rättegången hålls i tingsrätten och domstolen meddelar dom.",
+   "Åklagaren för talan mot den åtalade, och försvararen hjälper den åtalade. Domaren leder rättegången och dömer, ofta tillsammans med nämndemän.",
+   "Tingsrätten är första domstolen, sedan kommer hovrätten och sist Högsta domstolen. Att överklaga är att be en högre domstol pröva målet igen.",
+   "Riksdagen stiftar lagarna, och de flesta brott och straff står i brottsbalken. Det är domstolen, inte polisen, som bestämmer straffet.",
+   "Rättssäkerhet betyder att alla är lika inför lagen och får en rättvis prövning. Den misstänkta räknas som oskyldig tills en domstol har dömt."
+  ],
+  "exempel": [
+   [
+    "Två grannar är osams om vem som ska betala för ett nytt staket mellan deras tomter och tar saken till domstol. Är det ett brottmål eller ett tvistemål?",
+    "Ett tvistemål. Det är en tvist mellan två parter, inte ett brott som en åklagare för till domstolen."
+   ]
+  ],
+  "ord": [
+   [
+    "åtal",
+    "när åklagaren anklagar någon för ett brott inför domstolen"
+   ],
+   [
+    "nämndeman",
+    "en vanlig medborgare som dömer tillsammans med domaren"
+   ],
+   [
+    "böter",
+    "ett straff där man betalar pengar, för lindrigare brott"
+   ],
+   [
+    "brottmål",
+    "ett mål i domstol som gäller ett brott"
+   ],
+   [
+    "tvistemål",
+    "ett mål i domstol där två parter är oense, till exempel om pengar"
+   ],
+   [
+    "offentlighetsprincipen",
+    "rätten för alla att läsa allmänna handlingar hos myndigheterna, om de inte är hemliga"
+   ]
+  ],
+  "tips": "Friad betyder att domstolen inte fann brottet bevisat, inte att den har sagt att personen är oskyldig."
+ },
+ "Etik": {
+  "mal": [
+   "Förklara konsekvensetik, pliktetik, dygdetik och sinnelagsetik.",
+   "Känna igen vilken modell någon resonerar efter i en vardaglig situation.",
+   "Förklara begrepp som moral, etik, etiskt dilemma och människovärde.",
+   "Läsa en berättelse om ett val och koppla argumenten till modellerna."
+  ],
+  "fakta": [
+   "Konsekvensetik: följderna avgör om en handling är rätt. Utilitarismen säger att det rätta är det som ger mest lycka för flest.",
+   "Pliktetik: regler och plikter avgör, oavsett följderna. Den förknippas främst med Immanuel Kant.",
+   "Dygdetik: gör det som en god människa skulle göra, till exempel en rättvis och generös människa. Den förknippas främst med Aristoteles.",
+   "Sinnelagsetik: avsikten avgör. Den som ville väl har handlat rätt, även om det gick dåligt.",
+   "Moral är hur vi handlar, etik är när vi tänker och resonerar om vad som är rätt. Den gyllene regeln: behandla andra så som du själv vill bli behandlad."
+  ],
+  "exempel": [
+   [
+    "Jonas går mot rött i en tom korsning mitt i natten och säger: ”Det skadar ingen.” Vilken modell resonerar han efter?",
+    "Han ser till följderna, så det är konsekvensetik. En pliktetiker skulle säga att regeln gäller ändå."
+   ]
+  ],
+  "ord": [
+   [
+    "etiskt dilemma",
+    "ett val där alla alternativ har något dåligt med sig"
+   ],
+   [
+    "människovärde",
+    "att alla människor är lika mycket värda, oavsett vilka de är"
+   ],
+   [
+    "argument",
+    "ett skäl som stöder en åsikt"
+   ],
+   [
+    "utilitarism",
+    "konsekvensetik där det rätta är det som ger mest lycka för flest"
+   ]
+  ],
+  "tips": "Leta efter signalordet: följder pekar på konsekvensetik, regler och plikter på pliktetik, en god människa på dygdetik och avsikten på sinnelagsetik."
+ },
+ "Demokrati och val": {
+  "mal": [
+   "Förklara skillnaden mellan riksdagen, regeringen, kommunen och regionen.",
+   "Räkna ut hur många ledamöter som är mer än hälften.",
+   "Förklara vad demokrati, rösträtt, hemliga val och yttrandefrihet betyder."
+  ],
+  "fakta": [
+   "Riksdagen har 349 ledamöter, som väljs vart fjärde år. Den stiftar lagar och beslutar om skatterna.",
+   "Regeringen leds av statsministern. Den styr landet och genomför riksdagens beslut. Kungen bestämmer inte vilka lagar Sverige ska ha.",
+   "Kommunen ansvarar för bland annat grundskolan och äldreomsorgen, och regionen för sjukvården.",
+   "Rösta i riksdagsvalet får svenska medborgare som har fyllt 18 år senast på valdagen. Valet är hemligt: ingen annan ser vad du röstar på.",
+   "Yttrandefrihet är rätten att säga och skriva vad man tycker utan att staten straffar en. Den ger ingen rätt att hota andra."
+  ],
+  "exempel": [
+   [
+    "Ett kommunfullmäktige har 51 ledamöter. Vilket är det minsta antal som är fler än hälften?",
+    "Hälften av 51 är 25,5. Närmaste hela tal som är större är 26, så det behövs 26."
+   ]
+  ],
+  "ord": [
+   [
+    "demokrati",
+    "folkstyre"
+   ],
+   [
+    "ledamot",
+    "en person som har valts för att företräda folket, till exempel i riksdagen"
+   ],
+   [
+    "parti",
+    "en grupp med gemensamma åsikter som ställer upp i val för att få makt"
+   ],
+   [
+    "diktatur",
+    "ett land där folket inte kan byta ut ledarna i fria val"
+   ],
+   [
+    "insändare",
+    "en text som en läsare skriver till en tidning för att säga sin åsikt"
+   ]
+  ],
+  "tips": "Riksdagen beslutar, regeringen genomför. Håll isär dem så blir parfrågorna lättare."
+ }
+}

@@ -1,0 +1,311 @@
+{
+ "Ordförråd": {
+  "mal": [
+   "Säga vad kläder heter på engelska.",
+   "Beskriva vädret på engelska.",
+   "Prata om sport och vad du gör på fritiden."
+  ],
+  "fakta": [
+   "Vädret beskrivs ofta med It is: It is cold. It is warm.",
+   "Många väderord får -y: rain blir rainy och wind blir windy.",
+   "Kläder du har på dig använder du med wear: I wear boots.",
+   "Bollsporter heter play: play tennis. Många andra heter go och -ing: go running, go skiing."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'Det är varmt i dag, så jag har shorts'?",
+    "It is warm today, so I wear shorts."
+   ],
+   [
+    "Hur säger du 'Jag åker skidor på vintern'?",
+    "I go skiing in the winter."
+   ]
+  ],
+  "ord": [
+   [
+    "weather",
+    "väder"
+   ],
+   [
+    "wear",
+    "ha på sig, om kläder"
+   ],
+   [
+    "hobby",
+    "fritidsintresse"
+   ]
+  ],
+  "tips": "Trousers, jeans och shorts har alltid -s, också när det bara är ett par."
+ },
+ "Verb": {
+  "mal": [
+   "Säga vad som händer just nu med am, is eller are och -ing.",
+   "Stava verb rätt när de får -ing.",
+   "Berätta vad som hände med was, were och vanliga oregelbundna verb."
+  ],
+  "fakta": [
+   "Det som händer just nu: am, is eller are och verbet med -ing: She is singing.",
+   "Slutar verbet på -e tas e bort: write blir writing.",
+   "Slutar ett kort verb på en enda vokal och en konsonant, som get, dubblas konsonanten: getting. Två vokaler, som i sleep, eller w, x och y sist dubblas inte: sleeping, playing.",
+   "Be i preteritum: I was, he was, she was, it was, men you were, we were, they were.",
+   "Många verb får -ed i preteritum, men vanliga verb är ofta oregelbundna: take blir took och write blir wrote."
+  ],
+  "exempel": [
+   [
+    "Fyll i: Look! The children ___ (play) in the garden.",
+    "are playing. Det händer just nu, och children är flera."
+   ],
+   [
+    "Skriv buy i preteritum: Yesterday I ___ a new book.",
+    "bought. Buy är oregelbundet."
+   ]
+  ],
+  "ord": [
+   [
+    "right now",
+    "just nu"
+   ],
+   [
+    "yesterday",
+    "i går"
+   ],
+   [
+    "preteritum",
+    "verbets form för det som redan har hänt"
+   ],
+   [
+    "oregelbundet verb",
+    "ett verb som inte får -ed, som take och took"
+   ]
+  ],
+  "tips": "Now och Look! visar att det händer just nu, och yesterday eller last week att det redan har hänt."
+ },
+ "Pronomen och prepositioner": {
+  "mal": [
+   "Välja rätt form av ett pronomen, som I eller me.",
+   "Säga var något är med prepositioner.",
+   "Bygga meningar med pronomen och prepositioner."
+  ],
+  "fakta": [
+   "Den som gör något: I, you, he, she, it, we, they.",
+   "Efter ett verb, eller efter ord som with och for: me, you, him, her, it, us, them.",
+   "Her kan betyda både henne och hennes: I see her. Her bag is red.",
+   "Var något är: next to (bredvid), between (mellan), behind (bakom) och in front of (framför)."
+  ],
+  "exempel": [
+   [
+    "Välj rätt ord: My sister is nice. I like ___.",
+    "her. Ordet står efter verbet like, så det blir her och inte she."
+   ],
+   [
+    "Hur säger du 'Lampan står bredvid sängen'?",
+    "The lamp is next to the bed."
+   ]
+  ],
+  "ord": [
+   [
+    "pronomen",
+    "ett ord som står i stället för ett namn, som han och dem"
+   ],
+   [
+    "preposition",
+    "ett ord som säger var något är, som under och bakom"
+   ]
+  ],
+  "tips": "Pröva på svenska: blir det honom är det him, och blir det han är det he."
+ },
+ "Meningar": {
+  "mal": [
+   "Ställa frågor med do och does.",
+   "Säga att något inte är så med don't och doesn't.",
+   "Välja rätt form efter he, she och it."
+  ],
+  "fakta": [
+   "En fråga i presens börjar ofta med Do: Do you like tea?",
+   "Efter he, she, it och ett namn används does: Does Tom play the guitar?",
+   "Inte heter don't (do not) efter I, you, we och they, och doesn't (does not) efter he, she och it.",
+   "Efter does och doesn't står verbet utan -s: He doesn't swim.",
+   "Med am, is, are och can behövs inget do: He is not here. She can't come."
+  ],
+  "exempel": [
+   [
+    "Bygg frågan: Talar han engelska?",
+    "Does he speak English? Han är he, så det blir does, och speak står utan -s."
+   ],
+   [
+    "Skriv don't eller doesn't: My cat ___ like water.",
+    "doesn't. My cat är en it, så det blir doesn't."
+   ]
+  ],
+  "ord": [
+   [
+    "do, does",
+    "hjälpverb i frågor och i meningar med inte"
+   ],
+   [
+    "don't",
+    "do not, alltså inte"
+   ],
+   [
+    "doesn't",
+    "does not, alltså inte"
+   ]
+  ],
+  "tips": "Det räcker med ett -s: does tar det, så verbet efter står utan."
+ },
+ "Läsförståelse": {
+  "mal": [
+   "Läsa en berättelse och en lapp på engelska och förstå vad som står.",
+   "Hitta detaljer i texten, som namn, platser, tider och färger.",
+   "Dra slutsatser om sådant som inte står rakt ut."
+  ],
+  "fakta": [
+   "Läs hela texten först. Sedan kan du öppna den igen och leta efter svaret på varje fråga.",
+   "Leta efter nyckelord: frågar de var, leta efter platser, och frågar de när, leta efter dagar och tider.",
+   "Skilj på det som står i texten och det du får dra slutsatser om. Frågor med varför eller tror kräver ofta att du tänker efter.",
+   "Sant eller falskt: kontrollera varje detalj, för ett enda fel ord gör påståendet falskt.",
+   "En lapp om ett borttappat djur säger oftast vad som hänt, hur djuret ser ut och vad du ska göra."
+  ],
+  "exempel": [
+   [
+    "Texten: 'Max has a red bike. He rides it to school.' Är det sant att Max har en blå cykel?",
+    "Falskt. I texten står red, alltså röd."
+   ]
+  ],
+  "ord": [
+   [
+    "collar",
+    "halsband för en hund eller katt"
+   ],
+   [
+    "paws",
+    "tassar"
+   ],
+   [
+    "dining hall",
+    "matsal"
+   ],
+   [
+    "score a goal",
+    "göra mål"
+   ]
+  ],
+  "tips": "Hittar du inte svaret, läs stycket där nyckelordet står en gång till."
+ },
+ "Övningsblad: present simple": {
+  "mal": [
+   "Använda present simple om det som händer varje dag eller brukar hända.",
+   "Sätta -s eller -es på verbet efter he, she och it.",
+   "Bygga meningar om vardagen i present simple."
+  ],
+  "fakta": [
+   "Present simple används om vanor och det som brukar hända: I ride my bike every day.",
+   "Efter he, she, it och ett namn får verbet -s: she sings, Tom runs.",
+   "Slutar verbet på -s, -sh, -ch, -x eller -o får det -es: he catches, she misses.",
+   "Efter I, you, we och they får verbet inget -s: they swim, we sing."
+  ],
+  "exempel": [
+   [
+    "Fyll i rätt form av drink: My mum ___ coffee every morning.",
+    "drinks. My mum är en she, så verbet får -s."
+   ],
+   [
+    "Fyll i rätt form av fix: He ___ bikes in his free time.",
+    "fixes. Fix slutar på -x, så det blir -es."
+   ]
+  ],
+  "ord": [
+   [
+    "present simple",
+    "verbets form för vanor och det som brukar hända"
+   ],
+   [
+    "every day",
+    "varje dag"
+   ],
+   [
+    "usually",
+    "brukar, oftast"
+   ]
+  ],
+  "tips": "Every day, always och often är tecken på att meningen ska stå i present simple."
+ },
+ "Adjektiv": {
+  "mal": [
+   "Beskriva saker och personer med adjektiv.",
+   "Säga motsatsen till ett adjektiv, som long och short.",
+   "Jämföra med -er, -est och more."
+  ],
+  "fakta": [
+   "Ett adjektiv beskriver hur något är, och många har en motsats: long och short, happy och sad.",
+   "Korta ord jämförs med -er och -est: long, longer, the longest. Ett ord på -e får bara -r och -st: late, later, the latest.",
+   "Ibland ändras stavningen: thin blir thinner, och busy blir busier.",
+   "Långa ord jämförs med more och most: more beautiful, the most beautiful.",
+   "Några ord är oregelbundna: good, better, the best och bad, worse, the worst."
+  ],
+  "exempel": [
+   [
+    "Ella är 12 år och Omar är 10 år. Fyll i: Omar is ___ than Ella. (young)",
+    "younger. Omar är yngre än Ella."
+   ],
+   [
+    "Fyll i: This is the ___ film I have seen. (funny)",
+    "funniest. Y blir i, och the … -est betyder mest."
+   ]
+  ],
+  "ord": [
+   [
+    "adjektiv",
+    "ett ord som beskriver, som stor och snabb"
+   ],
+   [
+    "than",
+    "än, när man jämför"
+   ],
+   [
+    "opposite",
+    "motsats"
+   ]
+  ],
+  "tips": "Står det än på svenska ska det vara -er eller more, och sedan than."
+ },
+ "Igår och i helgen": {
+  "mal": [
+   "Sätta -ed på regelbundna verb när något redan har hänt.",
+   "Stava preteritum rätt, som liked och stopped.",
+   "Läsa en berättelse i preteritum och svara på frågor om den."
+  ],
+  "fakta": [
+   "Regelbundna verb får -ed när det redan har hänt: open blir opened. Formen är samma för alla: I opened, she opened.",
+   "Slutar verbet på -e får det bara -d: like blir liked.",
+   "Ett kort verb med en enda vokal och en konsonant sist dubblar konsonanten: stop blir stopped. Två vokaler, som i look, eller w, x och y sist dubblas inte: looked, stayed.",
+   "Ord som yesterday, last night och last weekend visar att något redan har hänt.",
+   "I berättelsen: läs texten först och leta sedan efter tidsord, som on Monday och in the morning."
+  ],
+  "exempel": [
+   [
+    "Skriv wash i preteritum: Yesterday I ___ my bike.",
+    "washed."
+   ],
+   [
+    "Skriv clap i preteritum: We ___ our hands.",
+    "clapped. Clap är kort och slutar på vokal och konsonant, så p dubbleras."
+   ]
+  ],
+  "ord": [
+   [
+    "last night",
+    "i går kväll"
+   ],
+   [
+    "last weekend",
+    "förra helgen"
+   ],
+   [
+    "cousin",
+    "kusin"
+   ]
+  ],
+  "tips": "Played och plays är olika: -ed betyder att det har hänt, -s att det händer nu eller brukar hända."
+ }
+}

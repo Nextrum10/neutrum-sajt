@@ -1,0 +1,90 @@
+{
+ "Kemi: mol och substansmängd": {
+  "mal": [
+   "Räkna ut molmassan för ett ämne ur formeln.",
+   "Räkna mellan massa och substansmängd med n = m / M.",
+   "Räkna ut antalet partiklar med Avogadros konstant.",
+   "Räkna ut hur många mol atomer som finns i en mängd molekyler."
+  ],
+  "fakta": [
+   "Molmassan M, i g/mol, är summan av atomernas molmassor i formeln, med indexen som antal.",
+   "Substansmängden n mäts i mol: n = m / M. Då är m = n · M.",
+   "En mol innehåller 6,02 · 10²³ partiklar (Avogadros konstant). Antal partiklar = n · 6,02 · 10²³.",
+   "Indexet i formeln säger hur många mol av en atom det finns per mol ämne: 1 mol NH₃ innehåller 1 mol N och 3 mol H.",
+   "Behåll enheterna i uträkningen och avrunda först i slutet, till lika många värdesiffror som i uppgiften."
+  ],
+  "exempel": [
+   [
+    "Hur många mol är 8,5 g ammoniak, NH₃? Molmassor: N 14,0 och H 1,0 g/mol.",
+    "M = 14,0 + 3 · 1,0 = 17,0 g/mol. n = 8,5 / 17,0 = 0,50 mol."
+   ],
+   [
+    "Hur många molekyler finns i 0,25 mol kvävgas, N₂?",
+    "0,25 · 6,02 · 10²³ ≈ 1,5 · 10²³ molekyler."
+   ]
+  ],
+  "ord": [
+   [
+    "substansmängd",
+    "mängden ämne räknad i mol, n"
+   ],
+   [
+    "molmassa",
+    "massan av en mol av ämnet, M, i g/mol"
+   ],
+   [
+    "Avogadros konstant",
+    "antalet partiklar i en mol, 6,02 · 10²³ per mol"
+   ],
+   [
+    "värdesiffror",
+    "de siffror i ett mätvärde som visar hur noggrant det är"
+   ]
+  ],
+  "tips": "Skriv n = m / M först och sätt in enheterna: g delat med g/mol ger mol."
+ },
+ "Kemi: koncentration och reaktionsformler": {
+  "mal": [
+   "Räkna ut koncentration, substansmängd eller volym med c = n / V.",
+   "Räkna om mellan cm³ och dm³ och räkna på spädning.",
+   "Använda koefficienterna i en reaktionsformel som molförhållanden.",
+   "Räkna ut massan av det som bildas i en reaktion."
+  ],
+  "fakta": [
+   "Koncentration: c = n / V, i mol/dm³. Då är n = c · V och V = n / c.",
+   "1 dm³ = 1 000 cm³ = 1 liter. Dela antalet cm³ med 1 000 för att få dm³.",
+   "När du späder med vatten ändras inte substansmängden löst ämne, bara volymen: c₁ · V₁ = c₂ · V₂.",
+   "Koefficienterna i en balanserad reaktionsformel anger förhållandet mellan substansmängderna. I N₂ + 3 H₂ → 2 NH₃ ger 1 mol N₂ och 3 mol H₂ 2 mol NH₃.",
+   "Från massa till massa: gör om till mol med n = m / M, använd molförhållandet och gör om tillbaka med m = n · M."
+  ],
+  "exempel": [
+   [
+    "Hur många mol finns i 400 cm³ lösning med koncentrationen 0,50 mol/dm³?",
+    "400 cm³ = 0,400 dm³. n = c · V = 0,50 · 0,400 = 0,20 mol."
+   ],
+   [
+    "N₂ + 3 H₂ → 2 NH₃. Hur många gram ammoniak bildas av 0,60 mol H₂? M(NH₃) = 17,0 g/mol.",
+    "n(NH₃) = 0,60 · 2/3 = 0,40 mol. m = 0,40 · 17,0 = 6,8 g."
+   ]
+  ],
+  "ord": [
+   [
+    "koncentration",
+    "hur mycket löst ämne det finns per volym lösning"
+   ],
+   [
+    "koefficient",
+    "talet framför en formel i en reaktionsformel"
+   ],
+   [
+    "balanserad",
+    "lika många atomer av varje slag på båda sidor om pilen"
+   ],
+   [
+    "späda",
+    "tillsätta vatten så att koncentrationen sjunker"
+   ]
+  ],
+  "tips": "Skriv molförhållandet som ett bråk, som 2 mol NH₃ / 3 mol H₂, så ser du om du ska multiplicera eller dela."
+ }
+}

@@ -1,0 +1,229 @@
+{
+ "Hälsa och presentera dig": {
+  "mal": [
+   "Hälsa och säga hej då på tyska, efter tid på dygnet och efter vem du pratar med.",
+   "Fråga hur någon mår och svara på frågan.",
+   "Säga vad du heter, var du kommer ifrån och var du bor, och fråga någon annan samma sak."
+  ],
+  "fakta": [
+   "Hälsningarna följer dygnet: Morgen är morgon, Tag dag och Abend kväll. Hallo och Tschüss är vardagliga, och Auf Wiedersehen är ett artigare hej då.",
+   "Wie geht's? betyder hur mår du. Gut betyder bra, sehr gut jättebra och es geht ungefär sådär.",
+   "Verbet får en ändelse efter vem det gäller: ich -e (ich wohne), du -st (du wohnst). Slutar stammen på s, ß eller z blir det bara -t efter du: du tanzt.",
+   "Till en vuxen du inte känner säger du Sie, med stor bokstav, och verbet slutar då på -en, som i grundformen. Undantaget är sein: Sie sind.",
+   "Wo betyder var och woher varifrån. Aus betyder från och in betyder i: aus Norwegen, in Berlin."
+  ],
+  "exempel": [
+   [
+    "Hur säger du att du talar svenska och engelska?",
+    "Ich spreche Schwedisch und Englisch. Till ich hör ändelsen -e: spreche."
+   ],
+   [
+    "Hur frågar du en vuxen du inte känner var hen bor?",
+    "Wo wohnen Sie? Till Sie slutar verbet på -en, precis som grundformen wohnen."
+   ]
+  ],
+  "ord": [
+   [
+    "Danke",
+    "tack"
+   ],
+   [
+    "Bitte",
+    "snälla när du ber om något, och varsågod när du ger något"
+   ],
+   [
+    "Entschuldigung",
+    "ursäkta"
+   ],
+   [
+    "Freut mich",
+    "trevligt att träffas"
+   ],
+   [
+    "Sie",
+    "ni, artigt till en vuxen du inte känner"
+   ],
+   [
+    "heißen",
+    "heta: ich heiße, jag heter"
+   ]
+  ],
+  "tips": "Gute Nacht är ingen hälsning när du kommer: det säger man när man skiljs åt sent eller ska sova."
+ },
+ "Siffror och ålder": {
+  "mal": [
+   "Känna igen, skriva och räkna med de tyska talen från 0 till 20.",
+   "Säga hur gammal du är och fråga hur gammal någon annan är."
+  ],
+  "fakta": [
+   "Talen 0–12: null, eins, zwei, drei, vier, fünf, sechs, sieben, acht, neun, zehn, elf, zwölf.",
+   "13–19 är entalet och zehn: dreizehn är tre och tio. Men sechs och sieben kortas: sechzehn (16) och siebzehn (17).",
+   "Tjugo heter zwanzig. Tiotalen slutar oftast på -zig: vierzig är 40, medan vierzehn är 14.",
+   "Åldern säger du med sein (vara), som på svenska: Ich bin … Jahre alt. Jahr betyder år, och fler än ett år heter Jahre."
+  ],
+  "exempel": [
+   [
+    "Räkna på tyska: drei plus acht.",
+    "Drei är 3 och acht är 8. 3 + 8 = 11, och elva heter elf."
+   ],
+   [
+    "Hur säger du att du är elva år?",
+    "Ich bin elf Jahre alt. Åldern säger du med bin (är), och alt (gammal) står sist."
+   ]
+  ],
+  "ord": [
+   [
+    "alt",
+    "gammal"
+   ],
+   [
+    "das Jahr, die Jahre",
+    "året, åren"
+   ],
+   [
+    "plus, minus",
+    "samma ord på tyska som på svenska"
+   ]
+  ],
+  "tips": "Saknar du ü och ö på tangentbordet går det bra att skriva ue och oe: fuenf, zwoelf."
+ },
+ "Familjen och artiklarna": {
+  "mal": [
+   "Använda ord för familjen och några husdjur.",
+   "Välja der, die eller das, och ein eller eine, till ett substantiv.",
+   "Säga min och din med mein, meine, dein och deine."
+  ],
+  "fakta": [
+   "Varje substantiv har en artikel: der, die eller das. Artikeln syns inte på ordet, så lär dig den tillsammans med ordet.",
+   "Ord för kvinnor i familjen är oftast die-ord och ord för män oftast der-ord. Ord bildade med ändelsen -chen, som gör något litet, är alltid das-ord.",
+   "I plural är artikeln alltid die: die Kinder, die Eltern.",
+   "En heter ein till der- och das-ord och eine till die-ord. Mein och dein böjs likadant: meine och deine till die-ord och i plural.",
+   "Alla substantiv skrivs med stor bokstav på tyska, var de än står i meningen."
+  ],
+  "exempel": [
+   [
+    "Ein eller eine? Das ist ___ Buch. (das Buch)",
+    "Buch är ett das-ord, och till der- och das-ord heter en ein: Das ist ein Buch."
+   ],
+   [
+    "Mein eller meine? ___ Lampe ist neu. (die Lampe)",
+    "Lampe är ett die-ord, så min blir meine: Meine Lampe ist neu."
+   ]
+  ],
+  "ord": [
+   [
+    "maskulinum",
+    "ord med der, till exempel der Vater"
+   ],
+   [
+    "femininum",
+    "ord med die, till exempel die Schwester"
+   ],
+   [
+    "neutrum",
+    "ord med das, till exempel das Haus"
+   ],
+   [
+    "substantiv",
+    "ord för personer, djur och saker"
+   ],
+   [
+    "die Großeltern",
+    "mor- och farföräldrarna"
+   ]
+  ],
+  "tips": "Ein och eine betyder båda en eller ett: det är ordets artikel som avgör formen, inte svenskans en eller ett."
+ },
+ "Verben sein och haben": {
+  "mal": [
+   "Böja sein (vara) i presens.",
+   "Böja haben (ha) i presens och säga att du har syskon eller husdjur.",
+   "Använda fasta uttryck som Ich habe Hunger.",
+   "Bygga en ja- eller nej-fråga med verbet först."
+  ],
+  "fakta": [
+   "Pronomenen: ich jag, du du, er han, sie hon, es den eller det, wir vi, ihr ni (flera du), sie de och Sie ni (artigt).",
+   "sein: ich bin, du bist, er/sie/es ist, wir sind, ihr seid, sie/Sie sind.",
+   "haben: ich habe, du hast, er/sie/es hat, wir haben, ihr habt, sie/Sie haben. B:et faller bort efter du och er/sie/es.",
+   "Efter haben blir ein till einen framför der-ord: Ich habe einen Ball. Eine och ein framför das-ord ändras inte.",
+   "Hunger, törst och rädsla har man på tyska, med haben, där svenskan säger att man är hungrig, törstig och rädd."
+  ],
+  "exempel": [
+   [
+    "Fyll i sein: Wir ___ heute im Kino.",
+    "Till wir hör sind: Wir sind heute im Kino, vi är på bio i dag."
+   ],
+   [
+    "Säg: Han har en boll. (der Ball)",
+    "Er hat einen Ball. Till er hör hat, och efter haben blir ein till einen framför der-ord."
+   ]
+  ],
+  "ord": [
+   [
+    "presens",
+    "nutid, verbets form för det som händer nu"
+   ],
+   [
+    "pronomen",
+    "ord som jag, du och hon, som står i stället för ett namn"
+   ],
+   [
+    "müde",
+    "trött"
+   ],
+   [
+    "zu Hause",
+    "hemma"
+   ]
+  ],
+  "tips": "I en ja- eller nej-fråga står verbet först, precis som på svenska: Bist du …? Hast du …?"
+ },
+ "Skolan och fritiden": {
+  "mal": [
+   "Böja regelbundna verb som spielen, lernen och machen i presens.",
+   "Placera verbet på andra plats, också när meningen börjar med en tid.",
+   "Ställa frågor med frågeord och ja- eller nej-frågor.",
+   "Känna igen namnen på skolämnen och fritidsaktiviteter."
+  ],
+  "fakta": [
+   "Ett regelbundet verb är stam och ändelse: ich spiele, du spielst, er/sie/es spielt, wir spielen, ihr spielt, sie/Sie spielen.",
+   "Efter wir, sie (de) och Sie har verbet samma form som i ordboken, infinitiven.",
+   "Verbet står på andra plats. Börjar meningen med en tid kommer verbet direkt efter och sedan subjektet: Morgen lerne ich.",
+   "Med ett frågeord står frågeordet först och verbet efter: Was machst du? I en ja- eller nej-fråga står verbet först: Lernst du Deutsch?",
+   "Frågeorden: was vad, wo var, wer vem, wie hur, wann när och woher varifrån."
+  ],
+  "exempel": [
+   [
+    "Bygg meningen: På söndag lagar han mat. (kochen)",
+    "Am Sonntag kocht er. Am Sonntag står först, så verbet kocht kommer på andra plats och sedan er."
+   ],
+   [
+    "Böj kaufen (köpa) efter ich, du och er.",
+    "ich kaufe, du kaufst, er kauft: stammen kauf- och ändelserna -e, -st och -t."
+   ]
+  ],
+  "ord": [
+   [
+    "heute",
+    "i dag"
+   ],
+   [
+    "morgen",
+    "i morgon"
+   ],
+   [
+    "gern",
+    "gärna, efter verbet: Ich lese gern, jag läser gärna"
+   ],
+   [
+    "die Schule",
+    "skolan"
+   ],
+   [
+    "das Fach",
+    "skolämnet"
+   ]
+  ],
+  "tips": "Akta dig för wer: det liknar var men betyder vem. Var heter wo."
+ }
+}

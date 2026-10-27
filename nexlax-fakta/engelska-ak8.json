@@ -1,0 +1,391 @@
+{
+ "Verb": {
+  "mal": [
+   "Böja vanliga oregelbundna verb i preteritum och perfekt particip.",
+   "Välja mellan past simple och present perfect.",
+   "Använda have och has rätt i present perfect."
+  ],
+  "fakta": [
+   "Ett verb har tre former: grundform, preteritum och perfekt particip. Regelbundna verb får -ed i de två sista: walk – walked – walked.",
+   "Oregelbundna verb har egna former som du lär dig utantill: come – came – come, give – gave – given, make – made – made.",
+   "Preteritum står ensamt: She came home. Perfekt particip står efter have eller has: She has come home.",
+   "Past simple används med en tid som är slut, som yesterday, last week och in 2019.",
+   "Present perfect (have eller has + particip) används när tiden inte sägs, med ever och never, och med since och for om något som pågår än."
+  ],
+  "exempel": [
+   [
+    "Fyll i ”tear”: Look, I have ___ my jeans!",
+    "Efter have står perfekt particip: tear – tore – torn. Look, I have torn my jeans!"
+   ],
+   [
+    "Past simple eller present perfect? We ___ (move) here in 2015.",
+    "In 2015 är en tid som är slut, så det blir past simple: We moved here in 2015."
+   ]
+  ],
+  "ord": [
+   [
+    "grundform",
+    "verbets första form: give"
+   ],
+   [
+    "preteritum",
+    "den andra formen, för det som hände: gave"
+   ],
+   [
+    "perfekt particip",
+    "den tredje formen, som står efter have och has: given"
+   ],
+   [
+    "present perfect",
+    "have eller has + perfekt particip: I have given"
+   ]
+  ],
+  "tips": "Står det yesterday, ago, last week eller in 2015 blir det past simple, aldrig have + particip. Med since blir det present perfect."
+ },
+ "Adjektiv": {
+  "mal": [
+   "Jämföra med -er och -est, med more och most och med de oregelbundna formerna.",
+   "Välja mellan adjektiv och adverb, som quiet och quietly.",
+   "Skilja på ord som tired och tiring."
+  ],
+  "fakta": [
+   "Korta adjektiv får -er och -est (cold – colder – coldest), långa får more och most (more famous, the most famous).",
+   "Oregelbundna: good – better – best, bad – worse – worst och many eller much – more – most.",
+   "Ett adjektiv beskriver ett substantiv: a slow car. Ett adverb beskriver ett verb, alltså hur något görs, och slutar ofta på -ly: drive slowly.",
+   "Konsonant + y blir -ily: easy → easily. Adverbet till good är well, och fast och hard ser likadana ut som adverb: work hard.",
+   "Ord på -ed säger hur någon känner sig, och ord på -ing hur något är: I am excited. The match is exciting."
+  ],
+  "exempel": [
+   [
+    "Fyll i ”quiet” eller ”quietly”: The cat walked ___ into the room.",
+    "Ordet säger hur katten gick, så det beskriver verbet: quietly."
+   ],
+   [
+    "Fyll i ”famous”: She is the ___ singer in the country.",
+    "Famous är långt, och hon jämförs med alla: the most famous singer."
+   ]
+  ],
+  "ord": [
+   [
+    "adjektiv",
+    "beskriver hur något eller någon är: a quiet room"
+   ],
+   [
+    "adverb",
+    "beskriver hur något görs: speak quietly"
+   ],
+   [
+    "komparativ",
+    "formen när du jämför två: colder, more famous"
+   ],
+   [
+    "superlativ",
+    "formen när du jämför med alla: the coldest, the most famous"
+   ]
+  ],
+  "tips": "Fråga dig vad ordet beskriver: en sak eller en person ger adjektiv, ett verb ger adverb."
+ },
+ "Prepositioner": {
+  "mal": [
+   "Välja in, on eller at framför tider och platser.",
+   "Använda rätt preposition efter vissa verb och adjektiv.",
+   "Placera prepositionen rätt i meningar och frågor."
+  ],
+  "fakta": [
+   "Tid: at före klockslag (at noon), on före dagar och datum (on Friday, on 1 May), in före månader, årstider och år (in autumn, in 1999).",
+   "Plats: in före städer och länder och inne i något (in Spain, in the box), on på en yta (on the wall) och at vid en punkt (at the door).",
+   "Många verb och adjektiv har en fast preposition som inte är samma som på svenska: proud of (stolt över), worried about (orolig för), ask for (be om).",
+   "Efter en preposition står ett verb i -ing-form: I am good at singing. Thank you for coming."
+  ],
+  "exempel": [
+   [
+    "Fyll i: She is famous ___ her songs.",
+    "Känd för heter famous for: She is famous for her songs."
+   ],
+   [
+    "In, on eller at? The concert is ___ Thursday ___ eight o'clock.",
+    "Före en dag står on och före ett klockslag at: on Thursday at eight o'clock."
+   ]
+  ],
+  "ord": [
+   [
+    "preposition",
+    "litet ord som visar tid, plats eller hur saker hänger ihop: in, on, at, of"
+   ],
+   [
+    "proud of",
+    "stolt över"
+   ],
+   [
+    "worried about",
+    "orolig för"
+   ],
+   [
+    "ask for",
+    "be om"
+   ]
+  ],
+  "tips": "”Stolt över” blir proud of, inte proud over: lär dig prepositionen tillsammans med ordet."
+ },
+ "Läsförståelse": {
+  "mal": [
+   "Förstå en berättelse på engelska och hitta detaljer i den.",
+   "Dra slutsatser om varför personerna gör som de gör.",
+   "Förstå vad ett ord betyder i just den texten."
+  ],
+  "fakta": [
+   "Skilj på det som står och det du kan dra slutsatser om. En slutsats bygger på ledtrådar i texten, till exempel vad någon gör eller säger.",
+   "Ett ord kan ha flera betydelser. Välj den som passar i meningen och i berättelsen, inte den du kan bäst.",
+   "Läs frågan noga: why frågar efter ett skäl, och how does she feel efter en känsla.",
+   "Svaren på frågor om detaljer står ofta i samma ordning som i texten.",
+   "Kontrollera svaret: hitta meningen i texten som visar att du har rätt."
+  ],
+  "ord": [
+   [
+    "clue",
+    "ledtråd, något i texten som hjälper dig att förstå"
+   ],
+   [
+    "supposed to",
+    "skulle, var tänkt att: I was supposed to call"
+   ],
+   [
+    "main road",
+    "stora vägen, huvudgatan"
+   ]
+  ],
+  "tips": "Fastnar du på en varför-fråga: läs några meningar före och efter stället där det händer."
+ },
+ "Övningsblad: oregelbundna verb": {
+  "mal": [
+   "Skriva vanliga oregelbundna verb i dåtid.",
+   "Använda oregelbundna verb i hela meningar om något som har hänt.",
+   "Känna igen oregelbundna verb i en mening."
+  ],
+  "fakta": [
+   "Regelbundna verb får -ed i dåtid (past tense): walk → walked. Oregelbundna verb har egna former som du lär dig utantill.",
+   "Ett oregelbundet verb får aldrig -ed: det heter came, inte comed.",
+   "Några grupper följer samma mönster: bring → brought och fight → fought, sleep → slept och keep → kept, drive → drove och ride → rode.",
+   "Signalord som yesterday, last week, this morning och ago visar att verbet ska stå i dåtid."
+  ],
+  "exempel": [
+   [
+    "Skriv ”drink” i dåtid: Yesterday I ___ a lot of water.",
+    "Drink är oregelbundet och blir drank: Yesterday I drank a lot of water."
+   ],
+   [
+    "Vilket verb är oregelbundet: jump, run eller open?",
+    "Run, som blir ran. Jump och open får -ed: jumped, opened."
+   ]
+  ],
+  "ord": [
+   [
+    "dåtid (past tense)",
+    "verbformen för det som har hänt: came, ran"
+   ],
+   [
+    "oregelbundet verb",
+    "ett verb med en egen form i dåtid, utan -ed"
+   ],
+   [
+    "signalord",
+    "ett ord som visar tiden, till exempel yesterday"
+   ]
+  ],
+  "tips": "Säg verbet i en kort mening, som ”Yesterday I …”, så minns du formen lättare."
+ },
+ "Relativa bisatser": {
+  "mal": [
+   "Binda ihop två meningar med who, which, that och where.",
+   "Använda whose för att visa vem något tillhör.",
+   "Avgöra när who eller that får utelämnas."
+  ],
+  "fakta": [
+   "Who används om personer, which om saker och djur, och where om platser. I vardagligt språk kan that stå i stället för who och which.",
+   "Whose betyder vars och följs alltid av ett substantiv: the man whose cat is lost.",
+   "Bisatsen står direkt efter ordet den berättar mer om: The book that I lent you is mine.",
+   "Who, which eller that får utelämnas när ordet inte är subjekt i bisatsen: The film (that) we saw was long. Men inte i: The girl who sang first won."
+  ],
+  "exempel": [
+   [
+    "Bind ihop: I have a friend. She lives in Spain.",
+    "Friend är en person, och she byts mot who: I have a friend who lives in Spain."
+   ],
+   [
+    "Välj ord: This is the café ___ we met.",
+    "Café är en plats, så det blir where: This is the café where we met."
+   ]
+  ],
+  "ord": [
+   [
+    "relativ bisats",
+    "en del av meningen som berättar mer om ett ord, till exempel who lives here"
+   ],
+   [
+    "subjekt",
+    "den som gör något i satsen"
+   ],
+   [
+    "objekt",
+    "den eller det som något görs med: I met him"
+   ]
+  ],
+  "tips": "Byt ut det som bisatsen handlar om: he eller she ger who, it ger which och there ger where."
+ },
+ "Läsa och förstå": {
+  "mal": [
+   "Förstå en berättelse och en nyhetsartikel på engelska.",
+   "Hitta detaljer som årtal, namn och tider.",
+   "Förklara vad personer menar och vad ord betyder i texten.",
+   "Sätta händelserna i rätt ordning."
+  ],
+  "fakta": [
+   "Läs texten först, och leta sedan efter frågans nyckelord i texten.",
+   "En nyhetsartikel säger ofta tidigt vem, vad, när, var och varför. Citaten visar vad olika personer tycker.",
+   "Ett uttryck med flera ord kan betyda något annat än orden var för sig: look up a word betyder slå upp ett ord.",
+   "I ett brev eller en lapp står den som får det efter Dear, och den som skrev sist, efter till exempel Love eller Best wishes.",
+   "Tidsord som first, then, a week later och finally hjälper dig att sätta händelserna i ordning."
+  ],
+  "ord": [
+   [
+    "according to",
+    "enligt"
+   ],
+   [
+    "quote",
+    "citat, det någon säger ordagrant"
+   ],
+   [
+    "finally",
+    "till slut"
+   ],
+   [
+    "a week later",
+    "en vecka senare"
+   ]
+  ],
+  "tips": "Ett svar med ord från texten är inte alltid rätt: kontrollera att det svarar på just den frågan."
+ },
+ "Gerund och infinitiv": {
+  "mal": [
+   "Välja mellan -ing och to efter verb som enjoy, finish, want och decide.",
+   "Använda -ing efter en preposition, som good at och afraid of.",
+   "Förstå skillnaden mellan stop doing och stop to do, och mellan remember doing och remember to do.",
+   "Använda -ing när ett verb är subjekt först i meningen."
+  ],
+  "fakta": [
+   "Efter enjoy, finish, mind och avoid står nästa verb med -ing: I enjoy reading.",
+   "Efter want, decide, hope, plan och promise står to och grundformen: We plan to leave early.",
+   "Efter en preposition (at, in, of, for, about) står verbet alltid med -ing: She is good at drawing.",
+   "Stop doing är att sluta göra något, stop to do att stanna för att göra något. Remember to do är att komma ihåg att göra något, remember doing att minnas något du har gjort.",
+   "Ett verb som är subjekt först i meningen får oftast -ing: Reading is fun."
+  ],
+  "exempel": [
+   [
+    "Vilket är rätt: \"I hope seeing you soon\" eller \"I hope to see you soon\"?",
+    "Efter hope står to och grundformen, så det blir I hope to see you soon."
+   ],
+   [
+    "Vad betyder \"We stopped to buy ice cream\"?",
+    "Stop + to är att stanna för att göra något: vi stannade för att köpa glass."
+   ]
+  ],
+  "ord": [
+   [
+    "gerund",
+    "verbets -ing-form när den används som ett substantiv: swimming, reading"
+   ],
+   [
+    "infinitiv",
+    "verbets grundform, ofta med to: to swim, to read"
+   ],
+   [
+    "preposition",
+    "ett litet ord som at, in, of och for"
+   ],
+   [
+    "grundform",
+    "verbet utan ändelse, som det står i ordboken: go, play"
+   ]
+  ],
+  "tips": "Står det en preposition före verbet på engelska, som good at eller tired of, blir verbet alltid -ing, aldrig to: good at drawing, tired of waiting."
+ },
+ "Frågetaggar": {
+  "mal": [
+   "Bygga en frågesvans, som isn’t it och don’t you, av hjälpverbet i meningen.",
+   "Veta när svansen ska vara jakande och när den ska vara nekande.",
+   "Klara de knepiga svansarna: aren’t I, shall we, will you, there is och nobody."
+  ],
+  "fakta": [
+   "En frågesvans är som eller hur på svenska: It’s late, isn’t it?",
+   "Svansen tar hjälpverbet ur meningen (is, can, will, have). Har meningen inget hjälpverb används do, does eller did.",
+   "En jakande mening får en nekande svans, och en nekande mening får en jakande: She’s ready, isn’t she? She isn’t ready, is she?",
+   "Svansen har ett pronomen, aldrig ett namn: Omar can drive, can’t he?",
+   "Ord som never, nobody och nothing gör meningen nekande, så svansen blir jakande: Nothing happened, did it?"
+  ],
+  "exempel": [
+   [
+    "Vilken svans passar? \"He bought a new bike, ___?\"",
+    "Bought är dåtid utan hjälpverb, så svansen får did. Meningen är jakande, så svansen blir nekande: didn’t he?"
+   ]
+  ],
+  "ord": [
+   [
+    "question tag",
+    "frågesvans, som eller hur på svenska"
+   ],
+   [
+    "hjälpverb",
+    "verb som is, are, can, will, have och do, som hjälper huvudverbet"
+   ],
+   [
+    "jakande",
+    "utan not: She is here."
+   ],
+   [
+    "nekande",
+    "med not eller ett ord som never: She isn’t here."
+   ]
+  ],
+  "tips": "Efter I am blir svansen aren’t I, och efter let’s blir den shall we. De två får du bara lära dig."
+ },
+ "Formella och informella mejl": {
+  "mal": [
+   "Börja och avsluta ett mejl till en kompis och till någon du inte känner.",
+   "Byta ut vardagliga fraser mot artigare och mer formella.",
+   "Känna igen om en text är formell eller informell, och förklara varför."
+  ],
+  "fakta": [
+   "Formellt: Dear Sir or Madam (du vet inte namnet) eller Dear Ms Berg (du vet namnet). Informellt: Hi Sam eller Hello!",
+   "I brittisk engelska avslutar du Dear Sir or Madam med Yours faithfully och Dear Ms Berg med Yours sincerely. Kind regards och Best wishes är vänliga men artiga.",
+   "Börja ett formellt mejl med varför du skriver: I am writing to ask about … Avsluta med I look forward to hearing from you.",
+   "I ett formellt mejl skriver du ut orden (I am, do not) och ber artigt: Could you please …? I would be grateful if …",
+   "Ett informellt mejl får ha kortformer, utrop och vardagliga ord: Guess what? Thanks a lot! Write back soon!"
+  ],
+  "exempel": [
+   [
+    "Gör meningen mer formell: \"Can you send me the prices?\"",
+    "Could you please send me the prices? Eller: I would be grateful if you could send me the prices."
+   ]
+  ],
+  "ord": [
+   [
+    "formal",
+    "formell, som till ett företag, en skola eller någon du inte känner"
+   ],
+   [
+    "informal",
+    "vardaglig, som till en kompis"
+   ],
+   [
+    "subject line",
+    "ämnesraden, som säger kort vad mejlet handlar om"
+   ],
+   [
+    "on behalf of",
+    "för någon annans räkning: on behalf of my class"
+   ]
+  ],
+  "tips": "Fråga dig vem som ska läsa. Känner du inte personen, skriv som du skulle prata med en rektor, inte som med en kompis."
+ }
+}

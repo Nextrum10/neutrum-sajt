@@ -53,9 +53,9 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=39f762c5">
-<link rel="stylesheet" href="nextrum-start.css?v=8a3f88cc">
-<link rel="stylesheet" href="nextrum-sidor.css?v=89c1fa67">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ecea07e">
+<link rel="stylesheet" href="nextrum-start.css?v=ec89727c">
+<link rel="stylesheet" href="nextrum-sidor.css?v=06d7a05c">
 </head>
 <body>
 
@@ -220,8 +220,14 @@
   </div>
 </section>
 
-<!-- Urvalet i tre steg, som hållpunkterna på startsidan: den man för
-     musen över kommer fram. Ordningen är ord, inte siffror. -->
+<!-- Urvalet i tre steg, som hållpunkterna på startsidan. Ordningen är
+     ord, inte siffror. Sedan 2026-10-27 har varje steg en liten scen i
+     stället för figuren (Leo: "Utvalda intervjuade och förberedda på
+     våran vår sida gör någon cool motion design där"): ansökningarna och
+     samtalet, skölden som blir godkänd och staplarna som växer, i tur
+     och ordning när raden syns, med en prick som går mellan stegen
+     (.sid-urval, nextrum-sidor.css avsnitt 5c). Bara CSS, och klassen
+     nx-in som raden får när den syns. -->
 <section class="nx-yta nx-sek">
   <div class="nx-wrap-bred">
     <div class="nx-head split" data-stig>
@@ -229,27 +235,39 @@
         <h2 class="nx-d2" style="margin-top:18px">Utvalda, intervjuade<br>och <em>förberedda.</em></h2></div>
       <div class="nx-head-aside"><p class="nx-lede">Vi lägger tiden på urvalet, så att ni slipper. Det är en av de saker ni betalar oss för.</p></div>
     </div>
-    <ul class="nx-holdpunkter sid-tre" data-stig data-fördröj="1" style="margin-top:clamp(36px,4.6vw,64px)">
+    <ul class="nx-holdpunkter sid-tre sid-urval" data-stig data-fördröj="1" style="margin-top:clamp(36px,4.6vw,64px)">
       <li class="nx-bubbla">
+        <div class="ur-scen ur-s1" aria-hidden="true">
+          <span class="ur-ark a"></span><span class="ur-ark b"></span>
+          <span class="ur-ark c"><i></i><i></i><i></i></span>
+          <span class="ur-prat"><b></b><b></b><b></b></span>
+        </div>
+        <span class="ur-led" aria-hidden="true"><i></i></span>
         <div class="hp-topp">
           <span class="sid-et">Först</span>
-          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H10.5L6 20v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span>
         </div>
         <h3>Ansökan och intervju</h3>
         <p>Ämnen, årskurser och tider — och ett samtal där vi lär känna personen bakom ansökan.</p>
       </li>
       <li class="nx-bubbla">
+        <div class="ur-scen ur-s2" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path class="ur-skold" pathLength="1" d="M32 7l19 7.5v15.5c0 12.4-8.2 20.8-19 25-10.8-4.2-19-12.6-19-25V14.5z"/><path class="ur-bock" pathLength="1" d="M23 32.5l6.5 6.5L42 26"/></svg>
+          <span class="ur-stampel">Godkänd</span>
+        </div>
+        <span class="ur-led" aria-hidden="true"><i></i></span>
         <div class="hp-topp">
           <span class="sid-et">Sedan</span>
-          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 7.5-7 8.8-4-1.3-7-4.2-7-8.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span>
         </div>
         <h3>Godkännande och förberedelse</h3>
         <p>Först efter godkännandet syns du för en familj. Vi går igenom hur ett pass läggs upp och hur rapporten skrivs.</p>
       </li>
       <li class="nx-bubbla">
+        <div class="ur-scen ur-s3" aria-hidden="true">
+          <span class="ur-stapel" style="--h:.42"></span><span class="ur-stapel" style="--h:.62"></span><span class="ur-stapel" style="--h:.55"></span><span class="ur-stapel" style="--h:.86"></span>
+          <svg class="ur-linje" viewBox="0 0 60 30"><path pathLength="1" d="M3 25 L20 17 L36 20 L57 5"/><path class="ur-pil" pathLength="1" d="M48 5 L57 5 L57 14"/></svg>
+        </div>
         <div class="hp-topp">
           <span class="sid-et">Löpande</span>
-          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19v-5M12 19V8M17 19v-9"/></svg></span>
         </div>
         <h3>Uppföljning</h3>
         <p>Vi följer upp passen och samlar in återkoppling. Arbetet slutar inte vid matchningen.</p>
@@ -258,30 +276,52 @@
   </div>
 </section>
 
-<!-- Priset bredvid ett foto, som Bli studiehjälpare på startsidan men
-     på ljus botten: Nästa steg under är redan mörk. -->
-<section class="nx-sek">
-  <div class="nx-split sid-split">
-    <div class="nx-split-bild" data-stig>
-      <figure class="nx-fig" style="--tint:#898268">
-        <picture><source type="image/webp" srcset="bilder/07-genombrottet-640.webp 640w, bilder/07-genombrottet-960.webp 960w, bilder/07-genombrottet-1280.webp 1280w, bilder/07-genombrottet-1600.webp 1600w" sizes="(max-width:900px) 92vw, 44vw"><img class="nx-img" src="bilder/07-genombrottet-1280.jpg"
-             srcset="bilder/07-genombrottet-640.jpg 640w, bilder/07-genombrottet-960.jpg 960w, bilder/07-genombrottet-1280.jpg 1280w, bilder/07-genombrottet-1600.jpg 1600w"
-             sizes="(max-width:900px) 92vw, 44vw" width="2048" height="1152" loading="lazy" decoding="async"
-             style="object-position:38% 40%"
-             alt="En elev ler för sig själv över sitt skrivblock efter att ha förstått något svårt, med studiehjälparen bredvid."></picture>
-      </figure>
-    </div>
-
-    <div class="nx-split-text">
-      <span class="nx-et acc" data-stig>Pris</span>
-      <h2 class="nx-d2" data-avslöj style="margin-top:20px">Ett timpris.<br>Inga dolda avgifter.</h2>
-      <div data-stig data-fördröj="1">
-        <p class="lede-lg">Samma pris oavsett ämne. Matematik kostar lika mycket som svenska, och en svår kurs kostar inte mer än en lätt.</p>
-        <p>Ingen anmälningsavgift, ingen månadsavgift och ingen bindningstid. Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir passet kortare än bokat betalar vi tillbaka mellanskillnaden. Har ni betalat för ett pass som aldrig blev av betalar vi tillbaka.</p>
-        <p>All betalning går genom Nextrum. Det är grunden för att ni ska kunna se vad som bokats, betalats och hållits — samlat på ett ställe.</p>
+<!-- Priset (2026-10-27, Leo: "Pris på vår ide sida är dålig ersätt den").
+     Förut ett foto och tre stycken text. Nu Just nus blad från startsidan
+     (nextrum-start.css avsnitt 16): de två priserna ur samma svar som
+     startsidan och prissidan, aldrig skrivna i HTML, och det som ingår
+     där startsidan har jämförelsen. Planens ruta väntar på svaret och
+     står dold om det inte kommer. Betalningsmeningen står kvar under
+     bladet (kolla-betalningsvillkor.py räknar den). -->
+<section class="nx-sek nx-jn sid-pris" aria-labelledby="sp-t">
+  <div class="nx-wrap-bred">
+    <div class="jn-kort" data-stig>
+      <div class="jn-text">
+        <span class="nx-et acc">Pris</span>
+        <h2 class="sp-rubrik" id="sp-t" data-avslöj>Ett timpris.<br><em>Inga dolda avgifter.</em></h2>
+        <dl class="jn-priser">
+          <div class="jn-pris">
+            <dt>Läxhjälp, pass för pass</dt>
+            <dd class="jn-pris-tal"><span class="jn-for">för</span> <b class="tnum" data-stat="pris-inline"></b> <span>i timmen</span></dd>
+            <dd class="nx-tejp jn-fast"><span class="nx-tejp-stor">Det är priset</span><span class="nx-tejp-liten">inte ett från-pris</span></dd>
+          </div>
+          <div class="jn-pris jn-paket" data-erb="plan_standard" data-erb-vantar hidden>
+            <dt>Paket, en månad i taget</dt>
+            <dd class="jn-pris-tal"><span class="jn-for">för</span> <b class="tnum" data-erb-rabatterat></b> <span>i timmen</span></dd>
+          </div>
+        </dl>
       </div>
-      <a class="nx-lank" href="/priser" data-stig data-fördröj="2">Se priserna <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+      <div class="sp-ingar">
+        <p class="sp-ingar-t">Det här ingår</p>
+        <ul class="sp-lista">
+          <li><span class="sp-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v13H4zM13 6.5h7v13h-7z"/><path d="M7.5 10h0M16.5 10h0"/></svg></span><span><b>Samma pris i alla ämnen</b><span>Matematik kostar lika mycket som svenska, och en svår kurs inte mer än en lätt.</span></span></li>
+          <li><span class="sp-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8.5 15.5l7-7"/></svg></span><span><b>Inga andra avgifter</b><span>Ingen anmälningsavgift, ingen månadsavgift och ingen bindningstid.</span></span></li>
+          <li><span class="sp-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4.5" width="16" height="15" rx="3"/><path d="M8 9.5h8M8 13h5"/></svg></span><span><b>Allt på ett ställe</b><span>All betalning går genom Nextrum, så ni ser vad som bokats, betalats och hållits i er studievy.</span></span></li>
+        </ul>
+      </div>
+      <div class="nx-cta-rad jn-cta">
+        <span class="nx-magnet">
+          <a class="btn btn-primary btn-lg" href="/priser">
+            Se priserna och planerna
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </span>
+        <a class="nx-lank" href="/intresseanmalan">Skicka intresseanmälan
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
     </div>
+    <p class="sp-not" data-stig data-fördröj="1">Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir passet kortare än bokat betalar vi tillbaka mellanskillnaden. Har ni betalat för ett pass som aldrig blev av betalar vi tillbaka.</p>
   </div>
 </section>
 
@@ -483,12 +523,12 @@
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=085fa9d6"></script>
-<script src="nextrum-images.js?v=d1aa8fea"></script>
+<script src="nextrum-images.js?v=1bcb27bb"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=23460dda"></script>
+<script src="nextrum-app.js?v=9c8ce04d"></script>
 <script src="nextrum-samtycke.js?v=92474eaf"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
-<script src="nextrum-start.js?v=c809c1c0"></script>
+<script src="nextrum-start.js?v=9b199ef9"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
@@ -504,6 +544,7 @@
   NX.initVagval();
   NX.initFaq();
   NX.initPris();
+  NX.initErbjudanden(); /* priserna ur erbjudanden_pris, där sidan har några (prisbladet på Vår idé) */
   NX.märkInloggad();
 })();
 </script>

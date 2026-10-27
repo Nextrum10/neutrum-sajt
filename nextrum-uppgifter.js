@@ -111,6 +111,9 @@ window.NXUppgifter = (function () {
     ljudPå: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.2 6.5a8 8 0 0 1 0 11"/></svg>',
     ljudAv: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/></svg>',
     vibration: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4.5 9v6M2.5 10.5v3M19.5 9v6M21.5 10.5v3"/></svg>',
+    /* 2026-10-27: faktabladen. */
+    lampa: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg>',
+    penna: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5zM13.5 7l3 3"/></svg>',
     länk: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5h5.5V10M19.5 4.5 11 13M17 13.5v5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 4 18.5v-10A1.5 1.5 0 0 1 5.5 7h5"/></svg>'
   };
 
@@ -876,6 +879,9 @@ window.NXUppgifter = (function () {
     host.dataset.arskurs = arskurs;
     host.dataset.spar = spar;
     host.dataset.nlF = ämnesKod(amne);
+    /* Faktabladen för banan hämtas nu, så att knappen och spelaren har
+       dem utan att vänta. Inget ritas om när de kommer. */
+    if (amne && arskurs) laddaFakta(amne, arskurs);
     return { väg, np, nästa, amne, arskurs, spar };
   }
 
@@ -1253,7 +1259,8 @@ window.NXUppgifter = (function () {
       const steg = a.nivåer.concat(a.mästare ? [a.mästare] : []);
       return '<li class="nl-np-omr' + (a.klart ? ' klart' : '') + (a.bemästrat ? ' bem' : '') + '" data-nl-f="' + områdesFärg(np.amne, i) + '">'
         + '<div class="nl-np-omr-huvud"><b>' + esc(npNamn(a.namn)) + '</b>'
-        + '<span class="nl-omr-lage">' + esc(a.bemästrat ? 'Bemästrat' : a.klart ? 'Klart' : a.klara + ' av ' + a.nivåer.length + ' klara') + '</span></div>'
+        + faktaKnapp(np.amne, np.arskurs, a.namn) + '</div>'
+        + ledHtml(a)
         + '<div class="nl-np-nivaer">' + steg.map(x => npKort(x, o)).join('') + '</div>'
         + '</li>';
     }).join('');
@@ -1296,6 +1303,89 @@ window.NXUppgifter = (function () {
 
   function stegTitel(n) {
     return n.sort === 'mastare' ? 'Mästarprov: ' + n.omrade : n.titel;
+  }
+
+  /* ============================================================
+     FAKTABLADEN (2026-10-27)
+     Leo: "Inför varje nytt område man gör på nexläx ska de finnas ett kort
+     strukturerat fakta blad man kan läsa lite kort om vad man kommer lära
+     sig ... samt vad man behöver veta lite som faktabladen innan man
+     genomför ett nytt område på matteboken."
+     Ett blad per område, skrivet i verktyg/faktablad/ och byggt av
+     verktyg/bygg-faktablad.py till en fil per bana i nexlax-fakta/. Ett
+     område är ingen rad i databasen, och bladet är inte hemligt, så det
+     hämtas som en vanlig fil, en gång per bana, när banan visas. Filnamnet
+     är ämnet som i slug() i verktyget: gemener, utan accenter, resten
+     bindestreck.
+     ============================================================ */
+  const faktaLöften = new Map();
+  const faktaData = new Map();
+  function faktaFil(amne, arskurs) {
+    return String(amne || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-' + arskurs + '.json';
+  }
+  function laddaFakta(amne, arskurs) {
+    if (!amne || !arskurs) return Promise.resolve({});
+    const fil = faktaFil(amne, arskurs);
+    if (!faktaLöften.has(fil)) {
+      /* no-cache: filen frågas om den ändrats, så ett nytt blad syns efter
+         nästa driftsättning utan att adressen byts. Ett fel glöms, så att
+         nästa visning försöker igen. */
+      faktaLöften.set(fil, fetch('/nexlax-fakta/' + fil, { cache: 'no-cache' })
+        .then(r => (r.ok ? r.json() : {}))
+        .then(d => { faktaData.set(fil, d || {}); return d || {}; })
+        .catch(() => { faktaLöften.delete(fil); return {}; }));
+    }
+    return faktaLöften.get(fil);
+  }
+  async function faktaFör(amne, arskurs, omrade) {
+    const d = await laddaFakta(amne, arskurs);
+    return (d && d[omrade]) || null;
+  }
+
+  function faktaHtml(b) {
+    const lista = (rubrik, ikon, rader, klass) => rader && rader.length
+      ? '<section class="nl-fakta-del ' + klass + '"><h4>' + ikon + '<span>' + esc(rubrik) + '</span></h4><ul>'
+        + rader.map(r => '<li>' + esc(r) + '</li>').join('') + '</ul></section>'
+      : '';
+    return '<div class="nl-fakta">'
+      + lista('När du är klar kan du', IKON.flagga, b.mal, 'mal')
+      + lista('Det här behöver du veta', IKON.bok, b.fakta, 'fakta')
+      + (b.exempel && b.exempel.length
+          ? '<section class="nl-fakta-del exempel"><h4>' + IKON.penna + '<span>Exempel</span></h4>'
+            + b.exempel.map(e => '<div class="nl-fakta-ex"><b>' + esc(e[0]) + '</b><p>' + esc(e[1]) + '</p></div>').join('') + '</section>'
+          : '')
+      + (b.ord && b.ord.length
+          ? '<section class="nl-fakta-del ord"><h4>' + IKON.böcker + '<span>Ord att kunna</span></h4><dl>'
+            + b.ord.map(x => '<div><dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd></div>').join('') + '</dl></section>'
+          : '')
+      + (b.tips ? '<p class="nl-fakta-tips">' + IKON.lampa + '<span><b>Tips</b> ' + esc(b.tips) + '</span></p>' : '')
+      + '</div>';
+  }
+
+  /* Ett område är nytt för eleven när ingen nivå i det har ett försök, klart
+     eller påbörjat. Då kommer faktabladet före första frågan. En nivå utan
+     område (en uppgift som bara bär nivåns namn) räknas inte som ny. */
+  function nyttOmråde(o, niva) {
+    if (!niva || !niva.omrade || (niva.sort || 'vanlig') !== 'vanlig') return false;
+    const ids = new Set((o.katalog || [])
+      .filter(n => n.amne === niva.amne && n.arskurs === niva.arskurs && n.omrade === niva.omrade)
+      .map(n => n.id));
+    ids.add(niva.id);
+    if ((o.forsok || []).some(f => ids.has(f.niva_id))) return false;
+    return !Object.keys(o.pågående || {}).some(id => ids.has(id));
+  }
+
+  /* Faktabladet i en egen ruta, från knappen i områdets huvud. */
+  async function visaFakta(amne, arskurs, omrade) {
+    const r = ruta('<div class="loading">Hämtar faktabladet</div>', 'Faktablad: ' + omrade);
+    r.r.classList.add('nl-fakta-ruta');
+    const b = await faktaFör(amne, arskurs, omrade);
+    if (!r.r.isConnected) return;
+    r.sätt('<div class="nl-fakta-huvud">'
+      + '<span class="upg-genom-etikett">' + esc(kortÄmne(amne) + ' · ' + NX.årskursText(arskurs)) + ' · Faktablad</span>'
+      + '<h3 id="upg-genom-t">' + esc(omrade) + '</h3></div>'
+      + (b ? faktaHtml(b) : '<p class="nl-fakta-saknas">Det här området har inget faktablad än. Frågorna förklarar sig själva när du svarat.</p>'));
   }
 
   /* Prickarna i en påbörjad nivå: en per uppgift, fylld när den är rätt
@@ -1424,21 +1514,62 @@ window.NXUppgifter = (function () {
      Områdena i ordning, med stegen i sicksack som i Duolingo. Ett
      område längre fram än nästa visar bara sitt namn och vad som låser
      upp det: vägen är lång nog ändå på en telefon. */
+  /* Hur mycket av en nivå som är gjort, 0–1: klar är hel, en påbörjad
+     räknar sina rätt besvarade uppgifter. */
+  function delGjord(x) {
+    if (x.klar) return 1;
+    const p = x.framsteg;
+    return p && p.totalt ? Math.min(1, p.klara / p.totalt) : 0;
+  }
+
+  /* Ledet (2026-10-27, Leo: "På sektionerna där de exempelvis står 0/3 eller
+     0/2 sätt ihop alla de uppgifterna på sektionen i ledet av uppgifter så
+     man ser hur mycket man har kvar av uppgifter på varje sektion som
+     duolingo har"). Områdets nivåer som ett led, en bit per nivå och lika
+     bred som nivåns antal uppgifter, fyllt med det som är gjort, och kronan
+     sist för Mästarprovet. Bredvid står hur många uppgifter som är kvar i
+     hela området, i stället för "0/3" nivåer. */
+  function antalFrågorI(x) { return Number(x.niva.antal_fragor) || 0; }
+  function områdetsUppgifter(a) {
+    const frågor = a.nivåer.reduce((s, x) => s + antalFrågorI(x), 0);
+    const gjorda = a.nivåer.reduce((s, x) => s + Math.round(delGjord(x) * antalFrågorI(x)), 0);
+    return { frågor, gjorda, kvar: Math.max(0, frågor - gjorda),
+             procent: frågor ? Math.round(gjorda / frågor * 100) : (a.nivåer.length ? Math.round(a.klara / a.nivåer.length * 100) : 0) };
+  }
+  function ledHtml(a) {
+    const antal = antalFrågorI;
+    const { frågor, gjorda, kvar } = områdetsUppgifter(a);
+    const m = a.mästare;
+    const text = a.bemästrat ? 'Bemästrat'
+      : a.klart ? (m && !m.klar ? 'Klart, provet kvar' : 'Klart')
+      : frågor ? kvar + ' kvar' : a.klara + ' av ' + a.nivåer.length;
+    const etikett = frågor
+      ? gjorda + ' av ' + frågor + ' uppgifter klara i ' + a.namn + (kvar ? ', ' + kvar + ' kvar' : '')
+      : a.klara + ' av ' + a.nivåer.length + ' nivåer klara i ' + a.namn;
+    return '<div class="nl-led" role="img" aria-label="' + esc(etikett) + '">'
+      + '<span class="nl-led-spar">'
+      + a.nivåer.map(x => '<i class="nl-led-del' + (x.klar ? ' klar' : '') + (x.aktuell ? ' nu' : '') + '"'
+          + ' style="flex-grow:' + Math.max(1, antal(x)) + ';--d:' + delGjord(x).toFixed(3) + '"></i>').join('')
+      + (m ? '<i class="nl-led-krona' + (m.klar ? ' klar' : '') + (a.bemästrat ? ' bem' : '') + '">' + IKON.krona + '</i>' : '')
+      + '</span>'
+      + '<span class="nl-led-text nl-omr-lage">' + (frågor && !a.klart ? '<b>' + kvar + '</b> uppgifter kvar' : esc(text)) + '</span>'
+      + '</div>';
+  }
+
   function vägHtml(o, väg) {
     let x = 0;
     const områden = väg.områden.map((a, i) => {
       const förra = i > 0 ? väg.områden[i - 1] : null;
       const ikon = a.klart ? (a.bemästrat ? IKON.krona : IKON.bock) : a.läge === 'last' || a.läge === 'nasta' ? IKON.lås : String(i + 1);
-      const lägesText = a.bemästrat ? 'Bemästrat' : a.klart ? 'Klart' : a.läge === 'aktuellt' ? 'Pågår'
-        : a.läge === 'oppet' ? 'Öppet' : a.läge === 'nasta' ? 'Nästa område' : 'Låst';
       const visaSteg = a.läge !== 'last';
       const noder = visaSteg ? a.nivåer.concat(a.mästare ? [a.mästare] : []).map(n => nodHtml(n, o, väg, XLED[x++ % XLED.length])).join('') : '';
       return '<li class="nl-omr nl-omr-' + a.läge + (a.bemästrat ? ' nl-omr-bem' : '') + '" data-nl-f="' + områdesFärg(väg.amne, i) + '">'
         + '<div class="nl-omr-huvud">'
         + '<span class="nl-omr-ik" aria-hidden="true">' + ikon + '</span>'
         + '<span class="nl-omr-text"><span class="nl-omr-et">Område ' + (i + 1) + '</span><b>' + esc(a.namn) + '</b></span>'
-        + '<span class="nl-omr-lage">' + esc(lägesText) + (a.bemästrat || !a.nivåer.length ? '' : '<em>' + a.klara + '/' + a.nivåer.length + '</em>') + '</span>'
+        + faktaKnapp(väg.amne, väg.arskurs, a.namn)
         + '</div>'
+        + ledHtml(a)
         + (visaSteg
             ? '<ol class="upg-stig nl-stig">' + noder + '</ol>'
             : '<p class="nl-omr-las">' + IKON.lås + 'Öppnas när du klarat ' + esc(förra ? förra.namn : 'området före') + '.</p>')
@@ -1453,6 +1584,7 @@ window.NXUppgifter = (function () {
     const hopp = väg.områden.length > 1
       ? '<ol class="nl-hopp" aria-label="Områdena i banan">' + väg.områden.map((a, i) =>
           '<li class="nl-hopp-knapp nl-hopp-' + (a.bemästrat ? 'bem' : a.klart ? 'klart' : a.läge) + '" data-nl-f="' + områdesFärg(väg.amne, i) + '"'
+          + ' style="--p:' + områdetsUppgifter(a).procent + '"'
           + (a.läge === 'aktuellt' ? ' aria-current="step"' : '') + '>'
           + '<span class="nl-hopp-ik" aria-hidden="true">' + (a.bemästrat ? IKON.krona : a.klart ? IKON.bock
               : a.läge === 'last' || a.läge === 'nasta' ? IKON.lås : String(i + 1)) + '</span>'
@@ -1463,6 +1595,15 @@ window.NXUppgifter = (function () {
       + '<ol class="nl-vag" aria-label="' + esc('Din väg i ' + banaNamn(väg.amne, väg.arskurs)) + '">' + områden
       + (väg.helaKlar ? '<li class="nl-mal-flagga"><span>' + IKON.pokal + '</span><b>Banan är klar</b></li>' : '')
       + '</ol>';
+  }
+
+  /* Knappen till områdets faktablad, som guideboken i Duolingos avsnitt.
+     Den står alltid: bladet hämtas när den trycks, om det inte redan är
+     hämtat, och ett område utan blad säger det i rutan. */
+  function faktaKnapp(amne, arskurs, omrade) {
+    return '<button type="button" class="nl-omr-fakta" data-nl-fakta="' + esc(omrade) + '" data-nl-fakta-amne="' + esc(amne) + '"'
+      + ' data-nl-fakta-ak="' + esc(arskurs) + '" aria-label="' + esc('Faktablad: ' + omrade) + '">'
+      + IKON.bok + '<span>Fakta</span></button>';
   }
 
   function nodHtml(n, o, väg, led) {
@@ -1476,6 +1617,13 @@ window.NXUppgifter = (function () {
       + '<button type="button" class="upg-nod-knapp" data-nl-nod="' + esc(n.niva.id) + '" aria-expanded="' + (ärÖppen ? 'true' : 'false') + '"'
       + ' aria-label="' + esc(stegTitel(n.niva) + ', ' + (n.klar ? 'klar, ' + n.stjarnor + ' av 3 stjärnor' : n.aktuell ? 'nästa steg' : n.öppen ? 'öppen' : 'låst')) + '">'
       + ikon
+      /* Hur långt man kommit i en påbörjad nivå, som ringen runt en nod i
+         Duolingo. pathLength 100 gör längden till procenten. */
+      + (n.framsteg && !n.klar && n.framsteg.totalt
+          ? '<svg class="upg-nod-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47" pathLength="100"/>'
+            + '<circle class="fylld" cx="50" cy="50" r="47" pathLength="100" stroke-dasharray="'
+            + Math.round(delGjord(n) * 100) + ' 100"/></svg>'
+          : '')
       + (n.aktuell ? '<span class="upg-nod-bubbla" aria-hidden="true">' + (n.pågår ? 'Fortsätt' : mästare ? 'Provet' : 'Börja') + '</span>' : '')
       + '</button>'
       + '<span class="upg-nod-namn">' + esc(mästare ? 'Mästarprov' : n.niva.titel) + '</span>'
@@ -2204,6 +2352,7 @@ window.NXUppgifter = (function () {
       else if (vad === 'nasta' && T.nästa) starta(T.nästa);
       else if (vad === 'klar') stäng();
       else if (vad === 'forsok-igen') kolla();
+      else if (vad === 'fakta-klar' && T && T.läge === 'fakta') starta(T.niva);
     });
     rot.addEventListener('input', e => {
       if (e.target.matches('.upg-skriv') && T) {
@@ -2899,7 +3048,31 @@ window.NXUppgifter = (function () {
       if (läge) o.läge = läge;
     }
 
-    starta(o.niva);
+    /* ---------- faktabladet (2026-10-27) ----------
+       Före första nivån i ett område eleven inte börjat: bladet med vad
+       området övar och vad man behöver veta, och Jag är redo. Inget
+       försök startas förrän knappen trycks, så den som stänger här har
+       inte börjat nivån. Saknas bladet går spelaren rakt till frågorna. */
+    async function faktaFörst(niva) {
+      T = { niva, data: null, läge: 'fakta', textÖppen: false, svarade: 0 };
+      rot.setAttribute('aria-label', 'Faktablad: ' + niva.omrade);
+      kropp.innerHTML = '<div class="upg-spel-laddar"><b>' + esc(niva.omrade) + '</b><span>Hämtar faktabladet</span></div>';
+      const b = await faktaFör(niva.amne, niva.arskurs, niva.omrade);
+      if (öppenSpelare !== rot || !T || T.niva !== niva || T.läge !== 'fakta') return;
+      if (!b) { starta(niva); return; }
+      kropp.innerHTML = '<div class="upg-fakta-forst">'
+        + '<p class="upg-fraga-typ">' + IKON.bok + 'Innan du börjar</p>'
+        + '<h2 class="upg-fraga-text" tabindex="-1">' + esc(niva.omrade) + '</h2>'
+        + '<p class="upg-fakta-ingress">Ett nytt område. Läs faktabladet, så vet du vad som kommer. Du hittar det igen vid områdets namn på din väg.</p>'
+        + faktaHtml(b) + '</div>';
+      knappar.innerHTML = '<button type="button" class="btn btn-primary btn-block" data-spel="fakta-klar">Jag är redo, börja</button>';
+      const h = kropp.querySelector('h2');
+      if (h) h.focus({ preventScroll: true });
+      kropp.scrollTop = 0;
+    }
+
+    if (nyttOmråde(o, o.niva)) faktaFörst(o.niva);
+    else starta(o.niva);
   }
 
   /* ============================================================
@@ -2980,7 +3153,11 @@ window.NXUppgifter = (function () {
   async function genomgång(supa, forsokId) {
     const g = ruta('<div class="loading">Hämtar rättningen</div>', 'Rättningen');
     const { data, error } = await supa.rpc('niva_genomgang', { p_forsok: forsokId });
-    if (error) { g.sätt('<div class="empty"><b>Rättningen gick inte att hämta</b><br><span>' + esc(NX.felText(error)) + '</span></div>'); return; }
+    /* Utan rad (förhandsvisningens värld har ingen rättning) står samma besked som vid ett fel. */
+    if (error || !data || !data.niva || !data.forsok) {
+      g.sätt('<div class="empty"><b>Rättningen gick inte att hämta</b><br><span>' + esc(error ? NX.felText(error) : 'Försöket hittades inte.') + '</span></div>');
+      return;
+    }
     g.sätt(genomgångHtml(data));
   }
 
@@ -3227,6 +3404,14 @@ window.NXUppgifter = (function () {
        bana och ritar om, och den kommer efter den här. */
     const akVal = mål.closest('.nl-valj [data-nl-ak]');
     if (akVal) { const host = akVal.closest('.nl'); if (host) { host.dataset.valj = ''; sistaHtml.delete(host); } }
+
+    /* Faktabladet från områdets huvud (2026-10-27). */
+    const fakta = mål.closest('[data-nl-fakta]');
+    if (fakta) {
+      visaFakta(fakta.dataset.nlFaktaAmne, fakta.dataset.nlFaktaAk, fakta.dataset.nlFakta);
+      känn('tryck');
+      return;
+    }
 
     const pil = mål.closest('[data-nl-rank-skrolla]');
     if (pil) {

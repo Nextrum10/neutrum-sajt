@@ -1,0 +1,245 @@
+{
+ "Mat och att beställa": {
+  "mal": [
+   "Använda ord för mat, dryck och måltider.",
+   "Säga vad du gärna äter och dricker, med gern efter verbet.",
+   "Beställa artigt med Ich möchte och Ich hätte gern, och fråga vad något kostar.",
+   "Böja essen, trinken och möchte i presens."
+  ],
+  "fakta": [
+   "Gern efter verbet säger att du tycker om det: Ich esse gern Reis, jag äter gärna ris.",
+   "Essen byter e mot i efter du och er/sie/es: du isst, er isst. Ich esse och ihr esst har kvar e. Trinken är regelbundet: du trinkst.",
+   "Möchte (skulle vilja) har ingen ändelse efter ich och er/sie/es: ich möchte, er möchte, men du möchtest och ihr möchtet.",
+   "Efter möchte och hätte gern blir ein till einen framför der-ord: Ich möchte einen Tee.",
+   "Efter möchte står ett annat verb sist, i infinitiv: Was möchtest du trinken? En stam på t får ett e före -t: es kostet."
+  ],
+  "exempel": [
+   [
+    "Beställ en te på ett kafé. (der Tee)",
+    "Ich möchte einen Tee, bitte. Tee är ett der-ord, så ein blir einen efter möchte."
+   ],
+   [
+    "Säg: Vi skulle vilja äta pizza.",
+    "Wir möchten Pizza essen. Möchten står på andra plats och infinitiven essen sist."
+   ]
+  ],
+  "ord": [
+   [
+    "das Mittagessen",
+    "lunchen, målet mitt på dagen"
+   ],
+   [
+    "das Abendessen",
+    "kvällsmaten"
+   ],
+   [
+    "lecker",
+    "gott"
+   ],
+   [
+    "die Speisekarte",
+    "menyn"
+   ],
+   [
+    "bitte",
+    "tack eller snälla, när du ber om något"
+   ]
+  ],
+  "tips": "Ich möchte … och Ich hätte gern … är båda artiga sätt att beställa."
+ },
+ "Vardagen och klockan": {
+  "mal": [
+   "Säga och förstå klockslag på tyska: hel och halv timme, kvart över och kvart i.",
+   "Säga när något händer med um … Uhr och am före en veckodag.",
+   "Använda veckodagarna och beskriva en vanlig dag.",
+   "Placera verbet rätt, också när aufstehen delas i två."
+  ],
+  "fakta": [
+   "Hel timme: Es ist drei Uhr. Före Uhr heter 1 ein: ein Uhr. Nach betyder över och vor i: zehn nach drei är 3:10 och fünf vor drei 2:55.",
+   "Halb räknar mot nästa timme, som på svenska: halb fünf är halv fem, alltså 4:30.",
+   "Viertel nach är kvart över och Viertel vor kvart i: Viertel nach vier är 4:15 och Viertel vor vier 3:45.",
+   "Um … Uhr säger när något händer: um neun Uhr, klockan nio. Före en veckodag står am: am Dienstag, på tisdag.",
+   "Veckodagarna: Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag (eller Sonnabend) och Sonntag."
+  ],
+  "exempel": [
+   [
+    "Vad är klockan om någon säger: Es ist fünf nach halb sechs?",
+    "Halb sechs är 5:30, och fünf nach halb sechs är fem minuter efter: 5:35. Det är som fem över halv sex på svenska."
+   ],
+   [
+    "Säg: Klockan är kvart i elva.",
+    "Es ist Viertel vor elf. Vor betyder i, före, så klockan är 10:45."
+   ]
+  ],
+  "ord": [
+   [
+    "Wie spät ist es?",
+    "Hur mycket är klockan? Ordagrant: hur sent är det?"
+   ],
+   [
+    "wann",
+    "när"
+   ],
+   [
+    "frühstücken",
+    "äta frukost"
+   ],
+   [
+    "aufstehen",
+    "gå upp, stiga upp"
+   ],
+   [
+    "beginnen",
+    "börja"
+   ]
+  ],
+  "tips": "Aufstehen delas i två: stehe står på andra plats och auf hamnar sist, som i Ich stehe früh auf."
+ },
+ "Staden och vägbeskrivning": {
+  "mal": [
+   "Säga vad som finns i en stad med es gibt, och vad som inte finns med kein.",
+   "Fråga om vägen och förstå en vägbeskrivning.",
+   "Använda dativ efter mit, zu och neben: mit dem Bus, zur Schule.",
+   "Känna igen ord för platser i staden."
+  ],
+  "fakta": [
+   "Es gibt betyder det finns. Efter es gibt blir ein till einen framför der-ord: Es gibt einen Markt.",
+   "Ingen heter kein och böjs som ein: kein framför der- och das-ord, keine framför die-ord, och keinen efter es gibt framför der-ord.",
+   "Mit och zu tar alltid dativ. I dativ blir der och das till dem och die till der: mit dem Zug, mit der Straßenbahn.",
+   "Zu dras ihop med artikeln: zu dem blir zum och zu der blir zur, som i zum Park och zur Schule.",
+   "När det gäller var något är tar neben och gegenüber också dativ: neben dem Rathaus, gegenüber der Apotheke."
+  ],
+  "exempel": [
+   [
+    "Säg: Det finns ingen park här. (der Park)",
+    "Hier gibt es keinen Park. Park är ett der-ord, och efter es gibt blir kein till keinen."
+   ],
+   [
+    "Säg: Jag åker spårvagn till träningen. (die Straßenbahn, das Training)",
+    "Ich fahre mit der Straßenbahn zum Training. Efter mit blir die till der, och zu dem blir zum."
+   ]
+  ],
+  "ord": [
+   [
+    "links",
+    "till vänster"
+   ],
+   [
+    "rechts",
+    "till höger"
+   ],
+   [
+    "geradeaus",
+    "rakt fram"
+   ],
+   [
+    "neben",
+    "bredvid"
+   ],
+   [
+    "gegenüber",
+    "mittemot"
+   ],
+   [
+    "die Haltestelle",
+    "hållplatsen"
+   ]
+  ],
+  "tips": "I en artig uppmaning står verbet först och Sie efter: Gehen Sie …, Nehmen Sie …"
+ },
+ "Modala verb": {
+  "mal": [
+   "Böja modalverben können, müssen och wollen i presens.",
+   "Bygga meningar med modalverbet på andra plats och infinitiven sist.",
+   "Förstå att nicht müssen betyder att man inte behöver."
+  ],
+  "fakta": [
+   "Modalverben har ingen ändelse efter ich och er/sie/es, och du får -st (bara -t efter s): ich kann, du kannst, er kann.",
+   "können (kunna): ich kann, du kannst, er/sie/es kann, wir können, ihr könnt, sie/Sie können.",
+   "müssen (måste): ich muss, du musst, er/sie/es muss, wir müssen, ihr müsst, sie/Sie müssen. Ü:et finns bara med wir, ihr och sie/Sie.",
+   "wollen (vilja): ich will, du willst, er/sie/es will, wir wollen, ihr wollt, sie/Sie wollen.",
+   "Modalverbet står på andra plats och det andra verbet sist, i infinitiv: Ich muss heute meine Oma besuchen."
+  ],
+  "exempel": [
+   [
+    "Säg: Min pappa kan laga mat mycket bra. (kochen)",
+    "Mein Vater kann sehr gut kochen. Kann har ingen ändelse efter er, och kochen står sist i infinitiv."
+   ],
+   [
+    "Gör en fråga: Vill ni läsa en bok? (lesen)",
+    "Wollt ihr ein Buch lesen? I en ja- eller nej-fråga står modalverbet först, och infinitiven lesen står sist."
+   ]
+  ],
+  "ord": [
+   [
+    "können",
+    "kunna"
+   ],
+   [
+    "müssen",
+    "måste"
+   ],
+   [
+    "wollen",
+    "vilja"
+   ],
+   [
+    "möchten",
+    "skulle vilja, artigt"
+   ],
+   [
+    "dürfen",
+    "få, ha lov att"
+   ],
+   [
+    "werden",
+    "bli"
+   ]
+  ],
+  "tips": "Ich muss nicht betyder jag behöver inte; får inte heter darf nicht."
+ },
+ "Perfekt med haben och sein": {
+  "mal": [
+   "Bilda perfekt med haben eller sein och ett particip.",
+   "Bilda participet av regelbundna verb med ge- och -t, och känna igen oregelbundna particip.",
+   "Placera participet sist i meningen.",
+   "Välja sein för verb som betyder förflyttning eller förändring."
+  ],
+  "fakta": [
+   "Perfekt är haben eller sein på andra plats och participet sist: Ich habe heute gekocht.",
+   "Regelbundna verb får ge- före stammen och -t efter: kochen blir gekocht och tanzen getanzt. Slutar stammen på t eller d blir det -et: gearbeitet.",
+   "Oregelbundna particip slutar ofta på -en, och vokalen kan ändras: schreiben blir geschrieben och finden gefunden. De måste läras in.",
+   "Verb som börjar på be-, ver- eller er- får inget ge-: bezahlen blir bezahlt och verkaufen verkauft.",
+   "De flesta verb tar haben. Sein tar verb för förflyttning eller förändring, som fahren, gehen, kommen, fliegen och aufstehen, och också sein och bleiben."
+  ],
+  "exempel": [
+   [
+    "Säg: Hon har skrivit ett brev. (schreiben, der Brief)",
+    "Sie hat einen Brief geschrieben. Hat står på andra plats och participet geschrieben sist."
+   ],
+   [
+    "Haben eller sein? Mein Opa ___ nach Italien gereist. (reisen, resa)",
+    "Reisen är en förflyttning och tar sein: Mein Opa ist nach Italien gereist."
+   ]
+  ],
+  "ord": [
+   [
+    "perfekt",
+    "verbformen för något som har hänt: ich habe gekocht"
+   ],
+   [
+    "particip",
+    "verbformen som står sist i perfekt, till exempel gekocht"
+   ],
+   [
+    "hjälpverb",
+    "haben eller sein, som böjs och står på andra plats"
+   ],
+   [
+    "gestern",
+    "i går"
+   ]
+  ],
+  "tips": "Tyskan använder ofta perfekt där svenskan säger preteritum: Gestern habe ich gekocht betyder i går lagade jag mat."
+ }
+}

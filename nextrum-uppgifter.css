@@ -2141,3 +2141,133 @@ section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
 @media (max-width:600px){
   .nl-flikar .vy-flik{white-space:normal;line-height:1.15;padding:4px 3px;font-size:.78rem;text-align:center;hyphens:manual}
 }
+
+/* ============================================================
+   LEDET OCH FAKTABLADET (2026-10-27)
+   Leo: "På sektionerna där de exempelvis står 0/3 eller 0/2 sätt ihop
+   alla de uppgifterna på sektionen i ledet av uppgifter så man ser hur
+   mycket man har kvar av uppgifter på varje sektion som duolingo har",
+   och ett faktablad före varje nytt område. Ledet står under områdets
+   huvud: en bit per nivå, lika bred som nivåns uppgifter, fylld med det
+   som är gjort, och kronan sist. Faktabladets knapp står i huvudet, som
+   guideboken i ett avsnitt i Duolingo. Inga hexkoder.
+   ============================================================ */
+.nl-omr-fakta{
+  flex:none;display:inline-flex;align-items:center;gap:6px;
+  min-height:40px;padding:0 14px 0 11px;border-radius:100px;
+  border:1.5px solid color-mix(in srgb,var(--nl-f,var(--acc)) 34%,var(--ln));
+  background:var(--yta);color:var(--nl-f,var(--acc-text));
+  font:inherit;font-size:.8rem;font-weight:700;letter-spacing:.01em;cursor:pointer;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  transition:scale .4s var(--vy-fjader,ease),background-color .2s var(--e);
+}
+.nl-omr-fakta svg{width:17px;height:17px;flex:none}
+.nl-omr-fakta:active{scale:.94;transition-duration:.09s}
+.nl-omr-fakta:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (hover:hover){
+  .nl-omr-fakta:hover{background:color-mix(in srgb,var(--nl-f,var(--acc)) 8%,var(--yta))}
+}
+/* En tumme behöver 44 px: ytan runt knappen räknas med. */
+@media (pointer:coarse){
+  .nl-omr-fakta{position:relative}
+  .nl-omr-fakta::after{content:"";position:absolute;inset:-4px -2px}
+}
+.nl-np-omr-huvud{display:flex;align-items:center;gap:10px}
+.nl-np-omr-huvud > b{flex:1;min-width:0}
+
+.nl-led{display:flex;align-items:center;gap:12px;margin:6px 4px 2px;min-height:28px}
+.nl-led-spar{flex:1;min-width:0;display:flex;align-items:center;gap:5px;height:28px}
+.nl-led-del{
+  position:relative;display:block;flex-basis:0;min-width:10px;height:12px;border-radius:100px;overflow:hidden;
+  background:color-mix(in srgb,var(--nl-f,var(--acc)) 15%,var(--pap-3));
+}
+/* Fyllningen är en egen bit som skalas i sidled: bredden räknas en gång
+   och rör sig med transform, aldrig med width. */
+.nl-led-del::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;
+  background:var(--nl-f,var(--acc));
+  transform-origin:left center;transform:scaleX(var(--d,0));
+  transition:transform .6s var(--e-ut,ease);
+}
+.nl-led-del.nu{box-shadow:0 0 0 2px color-mix(in srgb,var(--nl-f,var(--acc)) 35%,transparent)}
+.nl-omr-klart .nl-led-del::after,.nl-omr-bem .nl-led-del::after,
+.nl-np-omr.klart .nl-led-del::after{background:var(--mossa)}
+.nl-led-krona{
+  flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:9px;
+  background:var(--bricka);color:var(--bl-3);
+}
+.nl-led-krona svg{width:16px;height:16px}
+.nl-led-krona.klar{background:color-mix(in srgb,var(--ockra) 22%,var(--yta));color:var(--ockra-text)}
+.nl-led-krona.bem{background:var(--ockra);color:var(--pap)}
+.nl-led-text{font-size:.76rem}
+.nl-led-text b{font-weight:800;color:inherit;font-variant-numeric:tabular-nums}
+[data-nl-f] .nl-omr .nl-led-text,.nl-omr[data-nl-f] .nl-led-text{background:color-mix(in srgb,var(--nl-f) 12%,var(--yta));color:var(--nl-f)}
+.nl-omr-klart .nl-led-text,.nl-np-omr.klart .nl-led-text{background:var(--mossa-soft)!important;color:var(--mossa-text)!important}
+.nl-omr-bem .nl-led-text,.nl-np-omr.bem .nl-led-text{background:var(--ockra-soft)!important;color:var(--ockra-text)!important}
+@media (max-width:380px){
+  .nl-omr-fakta span{display:none}
+  .nl-omr-fakta{padding:0;width:40px;justify-content:center}
+}
+
+/* Ringen runt en påbörjad nivå: hur många av dess uppgifter som är gjorda. */
+.upg-nod-ring{position:absolute;inset:-9px;width:calc(100% + 18px);height:calc(100% + 18px);pointer-events:none;rotate:-90deg;overflow:visible}
+.upg-nod-ring circle{fill:none;stroke:color-mix(in srgb,var(--nl-f,var(--acc)) 18%,transparent);stroke-width:5}
+.upg-nod-ring circle.fylld{stroke:var(--nl-f,var(--acc));stroke-linecap:round}
+.upg-nod.mastare .upg-nod-ring{display:none}
+
+/* Översikten över områdena: ringen runt numret är hur långt man kommit. */
+.nl-hopp-aktuellt .nl-hopp-ik,.nl-hopp-oppet .nl-hopp-ik{
+  background:
+    radial-gradient(closest-side,var(--yta) 74%,transparent 76%),
+    conic-gradient(var(--nl-f,var(--acc)) calc(var(--p,0) * 1%),color-mix(in srgb,var(--nl-f,var(--acc)) 18%,var(--yta)) 0);
+  color:var(--nl-f,var(--acc));
+}
+
+/* Faktabladet: i rutan från knappen och före första frågan i spelaren. */
+.nl-fakta{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.nl-fakta-del{padding:14px 16px;border-radius:18px;background:var(--yta);border:1px solid var(--ln)}
+.nl-fakta-del h4{
+  display:flex;align-items:center;gap:8px;margin:0 0 8px;
+  font-size:.78rem;font-weight:750;letter-spacing:.04em;text-transform:uppercase;color:var(--bl-2);
+}
+.nl-fakta-del h4 svg{width:18px;height:18px;flex:none}
+.nl-fakta-del ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.nl-fakta-del li{position:relative;padding-left:18px;font-size:.95rem;line-height:1.5;color:var(--bl)}
+.nl-fakta-del li::before{content:"";position:absolute;left:3px;top:.62em;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.35}
+.nl-fakta-del.mal{background:color-mix(in srgb,var(--mossa) 9%,var(--yta));border-color:color-mix(in srgb,var(--mossa) 28%,var(--ln))}
+.nl-fakta-del.mal h4{color:var(--mossa-text)}
+.nl-fakta-del.mal li::before{background:var(--mossa);opacity:1;width:8px;height:8px}
+.nl-fakta-del.fakta{background:color-mix(in srgb,var(--amne-ma) 7%,var(--yta));border-color:color-mix(in srgb,var(--amne-ma) 26%,var(--ln))}
+.nl-fakta-del.fakta h4{color:var(--amne-ma)}
+.nl-fakta-del.fakta li::before{background:var(--amne-ma);opacity:1}
+.nl-fakta-ex{padding:10px 12px;border-radius:12px;background:var(--tint)}
+.nl-fakta-ex + .nl-fakta-ex{margin-top:8px}
+.nl-fakta-ex b{display:block;font-size:.93rem;font-weight:650;color:var(--bl);line-height:1.45}
+.nl-fakta-ex p{margin:4px 0 0;font-size:.92rem;line-height:1.5;color:var(--bl-2)}
+.nl-fakta-del.ord dl{margin:0;display:grid;gap:6px}
+.nl-fakta-del.ord dl > div{font-size:.92rem;line-height:1.5}
+.nl-fakta-del.ord dt{display:inline;font-weight:700;color:var(--bl);overflow-wrap:anywhere}
+.nl-fakta-del.ord dd{display:inline;margin:0;color:var(--bl-2)}
+.nl-fakta-del.ord dd::before{content:" – "}
+.nl-fakta-tips{
+  display:flex;gap:10px;align-items:flex-start;margin:0;padding:12px 14px;border-radius:16px;
+  background:var(--ockra-soft);color:var(--ockra-text);font-size:.92rem;line-height:1.5;
+}
+.nl-fakta-tips svg{width:20px;height:20px;flex:none;margin-top:1px}
+.nl-fakta-tips b{margin-right:4px}
+.nl-fakta-huvud{padding-right:44px;margin-bottom:4px}
+.nl-fakta-huvud h3{margin:4px 0 2px;font-size:1.35rem;font-weight:750;letter-spacing:-.015em;color:var(--bl)}
+.nl-fakta-saknas{margin:10px 0 0;color:var(--bl-2)}
+.upg-fakta-forst .upg-fraga-typ{display:inline-flex;align-items:center;gap:6px}
+.upg-fakta-forst .upg-fraga-typ svg{width:15px;height:15px}
+.upg-fakta-ingress{margin:-4px 0 14px;font-size:.92rem;line-height:1.5;color:var(--bl-2)}
+.upg-fakta-forst .nl-fakta{animation:nl-fakta-in .45s var(--e-ut,ease) both}
+.upg-fakta-forst .nl-fakta-del{animation:nl-fakta-in .45s var(--e-ut,ease) both}
+.upg-fakta-forst .nl-fakta-del:nth-child(2){animation-delay:.06s}
+.upg-fakta-forst .nl-fakta-del:nth-child(3){animation-delay:.12s}
+.upg-fakta-forst .nl-fakta-del:nth-child(4){animation-delay:.18s}
+@keyframes nl-fakta-in{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
+@media (prefers-reduced-motion:reduce){
+  .nl-led-del::after{transition:none}
+  .upg-fakta-forst .nl-fakta,.upg-fakta-forst .nl-fakta-del{animation:none}
+}

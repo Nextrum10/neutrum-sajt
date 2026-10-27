@@ -1,0 +1,338 @@
+{
+ "Ordklasser": {
+  "mal": [
+   "Känna igen verbens former: infinitiv, presens, preteritum och perfekt.",
+   "Skriva ett verb i preteritum, också verb som byter vokal.",
+   "Byta ut ett namn mot rätt pronomen, till exempel han eller honom.",
+   "Känna igen pronomen som visar vem något tillhör."
+  ],
+  "fakta": [
+   "Infinitiv: att dansa. Presens, det som händer nu: dansar. Preteritum, det som hände: dansade. Perfekt: har dansat.",
+   "Många verb byter vokal i preteritum: bita – bet, flyga – flög, dricka – drack.",
+   "Framtid visar man ofta med ”ska” eller ”kommer att”: Vi kommer att flytta i vår.",
+   "Jag, du, han, hon, vi och de är den som gör något: Hon ringer. Mig, dig, honom, henne, oss och dem används när någon gör något mot personen: Jag ringer henne.",
+   "Min, din, hans, hennes, vår, er och deras visar vem något tillhör."
+  ],
+  "exempel": [
+   [
+    "I dag sjunger jag. I går … jag.",
+    "Sjöng. Sjunga byter vokal i preteritum."
+   ],
+   [
+    "Byt ut ”Ali och Sara” mot ett pronomen: ”Jag mötte Ali och Sara.”",
+    "Dem: ”Jag mötte dem.” Det är jag som möter dem, så det blir dem och inte de."
+   ]
+  ],
+  "ord": [
+   [
+    "infinitiv",
+    "verbets grundform, ofta med att: att springa"
+   ],
+   [
+    "presens",
+    "verbets nu-form"
+   ],
+   [
+    "preteritum",
+    "verbets form för det som hände"
+   ],
+   [
+    "perfekt",
+    "har + verbet: har sprungit"
+   ],
+   [
+    "pronomen",
+    "ord som står i stället för ett namn, som han, hon och vi"
+   ]
+  ],
+  "tips": "Testa med ”i går”: det ord som passar efter ”I går …” är preteritum."
+ },
+ "Stavning": {
+  "mal": [
+   "Stava vanliga ord där å-ljudet skrivs med o.",
+   "Stava sj-ljudet med sj, sk, stj, skj, ch eller -tion.",
+   "Stava tj-ljudet med tj, k eller kj."
+  ],
+  "fakta": [
+   "Å-ljudet skrivs ofta med o, särskilt när vokalen är kort: korg, socka, sommar, gott. Lär dig de vanliga orden utantill.",
+   "Sj-ljudet stavas på många sätt: sj (sjal), sk före e, i, y, ä, ö (skepp), stj (stjäla), skj (skjul), ch (choklad) och -tion (lektion).",
+   "Tj-ljudet stavas tj (tjära), k före e, i, y, ä, ö (kök) och ibland kj.",
+   "E, i, y, ä och ö kallas mjuka vokaler. Före dem låter k oftast som tj-ljudet och sk som sj-ljudet."
+  ],
+  "exempel": [
+   [
+    "Ska det stå ”dåtter” eller ”dotter”?",
+    "”Dotter”. Å-ljudet skrivs med o i det ordet."
+   ],
+   [
+    "Ska det stå ”informasjon” eller ”information”?",
+    "”Information”. I ändelsen -tion låter ti som sj-ljudet."
+   ]
+  ],
+  "ord": [
+   [
+    "sj-ljud",
+    "ljudet först i ”sjal”"
+   ],
+   [
+    "tj-ljud",
+    "ljudet först i ”tjära”"
+   ],
+   [
+    "mjuka vokaler",
+    "e, i, y, ä och ö"
+   ]
+  ],
+  "tips": "Många ord med sj- och tj-ljud går inte att räkna ut med en regel. Lär dig hur de ser ut."
+ },
+ "Skiljetecken": {
+  "mal": [
+   "Skriva repliker med talstreck.",
+   "Sätta komma mellan repliken och ord som ”sa” och ”ropade”.",
+   "Sätta komma i uppräkningar, men inte före ”och”."
+  ],
+  "fakta": [
+   "En replik är det en person säger. Den börjar med ett talstreck (–).",
+   "Efter repliken står komma före ”sa”: – Det är kallt, sa Ida. Ordet ”sa” skrivs med liten bokstav.",
+   "Slutar repliken med frågetecken eller utropstecken behövs inget komma: – Var är du? frågade Ida.",
+   "Man kan också skriva det någon säger inom citattecken: ”Hej”, sa Ida.",
+   "I en uppräkning står komma mellan sakerna, men inte före det sista ”och”: mössa, vantar och halsduk."
+  ],
+  "exempel": [
+   [
+    "Rätta repliken: ”– Vi ses i morgon sa Lisa.”",
+    "– Vi ses i morgon, sa Lisa. Kommat står efter repliken, före ”sa”."
+   ],
+   [
+    "Var ska det stå komma? ”Vi åt pizza sallad glass och kakor.”",
+    "Efter pizza och efter sallad: ”Vi åt pizza, sallad, glass och kakor.” Inget komma före ”och”."
+   ]
+  ],
+  "ord": [
+   [
+    "replik",
+    "det en person säger i en text"
+   ],
+   [
+    "talstreck",
+    "strecket – först i en replik"
+   ],
+   [
+    "citattecken",
+    "tecknen ” ” runt det någon säger"
+   ],
+   [
+    "uppräkning",
+    "flera saker efter varandra i en mening"
+   ]
+  ],
+  "tips": "I en uppräkning står kommat bara mellan sakerna som inte har ”och” emellan."
+ },
+ "Ordförråd": {
+  "mal": [
+   "Förstå ord som stavas likadant men betyder olika saker.",
+   "Känna igen ord som låter likadant men stavas olika.",
+   "Bilda nya ord med o- först och med -ig eller -are sist."
+  ],
+  "fakta": [
+   "Samma ord kan betyda olika saker, och meningen visar vilken betydelse det är: ett bär kan man äta, men ”han bär en väska” handlar om att bära.",
+   "Några ord låter likadant men stavas olika och betyder olika: kål är en grönsak, och kol eldar man med.",
+   "Sätter man o- först får ordet ofta motsatt betydelse: ärlig – oärlig, trygg – otrygg.",
+   "Med -ig sist gör man ett adjektiv av ett substantiv: sand – sandig, lera – lerig.",
+   "Med -are sist gör man ett ord för den som gör något: dansa – dansare, måla – målare."
+  ],
+  "exempel": [
+   [
+    "Vad betyder ”kort” i ”Hon har kort hår”?",
+    "Att håret inte är långt. I ”Vi spelar kort” betyder ”kort” spelkort i stället."
+   ],
+   [
+    "Gör motsatsen med o-: tydlig.",
+    "Otydlig, som betyder inte tydlig."
+   ]
+  ],
+  "ord": [
+   [
+    "betydelse",
+    "vad ett ord betyder"
+   ],
+   [
+    "förstavelse",
+    "en del som sätts först i ett ord, som o-"
+   ],
+   [
+    "ändelse",
+    "en del som sätts sist i ett ord, som -ig eller -are"
+   ]
+  ],
+  "tips": "Se upp: o- först ger inte alltid motsatsen. ”Orolig” betyder att man oroar sig, inte att något är tråkigt."
+ },
+ "Läsförståelse": {
+  "mal": [
+   "Läsa en instruerande text, som ett recept, och hålla ordning på stegen.",
+   "Hitta detaljer som mängder och tider i en text.",
+   "Läsa en berättelse och förklara varför personerna gör som de gör.",
+   "Förstå vad ett uttryck betyder utifrån sammanhanget."
+  ],
+  "fakta": [
+   "En instruerande text talar om hur man gör något, steg för steg. Recept och bruksanvisningar är instruerande texter.",
+   "I en instruerande text är ordningen viktig. Stegen är ofta numrerade, eller så visar ord som först, sedan och sist ordningen.",
+   "Läs mängder och tider noga: dl betyder deciliter, och en halvtimme är 30 minuter.",
+   "I en berättelse förstår du hur någon känner sig och varför hen gör något av det hen säger och gör.",
+   "Ett ord eller uttryck du inte känner till kan du ofta förstå av meningarna runt omkring."
+  ],
+  "exempel": [
+   [
+    "Läs: ”1. Skölj bären. 2. Lägg dem i en skål. 3. Strö över socker.” Vad gör du direkt efter att du har sköljt bären?",
+    "Lägger dem i en skål. Det är steg 2, som kommer direkt efter steg 1."
+   ]
+  ],
+  "ord": [
+   [
+    "instruerande text",
+    "en text som talar om hur man gör något"
+   ],
+   [
+    "textsort",
+    "vilken sorts text det är, som recept, berättelse eller faktatext"
+   ],
+   [
+    "deciliter (dl)",
+    "ett mått för hur mycket något rymmer; 10 dl är 1 liter"
+   ]
+  ],
+  "tips": "Frågar uppgiften vad som kommer ”direkt efter”, titta bara på nästa steg."
+ },
+ "Dialog": {
+  "mal": [
+   "Skriva en dialog med talstreck och en ny rad för varje replik.",
+   "Välja rätt tecken sist i repliken: komma, frågetecken eller utropstecken.",
+   "Göra om berättad text till dialog.",
+   "Välja talande verb som visar hur någon säger något."
+  ],
+  "fakta": [
+   "Varje replik börjar med talstreck (–), och varje ny replik står på en ny rad.",
+   "Efter repliken kommer komma före ”sa”: – Jag är hungrig, sa Kim. Kommat står där det annars hade stått punkt.",
+   "Slutar repliken med frågetecken eller utropstecken står inget komma: – Är du klar? frågade Kim.",
+   "Ordet efter repliken, som ”sa” eller ”frågade”, skrivs med liten bokstav, också efter frågetecken och utropstecken.",
+   "Talande verb visar hur någon säger något: skrek, väste, stammade, fnissade."
+  ],
+  "exempel": [
+   [
+    "Gör om till dialog: Kim berättade att hon hade tappat sin nyckel.",
+    "– Jag har tappat min nyckel, berättade Kim. Det Kim säger blir en replik, och ”hon” blir ”jag”."
+   ]
+  ],
+  "ord": [
+   [
+    "dialog",
+    "ett samtal mellan personer i en text"
+   ],
+   [
+    "replik",
+    "det en person säger"
+   ],
+   [
+    "talstreck",
+    "strecket – först i en replik"
+   ],
+   [
+    "talande verb",
+    "ett verb som visar hur något sägs, som skrek eller väste"
+   ]
+  ],
+  "tips": "Läs repliken högt och hör hur personen låter: välj sedan ett talande verb som passar."
+ },
+ "Läsa och tolka": {
+  "mal": [
+   "Läsa en faktatext och förklara hur något går till, steg för steg.",
+   "Känna igen en argumenterande text, som en insändare, och dess syfte.",
+   "Hitta skribentens åsikt, argument och de invändningar hen svarar på.",
+   "Skilja på en åsikt och ett faktapåstående."
+  ],
+  "fakta": [
+   "En faktatext förklarar hur något är eller går till. Ord som först, sedan och då visar ordningen.",
+   "En insändare är en argumenterande text: skribenten vill övertyga läsaren om något.",
+   "En argumenterande text har en åsikt, argument som stöder den och ofta svar på invändningar, alltså skäl som andra kan ha emot.",
+   "Ett faktapåstående går att kontrollera: Skolan ligger två kilometer från stationen. En åsikt är vad någon tycker: Skolan ligger för långt bort.",
+   "Ord som ”för det första” och ”för det andra” visar var ett nytt argument börjar."
+  ],
+  "exempel": [
+   [
+    "Åsikt eller faktapåstående? ”Simhallen öppnar klockan sju.”",
+    "Faktapåstående. Det går att kontrollera om det stämmer."
+   ],
+   [
+    "Åsikt eller faktapåstående? ”Simhallen är det roligaste stället i stan.”",
+    "Åsikt. Det är vad någon tycker, och andra kan tycka annorlunda."
+   ]
+  ],
+  "ord": [
+   [
+    "insändare",
+    "en text där någon skriver vad hen tycker, till exempel i en tidning"
+   ],
+   [
+    "åsikt",
+    "vad någon tycker"
+   ],
+   [
+    "argument",
+    "ett skäl som stöder en åsikt"
+   ],
+   [
+    "invändning",
+    "ett skäl emot, som någon annan kan ha"
+   ],
+   [
+    "syfte",
+    "varför texten är skriven"
+   ]
+  ],
+  "tips": "Leta efter ord som ”jag tycker” och ”borde”: där står ofta skribentens åsikt."
+ },
+ "Bildligt språk": {
+  "mal": [
+   "Förklara vad vanliga uttryck med bildlig betydelse betyder.",
+   "Känna igen en liknelse, en jämförelse med ”som”.",
+   "Känna igen personifikation, när något som inte är en människa gör som en människa.",
+   "Skilja bildligt språk från en rak beskrivning."
+  ],
+  "fakta": [
+   "Ett uttryck med bildlig betydelse betyder något annat än orden säger: ”att ha en räv bakom örat” betyder att vara listig.",
+   "Sådana uttryck går inte att räkna ut ord för ord. Du lär dig dem, som ”att lägga näsan i blöt”, som betyder att lägga sig i något.",
+   "En liknelse jämför två saker med ordet ”som”: Han var snabb som vinden.",
+   "Personifikation betyder att något som inte är en människa gör eller känner som en människa: Vinden viskade i träden.",
+   "En rak beskrivning säger precis det som händer: Det blåste i träden."
+  ],
+  "exempel": [
+   [
+    "Liknelse eller personifikation? ”Klockan tickade otåligt på väggen.”",
+    "Personifikation. En klocka kan inte vara otålig, det kan bara en människa."
+   ],
+   [
+    "Vad betyder uttrycket ”att vara på hugget”?",
+    "Att vara pigg och redo att sätta i gång. Det betyder inte att man hugger något."
+   ]
+  ],
+  "ord": [
+   [
+    "bildlig betydelse",
+    "när orden betyder något annat än det de säger"
+   ],
+   [
+    "uttryck",
+    "flera ord som tillsammans har en egen betydelse"
+   ],
+   [
+    "liknelse",
+    "en jämförelse med ”som”"
+   ],
+   [
+    "personifikation",
+    "när något som inte är en människa gör eller känner som en människa"
+   ]
+  ],
+  "tips": "Fråga dig: kan det hända på riktigt, precis som det står? Om inte är det troligen bildligt språk."
+ }
+}

@@ -1,0 +1,75 @@
+{
+ "Läsa: Industrialiseringen": {
+  "mal": [
+   "Hitta fakta i en text om industrialiseringen i Sverige.",
+   "Förklara ord som urbanisering och fackförening med hjälp av texten.",
+   "Förklara orsaker, som varför människor flyttade, med det texten berättar."
+  ],
+  "fakta": [
+   "Läs frågorna innan du läser texten, så vet du vad du letar efter.",
+   "Frågor om orsaker: leta efter ”för att”, ”eftersom” och ”därför”. Efter ”för att” kommer orsaken, efter ”därför” kommer följden.",
+   "Förklarar texten ett ord står förklaringen ofta i samma mening, till exempel efter ”det kallas”.",
+   "Industrialiseringen betyder att varor börjar tillverkas med maskiner i fabriker i stället för för hand.",
+   "Frågar man ”enligt texten” är det texten som gäller, inte det du vet sedan förut."
+  ],
+  "exempel": [
+   [
+    "Texten: ”Fabriken behövde fler arbetare, och därför flyttade Anna till staden.” Varför flyttade Anna?",
+    "Efter ”därför” står följden, att Anna flyttade. Orsaken står före: fabriken behövde fler arbetare."
+   ]
+  ],
+  "ord": [
+   [
+    "orsak",
+    "det som gör att något händer"
+   ],
+   [
+    "följd",
+    "det som händer på grund av något"
+   ]
+  ],
+  "tips": "Läs hela meningen runt nyckelordet: svaret står sällan i ett enda ord."
+ },
+ "Industrialiseringen": {
+  "mal": [
+   "Förklara vad industrialisering är och hur den började.",
+   "Förklara hur järnvägen och råvarorna hjälpte industrin i Sverige.",
+   "Beskriva arbetarnas villkor och vad folkrörelserna arbetade för.",
+   "Förklara varför mer än en miljon svenskar emigrerade till Amerika."
+  ],
+  "fakta": [
+   "Industrialisering betyder att varor tillverkas med maskiner i fabriker i stället för för hand. Den började i Storbritannien, där ångmaskinen drev fabriker och lok.",
+   "I Sverige började den i mitten av 1800-talet. Trä från Norrlands skogar blev en viktig exportvara, och järnvägen fraktade varor snabbt och billigt.",
+   "I fabrikerna var dagarna långa och lönerna låga, och även barn arbetade. Arbetarna bildade fackföreningar, och ur arbetarrörelsen växte Socialdemokraterna.",
+   "Befolkningen växte, och som orsaker brukar man nämna freden, vaccinet och potatisen. Det fanns inte mark åt alla, så många flyttade till städerna.",
+   "Mer än en miljon svenskar emigrerade, de flesta till USA, för att få billig mark och arbete. Missväxt och hungersnöd i slutet av 1860-talet fick väldigt många att resa."
+  ],
+  "ord": [
+   [
+    "råvara",
+    "ett material från naturen som används för att tillverka varor"
+   ],
+   [
+    "fackförening",
+    "arbetare som går samman för att få bättre löner och villkor"
+   ],
+   [
+    "strejk",
+    "när arbetarna slutar arbeta tillsammans för att kräva bättre villkor"
+   ],
+   [
+    "folkrörelse",
+    "en stor rörelse av vanliga människor, som arbetar-, nykterhets-, frikyrko- och kvinnorörelsen"
+   ],
+   [
+    "emigrera",
+    "flytta från sitt land"
+   ],
+   [
+    "immigrera",
+    "flytta till ett nytt land"
+   ]
+  ],
+  "tips": "Emigrera är att flytta ut och immigrera att flytta in: e som i exit och i som i in."
+ }
+}

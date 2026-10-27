@@ -336,7 +336,7 @@ async function provaKassan(webb, läge) {
   prova(namn + ': ingen Fyll timbanken att köpa', (await page.locator('#erb-planer .erb-klippkol, [data-kop^="klipp"]').count()) === 0);
   const rubrik = await page.locator('#erb-planer').locator('xpath=..').locator('h5').first().textContent().catch(() => '');
   prova(namn + ': rubriken säger Planer', rubrik.trim() === 'Planer', rubrik);
-  const sek = await innehåll(page, 'section.vy-sek[data-sek="erbjudanden"]');
+  const sek = await innehåll(page, 'section.vy-sek[data-sek="betalning"]');
   prova(namn + ': inget i Erbjudanden säger att Fyll timbanken går att köpa',
     !/med Fyll timbanken|Planer och Fyll timbanken|Se planer och Fyll timbanken/.test(sek),
     (sek.match(/.{0,60}Fyll timbanken.{0,60}/) || [''])[0]);
@@ -352,7 +352,7 @@ async function provaKassan(webb, läge) {
   prova(namn + ': det köpta Fyll timbanken-kortet står under Er timbank', /Fyll timbanken, 10 timmar/.test(mina), mina);
   prova(namn + ': och räknar 7 av 10 timmar kvar', /7\s*av 10 timmar kvar/.test(mina), mina);
   prova(namn + ': ingen sidledsrullning', await ingenSidled(page));
-  await bild(page, 'kassan-' + läge.namn, 'section.vy-sek[data-sek="erbjudanden"]');
+  await bild(page, 'kassan-' + läge.namn, 'section.vy-sek[data-sek="betalning"]');
 
   /* Kortet betalar ett pass: Betala med timmar drar en timme, och vyn räknar ner. */
   await page.goto(BAS + '/foralder#pass/pass-1');

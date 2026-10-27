@@ -1,0 +1,272 @@
+{
+ "Källkritiska kriterier": {
+  "mal": [
+   "Förklara de fyra källkritiska kriterierna: äkthet, beroende, samtidighet och tendens.",
+   "Välja vilket kriterium som väger tyngst för en viss källa.",
+   "Avgöra hur många oberoende källor som står bakom en uppgift."
+  ],
+  "fakta": [
+   "Äkthet: är källan vad den utger sig för att vara? En oredigerad bild kan ändå vilseleda, om den sägs visa en annan händelse än den gör.",
+   "Beroende: bygger källan på andra källor? Flera texter med samma ursprung räknas som en källa.",
+   "Samtidighet: hur nära händelsen i tid och rum är källan? En källa nära händelsen väger i regel tyngre än en som skrevs långt senare.",
+   "Tendens: finns det ett syfte eller intresse som kan färga källan, till exempel att sälja något? En källa med tendens är inte falsk, men den behöver jämföras med oberoende källor.",
+   "Ta först reda på vem som står bakom en okänd webbplats och varför. Att många skriver samma sak gör det inte sant."
+  ],
+  "exempel": [
+   [
+    "Fem webbplatser återger samma pressmeddelande från ett företag. Hur många oberoende källor är det, och vilket kriterium är viktigast?",
+    "En enda, eftersom alla bygger på pressmeddelandet. Tendens är viktigt, för företaget har ett intresse av att framstå i god dager."
+   ]
+  ],
+  "ord": [
+   [
+    "oberoende källa",
+    "en källa som inte bygger på samma ursprung som de andra"
+   ],
+   [
+    "kriterium",
+    "en måttstock att pröva något mot, i plural kriterier"
+   ]
+  ],
+  "tips": "Fråga dig vem som tjänar på att du tror på källan: då hittar du tendensen."
+ },
+ "Primär- och sekundärkällor": {
+  "mal": [
+   "Avgöra om en källa är en primärkälla eller en sekundärkälla.",
+   "Kontrollera uppgifter på nätet med oberoende källor, originalkällan, datum och bildsökning.",
+   "Dra en slutsats om hur mycket du kan lita på en källa."
+  ],
+  "fakta": [
+   "En primärkälla kommer direkt från händelsen, som ett foto, en dagbok eller ett protokoll. En sekundärkälla beskriver händelsen i efterhand, som en lärobok.",
+   "Både primär- och sekundärkällor kan ha tendens, och en sekundärkälla är inte alltid mindre trovärdig.",
+   "Jämför ett påstående med flera oberoende källor, leta upp originalkällan för att se vad som faktiskt sades och i vilket sammanhang, och kontrollera när texten publicerades.",
+   "En omvänd bildsökning visar var och när en bild har publicerats tidigare. En faktagranskande sajt kontrollerar om påståenden som sprids stämmer.",
+   "En bedömning av en källa slutar med en slutsats om hur mycket du kan lita på den."
+  ],
+  "exempel": [
+   [
+    "Du undersöker en skolstrejk. Vilken källa är primär: en lärares minnesanteckningar från samma dag, eller en artikel skriven tio år senare?",
+    "Lärarens anteckningar: de kommer direkt från händelsen. Artikeln beskriver den i efterhand och är en sekundärkälla."
+   ]
+  ],
+  "ord": [
+   [
+    "originalkälla",
+    "den källa där en uppgift först kom fram"
+   ],
+   [
+    "omvänd bildsökning",
+    "att söka med en bild för att hitta var den har funnits förut"
+   ]
+  ],
+  "tips": "Två källor som bygger på varandra gör inte en uppgift säkrare: räkna bara de oberoende."
+ },
+ "Litteraturens epoker": {
+  "mal": [
+   "Beskriva allmänna drag i upplysningen, romantiken, realismen, naturalismen och modernismen.",
+   "Känna igen epoken i ett kort textstycke.",
+   "Ordna epokerna i tid och förklara varför de överlappar.",
+   "Förklara fri vers och inre monolog."
+  ],
+  "fakta": [
+   "Upplysningen (1700-talet) trodde på förnuft och vetenskap. Romantiken (tidigt 1800-tal) var delvis en reaktion mot den, med känsla, natur och längtan i centrum.",
+   "Realismen (1800-talets mitt och slut) skildrar vardagen och vanliga människors villkor sanningsenligt. Naturalismen går längre och visar hur människan formas av arv och miljö.",
+   "Modernismen (från tidigt 1900-tal) bryter mot traditionen och experimenterar med form och språk, till exempel med fri vers och inre monolog. Den splittrade formen kan spegla en splittrad värld.",
+   "En epok är en period då många författare skriver med liknande tankar och stil. Gränserna är inte skarpa, för nya idéer växer fram långsamt och epokerna överlappar.",
+   "Nationalromantiken intresserade sig för det egna landets natur, historia och folkdikt."
+  ],
+  "exempel": [
+   [
+    "Vilken epok passar bäst: ”Han vandrade ensam mot fjället, där stormen talade till hans själ om allt han hade förlorat.”?",
+    "Romantiken: naturen, känslan och längtan står i centrum, och stormen får tala som en människa."
+   ]
+  ],
+  "ord": [
+   [
+    "epok",
+    "tidsperiod vars litteratur har gemensamma drag i tema och stil"
+   ],
+   [
+    "fri vers",
+    "dikt utan rim och utan fast versmått"
+   ],
+   [
+    "inre monolog",
+    "en persons tankar återgivna direkt, som en röst inne i huvudet"
+   ]
+  ],
+  "tips": "Se vart texten riktar blicken: mot naturen och känslan (romantiken), mot samhället och vardagen (realismen) eller mot en splittrad inre upplevelse (modernismen)."
+ },
+ "Läsa och tolka": {
+  "mal": [
+   "Avgöra vem som berättar en novell och i vilken ordning det händer.",
+   "Tolka vad en sak i berättelsen kan stå för.",
+   "Känna igen personifikation, liknelse och metafor.",
+   "Beskriva stämningen och hur den förändras."
+  ],
+  "fakta": [
+   "Läs hela novellen först. Gå sedan tillbaka till texten för varje svar, och skilj på det som står och det du tolkar.",
+   "Berättaren är rösten som berättar. En jagberättare är en person i berättelsen, och vem det är ser du av det som sägs om hen och till hen.",
+   "En symbol är något konkret som står för något större, som en känsla, en relation eller tiden som går. Leta efter saker som återkommer eller som berättelsen stannar vid.",
+   "En liknelse jämför med ”som”, en metafor säger att något är något annat, och en personifikation ger en sak mänskliga egenskaper.",
+   "Stämningen är känslan texten ger, och den byggs av detaljer, ljud och ordval. Jämför början och slutet för att se om den skiftar."
+  ],
+  "exempel": [
+   [
+    "Vilken stilfigur är ”Huset sov under snön”?",
+    "Personifikation: huset får en mänsklig handling, att sova."
+   ]
+  ],
+  "ord": [
+   [
+    "tolka",
+    "att förklara vad något kan betyda, med stöd i texten"
+   ],
+   [
+    "stämning",
+    "den känsla en text eller en scen ger läsaren"
+   ]
+  ],
+  "tips": "En tolkning är rimlig när du kan peka på en mening i texten som stöder den."
+ },
+ "Antiken, medeltiden och renässansen": {
+  "mal": [
+   "Känna igen drag i antikens epos och drama.",
+   "Beskriva vad som präglade medeltidens litteratur.",
+   "Förklara vad renässansen och humanismen var.",
+   "Koppla några kända verk till sina författare och sin tid."
+  ],
+  "fakta": [
+   "Antiken: Iliaden och Odysséen, som tillskrivs Homeros, är epos, långa berättande dikter om hjältar. Tragedi och komedi kommer från den grekiska teatern.",
+   "I tragedin går hjälten under, ofta genom hybris, övermod. Aristoteles kallade publikens rening från medlidande och fruktan för katharsis.",
+   "Medeltiden: kristen tro och kyrkan präglade mycket av litteraturen. På Island skrevs sagorna ner, berättelser på prosa om släkter och strider.",
+   "Renässansen betyder pånyttfödelse: antikens konst och tankar togs upp igen, och humanismen satte människan i centrum. Boktryckarkonsten spred böckerna.",
+   "Kända verk: Dantes Den gudomliga komedin, Shakespeares skådespel, Cervantes Don Quijote och Petrarcas sonetter, dikter med fjorton rader."
+  ],
+  "exempel": [
+   [
+    "Vad är Romeo och Julia för slags verk, och från vilken tid?",
+    "Ett skådespel, en tragedi av Shakespeare, från renässansen. Två unga från släkter som är fiender blir kära, och det slutar med att båda dör."
+   ]
+  ],
+  "ord": [
+   [
+    "epos",
+    "en lång berättande dikt om hjältar och stora händelser"
+   ],
+   [
+    "tragedi",
+    "ett drama där huvudpersonen går under"
+   ],
+   [
+    "hybris",
+    "övermod som leder till hjältens fall"
+   ],
+   [
+    "katharsis",
+    "rening: publikens utlopp för medlidande och fruktan"
+   ],
+   [
+    "humanism",
+    "renässansens intresse för människan och antikens texter"
+   ],
+   [
+    "sonett",
+    "en dikt med fjorton rader och fast rimschema"
+   ]
+  ],
+  "tips": "Lär dig perioderna som en tidslinje: antiken, medeltiden, renässansen och sedan upplysningen."
+ },
+ "Språkhistoria": {
+  "mal": [
+   "Ordna svenskans perioder från runsvenska till nusvenska.",
+   "Berätta vad som kännetecknar runorna och fornsvenskan.",
+   "Förklara hur lågtyskan, bibeln och stavningsreformen har format svenskan.",
+   "Läsa och dra slutsatser av en text om en runsten."
+  ],
+  "fakta": [
+   "Perioderna i ordning: runsvenska, fornsvenska, äldre nysvenska, yngre nysvenska och nusvenska.",
+   "Under vikingatiden skrev man med runor. Den yngre futharken hade bara 16 runor, så samma runa fick stå för flera ljud.",
+   "Fornsvenskan hade fyra kasus. I dag finns genitivets s kvar hos substantiven, och pronomen som han och honom.",
+   "Under medeltiden kom många lågtyska ord och ordled, som be- och -het. Gustav Vasas bibel på 1500-talet blev en förebild för skriftspråket.",
+   "Stavningsreformen 1906 tog bort hv och f för v-ljudet: hvad blev vad och haf blev hav."
+  ],
+  "exempel": [
+   [
+    "Varför har svenskan ord som ”frihet” med ett ordled från tyskan?",
+    "Under medeltiden handlade hansans tyska köpmän i svenska städer. Svenskan lånade då både ord och ordled, som -het, från lågtyskan."
+   ]
+  ],
+  "ord": [
+   [
+    "runsvenska",
+    "svenskan under vikingatiden, skriven med runor"
+   ],
+   [
+    "futhark",
+    "runraden, uppkallad efter sina sex första tecken"
+   ],
+   [
+    "kasus",
+    "böjning som visar ett ords roll i satsen, som subjekt eller objekt"
+   ],
+   [
+    "lågtyska",
+    "språket i norra Tyskland, som hansans köpmän talade"
+   ],
+   [
+    "stavningsreform",
+    "ett beslut om att ändra hur ord stavas"
+   ]
+  ],
+  "tips": "Koppla varje period till något som hände: runorna, landskapslagarna, bibeln och reformen 1906."
+ },
+ "Ordbildning och lånord": {
+  "mal": [
+   "Skilja på sammansättning, avledning, kortord och initialord.",
+   "Känna igen prefix, suffix och foge-s.",
+   "Förklara hur lånord kommer in i svenskan och anpassas.",
+   "Koppla lånord till de språk svenskan har lånat mest från."
+  ],
+  "fakta": [
+   "Sammansättning: två ord blir ett, som fotboll + plan. Efterleden avgör ordklass och genus.",
+   "Avledning: ett ordled läggs till. Prefix står först (o-, be-), suffix sist (-het, -skap, -bar). Leden i en sammansättning kan bindas ihop med ett foge-s.",
+   "Kortord är förkortade ord, som bio av biograf. Initialord bildas av första bokstaven i flera ord.",
+   "Lånorden har kommit i vågor: lågtyska under medeltiden, franska på 1600- och 1700-talet och engelska framför allt under 1900-talet.",
+   "Ett översättningslån översätts led för led, som fotboll av football. Många lånord får svensk stavning, som jobb av job."
+  ],
+  "exempel": [
+   [
+    "Vilket genus får ordet ”glasskiosk”, och varför?",
+    "En glasskiosk, eftersom efterleden kiosk är ett en-ord. Det är efterleden som bestämmer genus."
+   ]
+  ],
+  "ord": [
+   [
+    "prefix",
+    "ett ordled som står först i ett ord, som o- i ovanlig"
+   ],
+   [
+    "suffix",
+    "ett ordled som står sist i ett ord, som -het i frihet"
+   ],
+   [
+    "foge-s",
+    "s:et som binder ihop leden i ord som fotbollsmatch"
+   ],
+   [
+    "kortord",
+    "ett ord som kortats, som bio av biograf"
+   ],
+   [
+    "översättningslån",
+    "ett ord som översatts led för led från ett annat språk"
+   ],
+   [
+    "purism",
+    "strävan att hålla ett språk fritt från lånord"
+   ]
+  ],
+  "tips": "Dela upp ett långt ord bakifrån: efterleden säger vad det är, och resten vad slags."
+ }
+}

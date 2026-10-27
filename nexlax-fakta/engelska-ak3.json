@@ -1,0 +1,258 @@
+{
+ "Ordförråd": {
+  "mal": [
+   "Hälsa och säga vad du heter på engelska.",
+   "Säga färger och talen upp till tio på engelska.",
+   "Säga vad saker i skolan och rummen hemma heter."
+  ],
+  "fakta": [
+   "Hello är hej och goodbye är hej då. Jag heter … säger du My name is …",
+   "I skolan: pen är penna, book är bok och desk är skolbänk.",
+   "Rummen hemma: kitchen är kök, bedroom är sovrum och bathroom är badrum.",
+   "On betyder på: The cup is on the desk."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'Jag heter Maja'?",
+    "My name is Maja. Du kan också säga I am Maja."
+   ],
+   [
+    "Skriv talet 9 med bokstäver på engelska.",
+    "nine"
+   ]
+  ],
+  "ord": [
+   [
+    "room",
+    "rum"
+   ],
+   [
+    "window",
+    "fönster"
+   ]
+  ],
+  "tips": "Living room är två ord på engelska, men vardagsrum är ett ord på svenska."
+ },
+ "Verb": {
+  "mal": [
+   "Säga vad vanliga verb heter på engelska.",
+   "Säga vad du kan och inte kan med I can och I can't.",
+   "Säga vad du tycker om och inte tycker om med I like och I don't like.",
+   "Fråga någon om hen kan något med Can you …?"
+  ],
+  "fakta": [
+   "Ett verb är ett ord för något man gör, som walk (gå) och play (spela).",
+   "I can betyder jag kan. I can't betyder jag kan inte.",
+   "I like betyder jag tycker om. I don't like betyder jag tycker inte om.",
+   "Efter can kommer verbet direkt: I can run. Frågan börjar med Can: Can you jump? – Yes, I can."
+  ],
+  "exempel": [
+   [
+    "Hur säger du 'Jag kan inte flyga'?",
+    "I can't fly."
+   ],
+   [
+    "Hur säger du 'Jag tycker inte om regn'?",
+    "I don't like rain."
+   ]
+  ],
+  "ord": [
+   [
+    "walk",
+    "gå"
+   ],
+   [
+    "talk",
+    "prata"
+   ],
+   [
+    "sit",
+    "sitta"
+   ]
+  ],
+  "tips": "Can't är en kort form av cannot, och don't är en kort form av do not."
+ },
+ "Pronomen": {
+  "mal": [
+   "Säga jag, du, han, hon, vi och de på engelska.",
+   "Välja he, she eller it när du pratar om en pojke, en flicka eller en sak.",
+   "Säga min, din, hans, hennes och vår på engelska."
+  ],
+  "fakta": [
+   "Jag är I, du är you, han är he, hon är she, vi är we och de är they.",
+   "Om en sak säger du it: The ball is big. It is big.",
+   "Min är my, din är your, hans är his, hennes är her och vår är our.",
+   "His använder du om det en pojke eller man har, och her om det en flicka eller kvinna har."
+  ],
+  "exempel": [
+   [
+    "Det handlar om mamma. Fyll i: ___ is at home.",
+    "She is at home. Mamma är en hon, så det blir she."
+   ],
+   [
+    "Sam har en hund. Fyll i: ___ dog is big.",
+    "His dog is big. Hunden är Sams, och Sam är en pojke."
+   ]
+  ],
+  "ord": [
+   [
+    "pronomen",
+    "ett ord som står i stället för ett namn, som han eller hon"
+   ]
+  ],
+  "tips": "I skrivs alltid med stor bokstav, också mitt i en mening."
+ },
+ "Meningar": {
+  "mal": [
+   "Bygga korta meningar i rätt ordning på engelska.",
+   "Sätta färgen före saken, som a red car.",
+   "Ställa enkla frågor och svara på dem."
+  ],
+  "fakta": [
+   "Först kommer vem det handlar om, sedan vad hen gör: I play. The cat sleeps.",
+   "Färger och andra ord som beskriver står före saken: a big dog, a red car.",
+   "Efter I kommer am: I am happy. Efter he och she kommer is: She is tall.",
+   "En fråga börjar ofta med ett frågeord, eller med are, do eller can: Are you hungry?"
+  ],
+  "exempel": [
+   [
+    "Bygg meningen: Jag har en grön bil.",
+    "I have a green car. Färgen green står före car."
+   ],
+   [
+    "Vad betyder Where is my bag?",
+    "Var är min väska?"
+   ]
+  ],
+  "ord": [
+   [
+    "what",
+    "vad"
+   ],
+   [
+    "how",
+    "hur"
+   ],
+   [
+    "where",
+    "var"
+   ],
+   [
+    "who",
+    "vem"
+   ]
+  ],
+  "tips": "Titta på slutet: har meningen ett frågetecken ska den börja som en fråga."
+ },
+ "Övningsblad: färger och tal": {
+  "mal": [
+   "Skriva färgerna red, blue, yellow och green på engelska.",
+   "Skriva talen one till ten med bokstäver och med siffror.",
+   "Säga vilket tal som fattas i en rad."
+  ],
+  "fakta": [
+   "Red är röd, blue är blå, yellow är gul och green är grön.",
+   "One 1, two 2, three 3, four 4, five 5, six 6, seven 7, eight 8, nine 9, ten 10.",
+   "Färger och tal skrivs med liten bokstav, utom först i en mening.",
+   "På brittisk engelska stavas favourite och colour med -our."
+  ],
+  "exempel": [
+   [
+    "Vilken färg har snö? Svara på engelska.",
+    "White. Snö är vit."
+   ],
+   [
+    "Vilket tal fattas? eight, ___, ten",
+    "nine. Talen kommer i ordning: eight (8), nine (9), ten (10)."
+   ]
+  ],
+  "ord": [
+   [
+    "colour",
+    "färg; colour på brittisk engelska och color på amerikansk"
+   ],
+   [
+    "number",
+    "tal"
+   ]
+  ],
+  "tips": "Säg talen högt i ordning från one, så hittar du det tal som fattas."
+ },
+ "Ett eller flera": {
+  "mal": [
+   "Sätta -s på ett ord när det är fler än en.",
+   "Välja a eller an före ett ord.",
+   "Bygga meningar om en sak eller flera saker."
+  ],
+  "fakta": [
+   "Är det fler än en sätter du oftast -s på slutet: one cup, two cups.",
+   "A betyder en eller ett: a cup, a car.",
+   "Börjar ordet med ett vokalljud, oftast a, e, i, o eller u, säger du an: an ear, an arm.",
+   "Det är ordet direkt efter a eller an som räknas, också när det beskriver något."
+  ],
+  "exempel": [
+   [
+    "Skriv i plural: one car, four ___",
+    "cars. Det är fler än en, så car får -s."
+   ],
+   [
+    "Skriv a eller an: ___ angry cat",
+    "an angry cat. Ordet efter är angry, och angry börjar med a."
+   ]
+  ],
+  "ord": [
+   [
+    "plural",
+    "flera, mer än en"
+   ],
+   [
+    "vokal",
+    "en bokstav som a, e, i, o och u"
+   ],
+   [
+    "konsonant",
+    "en bokstav som inte är vokal, som b, d och t"
+   ]
+  ],
+  "tips": "Säg det högt: an ear är lättare att säga än a ear."
+ },
+ "I affären": {
+  "mal": [
+   "Be om något artigt i en affär med Can I have …, please?",
+   "Säga tack och svara när någon säger tack.",
+   "Fråga vad något kostar och förstå priset i pounds.",
+   "Räkna ihop två priser."
+  ],
+  "fakta": [
+   "Kan jag få … heter Can I have …? Lägg till please, så blir det artigt.",
+   "Tack är thank you eller thanks. När någon säger tack kan du svara You're welcome.",
+   "Hur mycket kostar det? heter How much is it? Svaret kan vara It is four pounds.",
+   "Ett pound (pund) är pengar i Storbritannien. Flera heter pounds: one pound, two pounds."
+  ],
+  "exempel": [
+   [
+    "Be om en smörgås på engelska.",
+    "Can I have a sandwich, please?"
+   ],
+   [
+    "En kaka kostar six pounds och en juice kostar four pounds. Vad kostar de tillsammans?",
+    "Ten pounds. 6 + 4 = 10."
+   ]
+  ],
+  "ord": [
+   [
+    "shop",
+    "affär"
+   ],
+   [
+    "price",
+    "pris"
+   ],
+   [
+    "pound",
+    "pund, pengar i Storbritannien"
+   ]
+  ],
+  "tips": "Please står ofta sist i frågan, efter ett kommatecken."
+ }
+}

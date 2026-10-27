@@ -1,0 +1,426 @@
+{
+ "Taluppfattning": {
+  "mal": [
+   "Dela upp tal upp till 1 000 i hundratal, tiotal och ental.",
+   "Skriva tal med siffror och jämföra och ordna dem.",
+   "Räkna 1, 10 och 100 mer eller mindre än ett tal.",
+   "Avrunda till närmaste tiotal och hundratal."
+  ],
+  "fakta": [
+   "I ett tal med tre siffror står hundratalen först, sedan tiotalen och sist entalen: 736 är 7 hundratal, 3 tiotal och 6 ental.",
+   "En nolla håller platsen: 407 är 4 hundratal, 0 tiotal och 7 ental.",
+   "Jämför tal genom att titta på hundratalen först, sedan tiotalen och sist entalen.",
+   "10 tiotal är ett hundratal. Därför är 300 lika mycket som 30 tiotal.",
+   "Avrunda: titta på siffran efter den plats du avrundar till. Är den 5 eller mer avrundar du uppåt, annars nedåt."
+  ],
+  "exempel": [
+   [
+    "Avrunda 463 till närmaste tiotal och till närmaste hundratal.",
+    "Tiotal: entalssiffran är 3, mindre än 5, så 460. Hundratal: tiotalssiffran är 6, alltså 5 eller mer, så 500."
+   ],
+   [
+    "Vilket tal är 10 mindre än 802?",
+    "802 har 0 tiotal, så du växlar ett hundratal till 10 tiotal. 802 − 10 = 792."
+   ]
+  ],
+  "ord": [
+   [
+    "hundratal",
+    "tio tiotal, alltså 100"
+   ],
+   [
+    "tiotal",
+    "tio ental, alltså 10"
+   ],
+   [
+    "ental",
+    "den sista siffran i ett heltal"
+   ],
+   [
+    "avrunda",
+    "byta ett tal mot det närmaste hela tiotalet eller hundratalet"
+   ]
+  ],
+  "tips": "Saknar ett tal tiotal eller ental skriver du en nolla på den platsen: trehundrafyra är 304."
+ },
+ "Multiplikation": {
+  "mal": [
+   "Räkna med 2:ans, 5:ans och 10:ans tabell.",
+   "Räkna med 3:ans och 4:ans tabell.",
+   "Se multiplikation som lika stora grupper.",
+   "Hitta talet som fattas i en multiplikation."
+  ],
+  "fakta": [
+   "Multiplikation är upprepad addition: 2 · 6 betyder 2 grupper med 6, alltså 6 + 6 = 12.",
+   "Ordningen spelar ingen roll för svaret: 7 · 2 är lika mycket som 2 · 7.",
+   "Talen i 5:ans tabell slutar på 0 eller 5. Talen i 10:ans tabell slutar på 0.",
+   "4:ans tabell är dubbla 2:ans: 2 · 10 = 20, så 4 · 10 = 40.",
+   "Talet som fattas i 5 · ? = 40 hittar du genom att räkna 5:ans tabell tills du kommer till 40."
+  ],
+  "exempel": [
+   [
+    "I en rabatt står 5 rader med 7 tulpaner i varje rad. Hur många tulpaner är det?",
+    "5 · 7 är lika mycket som 7 · 5. Räkna 5:ans tabell sju steg: 5, 10, 15, 20, 25, 30, 35. Det är 35 tulpaner."
+   ]
+  ],
+  "ord": [
+   [
+    "multiplikation",
+    "räkna lika stora grupper, tecknet ·"
+   ],
+   [
+    "gångertabell",
+    "svaren när ett tal tas 1, 2, 3 … gånger, som 5:ans tabell"
+   ]
+  ],
+  "tips": "Kan du inte ett svar, gå från ett du kan och lägg till eller ta bort en grupp."
+ },
+ "Division": {
+  "mal": [
+   "Dela lika och räkna ut hur många det blir i varje grupp.",
+   "Räkna ut hur många grupper det blir.",
+   "Använda multiplikation baklänges när du räknar division.",
+   "Räkna ut hälften, en tredjedel och en fjärdedel av ett tal."
+  ],
+  "fakta": [
+   "Division skrivs med / eller :. Både 24 / 3 och 24 : 3 betyder 24 delat med 3.",
+   "Division är multiplikation baklänges: 3 · 8 = 24, så 24 / 3 = 8.",
+   "Dela lika: hur många får var och en? Dela i grupper: hur många grupper blir det? Båda räknas med division.",
+   "Hälften är att dela med 2, en tredjedel är att dela med 3 och en fjärdedel är att dela med 4."
+  ],
+  "exempel": [
+   [
+    "36 kulor delas lika i 4 påsar. Hur många kulor blir det i varje påse?",
+    "36 / 4 = 9, för 4 · 9 = 36. Det blir 9 kulor i varje påse."
+   ],
+   [
+    "Hur många femkronor är 25 kronor?",
+    "Hur många femmor går på 25? 25 / 5 = 5, för 5 · 5 = 25. Det är 5 femkronor."
+   ]
+  ],
+  "ord": [
+   [
+    "division",
+    "dela lika eller dela i grupper, tecknet / eller :"
+   ],
+   [
+    "delat med",
+    "så läser du / och :"
+   ]
+  ],
+  "tips": "Tänk på gångertabellen: delat med 5 frågar hur många femmor som får plats."
+ },
+ "Tid": {
+  "mal": [
+   "Läsa klockan vid kvart över, kvart i och några minuter före och efter hel timme.",
+   "Räkna ut hur lång tid något tar.",
+   "Räkna ut vad klockan blir efter en stund.",
+   "Skriva tider på eftermiddagen med 24-timmarsklockan."
+  ],
+  "fakta": [
+   "En timme är 60 minuter, en halvtimme 30 minuter och en kvart 15 minuter. Tre kvart är 45 minuter.",
+   "Kvart över är 15 minuter efter hel timme. Kvart i är 15 minuter före nästa hela timme: kvart i fyra är 3.45, som också skrivs 3:45.",
+   "Minuter efter hel timme heter över, och minuter före hel timme heter i: 5.05 är fem över fem, och 7.55 är fem i åtta.",
+   "24-timmarsklockan räknar vidare efter 12: klockan ett på eftermiddagen är 13.00, och klockan tre är 15.00.",
+   "Hur lång tid: räkna från starttiden fram till nästa hela timme, och sedan vidare till sluttiden."
+  ],
+  "exempel": [
+   [
+    "Filmen börjar 18.50 och slutar 19.25. Hur många minuter är filmen?",
+    "Från 18.50 till 19.00 är 10 minuter. Från 19.00 till 19.25 är 25 minuter. 10 + 25 = 35 minuter."
+   ],
+   [
+    "Klockan är kvart i tre på eftermiddagen. Hur skrivs det med 24-timmarsklocka?",
+    "Kvart i tre är 2.45. På eftermiddagen lägger du till 12 timmar: 14.45."
+   ]
+  ],
+  "ord": [
+   [
+    "kvart",
+    "15 minuter, en fjärdedel av en timme"
+   ],
+   [
+    "tre kvart",
+    "45 minuter"
+   ],
+   [
+    "24-timmarsklocka",
+    "klockan räknar från 0 till 24 under ett dygn"
+   ]
+  ],
+  "tips": "Kvart i går mot nästa timme: kvart i fem är före klockan fem, inte efter."
+ },
+ "Gånger och delat": {
+  "mal": [
+   "Räkna med 2:ans, 5:ans och 10:ans tabell.",
+   "Hitta talet som fattas i en multiplikation.",
+   "Räkna division som att dela lika.",
+   "Se hur multiplikation och division hör ihop."
+  ],
+  "fakta": [
+   "Multiplikation är lika stora grupper: 3 · 5 betyder 3 grupper med 5.",
+   "10 gånger ett tal: skriv en nolla efter talet, som 9 · 10 = 90.",
+   "5 gånger ett tal är hälften av 10 gånger talet. Talen i 5:ans tabell slutar på 0 eller 5.",
+   "Division är att dela lika, och den hör ihop med multiplikation: 2 · 6 = 12, så 12 : 2 = 6."
+  ],
+  "exempel": [
+   [
+    "Vilket tal fattas? ? · 5 = 40",
+    "Räkna 5:ans tabell tills du kommer till 40: 5, 10, 15, 20, 25, 30, 35, 40. Det är 8 steg, så talet är 8."
+   ],
+   [
+    "Du växlar 60 kronor till tiokronor. Hur många tiokronor får du?",
+    "60 : 10 = 6, för 6 · 10 = 60. Du får 6 tiokronor."
+   ]
+  ],
+  "ord": [
+   [
+    "gångertabell",
+    "svaren när ett tal tas 1, 2, 3 … gånger, som 5:ans tabell: 5, 10, 15 …"
+   ],
+   [
+    "delat med",
+    "tecknet : eller /"
+   ]
+  ],
+  "tips": "Ett tal gånger 2 är dubbelt så mycket som talet."
+ },
+ "Växla och mäta": {
+  "mal": [
+   "Räkna plus och minus med uppställning och växling.",
+   "Lösa räknehistorier med tal upp till 1 000.",
+   "Byta mellan millimeter, centimeter, decimeter och meter.",
+   "Välja en rimlig längd för saker omkring dig."
+  ],
+  "fakta": [
+   "Uppställning: skriv ental under ental, tiotal under tiotal och hundratal under hundratal. Börja räkna med entalen.",
+   "Blir entalen 10 eller fler när du räknar plus, skriver du entalen och växlar 1 tiotal till tiotalen.",
+   "Räcker inte entalen när du räknar minus, växlar du 1 tiotal till 10 ental. Är tiotalen 0 växlar du först ett hundratal.",
+   "1 cm = 10 mm, 1 dm = 10 cm och 1 m = 10 dm = 100 cm."
+  ],
+  "exempel": [
+   [
+    "Räkna 345 + 279 med uppställning.",
+    "Ental: 5 + 9 = 14, skriv 4 och växla 1. Tiotal: 4 + 7 + 1 = 12, skriv 2 och växla 1. Hundratal: 3 + 2 + 1 = 6. Svaret är 624."
+   ],
+   [
+    "Ett band är 2 m långt. Du klipper av 45 cm. Hur många centimeter är kvar?",
+    "Gör om till centimeter: 2 m = 200 cm. 200 − 45 = 155. Det är 155 cm kvar."
+   ]
+  ],
+  "ord": [
+   [
+    "uppställning",
+    "talen skrivs under varandra, ental under ental"
+   ],
+   [
+    "växla",
+    "byta 10 ental mot 1 tiotal, eller tvärtom"
+   ],
+   [
+    "millimeter",
+    "mm, en tiondel av en centimeter"
+   ],
+   [
+    "decimeter",
+    "dm, 10 centimeter"
+   ]
+  ],
+  "tips": "Gör om till samma enhet innan du räknar, till exempel allt till centimeter."
+ },
+ "Bråk": {
+  "mal": [
+   "Dela en helhet i lika stora delar och säga vad en del heter.",
+   "Skriva en del som ett bråk, som 1/3.",
+   "Jämföra delar som en halv, en tredjedel och en fjärdedel.",
+   "Räkna ut en halv, en tredjedel och en fjärdedel av ett antal."
+  ],
+  "fakta": [
+   "En del heter efter hur många lika stora delar det hela är delat i: delar du något i 6 delar är varje del en sjättedel.",
+   "Bråket 1/6 betyder en av sex lika stora delar. Talet under strecket säger hur många delar det hela är delat i.",
+   "Ju fler delar det hela delas i, desto mindre blir varje del.",
+   "Alla delarna tillsammans blir en hel: sex sjättedelar är en hel.",
+   "En del av ett antal: dela antalet med antalet delar. En sjättedel av 30 är 30 / 6 = 5."
+  ],
+  "exempel": [
+   [
+    "Vad är en femtedel av 15?",
+    "Dela 15 i 5 lika stora delar: 15 / 5 = 3. En femtedel av 15 är 3."
+   ],
+   [
+    "Av 16 kulor är en fjärdedel röda. Hur många är inte röda?",
+    "En fjärdedel av 16 är 16 / 4 = 4. Inte röda: 16 − 4 = 12."
+   ]
+  ],
+  "ord": [
+   [
+    "bråk",
+    "ett tal som visar en del av en helhet, som 1/4"
+   ],
+   [
+    "en halv",
+    "en av två lika stora delar, 1/2"
+   ],
+   [
+    "en tredjedel",
+    "en av tre lika stora delar, 1/3"
+   ],
+   [
+    "en fjärdedel",
+    "en av fyra lika stora delar, 1/4"
+   ]
+  ],
+  "tips": "Delarna måste vara lika stora, annars är det inga riktiga halvor, tredjedelar eller fjärdedelar."
+ },
+ "Tabeller och diagram": {
+  "mal": [
+   "Läsa av ett tal i en tabell.",
+   "Jämföra och räkna med talen i en tabell.",
+   "Läsa av ett stapeldiagram där varje ruta betyder flera.",
+   "Jämföra och ordna staplar."
+  ],
+  "fakta": [
+   "I en tabell letar du upp raden du söker och läser av talet som står bredvid.",
+   "Flest är det största talet och minst det minsta. Hur många fler räknar du med minus, och tillsammans räknar du med plus.",
+   "I ett stapeldiagram visar stapelns höjd hur många. Ju högre stapel, desto fler.",
+   "Läs först vad en ruta betyder. Betyder varje ruta 3, räknar du antalet rutor · 3."
+  ],
+  "exempel": [
+   [
+    "Varje ruta betyder 3 bollar. Stapeln är 5 rutor hög. Hur många bollar visar den?",
+    "5 rutor med 3 bollar i varje: 5 · 3 = 15 bollar."
+   ],
+   [
+    "En tabell visar hur många som valde en färg: gul 13, grön 7 och lila 4. Hur många fler valde gul än lila?",
+    "Hur många fler räknar du med minus: 13 − 4 = 9. Det var 9 fler som valde gul."
+   ]
+  ],
+  "ord": [
+   [
+    "tabell",
+    "tal ordnade i rader och kolumner"
+   ],
+   [
+    "stapeldiagram",
+    "ett diagram där höjden på staplarna visar hur många"
+   ],
+   [
+    "stapel",
+    "en av de raka pelarna i ett stapeldiagram"
+   ]
+  ],
+  "tips": "Läs frågan noga, för flest, minst, fler och tillsammans betyder olika saker."
+ },
+ "NP-träning: tal och räkning": {
+  "mal": [
+   "Säga vilket värde en siffra har i ett tal upp till 1 000.",
+   "Räkna i huvudet med hela hundratal och tiotal.",
+   "Räkna plus och minus med växling, och gånger och delat.",
+   "Räkna ut en halv och en fjärdedel av ett antal."
+  ],
+  "fakta": [
+   "Den här delen tränar talen och räknesätten inför nationella provet i årskurs 3.",
+   "Siffrans plats ger värdet: i 274 är 2 värd 200, 7 värd 70 och 4 värd 4.",
+   "Hela hundratal räknar du som ental: 600 + 300 är 6 + 3 hundratal, alltså 900.",
+   "Mitt emellan två tal på tallinjen ligger talet som är lika långt från båda: mitt emellan 200 och 300 ligger 250.",
+   "Arbeta som på ett prov: läs frågan noga, skriv ner hur du tänker och kontrollera svaret, till exempel minus med plus."
+  ],
+  "exempel": [
+   [
+    "Räkna: 612 − 358",
+    "Ental: 2 − 8 går inte, så växla ett tiotal: 12 − 8 = 4. Tiotal: nu 0 − 5, så växla ett hundratal: 10 − 5 = 5. Hundratal: 5 − 3 = 2. Svaret är 254. Kontroll: 254 + 358 = 612."
+   ]
+  ],
+  "ord": [
+   [
+    "värde",
+    "hur mycket en siffra är värd där den står i talet"
+   ],
+   [
+    "tallinje",
+    "en linje där talen står i ordning med lika långt mellan"
+   ],
+   [
+    "huvudräkning",
+    "att räkna i huvudet, utan att skriva"
+   ]
+  ],
+  "tips": "Gör ett överslag först, så ser du om svaret är rimligt: 612 − 358 är ungefär 610 − 360 = 250."
+ },
+ "NP-träning: mäta och geometri": {
+  "mal": [
+   "Räkna ut hur lång tid något tar.",
+   "Räkna med längd i meter och centimeter och välja rimliga mått.",
+   "Räkna med pengar och växel.",
+   "Känna igen former och kroppar, hitta symmetrilinjer och räkna sträckan runt en figur."
+  ],
+  "fakta": [
+   "Den här delen tränar mätning och geometri inför nationella provet i årskurs 3: tid, längd, pengar, former och symmetri.",
+   "1 m = 10 dm = 100 cm. Gör om till samma enhet innan du räknar.",
+   "Hur lång tid: räkna först fram till nästa hela timme, sedan resten.",
+   "Platta former är till exempel triangel, kvadrat, rektangel och cirkel. Kroppar är inte platta, som kub, rätblock, klot, cylinder och kon.",
+   "En symmetrilinje delar en figur i två halvor som är varandras spegelbilder. Sträckan runt en figur är alla sidor tillsammans."
+  ],
+  "exempel": [
+   [
+    "En rektangel har sidorna 6 m och 3 m. Hur långt är det runt den?",
+    "En rektangel har två långa och två korta sidor: 6 + 3 + 6 + 3 = 18. Det är 18 m runt rektangeln."
+   ],
+   [
+    "En leksak kostar 64 kr. Du betalar med 100 kr. Hur mycket får du tillbaka?",
+    "Räkna uppåt från 64: 6 kr till 70 och 30 kr till 100. 6 + 30 = 36. Du får 36 kr tillbaka."
+   ]
+  ],
+  "ord": [
+   [
+    "kropp",
+    "en form som inte är platt, som en kub eller ett klot"
+   ],
+   [
+    "symmetrilinje",
+    "en linje som delar en figur i två spegelbilder"
+   ],
+   [
+    "omkrets",
+    "sträckan runt en figur"
+   ]
+  ],
+  "tips": "Rita en bild när uppgiften handlar om former, sträckor eller tid."
+ },
+ "NP-träning: problemlösning": {
+  "mal": [
+   "Lösa textuppgifter i flera steg.",
+   "Välja räknesätt: plus, minus, gånger eller delat.",
+   "Tänka efter vad svaret betyder, som när något blir över.",
+   "Hitta regeln i en talföljd eller ett mönster och räkna längre fram."
+  ],
+  "fakta": [
+   "Den här delen tränar problemlösning inför nationella provet i årskurs 3. Läs hela uppgiften och leta efter ord som tillsammans, fler, färre, i varje och delas lika.",
+   "Lös ett steg i taget och skriv ner svaret på varje steg.",
+   "Blir något över måste du tänka efter: ska alla få plats behövs en grupp till.",
+   "I en talföljd letar du efter regeln: hur mycket talet ändras från ett tal till nästa, eller om det blir dubbelt så stort varje gång.",
+   "I ett mönster som upprepas räknar du hur lång den del är som kommer igen."
+  ],
+  "exempel": [
+   [
+    "25 elever ska sitta vid bord. Vid varje bord får 6 elever plats. Hur många bord behövs?",
+    "4 bord ger 4 · 6 = 24 platser. En elev får inte plats, så det behövs ett bord till: 5 bord."
+   ],
+   [
+    "Ett mönster går röd, gul, grön, röd, gul, grön och så vidare. Vilken färg står på plats 8?",
+    "Delen röd, gul, grön är 3 lång, så plats 3 och 6 är grön. Plats 7 är röd och plats 8 är gul."
+   ]
+  ],
+  "ord": [
+   [
+    "räknesätt",
+    "plus, minus, gånger eller delat"
+   ],
+   [
+    "talföljd",
+    "tal i en rad som ändras efter en regel"
+   ]
+  ],
+  "tips": "Läs frågan en gång till när du är klar och kontrollera att du svarat på det som frågas."
+ }
+}

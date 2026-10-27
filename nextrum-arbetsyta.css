@@ -734,7 +734,7 @@
   cursor:pointer;
   transition:border-color .16s var(--e),background .16s var(--e),transform .16s var(--e);
 }
-.vy-tid:hover{border-color:var(--bl-3);transform:translateY(-1px)}
+@media (hover:hover) and (pointer:fine){.vy-tid:hover{border-color:var(--bl-3)}}
 .vy-tid[aria-pressed="true"]{
   background:var(--bl);color:var(--pap);border-color:var(--bl);
 }
@@ -2794,7 +2794,7 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
   background:var(--pap);
   transition:border-color .18s var(--e),background .18s var(--e),transform .18s var(--e);
 }
-.ev-kort:hover{border-color:var(--ln-2);transform:translateY(-1px)}
+@media (hover:hover) and (pointer:fine){.ev-kort:hover{border-color:var(--ln-2)}}
 .ev-kort[aria-pressed="true"]{
   border-color:var(--bl);
   background:var(--pap-2);
@@ -2820,7 +2820,7 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 
 /* Plan & utveckling (ritaPlanElev). Med en enda elev säger kortet vem
    man skriver om men är inget val, och ska inte se tryckbart ut. */
-.ev-kort.ev-ensam:hover{border-color:var(--ln);transform:none}
+.ev-kort.ev-ensam:hover{border-color:var(--ln)}
 .plan-elev-tips{margin-top:12px;color:var(--bl-2);line-height:1.6}
 
 /* ------------------------------------------------------------
@@ -3923,6 +3923,9 @@ a:has(> .adm-status){
 .vy :is(.lage.gor,.lage.sen){background:var(--acc-soft);color:var(--acc-lugn)}
 .vy :is(.lage.gor,.lage.sen)::before{background:var(--acc);opacity:1}
 .vy .lage.avbokad{text-decoration:line-through}
+/* Ej betalt i studievyn: datumrutans röda ton (2026-10-27). */
+.vy .lage.obetald{background:var(--dag-rod);color:var(--dag-rod-text)}
+.vy .lage.obetald::before{background:var(--dag-rod-text);opacity:1}
 
 /* ---------- passraderna ----------
    Datumrutan säger veckodag, dag och månad; tiden och platsen står i
@@ -3940,6 +3943,23 @@ a:has(> .adm-status){
 .vy .pass-nar small{display:block;font-size:inherit}
 .vy .pass-nar.ar-nu{background:var(--bl)}
 .vy .pass-nar.ar-nu,.vy .pass-nar.ar-nu b{color:var(--pap)}
+/* Datumrutans färg (2026-10-27): obetalt rött, betalt grönt, önskat gult.
+   Ett förslag till er (studiehjälparens eller barnets) är gult med en prick
+   i hörnet: samma sort, men ert drag. Dagens pass behåller sin mörka ruta
+   och får färgen som kant. */
+.vy .pass-nar[class*="dag-"]{position:relative;box-shadow:inset 0 0 0 1.5px var(--dk,transparent);background:var(--db,var(--bricka))}
+.vy .pass-nar[class*="dag-"],.vy .pass-nar[class*="dag-"] b{color:var(--dt,var(--bl))}
+.vy .pass-nar.dag-rod{--db:var(--dag-rod);--dk:var(--dag-rod-kant);--dt:var(--dag-rod-text)}
+.vy .pass-nar.dag-gron{--db:var(--dag-gron);--dk:var(--dag-gron-kant);--dt:var(--dag-gron-text)}
+.vy .pass-nar:is(.dag-gul,.dag-forslag,.dag-barn){--db:var(--dag-gul);--dk:var(--dag-gul-kant);--dt:var(--dag-gul-text)}
+.vy .pass-nar:is(.dag-forslag,.dag-barn){box-shadow:inset 0 0 0 1.5px var(--dk),inset 0 0 0 4px var(--db),inset 0 0 0 5.5px color-mix(in srgb,var(--acc) 40%,transparent)}
+.vy .pass-nar-bubbla{
+  position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;
+  background:var(--acc);box-shadow:0 0 0 2.5px var(--yta);
+}
+.vy .pass-nar.ar-nu[class*="dag-"]{background:var(--bl);box-shadow:inset 0 0 0 3px var(--dk,transparent)}
+.vy .pass-nar.ar-nu[class*="dag-"],.vy .pass-nar.ar-nu[class*="dag-"] b{color:var(--pap)}
+.vy .pl-tidigare .pass .pass-nar[class*="dag-"]{opacity:1}
 .vy .pass-titel{font-size:1rem;font-weight:650;letter-spacing:-.015em}
 .vy .pass-titel em{font-style:normal;font-weight:500;color:var(--bl-2)}
 .vy .pass-vad .pass-meta{display:flex;flex-wrap:wrap;gap:3px 14px;margin-top:3px;font-size:.84rem;color:var(--bl-2)}

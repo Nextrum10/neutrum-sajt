@@ -1,0 +1,559 @@
+{
+ "Negativa tal": {
+  "mal": [
+   "Addera och subtrahera med negativa tal, också minus ett negativt tal.",
+   "Multiplicera och dividera med negativa tal.",
+   "Räkna med negativa tal i flera steg och i potenser.",
+   "Ordna negativa och positiva tal efter storlek."
+  ],
+  "fakta": [
+   "Att lägga till ett negativt tal är som att dra bort: 5 + (−2) = 5 − 2 = 3.",
+   "Att dra bort ett negativt tal är som att lägga till: 4 − (−3) = 4 + 3 = 7.",
+   "Gånger och delat: samma tecken ger plus och olika tecken ger minus. (−2) · (−5) = 10 och −18 / 3 = −6.",
+   "Med flera faktorer räknar du minustecknen: ett jämnt antal ger plus och ett udda antal ger minus. (−4)² = (−4) · (−4) = 16."
+  ],
+  "exempel": [
+   [
+    "Vad är −7 − (−3)?",
+    "Minus ett negativt tal blir plus: −7 + 3 = −4."
+   ],
+   [
+    "Vad är (−7) · 3 + 11?",
+    "Gånger först: (−7) · 3 = −21. Sedan −21 + 11 = −10."
+   ]
+  ],
+  "ord": [
+   [
+    "negativt tal",
+    "ett tal mindre än noll"
+   ],
+   [
+    "faktor",
+    "ett av talen i en multiplikation"
+   ],
+   [
+    "tecken",
+    "plus eller minus framför ett tal"
+   ]
+  ],
+  "tips": "Skriv parentes runt negativa tal, som 3 · (−2), så blandar du inte ihop minustecknet med räknetecknet."
+ },
+ "Prioriteringsregler": {
+  "mal": [
+   "Räkna uttryck med flera räknesätt i rätt ordning.",
+   "Räkna uttryck med parenteser och potenser.",
+   "Jämföra uttryck efter deras värde."
+  ],
+  "fakta": [
+   "Ordningen är: 1. parenteser, 2. potenser, 3. gånger och delat, 4. plus och minus.",
+   "Står bara plus och minus, eller bara gånger och delat, räknar du från vänster till höger: 12 − 5 − 2 = 5.",
+   "En potens gäller bara talet närmast före: i 3 · 2² räknar du först 2² = 4 och sedan 3 · 4 = 12.",
+   "Står potensen på en parentes räknar du parentesen först och sedan potensen: (1 + 2)² = 3² = 9."
+  ],
+  "exempel": [
+   [
+    "Vad är 4 + 3 · (7 − 2)?",
+    "Parentesen först: 7 − 2 = 5. Sedan gånger: 3 · 5 = 15. Sist plus: 4 + 15 = 19."
+   ],
+   [
+    "Vad är 2 · (1 + 3)² − 10?",
+    "Parentesen: 1 + 3 = 4. Potensen: 4² = 16. Gånger: 2 · 16 = 32. Sist minus: 32 − 10 = 22."
+   ]
+  ],
+  "ord": [
+   [
+    "potens",
+    "ett tal upphöjt till något, som 5² = 5 · 5"
+   ],
+   [
+    "parentes",
+    "tecknen ( ), som visar vad som räknas först"
+   ],
+   [
+    "uttryck",
+    "tal och räknetecken som tillsammans har ett värde"
+   ]
+  ],
+  "tips": "Skriv en ny rad för varje steg och räkna bara en sak i taget."
+ },
+ "Procent": {
+  "mal": [
+   "Räkna ut hur mycket ett antal procent av ett tal är.",
+   "Skriva procent som decimaltal.",
+   "Räkna ut hur många procent en del är av det hela.",
+   "Räkna ut med hur många procent ett pris har höjts eller sänkts."
+  ],
+  "fakta": [
+   "Procent betyder hundradelar: 1 % = 0,01, 3 % = 0,03 och 45 % = 0,45.",
+   "Del av ett tal: gör om procenten till decimaltal och multiplicera. 20 % av 45 = 0,2 · 45 = 9.",
+   "Hur många procent: dela delen med det hela och gör om till procent. 7 av 35 = 7 / 35 = 0,2 = 20 %.",
+   "Procentuell ändring: dela ändringen med det gamla värdet. Från 40 kr till 52 kr är ändringen 12 kr, och 12 / 40 = 0,3 = 30 %."
+  ],
+  "exempel": [
+   [
+    "En skola har 300 elever. 15 % går i årskurs 7. Hur många elever är det?",
+    "15 % = 0,15, och 0,15 · 300 = 45 elever."
+   ],
+   [
+    "En cykel kostade 2 500 kr och kostar nu 2 000 kr. Med hur många procent har priset sänkts?",
+    "Sänkningen är 500 kr. 500 / 2 500 = 0,2 = 20 %."
+   ]
+  ],
+  "ord": [
+   [
+    "procent",
+    "hundradelar, tecknet %"
+   ],
+   [
+    "andel",
+    "hur stor del något är av det hela"
+   ],
+   [
+    "procentuell ändring",
+    "hur många procent något ökat eller minskat, räknat på det gamla värdet"
+   ]
+  ],
+  "tips": "Räkna alltid ändringen på det gamla värdet, inte på det nya."
+ },
+ "Ekvationer": {
+  "mal": [
+   "Lösa ekvationer i ett och två steg genom att göra samma sak på båda sidor.",
+   "Lösa ekvationer där svaret är negativt eller ett decimaltal.",
+   "Ställa upp och lösa en ekvation ur en tankenöt.",
+   "Pröva om ett tal är en lösning till en ekvation."
+  ],
+  "fakta": [
+   "Gör samma sak på båda sidor om likhetstecknet tills x står ensamt.",
+   "Gör motsatt räknesätt: plus tar du bort med minus, gånger med delat och delat med gånger.",
+   "I två steg tar du först bort talet som läggs till eller dras bort, och delar sedan med talet framför x, eller multiplicerar om x är delat med ett tal.",
+   "Svaret kan vara negativt eller ett decimaltal: x + 6 = 2 ger x = −4, och 4x = 10 ger x = 2,5.",
+   "Pröva svaret: sätt in det i ekvationen. Blir vänster led lika med höger led är det rätt."
+  ],
+  "exempel": [
+   [
+    "Lös ekvationen 4x − 7 = 33.",
+    "Lägg till 7 på båda sidor: 4x = 40. Dela med 4: x = 10. Kontroll: 4 · 10 − 7 = 33."
+   ],
+   [
+    "Lös ekvationen 3x + 14 = 2.",
+    "Dra bort 14 på båda sidor: 3x = −12. Dela med 3: x = −4. Kontroll: 3 · (−4) + 14 = 2."
+   ]
+  ],
+  "ord": [
+   [
+    "ekvation",
+    "en likhet där ett tal är okänt"
+   ],
+   [
+    "led",
+    "det som står på ena sidan om likhetstecknet: vänster led och höger led"
+   ],
+   [
+    "lösning",
+    "det tal som gör att ekvationen stämmer"
+   ]
+  ],
+  "tips": "Kontrollera alltid genom att sätta in svaret, särskilt när det blir negativt."
+ },
+ "Potenser": {
+  "mal": [
+   "Förklara vad bas och exponent betyder i en potens.",
+   "Räkna ut potenser, också med negativ bas.",
+   "Skriva stora tal med tiopotenser.",
+   "Använda prefixen kilo, hekto, deci, centi och milli när du byter enhet."
+  ],
+  "fakta": [
+   "En potens är en upprepad multiplikation: 6³ = 6 · 6 · 6 = 216. Talet 6 är basen och 3 är exponenten.",
+   "Med negativ bas i parentes: (−2)² = (−2) · (−2) = 4.",
+   "En tiopotens 10ⁿ är en etta följd av n nollor: 10⁷ = 10 000 000, och 5 · 10³ = 5 000.",
+   "Prefixen säger hur stor enheten är: kilo = 1 000, hekto = 100, deci = 0,1, centi = 0,01 och milli = 0,001. En kilometer är 1 000 meter."
+  ],
+  "exempel": [
+   [
+    "Vad är 3⁴?",
+    "3⁴ = 3 · 3 · 3 · 3 = 81."
+   ],
+   [
+    "Hur många gram är 2,5 kg?",
+    "Kilo betyder 1 000, så 1 kg = 1 000 g. 2,5 · 1 000 = 2 500 g."
+   ]
+  ],
+  "ord": [
+   [
+    "bas",
+    "talet som multipliceras med sig självt i en potens"
+   ],
+   [
+    "exponent",
+    "den lilla siffran uppe till höger, som säger hur många gånger"
+   ],
+   [
+    "tiopotens",
+    "en potens med basen 10, som 10⁵"
+   ],
+   [
+    "prefix",
+    "förledet i en enhet, som kilo i kilometer"
+   ]
+  ],
+  "tips": "En vanlig fälla: 4³ är inte 4 · 3 utan 4 · 4 · 4 = 64."
+ },
+ "Procent i vardagen": {
+  "mal": [
+   "Skriva procent som decimaltal och bråk, och tvärtom.",
+   "Räkna ut nya priset efter en rabatt eller en höjning.",
+   "Räkna ut hur många procent en höjning, sänkning eller andel är.",
+   "Jämföra erbjudanden och se vilket som ger lägst pris."
+  ],
+  "fakta": [
+   "Från procent till decimaltal: dela med 100. 60 % = 0,6 och 2,5 % = 0,025.",
+   "Ett bråk blir procent om du förlänger till hundradelar: 3/20 = 15/100 = 15 %.",
+   "Nytt pris efter rabatt: dra bort rabatten från priset. Efter en höjning: lägg till höjningen.",
+   "Procentuell förändring: ändringen delad med det gamla priset. Räkna alltid på värdet före ändringen."
+  ],
+  "exempel": [
+   [
+    "En väska kostar 700 kr och säljs med 15 % rabatt. Vad kostar den nu?",
+    "15 % av 700 kr är 0,15 · 700 = 105 kr. Nya priset är 700 − 105 = 595 kr."
+   ],
+   [
+    "Ett pris höjs från 80 kr till 92 kr. Hur många procent är höjningen?",
+    "Höjningen är 12 kr. 12 / 80 = 0,15 = 15 %."
+   ]
+  ],
+  "ord": [
+   [
+    "rabatt",
+    "hur mycket billigare något blir"
+   ],
+   [
+    "decimalform",
+    "ett tal skrivet med decimaltecken, som 0,35"
+   ],
+   [
+    "procentform",
+    "ett tal skrivet med %, som 35 %"
+   ]
+  ],
+  "tips": "Fundera på om svaret är rimligt: efter en rabatt ska priset vara lägre, och efter en höjning högre."
+ },
+ "Uttryck och ekvationer": {
+  "mal": [
+   "Räkna ut värdet av ett uttryck när du sätter in tal för bokstäverna.",
+   "Förenkla uttryck genom att lägga ihop likadana termer och multiplicera in i parenteser.",
+   "Lösa ekvationer i flera steg, också när x står på båda sidor.",
+   "Ställa upp ett uttryck eller en ekvation ur en text."
+  ],
+  "fakta": [
+   "Sätt in talet i stället för bokstaven: 5a − 2 med a = 4 ger 5 · 4 − 2 = 18.",
+   "Bara likadana termer kan läggas ihop: 6x + 2x = 8x, men 6x + 2 går inte att förenkla.",
+   "En ensam bokstav betyder 1 gång bokstaven: 9b − b = 8b.",
+   "Multiplicera in: talet framför parentesen gånger varje term i parentesen. 4(x + 2) = 4x + 8.",
+   "Står x på båda sidor: samla x-termerna på ena sidan och talen på den andra, till exempel genom att dra bort 2x från båda sidor."
+  ],
+  "exempel": [
+   [
+    "Förenkla 2a + 5 + 4a − 3.",
+    "Lägg ihop a-termerna: 2a + 4a = 6a. Lägg ihop talen: 5 − 3 = 2. Svaret är 6a + 2."
+   ],
+   [
+    "Lös ekvationen 5x + 2 = 3x + 14.",
+    "Dra bort 3x: 2x + 2 = 14. Dra bort 2: 2x = 12. Dela med 2: x = 6. Kontroll: 5 · 6 + 2 = 32 och 3 · 6 + 14 = 32."
+   ]
+  ],
+  "ord": [
+   [
+    "variabel",
+    "en bokstav som står för ett tal"
+   ],
+   [
+    "term",
+    "en del i ett uttryck som skiljs från de andra av plus eller minus"
+   ],
+   [
+    "förenkla",
+    "skriva ett uttryck kortare utan att ändra värdet"
+   ],
+   [
+    "uttryck",
+    "tal och bokstäver med räknetecken, utan likhetstecken"
+   ]
+  ],
+  "tips": "Skriv först vad bokstaven står för, till exempel ”x = priset för en biljett”, innan du ställer upp ekvationen."
+ },
+ "Vinklar och trianglar": {
+  "mal": [
+   "Räkna ut okända vinklar med vinkelsumman i trianglar och fyrhörningar.",
+   "Räkna ut sidovinklar.",
+   "Använda att basvinklarna i en likbent triangel är lika stora.",
+   "Räkna ut arean av en triangel, och höjden när du vet arean."
+  ],
+  "fakta": [
+   "Vinkelsumman i en triangel är 180° och i en fyrhörning 360°.",
+   "Sidovinklar ligger bredvid varandra på en rak linje och är tillsammans 180°.",
+   "I en likbent triangel är de två basvinklarna lika stora. I en liksidig triangel är alla tre vinklarna lika stora.",
+   "Triangelns area = basen · höjden / 2. Höjden står vinkelrätt mot basen.",
+   "Vinklarnas namn: spetsig är under 90°, rät exakt 90°, trubbig mellan 90° och 180° och rak exakt 180°."
+  ],
+  "exempel": [
+   [
+    "En vinkel är 72°. Hur stor är dess sidovinkel?",
+    "180° − 72° = 108°."
+   ],
+   [
+    "En triangel har arean 28 cm² och basen 7 cm. Hur hög är den?",
+    "Arean = basen · höjden / 2, så basen · höjden = 2 · 28 = 56. Höjden är 56 / 7 = 8 cm."
+   ]
+  ],
+  "ord": [
+   [
+    "sidovinklar",
+    "två vinklar bredvid varandra på en rak linje, tillsammans 180°"
+   ],
+   [
+    "basvinklar",
+    "de två lika stora vinklarna vid basen i en likbent triangel"
+   ],
+   [
+    "toppvinkel",
+    "vinkeln mellan de två lika långa sidorna i en likbent triangel"
+   ],
+   [
+    "höjd",
+    "avståndet från basen rakt upp till hörnet mitt emot"
+   ]
+  ],
+  "tips": "Börja med vinkelsumman: dra bort de vinklar du vet från 180° eller 360°."
+ },
+ "Bråk och decimaltal": {
+  "mal": [
+   "Förlänga, förkorta och jämföra bråk.",
+   "Skriva bråk som decimaltal och decimaltal som bråk.",
+   "Addera, multiplicera och dividera bråk.",
+   "Multiplicera decimaltal och räkna ut en bråkdel av ett tal."
+  ],
+  "fakta": [
+   "Förläng eller förkorta: multiplicera eller dela täljare och nämnare med samma tal. 3/5 = 6/10, och 10/25 = 2/5.",
+   "Bråk till decimaltal: dela täljaren med nämnaren. 3/20 = 3 : 20 = 0,15.",
+   "Addera bråk: gör nämnarna lika först. 1/2 + 1/5 = 5/10 + 2/10 = 7/10.",
+   "Multiplicera bråk: täljare gånger täljare och nämnare gånger nämnare. Att dela med ett bråk är att multiplicera med bråket vänt upp och ner.",
+   "En bråkdel av ett tal: 2/3 av 15 är 15 / 3 · 2 = 10."
+  ],
+  "exempel": [
+   [
+    "Vilket är störst, 4/5 eller 5/7?",
+    "Gör om till decimaltal: 4/5 = 0,8 och 5/7 ≈ 0,71. Alltså är 4/5 störst."
+   ],
+   [
+    "Vad är 2/3 · 3/7?",
+    "2 · 3 = 6 och 3 · 7 = 21, så 6/21. Förkorta med 3: 2/7."
+   ]
+  ],
+  "ord": [
+   [
+    "täljare",
+    "talet över bråkstrecket"
+   ],
+   [
+    "nämnare",
+    "talet under bråkstrecket"
+   ],
+   [
+    "förlänga",
+    "multiplicera täljare och nämnare med samma tal"
+   ],
+   [
+    "förkorta",
+    "dela täljare och nämnare med samma tal"
+   ],
+   [
+    "enklaste form",
+    "ett bråk som inte går att förkorta mer"
+   ]
+  ],
+  "tips": "Lägg aldrig ihop nämnarna: 1/2 + 1/3 är inte 2/5 utan 3/6 + 2/6 = 5/6."
+ },
+ "Cirkelns omkrets och area": {
+  "mal": [
+   "Förklara vad radie, diameter, omkrets och π är.",
+   "Räkna ut en cirkels omkrets med O = π · d eller O = 2πr.",
+   "Räkna ut arean av en cirkel och en halvcirkel med A = πr².",
+   "Räkna baklänges från omkretsen eller arean till diametern eller radien."
+  ],
+  "fakta": [
+   "Diametern är dubbelt så lång som radien: d = 2r.",
+   "Omkretsen O = π · d = 2πr, där π ≈ 3,14. Omkretsen är alltså lite mer än tre diametrar.",
+   "Arean A = π · r². Har du diametern, dela den med 2 först.",
+   "Räkna baklänges: diametern är omkretsen / π. Radien får du ur arean genom att dela med π och dra roten ur."
+  ],
+  "exempel": [
+   [
+    "En cirkel har radien 4 cm. Hur lång är omkretsen? Räkna med π ≈ 3,14.",
+    "O = 2 · 3,14 · 4 = 25,12 cm."
+   ],
+   [
+    "En cirkel har diametern 18 cm. Hur stor är arean? Räkna med π ≈ 3,14.",
+    "Radien är 18 / 2 = 9 cm. A = 3,14 · 9² = 3,14 · 81 = 254,34 cm²."
+   ]
+  ],
+  "ord": [
+   [
+    "radie",
+    "avståndet från cirkelns mittpunkt till kanten"
+   ],
+   [
+    "diameter",
+    "sträckan från kant till kant genom mittpunkten"
+   ],
+   [
+    "omkrets",
+    "längden runt hela cirkeln"
+   ],
+   [
+    "π (pi)",
+    "kvoten mellan omkretsen och diametern, ungefär 3,14"
+   ]
+  ],
+  "tips": "Kolla om frågan ger radien eller diametern innan du räknar; att blanda ihop dem är den vanligaste fällan."
+ },
+ "Fyrhörningar och area": {
+  "mal": [
+   "Räkna ut arean av en parallellogram och en parallelltrapets.",
+   "Räkna baklänges från arean till höjden.",
+   "Dela upp en sammansatt figur och räkna ut dess area.",
+   "Byta mellan mm², cm², dm² och m²."
+  ],
+  "fakta": [
+   "Parallellogram: A = b · h, där h är höjden vinkelrätt mot basen b, inte den sneda sidan.",
+   "Parallelltrapets: A = (a + b) · h / 2, där a och b är de två parallella sidorna.",
+   "Triangel: A = b · h / 2. Rektangel: A = längden · bredden.",
+   "En sammansatt figur: dela upp den i delar du kan räkna, räkna varje del och lägg ihop. Ett hål dras bort.",
+   "Areaenheter: 1 m² = 100 dm², 1 dm² = 100 cm² och 1 cm² = 100 mm². Varje steg är 10 · 10 = 100 gånger."
+  ],
+  "exempel": [
+   [
+    "En parallelltrapets har de parallella sidorna 7 cm och 11 cm och höjden 5 cm. Hur stor är arean?",
+    "A = (7 + 11) · 5 / 2 = 18 · 5 / 2 = 45 cm²."
+   ],
+   [
+    "Hur många cm² är 0,3 m²?",
+    "1 m² = 100 · 100 = 10 000 cm², så 0,3 m² är 0,3 · 10 000 = 3 000 cm²."
+   ]
+  ],
+  "ord": [
+   [
+    "bas",
+    "den sida som höjden mäts mot"
+   ],
+   [
+    "höjd",
+    "avståndet vinkelrätt från basen till den motsatta sidan"
+   ],
+   [
+    "parallell",
+    "två linjer som aldrig möts, med samma avstånd hela vägen"
+   ],
+   [
+    "parallellogram",
+    "en fyrhörning där båda paren av motstående sidor är parallella"
+   ],
+   [
+    "parallelltrapets",
+    "en fyrhörning där två av sidorna är parallella"
+   ]
+  ],
+  "tips": "Höjden står alltid i rät vinkel mot basen. Den sneda sidan är längre, och den används inte för arean."
+ },
+ "Statistik och diagram": {
+  "mal": [
+   "Läsa en frekvenstabell och räkna ut hur många som svarat.",
+   "Räkna ut relativ frekvens i procent.",
+   "Räkna ut medelvärde, median och typvärde ur en tabell, och variationsbredden.",
+   "Räkna mellan andelar och grader i ett cirkeldiagram."
+  ],
+  "fakta": [
+   "Frekvens är hur många som har ett värde. Relativ frekvens är frekvensen delad med antalet, ofta skriven i procent.",
+   "Medelvärdet ur en tabell: multiplicera varje värde med sin frekvens, lägg ihop och dela med antalet.",
+   "Typvärdet är värdet som flest har, inte hur många de är. Medianen är värdet i mitten när alla värden står i storleksordning. Är de ett jämnt antal är medianen medelvärdet av de två i mitten.",
+   "Variationsbredden är det största värdet minus det minsta. Den visar hur utspridda värdena är.",
+   "Ett cirkeldiagram är 360°. En sektor är andelen · 360°, och andelen är sektorns grader delade med 360."
+  ],
+  "exempel": [
+   [
+    "2 elever har 0 husdjur, 3 elever har 1 husdjur och 5 elever har 2 husdjur. Vad är medelvärdet?",
+    "Husdjuren är 0 · 2 + 1 · 3 + 2 · 5 = 13 och eleverna 2 + 3 + 5 = 10. Medelvärdet är 13 : 10 = 1,3 husdjur."
+   ],
+   [
+    "15 av 60 svarade ”buss”. Hur många grader blir bussens sektor i ett cirkeldiagram?",
+    "Andelen är 15 : 60 = 0,25. 0,25 · 360° = 90°."
+   ]
+  ],
+  "ord": [
+   [
+    "frekvens",
+    "hur många gånger ett värde finns"
+   ],
+   [
+    "relativ frekvens",
+    "frekvensen som andel av alla, till exempel 20 %"
+   ],
+   [
+    "lägesmått",
+    "medelvärde, median och typvärde: var värdena ligger"
+   ],
+   [
+    "spridningsmått",
+    "till exempel variationsbredden: hur utspridda värdena är"
+   ],
+   [
+    "sektor",
+    "en tårtbit av ett cirkeldiagram"
+   ]
+  ],
+  "tips": "Blanda inte ihop värdet och frekvensen: i ”10 elever har 1 syskon” är värdet 1 och frekvensen 10."
+ },
+ "Koordinatsystem och grafer": {
+  "mal": [
+   "Säga i vilken kvadrant en punkt ligger, också med negativa koordinater.",
+   "Flytta och spegla punkter, och räkna avståndet längs en linje.",
+   "Räkna ut y ur en formel och se om en punkt ligger på en graf.",
+   "Hitta formeln till en värdetabell."
+  ],
+  "fakta": [
+   "En punkt skrivs (x, y): först x, steg åt höger eller vänster, sedan y, steg uppåt eller nedåt.",
+   "Kvadranterna räknas moturs från den övre högra: första (+, +), andra (−, +), tredje (−, −) och fjärde (+, −).",
+   "Speglas en punkt i x-axeln byter y tecken. Speglas den i y-axeln byter x tecken.",
+   "En punkt ligger på grafen till en formel om formeln ger punktens y när du sätter in punktens x.",
+   "I y = 2x + 5 är talet framför x, 2, hur mycket y ökar när x ökar med 1. Talet som läggs till, 5, är y när x = 0, där grafen skär y-axeln."
+  ],
+  "exempel": [
+   [
+    "Ligger punkten (−2, −1) på grafen till y = 3x + 5?",
+    "Sätt in x = −2: y = 3 · (−2) + 5 = −6 + 5 = −1. Det är punktens y, så punkten ligger på grafen."
+   ],
+   [
+    "När x = 0 är y = 1, när x = 1 är y = 5 och när x = 2 är y = 9. Vilken formel passar?",
+    "y ökar med 4 när x ökar med 1, och y är 1 när x = 0. Formeln är y = 4x + 1."
+   ]
+  ],
+  "ord": [
+   [
+    "origo",
+    "punkten (0, 0), där axlarna möts"
+   ],
+   [
+    "kvadrant",
+    "en av de fyra delar som axlarna delar koordinatsystemet i"
+   ],
+   [
+    "värdetabell",
+    "en tabell med x-värden och de y-värden som formeln ger"
+   ],
+   [
+    "graf",
+    "alla punkter som stämmer med en formel, ritade i ett koordinatsystem"
+   ]
+  ],
+  "tips": "Säg x först och y sedan: (3, −2) är tre steg åt höger och två steg nedåt."
+ }
+}

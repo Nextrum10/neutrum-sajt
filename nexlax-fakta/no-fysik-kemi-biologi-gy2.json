@@ -1,0 +1,82 @@
+{
+ "Fysik: hastighet och acceleration": {
+  "mal": [
+   "Räkna ut medelhastighet och lösa ut tid och sträcka.",
+   "Räkna om mellan km/h och m/s.",
+   "Räkna ut acceleration och sluthastighet vid likformigt accelererad rörelse.",
+   "Räkna ut sträckan vid acceleration och inbromsning."
+  ],
+  "fakta": [
+   "Medelhastighet: v = s / t, den totala sträckan delad med den totala tiden. Då är s = v · t och t = s / v.",
+   "Från km/h till m/s delar du med 3,6, och från m/s till km/h multiplicerar du med 3,6, för 1 km/h = 1 000 m / 3 600 s.",
+   "Acceleration: a = (v − v₀) / t, i m/s². Konstant fart rakt fram ger accelerationen noll. Vid inbromsning är accelerationen negativ.",
+   "Vid konstant acceleration är v = v₀ + a · t och s = v₀ · t + a · t² / 2.",
+   "Sträckan är också medelfarten gånger tiden: s = (v₀ + v) / 2 · t."
+  ],
+  "exempel": [
+   [
+    "En bil ökar farten från 15 m/s till 25 m/s på 4,0 s. Beräkna accelerationen och sträckan.",
+    "a = (25 − 15) / 4,0 = 2,5 m/s². s = (15 + 25) / 2 · 4,0 = 80 m."
+   ],
+   [
+    "Omvandla 54 km/h till m/s.",
+    "54 / 3,6 = 15 m/s."
+   ]
+  ],
+  "ord": [
+   [
+    "v₀",
+    "begynnelsehastigheten, farten när tidtagningen börjar"
+   ],
+   [
+    "retardation",
+    "inbromsning: accelerationens belopp när farten minskar"
+   ],
+   [
+    "likformigt accelererad",
+    "farten ändras lika mycket varje sekund"
+   ]
+  ],
+  "tips": "Gör om till meter och sekunder innan du räknar med a: blandade enheter är den vanligaste felkällan."
+ },
+ "Fysik: Newtons lagar och fritt fall": {
+  "mal": [
+   "Räkna med Newtons andra lag, F = m · a, och med resulterande kraft.",
+   "Räkna ut tyngden med F = m · g, på jorden och på månen.",
+   "Förklara Newtons första och tredje lag.",
+   "Räkna ut fart, sträcka och tid i fritt fall."
+  ],
+  "fakta": [
+   "Newtons andra lag: F = m · a, där F är den resulterande kraften, alla krafter sammanlagda med riktning. 1 N = 1 kg · m/s².",
+   "Newtons första lag: är summan av krafterna noll står kroppen still eller rör sig rakt fram med konstant fart.",
+   "Newtons tredje lag: trycker du på något trycker det tillbaka på dig med lika stor kraft, åt motsatt håll.",
+   "Tyngd: F = m · g. Nära jordytan är g = 9,82 m/s², och andra himlakroppar har andra värden på g.",
+   "Utan luftmotstånd faller alla föremål med accelerationen g. Från vila är v = g · t och s = g · t² / 2. Uppåt minskar farten med g varje sekund."
+  ],
+  "exempel": [
+   [
+    "En släde med massan 40 kg dras med 150 N, och friktionen är 30 N. Beräkna accelerationen.",
+    "Resulterande kraft: 150 − 30 = 120 N. a = F / m = 120 / 40 = 3,0 m/s²."
+   ],
+   [
+    "En sten släpps och faller fritt i 4,0 s. Hur långt faller den? g = 9,82 m/s².",
+    "s = 9,82 · 4,0² / 2 = 9,82 · 16 / 2 = 78,56 ≈ 79 m."
+   ]
+  ],
+  "ord": [
+   [
+    "resulterande kraft",
+    "summan av alla krafter på en kropp, med riktning"
+   ],
+   [
+    "tyngdacceleration",
+    "g, accelerationen i fritt fall"
+   ],
+   [
+    "försumma",
+    "räkna som om något inte fanns, till exempel luftmotståndet"
+   ]
+  ],
+  "tips": "Rita krafterna som pilar och räkna ut den resulterande kraften innan du använder F = m · a."
+ }
+}
