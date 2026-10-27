@@ -768,3 +768,21 @@ som gör den säker:
   loggar inte ut den riktiga inloggningen.
 - CSP:n är orörd: filen laddas med `src` som alla andra, och remsan
   ritas med DOM, inte med inline-kod.
+- **Två undantag sedan 2026-10-27** (Leo: "kontrollera betalningen med
+  stripe" och "tillgång till alla ämnen och årskurser"), båda med adminens
+  riktiga inloggning och inget av dem skriver i databasen:
+  - **Kassan** går genom Stripes riktiga kassa i testläge, genom
+    edge-funktionen `forhandsvisning-kassa` (bara superadmin, `kravAdmin`).
+    Beloppen räknas i webbläsaren ur världen och kommer ur anropet, enda
+    stället där det får hända (`_delad/forhandsvisning.ts`): funktionen
+    öppnar ingen kassa utan en testnyckel (`STRIPE_FORHANDSVISNING_SECRET_KEY`,
+    annars driftens `STRIPE_SECRET_KEY` bara så länge den är `sk_test_`),
+    raderna har tak, och sessionen och dess PaymentIntent bär
+    `forhandsvisning=1`, som webhooken kvitterar utan att skriva något
+    (`arForhandsvisning`). När Stripe går skarpt sätts testnycklarna som egna
+    secrets, annars slutar kassan fungera i förhandsvisningen, och aldrig
+    tvärtom. Studievyn laddar Stripe.js; studiehjälparvyn har stubben kvar.
+  - **NexLäx** läser `nivaer` (som varje inloggad läser) och spelar frågorna
+    genom `forhandsvisning_niva()` och `forhandsvisning_ratta()` (bara
+    `is_admin()`, utan facit ut, rättat av `intern.niva_ratta`, inget
+    sparat). Utan migrationen, eller utan nät, är det de påhittade nivåerna.

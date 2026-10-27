@@ -18,10 +18,25 @@
    egen fetch, som svarar ur en värld i webbläsaren, och en egen websocket
    som inte går någonstans. De två vyerna delar världen (localStorage):
    föreslå en tid som familjen, byt vy i remsan och acceptera den som
-   studiehjälparen. Inga mejl, inga betalningar, ingen AI: edge-
-   funktionerna svarar att det inte görs här. Inget konto behövs, och
-   inget hamnar i databasen: inte i statistiken, lönerna, betalningarna,
-   auditloggen eller hos en familj.
+   studiehjälparen. Inga mejl och ingen AI: edge-funktionerna svarar att
+   det inte görs här. Inget konto behövs, och inget hamnar i databasen:
+   inte i statistiken, lönerna, betalningarna, auditloggen eller hos en
+   familj.
+
+   TVÅ SAKER FRÅGAR UTANFÖR WEBBLÄSAREN (2026-10-27, Leo: "ska vi jag och
+   alex kunna kontrollera betalningen med stripe" och "eleven ska kunna ha
+   tillgång till alla ämnen och årskurser"), båda med adminens egen
+   inloggning och båda utan att skriva något i databasen:
+   - Betala nu, Betala alla och planerna öppnar Stripes riktiga kassa i
+     TESTLÄGE genom edge-funktionen forhandsvisning-kassa. Beloppet räknas
+     här ur världen; funktionen öppnar ingen kassa med en skarp nyckel, och
+     webhooken skriver inget för den. När Stripe säger att sessionen är
+     betald blir passet eller planen betalt i världen (kassornaKlara).
+   - NexLäx läser den riktiga banan (nivaer) och spelar de riktiga
+     frågorna genom forhandsvisning_niva() och forhandsvisning_ratta(),
+     som rättar som niva_svara men inte sparar något. Försöken, stjärnorna
+     och XP står i världen. Före migrationen, eller utan nät, är det de
+     påhittade nivåerna och frågorna här.
 
    Vem som får se den: den som är inloggad som admin i samma webbläsare.
    Den riktiga inloggningen frågar den riktiga databasen en enda sak,
@@ -311,6 +326,10 @@ window.NXForhandsvisning = (function () {
       kortreservationer: [],
       /* Egna upplägg (egna_upplagg, 2026-10-27): inga skickade i världen. */
       egna_upplagg: [],
+      /* Förhandsvisningens kassa (2026-10-27): kassorna Stripe öppnat, och
+         planerna som köpts i dem. */
+      fv_kassor: [],
+      klippkort: [],
       erbjudanden: [
         { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 10 },
         { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 20 },
@@ -442,7 +461,18 @@ window.NXForhandsvisning = (function () {
       });
       return Object.keys(per).map(function (k) { return per[k]; });
     },
-    klippkort_saldo: function () { return []; },
+    /* Den riktiga banan när den gått att läsa, annars de påhittade nivåerna. */
+    nivaer: function () { return BANK || W.nivaer; },
+    /* Planer köpta i förhandsvisningens kassa: hela, oanvända timmar. */
+    klippkort_saldo: function () {
+      var idag = dag(0);
+      return (W.klippkort || []).map(function (k) {
+        return Object.assign({ anvanda: 0, kvar: k.timmar, aterbetald_ore: 0, aterbetalda_timmar: 0, aterkallad_at: null,
+          galler_fran: null, familjerabatt_ore: 0, gratis_kvar: 0, gratis_till: null, till_plan: null,
+          rabatterat_timpris_ore: k.timpris_ore, vid_uppsagning_ore: k.betalt_ore, vid_anger_ore: k.betalt_ore,
+          angerfrist_till: dag(14), brukbar: k.status === 'betald' && String(k.giltigt_till) >= idag }, k);
+      });
+    },
     klippkort_rorelser: function () { return []; },
     timbank_saldo: function () { return []; },
     timbank_rorelser: function () { return []; }
@@ -477,6 +507,7 @@ window.NXForhandsvisning = (function () {
          kortet bara genom mitt_kort(). */
       case 'kortreservationer': return roll === 'foralder' && r.parent_id === JAG;
       case 'egna_upplagg': return roll === 'foralder' && r.familj === JAG;
+      case 'klippkort_saldo': return roll === 'foralder' && r.parent_id === JAG;
       case 'sparade_kort': return false;
       case 'payouts': case 'arbetade_timmar': case 'payout_lines': return roll !== 'foralder' && r.tutor_id === JAG;
       case 'varvningsbonus': return false;
@@ -760,7 +791,7 @@ window.NXForhandsvisning = (function () {
     if (spel[forsokId]) return spel[forsokId];
     var f = W.niva_forsok.find(function (x) { return x.id === forsokId; });
     if (!f) return null;
-    var s = { frågor: frågorFör(f.niva_id), rätt: {}, fel: {} };
+    var s = { frågor: f.fv ? f.fv.frågor : frågorFör(f.niva_id), rätt: {}, fel: {} };
     W.niva_svar.filter(function (x) { return x.forsok_id === forsokId; }).forEach(function (x) {
       if (x.ratt) s.rätt[x.fraga_id] = true; else s.fel[x.fraga_id] = true;
     });
@@ -768,10 +799,10 @@ window.NXForhandsvisning = (function () {
     return s;
   }
   function frågorFör(nivaId) {
-    var n = W.nivaer.find(function (x) { return x.id === nivaId; });
+    var n = nivå(nivaId);
     var bank = FRÅGOR[n && n.omrade] || FRÅGOR.Bråk;
     return bank.map(function (f, i) {
-      return { id: 'f2000000-0000-4000-8000-' + String(Number(nivaId.slice(-6)) * 100 + i).padStart(12, '0'),
+      return { id: 'f2000000-0000-4000-8000-' + (fingeravtryck(nivaId).padStart(8, '0') + String(i).padStart(4, '0')),
                typ: 'val', fraga: f[0], alternativ: f[1].slice(),
                ratt: f[2], forklaring: f[3], ordning: i + 1 };
     });
@@ -783,7 +814,7 @@ window.NXForhandsvisning = (function () {
     return {
       xp: xp, xp_idag: idag * 90, xp_vecka: 160 + idag * 90, serie: { nu: 3 + (idag ? 1 : 0), basta: 6, idag: !!idag },
       dagar: [-5, -4, -2].map(function (n) { return { dag: dag(n), xp: 60, nivaer: 1, uppgifter: 1, pass: 0 }; }),
-      banor: [], nivaer: {}, omraden: [{ amne: 'Matematik', arskurs: 'ak6', omrade: 'Bråk', klart: tid(-9, '16:12') }],
+      banor: [], nivaer: {}, omraden: klaraOmråden(),
       missade: [], uppgifter: { klara: 24, direkt: 20, forsta: 30, forsta_ratt: 24 },
       regler: { val: 10, svarare: 20, niva: 50, omrade: 100 }, idag: dag(0),
       uppdrag: { dag: dag(0), idag: [
@@ -996,71 +1027,313 @@ window.NXForhandsvisning = (function () {
     /* NexLäx. */
     nexlax_lage: function () { return nexlaxLäge(); },
     niva_starta: function (k) {
-      var n = W.nivaer.find(function (x) { return x.id === k.p_niva; });
+      var n = nivå(k.p_niva);
       if (!n) return { __fel: [400, 'P0001', 'Nivån finns inte.'] };
-      if (n.sort !== 'vanlig') {
-        return { __fel: [400, 'P0001', 'Mästarprov och repetition går inte att göra i förhandsvisningen. Prova en vanlig nivå.'] };
+      if (BANK && riktigaFrågor !== false) {
+        return startaRiktig(n, k.p_elev || ALVA).then(function (r) { return r || startaPåhittad(n, k); });
       }
-      /* Ett påbörjat försök från det senaste dygnet fortsätter, som
-         niva_starta i databasen gör: så spelas prickarna en i taget. */
-      var elev = k.p_elev || ALVA;
-      var sedan = Date.now() - 86400000;
-      var f = W.niva_forsok.filter(function (x) {
-        return x.niva_id === n.id && x.student_id === elev && !x.klar_at && Date.parse(x.startad_at) > sedan;
-      }).sort(function (a, b) { return String(b.startad_at).localeCompare(String(a.startad_at)); })[0];
-      if (!f) {
-        f = { id: nyttId(), niva_id: n.id, student_id: elev, startad_at: nu(), klar_at: null,
-              antal: 0, ratt_direkt: 0, stjarnor: 0, godkand: false, fragor: [] };
-        f.fragor = frågorFör(n.id).map(function (x) { return x.id; });
-        f.antal = f.fragor.length;
-        W.niva_forsok.push(f);
-      }
-      var s = spelFör(f.id);
-      return { forsok: f.id, niva: { id: n.id, titel: n.titel, amne: n.amne, omrade: n.omrade, arskurs: n.arskurs,
-               sort: n.sort, lastext: n.lastext }, klara: Object.keys(s.rätt),
-               fragor: s.frågor.map(function (x) { return { id: x.id, typ: x.typ, fraga: x.fraga, alternativ: x.alternativ }; }) };
+      return startaPåhittad(n, k);
     },
     niva_svara: function (k) {
-      var s = spelFör(k.p_forsok);
       var f = W.niva_forsok.find(function (x) { return x.id === k.p_forsok; });
-      if (!s || !f) return { __fel: [400, 'P0001', 'Försöket finns inte.'] };
-      var fråga = s.frågor.find(function (x) { return x.id === k.p_fraga; });
-      if (!fråga) return { __fel: [400, 'P0001', 'Frågan finns inte.'] };
-      var rätt = !!(k.p_svar && Number(k.p_svar.val) === fråga.ratt);
-      W.niva_svar.push({ forsok_id: f.id, fraga_id: fråga.id, ratt: rätt, svar: k.p_svar || null, created_at: nu() });
-      if (rätt && !s.fel[fråga.id]) f.ratt_direkt++;
-      if (rätt) s.rätt[fråga.id] = true; else s.fel[fråga.id] = true;
-      var klar = Object.keys(s.rätt).length === s.frågor.length;
-      var resultat = null;
-      if (klar && !f.klar_at) {
-        var antal = s.frågor.length;
-        f.klar_at = nu();
-        f.antal = antal;
-        f.stjarnor = f.ratt_direkt === antal ? 3 : f.ratt_direkt >= antal * 0.75 ? 2 : 1;
-        f.godkand = true;
-        resultat = { antal: antal, ratt_direkt: f.ratt_direkt, stjarnor: f.stjarnor, godkand: true, forut: 0, klar_at: f.klar_at,
-                     xp_fragor: f.ratt_direkt * 10, xp_niva: 50, xp_omrade: 0 };
-      }
-      return { ratt: rätt, facit: fråga.ratt, forklaring: fråga.forklaring, klar: klar, xp: rätt ? 10 : 0, resultat: resultat };
+      if (f && f.fv) return svaraRiktig(f, k);
+      return svaraPåhittad(k);
     },
     niva_genomgang: function (k) {
       var s = spelFör(k.p_forsok);
       if (!s) return null;
       return { fragor: s.frågor.map(function (x) {
-        return { fraga: x.fraga, alternativ: x.alternativ, ratt: x.ratt, forklaring: x.forklaring, typ: x.typ,
-                 svar: null, ratt_svar: !!s.rätt[x.id] };
+        var r = x.ratt != null ? x.ratt : ((W.niva_forsok.find(function (f) { return f.id === k.p_forsok; }) || {}).fv || { facit: {} }).facit[x.id];
+        return { fraga: x.fraga, alternativ: x.alternativ, ratt: r && r.facit !== undefined ? r.facit : r,
+                 forklaring: x.forklaring || (r && r.forklaring) || null, typ: x.typ, svar: null, ratt_svar: !!s.rätt[x.id] };
       }) };
     },
     rapportera_fragefel: function () { return true; }
   };
 
-  function rpc(namn, kropp) {
+  function startaPåhittad(n, k) {
+    if (n.sort !== 'vanlig') {
+      return { __fel: [400, 'P0001', 'Mästarprov och repetition går inte att göra i förhandsvisningen. Prova en vanlig nivå.'] };
+    }
+    /* Ett påbörjat försök från det senaste dygnet fortsätter, som
+       niva_starta i databasen gör: så spelas prickarna en i taget. */
+    var elev = k.p_elev || ALVA;
+    var sedan = Date.now() - 86400000;
+    var f = W.niva_forsok.filter(function (x) {
+      return x.niva_id === n.id && x.student_id === elev && !x.klar_at && Date.parse(x.startad_at) > sedan;
+    }).sort(function (a, b) { return String(b.startad_at).localeCompare(String(a.startad_at)); })[0];
+    if (!f) {
+      f = { id: nyttId(), niva_id: n.id, student_id: elev, startad_at: nu(), klar_at: null,
+            antal: 0, ratt_direkt: 0, stjarnor: 0, godkand: false, fragor: [] };
+      f.fragor = frågorFör(n.id).map(function (x) { return x.id; });
+      f.antal = f.fragor.length;
+      W.niva_forsok.push(f);
+    }
+    var s = spelFör(f.id);
+    return { forsok: f.id, niva: { id: n.id, titel: n.titel, amne: n.amne, omrade: n.omrade, arskurs: n.arskurs,
+             sort: n.sort, lastext: n.lastext }, klara: Object.keys(s.rätt),
+             fragor: s.frågor.map(function (x) { return { id: x.id, typ: x.typ, fraga: x.fraga, alternativ: x.alternativ }; }) };
+  }
+  function svaraPåhittad(k) {
+    var s = spelFör(k.p_forsok);
+    var f = W.niva_forsok.find(function (x) { return x.id === k.p_forsok; });
+    if (!s || !f) return { __fel: [400, 'P0001', 'Försöket finns inte.'] };
+    var fråga = s.frågor.find(function (x) { return x.id === k.p_fraga; });
+    if (!fråga) return { __fel: [400, 'P0001', 'Frågan finns inte.'] };
+    var rätt = !!(k.p_svar && Number(k.p_svar.val) === fråga.ratt);
+    return bokför(f, s, fråga, k.p_svar, rätt, { ratt: rätt, facit: fråga.ratt, forklaring: fråga.forklaring });
+  }
+  /* Ett svar skrivs i världen, och nivån blir klar när alla är rätt. */
+  function bokför(f, s, fråga, svarat, rätt, rättning) {
+    W.niva_svar.push({ forsok_id: f.id, fraga_id: fråga.id, ratt: rätt, svar: svarat || null, created_at: nu() });
+    if (rätt && !s.fel[fråga.id]) f.ratt_direkt++;
+    if (rätt) s.rätt[fråga.id] = true; else s.fel[fråga.id] = true;
+    var klar = Object.keys(s.rätt).length === s.frågor.length;
+    var resultat = null;
+    if (klar && !f.klar_at) {
+      var antal = s.frågor.length;
+      f.klar_at = nu();
+      f.antal = antal;
+      /* Samma gränser som niva_svara: alla direkt tre, 80 % två, 60 % en. */
+      f.stjarnor = f.ratt_direkt === antal ? 3 : f.ratt_direkt * 5 >= antal * 4 ? 2 : f.ratt_direkt * 5 >= antal * 3 ? 1 : 0;
+      f.godkand = f.stjarnor >= 1;
+      resultat = { antal: antal, ratt_direkt: f.ratt_direkt, stjarnor: f.stjarnor, godkand: f.godkand, forut: 0, klar_at: f.klar_at,
+                   xp_fragor: f.ratt_direkt * 10, xp_niva: f.godkand ? 50 : 0, xp_omrade: 0 };
+    }
+    return { ratt: rätt, facit: rättning.facit, forklaring: rättning.forklaring, klar: klar, xp: rätt ? 10 : 0, resultat: resultat };
+  }
+
+  /* ============ NexLäx ur den riktiga banan (2026-10-27) ============
+     Banan läses en gång när förhandsvisningen öppnas, med adminens
+     inloggning (nivaer läser varje inloggad). Frågorna hämtas när en nivå
+     startar, utan facit, och varje svar rättas i databasen, utan att något
+     sparas där. Den påhittade elevens historik (tre klara nivåer och två
+     läxor) flyttas till de första nivåerna i matematik åk 6, så att vägen
+     ser ut som förut. */
+  var BANK = null;
+  var riktigaFrågor = null;
+  var NIVÅKOL = 'id, nyckel, amne, arskurs, omrade, titel, beskrivning, ordning, antal_fragor, aktiv, sort, lastext, spar';
+  function nivå(id) {
+    return (BANK || []).find(function (x) { return x.id === id; }) || W.nivaer.find(function (x) { return x.id === id; });
+  }
+  async function laddaBanken() {
+    try {
+      var alla = [];
+      for (var från = 0; från < 20000; från += 1000) {
+        var r = await riktig.from('nivaer').select(NIVÅKOL).eq('aktiv', true)
+          .order('amne').order('arskurs').order('ordning').order('id').range(från, från + 999);
+        if (r.error) throw r.error;
+        alla = alla.concat(r.data || []);
+        if (!r.data || r.data.length < 1000) break;
+      }
+      if (!alla.length) return;
+      alla.forEach(function (n) { n.sort = n.sort || 'vanlig'; n.spar = n.spar || 'vag'; });
+      BANK = alla;
+      flyttaHistoriken();
+    } catch (e) { console.warn('Förhandsvisningen: banan gick inte att läsa, och de påhittade nivåerna används', e); }
+  }
+  function flyttaHistoriken() {
+    synka();
+    var ma6 = BANK.filter(function (n) { return n.amne === 'Matematik' && n.arskurs === 'ak6' && n.sort === 'vanlig' && n.spar === 'vag'; });
+    if (ma6.length < 4) return;
+    var karta = {};
+    karta[id(301)] = ma6[0]; karta[id(302)] = ma6[1]; karta[id(303)] = ma6[2]; karta[id(305)] = ma6[3];
+    var ändrat = false;
+    W.niva_forsok.forEach(function (f) { if (karta[f.niva_id]) { f.niva_id = karta[f.niva_id].id; ändrat = true; } });
+    W.homework.forEach(function (h) {
+      var n = karta[h.niva_id];
+      if (!n) return;
+      h.niva_id = n.id; h.title = n.omrade + ': ' + n.titel; ändrat = true;
+    });
+    if (ändrat) spara();
+  }
+  /* Områden där varje vanlig nivå är klar, som nexlax_lage().omraden. */
+  function klaraOmråden() {
+    var klara = {};
+    W.niva_forsok.forEach(function (f) { if (f.student_id === ALVA && f.godkand) klara[f.niva_id] = f.klar_at; });
+    var per = {};
+    (BANK || W.nivaer).forEach(function (n) {
+      if (n.sort !== 'vanlig') return;
+      var k = n.amne + '|' + n.arskurs + '|' + n.omrade;
+      var o = per[k] = per[k] || { amne: n.amne, arskurs: n.arskurs, omrade: n.omrade, klart: '', alla: true };
+      if (!klara[n.id]) o.alla = false; else if (klara[n.id] > o.klart) o.klart = klara[n.id];
+    });
+    return Object.keys(per).map(function (k) { return per[k]; }).filter(function (o) { return o.alla && o.klart; })
+      .map(function (o) { return { amne: o.amne, arskurs: o.arskurs, omrade: o.omrade, klart: o.klart }; });
+  }
+  async function startaRiktig(n, elev) {
+    var sedan = Date.now() - 86400000;
+    var f = W.niva_forsok.filter(function (x) {
+      return x.niva_id === n.id && x.student_id === elev && !x.klar_at && x.fv && Date.parse(x.startad_at) > sedan;
+    }).sort(function (a, b) { return String(b.startad_at).localeCompare(String(a.startad_at)); })[0];
+    if (!f) {
+      var r = await riktig.rpc('forhandsvisning_niva', { p_niva: n.id });
+      if (r.error) {
+        if (r.error.code === 'PGRST202' || r.error.code === '42501') { riktigaFrågor = false; return null; }
+        return { __fel: [400, r.error.code || 'P0001', r.error.message] };
+      }
+      riktigaFrågor = true;
+      var frågor = (r.data && r.data.fragor) || [];
+      f = { id: nyttId(), niva_id: n.id, student_id: elev, startad_at: nu(), klar_at: null,
+            antal: frågor.length, ratt_direkt: 0, stjarnor: 0, godkand: false,
+            fragor: frågor.map(function (x) { return x.id; }), fv: { frågor: frågor, facit: {} } };
+      W.niva_forsok.push(f);
+    }
+    var s = spelFör(f.id);
+    return { forsok: f.id, niva: { id: n.id, titel: n.titel, amne: n.amne, omrade: n.omrade, arskurs: n.arskurs,
+             sort: n.sort, lastext: n.lastext }, klara: Object.keys(s.rätt), fragor: s.frågor };
+  }
+  async function svaraRiktig(f, k) {
+    var s = spelFör(f.id);
+    var fråga = s && s.frågor.find(function (x) { return x.id === k.p_fraga; });
+    if (!fråga) return { __fel: [400, 'P0001', 'Frågan finns inte.'] };
+    var r = await riktig.rpc('forhandsvisning_ratta', { p_fraga: fråga.id, p_svar: k.p_svar });
+    if (r.error) return { __fel: [400, r.error.code || 'P0001', r.error.message] };
+    f.fv.facit[fråga.id] = { facit: r.data.facit, forklaring: r.data.forklaring };
+    return bokför(f, s, fråga, k.p_svar, !!r.data.ratt, r.data);
+  }
+
+  async function rpc(namn, kropp) {
     var f = RPC[namn];
     if (!f) return fel(404, 'PGRST202', 'Could not find the function public.' + namn + ' in the schema cache');
     var data;
-    try { data = f(kropp || {}); } catch (e) { return fel(500, 'XX000', String(e && e.message || e)); }
+    try { data = await f(kropp || {}); } catch (e) { return fel(500, 'XX000', String(e && e.message || e)); }
     if (data && data.__fel) return fel(data.__fel[0], data.__fel[1], data.__fel[2], data.__fel[3]);
     return svar(200, data === undefined ? null : data);
+  }
+
+  /* ============ Stripes kassa (2026-10-27) ============
+     Leo: "på våran förhandsvisning av studievy ska vi jag och alex kunna
+     kontrollera betalningen med stripe". Vyn frågar stripe-checkout som
+     vanligt; här räknas beloppet ur världen, och forhandsvisning-kassa
+     öppnar en riktig kassa i Stripes testläge med adminens inloggning.
+     Funktionen vägrar en skarp nyckel, och webhooken skriver ingenting för
+     kassan. När Stripe svarar att den är betald blir passen eller planen
+     betalda här, i världen (kassornaKlara, före varje läsning). */
+  async function tillKassan(kropp) {
+    var s = await riktig.auth.getSession();
+    var token = s && s.data && s.data.session && s.data.session.access_token;
+    if (!token) return { status: 401, data: { error: 'Logga in som admin igen.' } };
+    try {
+      var r = await fetch(KASSAN.url, { method: 'POST', body: JSON.stringify(kropp),
+        headers: { authorization: 'Bearer ' + token, apikey: KASSAN.anon, 'content-type': 'application/json' } });
+      return { status: r.status, data: await r.json().catch(function () { return {}; }) };
+    } catch (e) {
+      return { status: 503, data: { error: 'Kassan gick inte att nå. Är forhandsvisning-kassa driftsatt?' } };
+    }
+  }
+  function attBetala(b) {
+    return !!b && b.parent_id === JAG && (b.status === 'confirmed' || b.status === 'completed')
+      && ['ingen', 'misslyckad'].indexOf(b.betalning_status || 'ingen') !== -1 && b.fakturerbar !== false && !b.klippkort_id;
+  }
+  function passetsBelopp(b) {
+    var r = W.lesson_reports.find(function (x) { return x.booking_id === b.id; });
+    var min = b.status === 'completed' && r ? Number(r.debiterade_min || b.duration_min) : Number(b.duration_min || 60);
+    return window.NXBetalning ? window.NXBetalning.passpris(b, null, min) || 0 : Math.round(Number(b.timpris_ore) * min / 60);
+  }
+  function passetsText(b) {
+    return (b.subject || 'Pass') + ', ' + b.wanted_date + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '');
+  }
+  function gällandePlan() {
+    var idag = dag(0);
+    return (W.klippkort || []).filter(function (k) {
+      return k.status === 'betald' && k.sort === 'plan' && !k.till_plan && String(k.giltigt_till) > idag;
+    }).sort(function (a, b) { return String(b.giltigt_till).localeCompare(String(a.giltigt_till)); })[0] || null;
+  }
+  async function kassa(k) {
+    var nej = function (t) { return svar(409, { error: t }); };
+    if (roll !== 'foralder') return nej(INTE_HÄR);
+    var rader = [], avser;
+    if (k.pass && !k.tillagg) {
+      var b = W.bookings.find(function (x) { return x.id === k.pass; });
+      if (!attBetala(b)) return nej('Passet är redan betalt, eller kostar inget.');
+      var ore = passetsBelopp(b);
+      rader.push({ text: passetsText(b), ore: ore });
+      avser = { sort: 'pass', pass: [{ id: b.id, ore: ore }] };
+    } else if (Array.isArray(k.passen)) {
+      avser = { sort: 'pass', pass: [] };
+      for (var i = 0; i < k.passen.length; i++) {
+        var p = W.bookings.find(function (x) { return x.id === k.passen[i]; });
+        if (!attBetala(p)) return nej('Ett av passen är redan betalt, eller kostar inget.');
+        var o = passetsBelopp(p);
+        rader.push({ text: passetsText(p), ore: o });
+        avser.pass.push({ id: p.id, ore: o });
+      }
+    } else if (k.erbjudande) {
+      var e = VYER.erbjudanden_pris().find(function (x) { return x.kod === k.erbjudande && x.sort === 'plan'; });
+      if (!e) return nej('Bara planerna säljs.');
+      if (k.timmar) {
+        var plan = gällandePlan();
+        var t = Math.floor(Number(k.timmar));
+        if (!plan) return nej('Timmar köps till en plan som gäller.');
+        if (!(t >= 1 && t <= 20)) return nej('Välj 1–20 timmar.');
+        rader.push({ text: t + (t === 1 ? ' timme' : ' timmar') + ' till ' + plan.namn, ore: t * e.rabatterat_timpris_ore });
+        avser = { sort: 'kop', namn: t + ' timmar till ' + plan.namn, timmar: t, erbjudande: 'plan_extra',
+                  timpris_ore: e.rabatterat_timpris_ore, till_plan: plan.id, giltigt_till: plan.giltigt_till };
+      } else {
+        rader.push({ text: e.namn + ', ' + e.timmar + ' timmar', ore: e.pris_ore });
+        avser = { sort: 'kop', namn: e.namn, timmar: e.timmar, erbjudande: e.kod, timpris_ore: e.rabatterat_timpris_ore,
+                  till_plan: null, giltigt_till: dag(30) };
+      }
+    } else if (k.upplagg) {
+      var u = W.egna_upplagg.find(function (x) { return x.id === k.upplagg && x.familj === JAG && !x.kopt_at && !x.aterkallad_at; });
+      if (!u) return nej('Upplägget går inte att köpa längre.');
+      rader.push({ text: u.namn + ', ' + u.timmar + ' timmar', ore: u.pris_ore });
+      avser = { sort: 'kop', namn: u.namn, timmar: u.timmar, erbjudande: 'plan_eget', timpris_ore: u.timpris_ore,
+                till_plan: null, giltigt_till: dag(30), upplagg: u.id };
+    } else {
+      return nej('I förhandsvisningen går passen, planerna, timmar till planen och upplägg genom Stripes kassa, '
+        + 'men inte det här. ' + INTE_HÄR);
+    }
+    var r = await tillKassan({ rader: rader, retur: location.origin, ui: k.ui === 'sida' ? 'sida' : 'inbaddad' });
+    if (r.status >= 400) return svar(r.status, { error: (r.data && r.data.error) || 'Kassan gick inte att öppna.' });
+    synka();
+    W.fv_kassor.push({ session: r.data.session, avser: avser, belopp_ore: r.data.belopp_ore, skapad: nu(), klar: false });
+    spara();
+    return svar(200, Object.assign({}, r.data, avser.pass ? { antal_pass: avser.pass.length } : {}));
+  }
+  var senastFrågat = 0;
+  async function kassornaKlara() {
+    var öppna = (W.fv_kassor || []).filter(function (x) { return !x.klar && Date.now() - Date.parse(x.skapad) < 86400000; });
+    if (!öppna.length || Date.now() - senastFrågat < 2000) return;
+    senastFrågat = Date.now();
+    var klara = [];
+    for (var i = 0; i < öppna.length; i++) {
+      var r = await tillKassan({ session: öppna[i].session });
+      if (r.status < 400 && (r.data.betald || r.data.status === 'expired')) klara.push({ session: öppna[i].session, betald: !!r.data.betald });
+    }
+    if (!klara.length) return;
+    synka();
+    klara.forEach(function (x) {
+      var kassan = W.fv_kassor.find(function (y) { return y.session === x.session; });
+      if (!kassan || kassan.klar) return;
+      kassan.klar = true;
+      if (x.betald) verkställ(kassan.avser);
+    });
+    spara();
+  }
+  function verkställ(a) {
+    if (a.sort === 'pass') {
+      a.pass.forEach(function (p) {
+        var b = W.bookings.find(function (x) { return x.id === p.id; });
+        if (!b) return;
+        Object.assign(b, { betalning_status: 'betald', betald_at: nu(), betalt_ore: p.ore, begart_ore: p.ore, stripe_skarp: false });
+      });
+      return;
+    }
+    var betalt = a.timmar * a.timpris_ore;
+    if (a.upplagg) {
+      var u = W.egna_upplagg.find(function (x) { return x.id === a.upplagg; });
+      if (u) { u.kopt_at = nu(); betalt = u.pris_ore; }
+    }
+    /* Den första planen får en timme till, gratis i 60 dagar, som i
+       databasen (intern.planens_forsta_timme); timmar till planen aldrig. */
+    var första = !a.till_plan && !W.klippkort.some(function (k) { return k.sort === 'plan' && !k.till_plan; });
+    W.klippkort.push({ id: nyttId(), parent_id: JAG, erbjudande: a.erbjudande, namn: a.namn, sort: 'plan',
+      timmar: a.timmar + (första ? 1 : 0), timmar_pa_kopet: första ? 1 : 0, gratis_kvar: första ? 1 : 0,
+      gratis_till: första ? dag(60) : null,
+      status: 'betald', giltigt_till: a.giltigt_till, begart_ore: betalt, betalt_ore: betalt, timpris_ore: a.timpris_ore,
+      betald_at: nu(), created_at: nu(), till_plan: a.till_plan });
   }
 
   /* ============ auth, funktioner och lagring ============ */
@@ -1080,6 +1353,10 @@ window.NXForhandsvisning = (function () {
 
   /* ============ fetch ============ */
   var grind = null;
+  /* Den riktiga klienten, inloggad som adminen: frågan om rollen, banan
+     och kassan. Allt annat går till världen. */
+  var riktig = null;
+  var KASSAN = null;
   function läsKropp(init) {
     var b = init && init.body;
     if (b == null || typeof b !== 'string') return null;
@@ -1100,13 +1377,15 @@ window.NXForhandsvisning = (function () {
        svaret, som de gör på riktigt. */
     await new Promise(function (r) { setTimeout(r, 30); });
     synka();
-    var ut = svara(väg, metod, url, headers, kropp);
+    if (metod === 'GET' && väg.indexOf('/rest/v1/') === 0) { await kassornaKlara(); synka(); }
+    var ut = await svara(väg, metod, url, headers, kropp);
     if (metod !== 'GET' && metod !== 'HEAD' && väg.indexOf('/rest/v1/') === 0 && ut.status < 400) spara();
     logg.push({ metod: metod, väg: väg, sök: url.search, kropp: kropp, status: ut.status });
     return ut;
   }
   function svara(väg, metod, url, headers, kropp) {
     if (väg.indexOf('/auth/v1/') === 0) return auth(väg, metod, kropp);
+    if (väg === '/functions/v1/stripe-checkout') return kassa(kropp || {});
     if (väg.indexOf('/functions/v1/') === 0) return svar(409, { error: INTE_HÄR });
     if (väg.indexOf('/storage/v1/') === 0) return svar(400, { statusCode: '400', error: 'forhandsvisning', message: INTE_HÄR });
     if (väg.indexOf('/rest/v1/rpc/') === 0) return rpc(väg.slice('/rest/v1/rpc/'.length), kropp);
@@ -1172,13 +1451,16 @@ window.NXForhandsvisning = (function () {
   /* Vyns klient. nextrum-app.js frågar efter den i stället för att skapa
      sin egen. Den riktiga klienten finns bara för frågan om adminrollen. */
   function klient(CFG) {
-    var riktig = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY,
+    riktig = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY,
       { auth: { detectSessionInUrl: false } });
+    KASSAN = { url: CFG.SUPABASE_URL + '/functions/v1/forhandsvisning-kassa', anon: CFG.SUPABASE_ANON_KEY };
     grind = riktig.auth.getSession().then(function (s) {
       if (!s || !s.data || !s.data.session) return 'utloggad';
       return riktig.rpc('mina_behorigheter').then(function (r) {
         return !r.error && r.data && r.data.admin ? 'ok' : 'nej';
       });
+    }).then(function (läge) {
+      return läge === 'ok' ? laddaBanken().then(function () { return läge; }) : läge;
     }).catch(function () { return 'nej'; });
     grind.then(function (läge) { if (läge !== 'ok') tillAdmin(); });
 
@@ -1209,7 +1491,8 @@ window.NXForhandsvisning = (function () {
     b.textContent = 'Förhandsvisning';
     text.appendChild(b);
     text.appendChild(document.createTextNode(' Du är ' + vem + '. Påhittat och sparat bara i din webbläsare: '
-      + 'inget skickas, och inget räknas i statistik, lön eller betalningar.'));
+      + 'inget skickas, och inget räknas i statistik, lön eller betalningar.'
+      + (roll === 'foralder' ? ' Kassan är Stripes testläge: betala med testkortet 4242 4242 4242 4242, ett datum framåt och valfri CVC.' : '')));
     var knappar = document.createElement('span');
     knappar.className = 'nx-fv-knappar';
     /* Samma värld i den andra vyn: föreslå som familjen, byt, svara som
@@ -1238,10 +1521,15 @@ window.NXForhandsvisning = (function () {
     värd.insertBefore(el, värd.firstChild);
     document.documentElement.classList.add('nx-forhandsvisning');
   }
-  /* Stripe.js laddas aldrig här: kassan svarar att den inte öppnas, och
-     skriptet hade hämtats från Stripe i onödan (laddaStripe i
-     nextrum-studie-vy.js frågar efter window.Stripe först). */
-  window.Stripe = function () { throw new Error(INTE_HÄR); };
+  /* Studiehjälparvyn betalar inget: Stripe.js laddas aldrig där
+     (laddaStripe i nextrum-studie-vy.js frågar efter window.Stripe först).
+     I studievyn är kassan Stripes testläge sedan 2026-10-27. */
+  if (roll !== 'foralder') window.Stripe = function () { throw new Error(INTE_HÄR); };
+  /* Tillbaka från Stripes sida (Klarna, eller kassan utan panel): sessionen
+     står redan i världen, och kassornaKlara frågar Stripe. */
+  if (/[?&]fvkassa=/.test(location.search) && window.history && history.replaceState) {
+    history.replaceState(null, '', location.pathname + '?forhandsvisning' + location.hash);
+  }
 
   document.title = 'Förhandsvisning · ' + document.title;
   if (document.body) remsa();

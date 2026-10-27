@@ -2075,6 +2075,9 @@ väntar på svar. Ett förslag från studiehjälparen eller barnet har en prick 
 (`.pass-nar-bubbla`) och märket "Sara föreslår" (`förslagsMärke`), familjens eget "Ni önskade";
 ordet Önskad står inte längre ensamt. Barnets förslag står med i passlistan (`passLista` tar
 `extra` och `extraRad`) och under Översikt.
+Alla rutor har samma form och en enda kant; bara färgen skiljer (Leo samma kväll: den gula "har extra
+streck inuti och de ser inte snyggt ut"). Förslaget hade en andra ring innanför kanten, som är borta;
+pricken och märket skiljer det från familjens egna.
 
 **Studievyn på hemskärmen** (`nextrum-hemskarm.js`, `NXHemskarm`). Leo skickade en skärminspelning
 av hur det görs i Safari (tre punkter, Dela, Lägg till på hemskärmen, Öppna som webbapp) och bad om
