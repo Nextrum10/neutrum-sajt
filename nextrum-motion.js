@@ -973,8 +973,8 @@ const NXFin = (function () {
   }
 
   /* ---------- ämnesbandet ----------
-     Som ScrollVelocity i React Bits: bandet driver av sig självt, går
-     fortare ju snabbare man scrollar och vänder när man scrollar uppåt.
+     Bandet följer scrollen (2026-10-27, Leo): det rör sig bara när sidan
+     scrollas, åt vänster på väg nedåt.
      Markupen har en rad ämnen; resten är kopior (aria-hidden) som
      skriptet lägger till tills raden är bredare än två fönster. Bara
      transform, och loopen går bara medan bandet syns. */
@@ -997,25 +997,24 @@ const NXFin = (function () {
         }
       };
       fyll();
-      let x = 0, fart = NXMotion.tier === 'lite' ? 36 : 54, rikt = -1;
-      let sY = window.scrollY, extra = 0, synlig = false, rad_ = 0, förra = 0;
-      const steg = nu => {
+      /* Läget följer sidans scroll rakt av: nedåt flyttar bandet åt
+         vänster, ingen egen drift. Ett varv är en radbredd. */
+      let synlig = false, rad_ = 0;
+      const faktor = NXMotion.tier === 'lite' ? 0.9 : 0.6;
+      const steg = () => {
         rad_ = 0;
-        if (!synlig) { förra = 0; return; }
-        const dt = förra ? Math.min(0.05, (nu - förra) / 1000) : 0;
-        förra = nu;
-        const y = window.scrollY, d = y - sY; sY = y;
-        if (d) { rikt = d > 0 ? -1 : 1; extra = Math.min(7, extra + Math.abs(d) * 0.045); }
-        extra *= 0.93;
-        x += rikt * (fart * (1 + extra)) * dt;
-        if (bredd) { if (x <= -bredd) x += bredd; else if (x > 0) x -= bredd; }
+        if (!synlig || !bredd) return;
+        const r = band.getBoundingClientRect();
+        const bana = window.innerHeight - r.top;
+        const x = -((bana * faktor) % bredd + bredd) % bredd;
         spar.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)';
-        rad_ = requestAnimationFrame(steg);
       };
+      const be = () => { if (synlig && !rad_) rad_ = requestAnimationFrame(steg); };
+      window.addEventListener('scroll', be, { passive: true });
       if ('IntersectionObserver' in window) {
         new IntersectionObserver(es => es.forEach(e => {
           synlig = e.isIntersecting;
-          if (synlig && !rad_) { sY = window.scrollY; rad_ = requestAnimationFrame(steg); }
+          be();
         }), { rootMargin: '10% 0px' }).observe(band);
       }
       let tid = 0;
