@@ -16,7 +16,7 @@ konsekvensbedömningen, incidentrutinen och biträdena) står i
 länge: ändra `DATASKYDD.md` och integritetspolicyn på båda språken i
 samma ändring.**
 
-Det som skickas till Anthropic från rapportutkasten och hälsningarna
+Det som skickas till Anthropic från hälsningarna (rapporten går inte till en AI sedan 2026-10-27)
 går genom `_delad/minimera.ts`: förnamnet, och fritext där
 personnummer, telefonnummer och e-post är maskade. Samma regler som
 `maska_kontakt()` i databasen; ändras den ena ska den andra ändras.

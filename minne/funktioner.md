@@ -19,7 +19,7 @@ tillbaka en kopia.**
 | `ansokan-mejl` | Mejlet vi skriver till den som sökt jobb (2026-10-20). Tar ansökans id, ämnet, texten och en nyckel per ruta, läser adressen ur ansökan med adminens token (aldrig ur anropet) och skickar från info@ genom Resend, i mejlens skal och med en hemlig kopia till info@. Sparar inget, och loggar aldrig adressen eller texten. Kräver admin (`verify_jwt` på); använder inte `service_role`. **I drift sedan 2026-10-20**: v1 från merge-commiten av PR #306 (864e49e), hämtad tillbaka och byte för byte lika i alla tio filer; preflighten svarade `ok` och ett anrop utan inloggning 401 | Skicka i Skriv till hen och Skicka utbildningen i adminvyns Rekrytering |
 | `bjud-in` | Skapar kontot åt den som tas in (2026-10-06): en familj, eller med `roll: 'tutor'` en studiehjälpare, med en Auth-inbjudan och `valkommen: 'losenord'`, aldrig ett lösenord. Med `igen: true` en ny inbjudan till den som inte tryckt på länken, annars länken för lösenordet, också för ett konto i bruk (2026-10-07; förut 409). Rollen vitlistas i funktionen: allt utom `tutor` blir förälder, och en inbjuden studiehjälpare hamnar i väntläge tills admin godkänner | Adminvyn: Ta in familjen, Ta in i poolen, Skicka inbjudan igen |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
-| `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
+| `generate-message` | Claude-utkast (`generate-feedback`, rapportens omskrivning, är borta sedan 2026-10-27: rapporten går inte till en AI). Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
 | `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
@@ -59,8 +59,7 @@ i main, i sin egen `index.ts` eller i `_delad/`. Det som gör skillnad:
   tvist. Kärnan och `betalning.md` beskriver båda som om de gällde.
 - `notis-avanmal` (v7) har en `typer.ts` utan `timmar_gar_ut`, så
   avanmälningslänken i det mejlet nekas som okänd typ.
-- `juridik` och `ekonomi` prövar inte behörigheten först, och
-  `generate-feedback` prövar API-nyckeln före behörigheten.
+- `juridik` och `ekonomi` prövar inte behörigheten först.
 - `lead-notis`, `ansokan-notis` och `faktura-utskick` bär äldre mallar
   (Wint, utan fakturameningen).
 **Alla sexton driftsattes samma kväll från main (8bad1d4)**, webhooken
