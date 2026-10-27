@@ -3976,18 +3976,18 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
    ============================================================ */
 
 /* ---------- ordvis rubrik ---------- */
-html[data-motion="full"] .nx-ord-h:not(.nx-in) .nx-ord,
-html[data-motion="lite"] .nx-ord-h:not(.nx-in) .nx-ord{
+html[data-motion="full"] .nx-ov-h:not(.nx-in) .nx-ov,
+html[data-motion="lite"] .nx-ov-h:not(.nx-in) .nx-ov{
   opacity:0;transform:translate3d(0,.55em,0);
 }
-html[data-motion="full"] .nx-ord-h:not(.nx-in) .nx-ord{filter:blur(8px)}
-html[data-motion="full"] .nx-ord,
-html[data-motion="lite"] .nx-ord{
+html[data-motion="full"] .nx-ov-h:not(.nx-in) .nx-ov{filter:blur(8px)}
+html[data-motion="full"] .nx-ov,
+html[data-motion="lite"] .nx-ov{
   display:inline-block;
   transition:opacity .7s var(--e-ut),transform .85s var(--e-ut),filter .7s var(--e-ut);
   transition-delay:calc(var(--i,0) * 48ms);
 }
-html[data-motion="lite"] .nx-ord{transition-delay:calc(var(--i,0) * 30ms)}
+html[data-motion="lite"] .nx-ov{transition-delay:calc(var(--i,0) * 30ms)}
 
 /* ---------- glans under muspekaren ---------- */
 .nx-glans{
@@ -4050,4 +4050,76 @@ html[data-motion="lite"] .nx-ftr-ord.nx-in span{background-position:0 0}
     background-position:-30% 0;
     transition:background-position .9s var(--e-ut),background-color .2s,box-shadow .2s;
   }
+}
+
+/* ---------- ikoner som ritar sig själva ---------- */
+html[data-motion="full"] svg.nx-rita:not(.nx-ritad) :is(path,circle,line,polyline,rect,ellipse),
+html[data-motion="lite"] svg.nx-rita:not(.nx-ritad) :is(path,circle,line,polyline,rect,ellipse){
+  stroke-dasharray:var(--l);stroke-dashoffset:var(--l);
+}
+html[data-motion="full"] svg.nx-rita :is(path,circle,line,polyline,rect,ellipse),
+html[data-motion="lite"] svg.nx-rita :is(path,circle,line,polyline,rect,ellipse){
+  transition:stroke-dashoffset 1.15s var(--e-ut) calc(var(--j,0) * 110ms);
+}
+svg.nx-ritad :is(path,circle,line,polyline,rect,ellipse){stroke-dashoffset:0}
+
+/* ---------- strecket framför etiketterna ---------- */
+html[data-motion="full"] .nx-et::before,
+html[data-motion="lite"] .nx-et::before{
+  transform-origin:0 50%;
+  transition:transform .9s var(--e-ut) .12s;
+}
+html[data-motion="full"] .nx-et:not(.nx-et-in)::before,
+html[data-motion="lite"] .nx-et:not(.nx-et-in)::before{transform:scaleX(0)}
+
+/* ---------- understrykningen under det orange ordet i rubriken ---------- */
+html[data-motion="full"] .nx-ov-h em,
+html[data-motion="full"] [data-ordfyll] em,
+html[data-motion="lite"] .nx-ov-h em,
+html[data-motion="lite"] [data-ordfyll] em{
+  background:linear-gradient(color-mix(in srgb,var(--acc,var(--orange)) 42%,transparent),
+                             color-mix(in srgb,var(--acc,var(--orange)) 42%,transparent))
+             no-repeat 0 94% / 0 .055em;
+  transition:background-size 1s var(--e-ut) .55s;
+}
+html[data-motion] .nx-ov-h.nx-in em,
+html[data-motion] [data-ordfyll].nx-fylld em{background-size:100% .055em}
+
+/* ---------- ämnesbandet ---------- */
+.nx-amnesband{
+  position:relative;overflow:clip;
+  border-block:1px solid var(--ln);
+  padding-block:clamp(22px,3.4vw,46px);
+}
+.nx-amnesband-spar{display:flex;width:max-content;will-change:transform}
+.nx-amnesband-rad{
+  display:flex;flex:none;list-style:none;margin:0;padding:0;
+}
+.nx-amnesband-rad li{
+  display:flex;align-items:center;flex:none;
+  font-size:clamp(2.4rem,7.2vw,6.6rem);font-weight:800;
+  line-height:1;letter-spacing:-.05em;white-space:nowrap;
+  color:var(--bl,currentColor);
+  padding-inline:clamp(14px,2vw,30px);
+}
+.nx-amnesband-rad li:nth-child(even){color:var(--f,currentColor)}
+.nx-amnesband-rad li::after{
+  content:"";flex:none;width:.2em;height:.2em;border-radius:50%;
+  background:var(--f,var(--orange));margin-left:clamp(28px,4vw,60px);
+}
+/* utan rörelse: raden står still och klipps vid kanten */
+html[data-motion="still"] .nx-amnesband-spar{width:auto}
+
+/* ---------- en tunn rad överst som följer scrollen ----------
+   Bara där webbläsaren kan koppla en animation till scrollen; annars
+   finns den inte. Ingen skriptloop. */
+@supports (animation-timeline:scroll()){
+  html[data-motion="full"] body::after,
+  html[data-motion="lite"] body::after{
+    content:"";position:fixed;inset:0 0 auto 0;height:3px;z-index:70;
+    pointer-events:none;background:var(--orange);
+    transform-origin:0 50%;transform:scaleX(0);
+    animation:nx-fram linear both;animation-timeline:scroll(root);
+  }
+  @keyframes nx-fram{to{transform:scaleX(1)}}
 }
