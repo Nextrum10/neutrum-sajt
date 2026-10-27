@@ -3428,6 +3428,14 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
 .nx-text p:last-of-type{margin-bottom:0}
 .nx-text .nx-lank{margin-top:26px}
 
+/* Länkar i löptexten på ort-, ämnes-, stadie- och guidesidorna, navet och
+   404 (2026-10-27). Utan understrykning stod "Se hela prissidan" och
+   "FAQ-sidan" i textens egen färg på 53 sidor, och ingen kunde se att de
+   gick att trycka på. Samma stil som .faq-a p a. */
+.nx-text p a,.faq ~ .xsmall a,.nx-note a,.nx-page-hero .xsmall a{
+  text-decoration:underline;text-underline-offset:3px;
+}
+
 /* Förloppet. Ligger BARA på Så fungerar Nextrum — tre sidor med
    samma stegtrappa läste som en mall, inte som tre sidor. */
 .nx-forlopp{

@@ -84,8 +84,9 @@ FLERA_BARN = f'{PRIS_KR + EXTRA_KR} kr'
 # 2026-10-26 (Leo: "lägg till landningssidor för varje ort i
 # Stockholm") får stadsdelarna och kommunerna i länet egna sidor, en
 # ort när dess trafik och bibliotek är kontrollerade (tio kommuner
-# väntade den dagen), och då kan en sida inte länka till alla andra:
-# de närmaste och navet räcker, och navet listar alla.
+# väntade den dagen och kom 2026-10-27), och då kan en sida inte
+# länka till alla andra: de närmaste och navet räcker, och navet
+# listar alla.
 # ============================================================
 
 # Navets regioner, i den ordning de står där. Footern länkar till dem
@@ -102,7 +103,7 @@ REGIONER = [
     ('norr-och-vaster', 'Norr och väster om stan', 'Läxhjälp norr och väster om stan',
      'Solna, Sundbyberg, Täby, Sollentuna med flera'),
     ('soder-och-oster', 'Söder och öster om stan', 'Läxhjälp söder och öster om stan',
-     'Nacka, Huddinge, Botkyrka, Salem och Södertälje'),
+     'Nacka, Huddinge, Haninge, Tyresö med flera'),
 ]
 
 # Frågor som gäller överallt, med samma svar som på de första sju
@@ -266,7 +267,7 @@ OMRADEN = [
         'region': 'soderort',
         'grannar': [
             'laxhjalp-skarpnack', 'laxhjalp-enskede-arsta-vantor', 'laxhjalp-alvsjo',
-            'laxhjalp-huddinge',
+            'laxhjalp-huddinge', 'laxhjalp-tyreso', 'laxhjalp-haninge',
         ],
         'beskrivning': (
             f'Läxhjälp i Farsta, Hökarängen och Gubbängen för {PRIS} i timmen: hemma hos er, på '
@@ -318,7 +319,7 @@ OMRADEN = [
         'region': 'soder-och-oster',
         'grannar': [
             'laxhjalp-hammarby-sjostad', 'laxhjalp-sodermalm', 'laxhjalp-skarpnack',
-            'laxhjalp-farsta',
+            'laxhjalp-farsta', 'laxhjalp-tyreso', 'laxhjalp-varmdo',
         ],
         'beskrivning': (
             f'Läxhjälp i Nacka för {PRIS} i timmen, från Sickla till Orminge och Saltsjöbaden: hemma '
@@ -422,6 +423,7 @@ OMRADEN = [
         'grannar': [
             'laxhjalp-kungsholmen', 'laxhjalp-vallingby-hasselby', 'laxhjalp-spanga-tensta',
             'laxhjalp-solna', 'laxhjalp-sundbyberg', 'laxhjalp-hagersten-liljeholmen',
+            'laxhjalp-ekero',
         ],
         'beskrivning': (
             f'Läxhjälp i Bromma för {PRIS} i timmen, från Alvik till Nockeby: hemma hos er, på '
@@ -525,7 +527,7 @@ OMRADEN = [
         'region': 'soder-och-oster',
         'grannar': [
             'laxhjalp-farsta', 'laxhjalp-alvsjo', 'laxhjalp-skarholmen',
-            'laxhjalp-botkyrka', 'laxhjalp-salem',
+            'laxhjalp-botkyrka', 'laxhjalp-salem', 'laxhjalp-haninge',
         ],
         'beskrivning': (
             f'Läxhjälp i Huddinge, Flemingsberg och Skogås för {PRIS} i timmen: hemma hos er, på '
@@ -569,7 +571,7 @@ OMRADEN = [
         'region': 'soder-och-oster',
         'grannar': [
             'laxhjalp-huddinge', 'laxhjalp-skarholmen', 'laxhjalp-salem',
-            'laxhjalp-sodertalje',
+            'laxhjalp-sodertalje', 'laxhjalp-nynashamn',
         ],
         'beskrivning': (
             'Läxhjälp i Botkyrka, från Fittja och Alby till Tumba och Tullinge, för '
@@ -655,7 +657,7 @@ OMRADEN = [
         'nav': 'Södertälje',
         'region': 'soder-och-oster',
         'grannar': [
-            'laxhjalp-salem', 'laxhjalp-botkyrka',
+            'laxhjalp-salem', 'laxhjalp-botkyrka', 'laxhjalp-nykvarn',
         ],
         'beskrivning': (
             f'Läxhjälp i Södertälje för {PRIS} i timmen, från Östertälje och Hovsjö till Järna: '
@@ -699,7 +701,7 @@ OMRADEN = [
         'region': 'norr-och-vaster',
         'grannar': [
             'laxhjalp-spanga-tensta', 'laxhjalp-vallingby-hasselby',
-            'laxhjalp-sollentuna', 'laxhjalp-upplands-vasby',
+            'laxhjalp-sollentuna', 'laxhjalp-upplands-vasby', 'laxhjalp-upplands-bro',
         ],
         'beskrivning': (
             'Läxhjälp i Järfälla, från Barkarby och Jakobsberg till Kallhäll, för '
@@ -743,7 +745,7 @@ OMRADEN = [
         'region': 'norr-och-vaster',
         'grannar': [
             'laxhjalp-sollentuna', 'laxhjalp-jarfalla', 'laxhjalp-vallentuna',
-            'laxhjalp-taby',
+            'laxhjalp-taby', 'laxhjalp-sigtuna', 'laxhjalp-upplands-bro',
         ],
         'beskrivning': (
             f'Läxhjälp i Upplands Väsby för {PRIS} i timmen, från Bollstanäs till Runby: hemma hos '
@@ -1096,7 +1098,7 @@ OMRADEN = [
         'region': 'soderort',
         'grannar': [
             'laxhjalp-hammarby-sjostad', 'laxhjalp-enskede-arsta-vantor', 'laxhjalp-farsta',
-            'laxhjalp-nacka',
+            'laxhjalp-nacka', 'laxhjalp-tyreso',
         ],
         'beskrivning': (
             f'Läxhjälp i Skarpnäck, Bagarmossen och Björkhagen för {PRIS} i timmen: hemma hos er, '
@@ -1138,7 +1140,7 @@ OMRADEN = [
         'nav': 'Vällingby och Hässelby',
         'region': 'vasterort',
         'grannar': [
-            'laxhjalp-bromma', 'laxhjalp-spanga-tensta', 'laxhjalp-jarfalla',
+            'laxhjalp-bromma', 'laxhjalp-spanga-tensta', 'laxhjalp-jarfalla', 'laxhjalp-ekero',
         ],
         'beskrivning': (
             f'Läxhjälp i Vällingby och Hässelby för {PRIS} i timmen, från Råcksta till Hässelby '
@@ -1294,8 +1296,8 @@ OMRADEN = [
              'Vi matchar elever i centrala Sundbyberg, Duvbo, Lilla Alby, Storskogen, Hallonbergen, '
              'Ör, Rissne och Ursvik. Hemma hos er går när studiehjälparen kan ta sig dit varje '
              'vecka, och annars börjar ni online.'),
+            F_KVALL,
             F_PRIS,
-            F_ONLINE,
             ('Kan vi ses på biblioteket?',
              'Ja. Skriv platsen när ni föreslår tiden, till exempel Biblioteket i Signalfabriken i '
              'centrala Sundbyberg eller Hallonbergens bibliotek.'),
@@ -1385,8 +1387,8 @@ OMRADEN = [
              'Vi matchar elever i Täby centrum, Tibble, Näsbypark, Gribbylund, Skarpäng, Täby '
              'kyrkby, Ensta, Viggbyholm, Hägernäs och Arninge. Hemma hos er går när '
              'studiehjälparen kan ta sig dit varje vecka, och annars börjar ni online.'),
+            F_IGANG,
             F_PROV,
-            F_KVALL,
             ('Kan vi ses på biblioteket?',
              'Ja. Skriv platsen när ni föreslår tiden, till exempel Huvudbiblioteket vid Täby '
              'centrum, Näsbyparks bibliotek eller Gribbylunds bibliotek.'),
@@ -1470,8 +1472,8 @@ OMRADEN = [
              'Tureberg och Sollentuna centrum, Edsberg, Helenelund, Häggvik, Norrviken och Rotebro. '
              'Hemma hos er går när matchningen ger en studiehjälpare som kan ta sig dit varje '
              'vecka; annars börjar ni online.'),
+            F_BYTA,
             F_IGANG,
-            F_RAPPORT,
             ('Kan vi ses på biblioteket?',
              'Ja. Skriv platsen när ni föreslår tiden, till exempel Sollentuna bibliotek i '
              'Turebergshuset eller biblioteket i Arena Edsberg.'),
@@ -1484,7 +1486,8 @@ OMRADEN = [
         'nav': 'Vallentuna',
         'region': 'norr-och-vaster',
         'grannar': [
-            'laxhjalp-taby', 'laxhjalp-osteraker', 'laxhjalp-upplands-vasby',
+            'laxhjalp-taby', 'laxhjalp-osteraker', 'laxhjalp-upplands-vasby', 'laxhjalp-sigtuna',
+            'laxhjalp-norrtalje',
         ],
         'beskrivning': (
             f'Läxhjälp i Vallentuna för {PRIS} i timmen, från Kragstalund till Kårsta: hemma hos er, '
@@ -1527,11 +1530,11 @@ OMRADEN = [
         'nav': 'Österåker',
         'region': 'norr-och-vaster',
         'grannar': [
-            'laxhjalp-taby', 'laxhjalp-vallentuna',
+            'laxhjalp-taby', 'laxhjalp-vallentuna', 'laxhjalp-vaxholm', 'laxhjalp-norrtalje',
         ],
         'beskrivning': (
             f'Läxhjälp i Österåker och Åkersberga för {PRIS} i timmen, från Rydbo till Österskär: '
-            'hemma hos er eller online. Ingen bindningstid.'
+            'hemma hos er, på biblioteket eller online.'
         ),
         'etikett': 'Läxhjälp i Österåker',
         'h1': 'Läxhjälp i<br><em>Österåker.</em>',
@@ -1549,20 +1552,489 @@ OMRADEN = [
             'Tunagård och Österskär, där grenen slutar. Åkersberga är kommunens knutpunkt för tåg '
             'och buss, och en studiehjälpare som bor längs banan har en resa utan byten.'
         ),
-        # Biblioteken i Österåker gick inte att kontrollera 2026-10-26 (sök-
-        # budgeten tog slut). Lägg in dem när de är kontrollerade.
-        'bibliotek': [],
+        # Kontrollerat 2026-10-27. Biblioteket kallar det Huvudbiblioteket, inte
+        # Åkersberga bibliotek. Filialen på Ljusterö ligger i en skola och är
+        # delvis obemannad, och Ingmarsös var stängt tills vidare.
+        'bibliotek': ['Huvudbiblioteket i Åkersberga centrum'],
         'faq': [
             ('Kommer ni hem till oss i Åkersberga?',
              'Ja, när matchningen ger en studiehjälpare som kan ta sig dit varje vecka. '
              'Roslagsbanan går hela vägen till Österskär, så längs banan går det oftast; längre ut '
              'börjar ni online.'),
             F_PRIS,
-            F_SAMMA,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Huvudbiblioteket på '
+             'Storängstorget i Åkersberga centrum.'),
             ('Hur långt ut i kommunen kommer ni?',
              'Så långt som en studiehjälpare kan ta sig varje vecka utan att resan tar över. Det '
              'avgör vi när vi vet var ni bor, och går det inte blir det online, med samma person och '
              'samma pris.'),
+        ],
+    },
+    # De tio kommunerna 2026-10-27, kontrollerade genom sökträffar på
+    # kommunernas, bibliotekens och trafikbolagens egna sidor och Wikipedia
+    # (nätet släppte inte fram sidorna). Inga linjenummer, restider eller
+    # turtätheter: källorna gick isär om dem, och de ändras utan att någon
+    # säger till. Ett bibliotek som är obemannat för barn eller renoveras
+    # står inte som självklar plats för ett pass.
+    {
+        'slug': 'laxhjalp-vaxholm',
+        'namn': 'Vaxholm',
+        'i_namn': 'i Vaxholm',
+        'nav': 'Vaxholm',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-osteraker', 'laxhjalp-taby', 'laxhjalp-danderyd', 'laxhjalp-lidingo',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Vaxholm för {PRIS} i timmen, på Vaxön, Resarö och Rindö: hemma hos er, '
+            'på stadsbiblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Vaxholm',
+        'h1': 'Läxhjälp i<br><em>Vaxholm.</em>',
+        'lede': (
+            'Från Resarö till Rindö. Vi matchar elever i Vaxholm med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '07-genombrottet',
+        'delar': [
+            'Vaxön', 'Kullö', 'Resarö', 'Rindö', 'Skarpö', 'Tynningö', 'Bogesundslandet', 'Ramsö',
+        ],
+        'transport': (
+            'Bussen från Tekniska högskolan, där röda linjen stannar, går till Vaxholm flera gånger '
+            'i timmen, och Waxholmsbolagets båtar går från Strömkajen året runt, oftare på sommaren. '
+            'Till Rindö går vägfärjan från Vaxholm. På Resarö och Rindö går bussarna glesare, så där '
+            'matchar vi efter var eleven bor, och online är ofta det som gör att passen blir av varje '
+            'vecka.'
+        ),
+        'bibliotek': ['Vaxholms stadsbibliotek på Hamngatan'],
+        'faq': [
+            ('Kommer ni hem till oss i Vaxholm?',
+             'Ja, när matchningen ger en studiehjälpare som kan ta sig hit varje vecka. Till Vaxön '
+             'går bussen från Tekniska högskolan flera gånger i timmen. Ute på Resarö, Rindö och '
+             'de andra öarna är online ofta det som gör att passen blir av, med samma person och '
+             'samma studieplan.'),
+            F_ONLINE,
+            F_RAPPORT,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden. Vaxholms stadsbibliotek ligger centralt på '
+             'Vaxön, på Hamngatan.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-sigtuna',
+        'namn': 'Sigtuna',
+        'i_namn': 'i Sigtuna',
+        'nav': 'Sigtuna',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-upplands-vasby', 'laxhjalp-vallentuna', 'laxhjalp-upplands-bro',
+            'laxhjalp-norrtalje',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Sigtuna kommun för {PRIS} i timmen, i Märsta, Valsta, Rosersberg och '
+            'Sigtuna stad: hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Sigtuna',
+        'h1': 'Läxhjälp i<br><em>Sigtuna.</em>',
+        'lede': (
+            'Från Rosersberg till Sigtuna stad. Vi matchar elever i Märsta, Valsta och resten av '
+            'kommunen med en studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på '
+            'biblioteket eller online.'
+        ),
+        'bild': '02-personlig-anpassning',
+        'delar': [
+            'Märsta', 'Valsta', 'Sigtuna stad', 'Rosersberg', 'Steningehöjden', 'Steninge slottsby',
+            'Norrbacka', 'Tingvalla', 'Ekilla', 'Sätuna', 'Odensala',
+        ],
+        'transport': (
+            'Pendeltåget stannar i Rosersberg och slutar i Märsta, och från Märsta station går '
+            'bussarna till Märsta centrum, Valsta, Steningehöjden och Sigtuna stad. En studiehjälpare '
+            'som bor längs pendeltåget norrut har alltså en resa utan byten till Märsta, och till '
+            'Sigtuna stad blir det ett byte till bussen.'
+        ),
+        # Huvudbiblioteket ligger i Märsta, inte i Sigtuna stad. Kulturhuset
+        # Mimer i Valsta, med ett nytt bibliotek, var inte öppnat 2026-10-27.
+        'bibliotek': ['Märsta bibliotek vid Kulturtorget', 'Sigtuna bibliotek i Sigtuna stad'],
+        'faq': [
+            ('Gäller det hela Sigtuna kommun?',
+             'Vi matchar elever i Märsta, Valsta, Sigtuna stad, Rosersberg, Steningehöjden och '
+             'Odensala. Hemma hos er går när studiehjälparen kan ta sig dit varje vecka, och annars '
+             'börjar ni online.'),
+            F_IGANG,
+            F_GYMNASIET,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Märsta bibliotek vid '
+             'Kulturtorget i Märsta centrum eller Sigtuna bibliotek i Sigtuna stad.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-upplands-bro',
+        'namn': 'Upplands-Bro',
+        'i_namn': 'i Upplands-Bro',
+        'nav': 'Upplands-Bro',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-jarfalla', 'laxhjalp-upplands-vasby', 'laxhjalp-sigtuna', 'laxhjalp-ekero',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Upplands-Bro för {PRIS} i timmen, i Kungsängen, Brunna och Bro: hemma hos '
+            'er, på biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Upplands-Bro',
+        'h1': 'Läxhjälp i<br><em>Upplands-Bro.</em>',
+        'lede': (
+            'Från Brunna till Bro. Vi matchar elever i Upplands-Bro med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '05-av-unga-for-unga',
+        'delar': [
+            'Kungsängen', 'Brunna', 'Tibble', 'Ekhammar', 'Bro', 'Finnsta', 'Håbo-Tibble kyrkby',
+            'Låssa', 'Håtuna',
+        ],
+        'transport': (
+            'Pendeltåget mot Bålsta stannar i Kungsängen och Bro, och vid båda stationerna går '
+            'bussarna vidare. Brunna har ingen station, så dit är det bussen som gäller. En '
+            'studiehjälpare som bor längs pendeltåget genom Järfälla har alltså en resa utan byten '
+            'till Kungsängen och Bro.'
+        ),
+        'bibliotek': ['Kungsängens bibliotek i Kulturhuset', 'Bro bibliotek i Brohuset'],
+        'faq': [
+            ('Vilka delar av Upplands-Bro?',
+             'Kungsängen med Brunna och Tibble, Ekhammar, Bro och Finnsta, och längre ut Håtuna och '
+             'Låssa. Hemma hos er går när studiehjälparen kan ta sig dit varje vecka, och annars '
+             'börjar ni online.'),
+            F_RAPPORT,
+            F_SYSKON,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Kungsängens bibliotek i '
+             'Kulturhuset vid Furuhällsplan eller Bro bibliotek i Brohuset i Bro centrum.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-ekero',
+        'namn': 'Ekerö',
+        'i_namn': 'på Ekerö',
+        'nav': 'Ekerö',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-bromma', 'laxhjalp-vallingby-hasselby', 'laxhjalp-upplands-bro',
+        ],
+        'beskrivning': (
+            f'Läxhjälp på Ekerö för {PRIS} i timmen, från Tappström och Träkvista till Stenhamra på '
+            'Färingsö: hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp på Ekerö',
+        'h1': 'Läxhjälp på<br><em>Ekerö.</em>',
+        'lede': (
+            'Från Drottningholm till Stenhamra. Vi matchar elever i Ekerö kommun med en '
+            'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket eller '
+            'online.'
+        ),
+        'bild': '09-online-v2',
+        'delar': [
+            'Ekerö centrum', 'Tappström', 'Träkvista', 'Sandudden', 'Ekerö sommarstad',
+            'Drottningholm', 'Stenhamra', 'Färingsö', 'Munsö', 'Adelsö', 'Jungfrusund',
+        ],
+        # Pendelbåten till Klara Mälarstrand står inte med: den enda färska
+        # källan var en sammanfattning av kommunens sida.
+        'transport': (
+            'Ekerö har varken tunnelbana eller pendeltåg. De flesta bussar går från Brommaplan, på '
+            'gröna linjen, och nästan alla passerar Ekerö centrum eller Tappström; till Stenhamra på '
+            'Färingsö går bussen också från Brommaplan. En studiehjälpare som bor längs gröna linjen '
+            'har alltså ett byte, och längre ut på öarna är online ofta det som gör att passen blir '
+            'av varje vecka.'
+        ),
+        'bibliotek': ['Ekerö bibliotek i kulturhuset i Ekerö centrum',
+                      'Stenhamra bibliotek i Stenhamraskolan'],
+        'faq': [
+            ('Kommer ni ut till Ekerö?',
+             'Ja, när matchningen ger en studiehjälpare som kan ta sig hit varje vecka. Till Ekerö '
+             'centrum och Tappström går bussarna från Brommaplan; på Färingsö, Munsö och Adelsö '
+             'börjar ni ofta online, med samma person, studieplan och rapport.'),
+            F_SAMMA,
+            F_KVALL,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Ekerö bibliotek i kulturhuset i '
+             'Ekerö centrum eller Stenhamra bibliotek i Stenhamraskolan, ett hundratal meter från '
+             'busshållplatsen Stenhamra centrum.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-norrtalje',
+        'namn': 'Norrtälje',
+        'i_namn': 'i Norrtälje',
+        'nav': 'Norrtälje',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-osteraker', 'laxhjalp-vallentuna', 'laxhjalp-sigtuna',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Norrtälje kommun för {PRIS} i timmen, i Norrtälje, Rimbo, Hallstavik och '
+            'Älmsta: hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Norrtälje',
+        'h1': 'Läxhjälp i<br><em>Norrtälje.</em>',
+        'lede': (
+            'Från Rimbo till Grisslehamn. Vi matchar elever i Norrtälje kommun med en studiehjälpare '
+            'som nyligen läst samma kurser själv, och bor ingen studiehjälpare nära er blir det online.'
+        ),
+        'bild': '03-digital-laxhjalp',
+        # Bergshamra står inte med, fast det är en ort i kommunen: Solnas
+        # Bergshamra har redan en plats på Solnas sida.
+        'delar': [
+            'Norrtälje stad', 'Rimbo', 'Hallstavik', 'Älmsta', 'Grisslehamn', 'Spillersboda',
+            'Edsbro', 'Herräng', 'Blidö', 'Furusund', 'Arholma',
+        ],
+        'transport': (
+            'Någon järnväg finns inte i kommunen. Expressbussarna till Norrtälje går från Tekniska '
+            'högskolan, där röda linjen stannar, och därifrån går också direktbussar till Rimbo på '
+            'omkring en timme. Resan tar alltså tid, och därför letar vi först efter en studiehjälpare som '
+            'själv bor i Norrtälje eller Rimbo; finns ingen än börjar ni online.'
+        ),
+        'bibliotek': ['Norrtälje stadsbibliotek intill busstationen', 'Rimbo bibliotek',
+                      'Väddö bibliotek i Älmsta'],
+        'faq': [
+            ('Kommer ni hem till oss i Norrtälje?',
+             'När matchningen ger en studiehjälpare som bor nära nog att komma varje vecka, ja. '
+             'Kommunen är stor, från Rimbo till Arholma, och längre ut börjar ni online, med samma '
+             'person, samma studieplan och en rapport efter varje pass.'),
+            F_KVALL,
+            F_ONLINE,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Norrtälje stadsbibliotek intill '
+             'busstationen. Biblioteken i Rimbo, Hallstavik och Älmsta är meröppna, så kolla när de '
+             'har personal innan ni bokar.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-nykvarn',
+        'namn': 'Nykvarn',
+        'i_namn': 'i Nykvarn',
+        'nav': 'Nykvarn',
+        'region': 'soder-och-oster',
+        'grannar': [
+            'laxhjalp-sodertalje', 'laxhjalp-salem',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Nykvarn för {PRIS} i timmen, i Nykvarns centrum, Turinge och Taxinge: '
+            'hemma hos er, på biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Nykvarn',
+        'h1': 'Läxhjälp i<br><em>Nykvarn.</em>',
+        'lede': (
+            'Från Turinge till Taxinge. Vi matchar elever i Nykvarn med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '11-studiehjalparen',
+        'delar': [
+            'Nykvarns centrum', 'Turinge', 'Taxinge', 'Sundsvik', 'Stensättra',
+        ],
+        # Tåget i Nykvarn är Mälartåg, inte SL:s pendeltåg, och att SL-kortet
+        # skulle gälla där var 2026-10-27 bara ett förslag. Skriv inget om det.
+        'transport': (
+            'Mälartåget på Svealandsbanan stannar i Nykvarn, mellan Läggesta och Södertälje syd, och '
+            'går vidare till Stockholm C via Flemingsberg. Det är inte SL:s pendeltåg. Mellan Nykvarn '
+            'och Södertälje går bussarna. Resan från stan tar tid, så vi letar i första hand efter '
+            'någon som bor i Nykvarn eller Södertälje och kan komma varje vecka; tills vi hittar rätt '
+            'person går passen online.'
+        ),
+        # Bibliotekets namn stod 2026-10-27 bara i en katalog från 2011, så
+        # sidan säger var det ligger i stället.
+        'bibliotek': ['biblioteket på Centrumvägen i Nykvarns centrum'],
+        'faq': [
+            ('Kommer ni hem till oss i Nykvarn?',
+             'Ja, om matchningen ger en studiehjälpare som bor nära nog att komma varje vecka. Nykvarn '
+             'ligger en bit från stan, så vi letar först i Nykvarn och Södertälje; finns ingen där '
+             'börjar ni online, med samma person och en rapport efter varje pass.'),
+            F_ONLINE,
+            F_SAMMA,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden. Biblioteket ligger på Centrumvägen i Nykvarns '
+             'centrum, granne med kommunens servicecenter.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-haninge',
+        'namn': 'Haninge',
+        'i_namn': 'i Haninge',
+        'nav': 'Haninge',
+        'region': 'soder-och-oster',
+        'grannar': [
+            'laxhjalp-huddinge', 'laxhjalp-farsta', 'laxhjalp-tyreso', 'laxhjalp-nynashamn',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Haninge för {PRIS} i timmen, i Handen, Vega, Jordbro, Västerhaninge och '
+            'Brandbergen: hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Haninge',
+        'h1': 'Läxhjälp i<br><em>Haninge.</em>',
+        'lede': (
+            'Från Vega till Dalarö. Vi matchar elever i Haninge med en studiehjälpare som nyligen '
+            'läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '04-sjalvfortroende',
+        'delar': [
+            'Handen', 'Vega', 'Jordbro', 'Västerhaninge', 'Brandbergen', 'Vendelsö', 'Vendelsömalm',
+            'Tungelsta', 'Gudö', 'Dalarö', 'Årsta havsbad', 'Muskö',
+        ],
+        'transport': (
+            'Pendeltåget mot Nynäshamn stannar i Vega, Handen, Jordbro, Västerhaninge, Krigslida, '
+            'Tungelsta och Hemfosa, och flest tåg går till Handen och Västerhaninge. Brandbergen, '
+            'Vendelsö och Dalarö har ingen station, så där matchar vi efter var eleven bor. En '
+            'studiehjälpare som bor längs pendeltåget söderut har alltså en resa utan byten till '
+            'Vega, Handen, Jordbro, Västerhaninge och Tungelsta.'
+        ),
+        'bibliotek': ['Handens bibliotek i Haninge kulturhus', 'Västerhaninge bibliotek',
+                      'Brandbergens bibliotek'],
+        'faq': [
+            ('Vilka delar av Haninge?',
+             'Handen, Vega, Jordbro, Västerhaninge, Brandbergen, Vendelsö, Tungelsta och Dalarö. '
+             'Längs pendeltåget går det oftast att ses hemma; längre ut börjar ni online om ingen '
+             'studiehjälpare kan ta sig dit varje vecka.'),
+            F_IGANG,
+            F_KVALL,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Handens bibliotek i Haninge '
+             'kulturhus, Västerhaninge bibliotek nära pendeltågsstationen eller Brandbergens '
+             'bibliotek, som har ett studierum.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-tyreso',
+        'namn': 'Tyresö',
+        'i_namn': 'i Tyresö',
+        'nav': 'Tyresö',
+        'region': 'soder-och-oster',
+        'grannar': [
+            'laxhjalp-nacka', 'laxhjalp-skarpnack', 'laxhjalp-farsta', 'laxhjalp-haninge',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Tyresö för {PRIS} i timmen, från Trollbäcken och Bollmora till Brevik: '
+            'hemma hos er, på biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Tyresö',
+        'h1': 'Läxhjälp i<br><em>Tyresö.</em>',
+        'lede': (
+            'Från Trollbäcken till Brevik. Vi matchar elever i Tyresö med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '01-en-till-en',
+        'delar': [
+            'Tyresö centrum', 'Bollmora', 'Krusboda', 'Fårdala', 'Trollbäcken', 'Tyresö strand',
+            'Brevik', 'Öringe', 'Nyfors',
+        ],
+        'transport': (
+            'Tyresö har varken tunnelbana eller pendeltåg. Bussarna går från Gullmarsplan, där gröna '
+            'linjen stannar, till Tyresö centrum och Trollbäckens centrum. En studiehjälpare som bor '
+            'längs gröna linjen har alltså ett byte, och vi matchar efter var eleven bor så att resan '
+            'håller varje vecka.'
+        ),
+        # Filialerna i Trollbäcken och Tyresö strand är meröppna: utan personal
+        # kommer bara den som är 18 och registrerad in, och då inte ett barn.
+        'bibliotek': ['Tyresö bibliotek i Tyresö centrum'],
+        'faq': [
+            ('Gäller det hela Tyresö?',
+             'Vi matchar elever i Tyresö centrum, Bollmora, Krusboda, Fårdala, Trollbäcken, Tyresö '
+             'strand, Brevik och Öringe. Hemma hos er går när studiehjälparen kan ta sig dit varje '
+             'vecka, och annars börjar ni online.'),
+            F_GYMNASIET,
+            F_PRIS,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel huvudbiblioteket i Tyresö '
+             'centrum. Filialerna i Trollbäcken och Tyresö strand är meröppna, så kolla när de har '
+             'personal innan ni bokar.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-nynashamn',
+        'namn': 'Nynäshamn',
+        'i_namn': 'i Nynäshamn',
+        'nav': 'Nynäshamn',
+        'region': 'soder-och-oster',
+        'grannar': [
+            'laxhjalp-haninge', 'laxhjalp-botkyrka',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Nynäshamn för {PRIS} i timmen, i Nynäshamn, Ösmo, Sorunda och Segersäng: '
+            'hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Nynäshamn',
+        'h1': 'Läxhjälp i<br><em>Nynäshamn.</em>',
+        'lede': (
+            'Från Sorunda till Torö. Vi matchar elever i Nynäshamns kommun med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '13-kvallsplugg',
+        'delar': [
+            'Nynäshamn', 'Nynäsgård', 'Ösmo', 'Sorunda', 'Stora Vika', 'Segersäng', 'Grödby',
+            'Lidatorp', 'Landfjärden', 'Torö',
+        ],
+        'transport': (
+            'Pendeltåget på Nynäsbanan stannar i Segersäng, Ösmo, Nynäsgård och Gröndalsviken och '
+            'slutar i Nynäshamn. Från stan är det en bra bit, så vi letar efter en studiehjälpare som '
+            'bor i kommunen eller längs banan i Haninge, och tills dess blir det online.'
+        ),
+        # Huvudbiblioteket renoverades hösten 2026 och Sorundas låg i
+        # tillfälliga lokaler, så sidan lovar ingen plats utan att be dem kolla.
+        'bibliotek': ['Nynäshamns bibliotek vid Stadshusplatsen', 'Ösmo bibliotek',
+                      'Sorunda bibliotek'],
+        'faq': [
+            ('Kommer ni ut till Nynäshamn?',
+             'När matchningen ger en studiehjälpare som kan ta sig hit varje vecka, ja. Pendeltåget '
+             'går hela vägen till Nynäshamn, men resan är lång, så längre ut i kommunen börjar ni '
+             'ofta online, med samma person och samma studieplan.'),
+            F_AMNEN,
+            F_PROV,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Nynäshamns bibliotek vid '
+             'Stadshusplatsen, Ösmo bibliotek eller Sorunda bibliotek. Kolla öppettiderna innan ni '
+             'bokar.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-varmdo',
+        'namn': 'Värmdö',
+        'i_namn': 'på Värmdö',
+        'nav': 'Värmdö',
+        'region': 'soder-och-oster',
+        'grannar': [
+            'laxhjalp-nacka', 'laxhjalp-tyreso', 'laxhjalp-vaxholm',
+        ],
+        'beskrivning': (
+            f'Läxhjälp på Värmdö för {PRIS} i timmen, i Gustavsberg, Hemmesta, Mölnvik och på Ingarö: '
+            'hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp på Värmdö',
+        'h1': 'Läxhjälp på<br><em>Värmdö.</em>',
+        'lede': (
+            'Från Gustavsberg till Djurö. Vi matchar elever i Värmdö kommun med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '10-forsta-motet',
+        'delar': [
+            'Gustavsberg', 'Gustavsbergs hamn', 'Hemmesta', 'Mölnvik', 'Ingarö', 'Brunn', 'Djurö',
+            'Stavsnäs', 'Kopparmora',
+        ],
+        'transport': (
+            'Värmdö har varken tunnelbana eller pendeltåg. Bussarna går från Slussen till Gustavsberg '
+            'och vidare mot Hemmesta och Mölnvik. En studiehjälpare som bor längs tunnelbanan byter '
+            'alltså en gång, vid Slussen, och längre ut i kommunen är online ofta det som gör att '
+            'passen blir av varje vecka.'
+        ),
+        # Hemmesta bibliotek är obemannat och bara meröppet för den som är 18,
+        # och Ingarö bibliotek stängde 2019.
+        'bibliotek': ['Gustavsbergs bibliotek i Värmdö kulturhus'],
+        'faq': [
+            ('Kommer ni ut till Värmdö?',
+             'Ja, när matchningen ger en studiehjälpare som kan ta sig dit varje vecka. Till '
+             'Gustavsberg, Hemmesta och Mölnvik går bussarna från Slussen; på Ingarö, Djurö och '
+             'längre ut börjar ni ofta online.'),
+            F_PRIS,
+            F_RAPPORT,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Gustavsbergs bibliotek i Värmdö '
+             'kulturhus i Gustavsbergs hamn, där bussen från Slussen stannar.'),
         ],
     },
 ]
@@ -3470,8 +3942,8 @@ def andra_omraden(o):
 
     De finns för läsaren som bor i grannområdet. Förut länkade varje
     sida till alla andra; med en sida per stadsdelsområde och kommun
-    (2026-10-26) hade det blivit trettio kort, och fler när resten av
-    länet kommer till, så en sida länkar till sina grannar och till
+    (2026-10-26) hade det blivit trettio kort, och fyrtio sedan
+    2026-10-27, så en sida länkar till sina grannar och till
     navet, och navet länkar till alla.
     """
     grannar = [omrade(g) for g in o.get('grannar', [])]
@@ -3788,7 +4260,7 @@ def amnessida(o):
         for i, (r, t) in enumerate(o['lista'], 1))
     vinkel = '\n'.join(f'      <p>{esc(p)}</p>' for p in o['vinkel'])
     # Ett kort per region i navet, inte ett per ort: orterna är
-    # trettio sedan 2026-10-26.
+    # fyrtio sedan 2026-10-27.
     omrkort = regionkort()
     # Rubriken säger "eller online", så onlinesidan står bland områdena.
     if o is not ONLINE:
@@ -4143,6 +4615,23 @@ def prova_regionraderna():
             sys.exit(f'regionen {rid} säger "med flera" men har inga fler orter')
 
 
+def prova_fragorna():
+    """Varje ort har ett eget par av de allmänna frågorna (2026-10-27).
+    Spånga och Tensta, Sollentuna och Värmdö hade samma par och var de
+    mest lika sidorna på sajten, för frågorna är den längsta text som
+    står likadant på två sidor. Med elva frågor finns 55 par."""
+    allmanna = {f[0] for f in (F_AMNEN, F_IGANG, F_PROV, F_PRIS, F_ONLINE, F_SYSKON,
+                               F_KVALL, F_RAPPORT, F_SAMMA, F_BYTA, F_GYMNASIET)}
+    sett = {}
+    for o in OMRADEN:
+        if o.get('handskriven'):
+            continue
+        par = frozenset(q for q, _ in o['faq'] if q in allmanna)
+        if par in sett:
+            sys.exit(f'{o["slug"]} har samma allmänna frågor som {sett[par]}: välj ett annat par')
+        sett[par] = o['slug']
+
+
 def main():
     if not os.path.exists(SKAL):
         sys.exit(f'hittar inte skalsidan {SKAL}')
@@ -4155,6 +4644,7 @@ def main():
         if not o.get('hub') and o.get('region') not in [r[0] for r in REGIONER]:
             sys.exit(f'{o["slug"]} har ingen region i REGIONER')
     prova_regionraderna()
+    prova_fragorna()
     prova_bredden([o for o in OMRADEN if not o.get('handskriven')]
                   + AMNEN + STADIER + GUIDER + [ONLINE])
     delar = [a['namn'] for a in OMRADEN if not a.get('hub')]

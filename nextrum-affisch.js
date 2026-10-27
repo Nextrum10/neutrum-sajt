@@ -40,20 +40,30 @@
     ['spanga-tensta', 'Spånga och Tensta', 'i', 'Västerort'],
     ['vallingby-hasselby', 'Vällingby och Hässelby', 'i', 'Västerort'],
     ['danderyd', 'Danderyd', 'i', 'Norr och väster om stan'],
+    ['ekero', 'Ekerö', 'på', 'Norr och väster om stan'],
     ['jarfalla', 'Järfälla', 'i', 'Norr och väster om stan'],
     ['lidingo', 'Lidingö', 'på', 'Norr och väster om stan'],
+    ['norrtalje', 'Norrtälje', 'i', 'Norr och väster om stan'],
+    ['sigtuna', 'Sigtuna', 'i', 'Norr och väster om stan'],
     ['sollentuna', 'Sollentuna', 'i', 'Norr och väster om stan'],
     ['solna', 'Solna', 'i', 'Norr och väster om stan'],
     ['sundbyberg', 'Sundbyberg', 'i', 'Norr och väster om stan'],
     ['taby', 'Täby', 'i', 'Norr och väster om stan'],
     ['upplands-vasby', 'Upplands Väsby', 'i', 'Norr och väster om stan'],
+    ['upplands-bro', 'Upplands-Bro', 'i', 'Norr och väster om stan'],
     ['vallentuna', 'Vallentuna', 'i', 'Norr och väster om stan'],
+    ['vaxholm', 'Vaxholm', 'i', 'Norr och väster om stan'],
     ['osteraker', 'Österåker', 'i', 'Norr och väster om stan'],
     ['botkyrka', 'Botkyrka', 'i', 'Söder och öster om stan'],
+    ['haninge', 'Haninge', 'i', 'Söder och öster om stan'],
     ['huddinge', 'Huddinge', 'i', 'Söder och öster om stan'],
     ['nacka', 'Nacka', 'i', 'Söder och öster om stan'],
+    ['nykvarn', 'Nykvarn', 'i', 'Söder och öster om stan'],
+    ['nynashamn', 'Nynäshamn', 'i', 'Söder och öster om stan'],
     ['salem', 'Salem', 'i', 'Söder och öster om stan'],
-    ['sodertalje', 'Södertälje', 'i', 'Söder och öster om stan']
+    ['sodertalje', 'Södertälje', 'i', 'Söder och öster om stan'],
+    ['tyreso', 'Tyresö', 'i', 'Söder och öster om stan'],
+    ['varmdo', 'Värmdö', 'på', 'Söder och öster om stan']
   ];
   /* /orter */
 

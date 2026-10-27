@@ -151,6 +151,12 @@
       "rad": "Guide för föräldrar · Nextrum",
       "foto": "12-pa-vag"
     },
+    "laxhjalp-ekero.html": {
+      "bild": "delning/laxhjalp-ekero.jpg",
+      "rubrik": "Läxhjälp på Ekerö.",
+      "rad": "Hemma eller online · 399 kr i timmen",
+      "foto": "09-online-v2"
+    },
     "laxhjalp-eller-privatlarare.html": {
       "bild": "delning/laxhjalp-eller-privatlarare.jpg",
       "rubrik": "Läxhjälp eller privatlärare?",
@@ -192,6 +198,12 @@
       "rubrik": "Läxhjälp i Hammarby Sjöstad.",
       "rad": "Hemma eller online · 399 kr i timmen",
       "foto": "13-kvallsplugg"
+    },
+    "laxhjalp-haninge.html": {
+      "bild": "delning/laxhjalp-haninge.jpg",
+      "rubrik": "Läxhjälp i Haninge.",
+      "rad": "Hemma eller online · 399 kr i timmen",
+      "foto": "04-sjalvfortroende"
     },
     "laxhjalp-hogstadiet.html": {
       "bild": "delning/laxhjalp-hogstadiet.jpg",
@@ -265,6 +277,24 @@
       "rad": "Läxhjälp i Stockholm · 399 kr i timmen",
       "foto": "02-personlig-anpassning"
     },
+    "laxhjalp-norrtalje.html": {
+      "bild": "delning/laxhjalp-norrtalje.jpg",
+      "rubrik": "Läxhjälp i Norrtälje.",
+      "rad": "Hemma eller online · 399 kr i timmen",
+      "foto": "03-digital-laxhjalp"
+    },
+    "laxhjalp-nykvarn.html": {
+      "bild": "delning/laxhjalp-nykvarn.jpg",
+      "rubrik": "Läxhjälp i Nykvarn.",
+      "rad": "Hemma eller online · 399 kr i timmen",
+      "foto": "11-studiehjalparen"
+    },
+    "laxhjalp-nynashamn.html": {
+      "bild": "delning/laxhjalp-nynashamn.jpg",
+      "rubrik": "Läxhjälp i Nynäshamn.",
+      "rad": "Hemma eller online · 399 kr i timmen",
+      "foto": "13-kvallsplugg"
+    },
     "laxhjalp-online.html": {
       "bild": "delning/laxhjalp-online.jpg",
       "rubrik": "Läxhjälp online.",
@@ -288,6 +318,12 @@
       "rubrik": "Läxhjälp i Salem.",
       "rad": "Hemma eller online · 399 kr i timmen",
       "foto": "12-pa-vag"
+    },
+    "laxhjalp-sigtuna.html": {
+      "bild": "delning/laxhjalp-sigtuna.jpg",
+      "rubrik": "Läxhjälp i Sigtuna.",
+      "rad": "Hemma eller online · 399 kr i timmen",
+      "foto": "02-personlig-anpassning"
     },
     "laxhjalp-skarholmen.html": {
       "bild": "delning/laxhjalp-skarholmen.jpg",
@@ -361,6 +397,18 @@
       "rad": "Hemma eller online · 399 kr i timmen",
       "foto": "10-forsta-motet"
     },
+    "laxhjalp-tyreso.html": {
+      "bild": "delning/laxhjalp-tyreso.jpg",
+      "rubrik": "Läxhjälp i Tyresö.",
+      "rad": "Hemma eller online · 399 kr i timmen",
+      "foto": "01-en-till-en"
+    },
+    "laxhjalp-upplands-bro.html": {
+      "bild": "delning/laxhjalp-upplands-bro.jpg",
+      "rubrik": "Läxhjälp i Upplands-Bro.",
+      "rad": "Hemma eller online · 399 kr i timmen",
+      "foto": "05-av-unga-for-unga"
+    },
     "laxhjalp-upplands-vasby.html": {
       "bild": "delning/laxhjalp-upplands-vasby.jpg",
       "rubrik": "Läxhjälp i Upplands Väsby.",
@@ -379,9 +427,21 @@
       "rad": "Hemma eller online · 399 kr i timmen",
       "foto": "05-av-unga-for-unga"
     },
+    "laxhjalp-varmdo.html": {
+      "bild": "delning/laxhjalp-varmdo.jpg",
+      "rubrik": "Läxhjälp på Värmdö.",
+      "rad": "Hemma eller online · 399 kr i timmen",
+      "foto": "10-forsta-motet"
+    },
     "laxhjalp-vasastan.html": {
       "bild": "delning/laxhjalp-vasastan.jpg",
       "rubrik": "Läxhjälp i Vasastan.",
+      "rad": "Hemma eller online · 399 kr i timmen",
+      "foto": "07-genombrottet"
+    },
+    "laxhjalp-vaxholm.html": {
+      "bild": "delning/laxhjalp-vaxholm.jpg",
+      "rubrik": "Läxhjälp i Vaxholm.",
       "rad": "Hemma eller online · 399 kr i timmen",
       "foto": "07-genombrottet"
     },

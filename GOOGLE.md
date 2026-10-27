@@ -5,7 +5,7 @@ Allt på sajtens sida är gjort och kontrollerat:
 | | |
 |---|---|
 | favicon | finns, svarar 200 |
-| sitemap.xml | 76 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` (24 ortssidor kom till 2026-10-26) |
+| sitemap.xml | 86 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` (24 ortssidor kom till 2026-10-26 och tio 2026-10-27) |
 | robots.txt | pekar på sitemap, blockerar inget publikt |
 | strukturerad data | Organization + WebSite med namn, beskrivning, slogan, sociala konton |
 | verifieringspost i DNS | finns redan (`google-site-verification=5o3n…`) |

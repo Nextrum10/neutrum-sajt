@@ -54,7 +54,7 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 60
+=== svenska sidor utan engelsk tvilling: 70
   404.html
   admin.html
   affisch.html
@@ -71,6 +71,7 @@
   laxhjalp-bromma.html
   laxhjalp-danderyd.html
   laxhjalp-efter-sommarlovet.html
+  laxhjalp-ekero.html
   laxhjalp-eller-privatlarare.html
   laxhjalp-engelska.html
   laxhjalp-enskede-arsta-vantor.html
@@ -78,6 +79,7 @@
   laxhjalp-gymnasiet.html
   laxhjalp-hagersten-liljeholmen.html
   laxhjalp-hammarby-sjostad.html
+  laxhjalp-haninge.html
   laxhjalp-hogstadiet.html
   laxhjalp-huddinge.html
   laxhjalp-jarfalla.html
@@ -90,10 +92,14 @@
   laxhjalp-moderna-sprak.html
   laxhjalp-nacka.html
   laxhjalp-no.html
+  laxhjalp-norrtalje.html
+  laxhjalp-nykvarn.html
+  laxhjalp-nynashamn.html
   laxhjalp-online.html
   laxhjalp-osteraker.html
   laxhjalp-ostermalm.html
   laxhjalp-salem.html
+  laxhjalp-sigtuna.html
   laxhjalp-skarholmen.html
   laxhjalp-skarpnack.html
   laxhjalp-so.html
@@ -106,10 +112,14 @@
   laxhjalp-sundbyberg.html
   laxhjalp-svenska.html
   laxhjalp-taby.html
+  laxhjalp-tyreso.html
+  laxhjalp-upplands-bro.html
   laxhjalp-upplands-vasby.html
   laxhjalp-vallentuna.html
   laxhjalp-vallingby-hasselby.html
+  laxhjalp-varmdo.html
   laxhjalp-vasastan.html
+  laxhjalp-vaxholm.html
   nationella-prov-ak-6.html
   nationella-prov-ak-9.html
   om-oss.html
