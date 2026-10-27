@@ -99,10 +99,11 @@ TILLAGG = [
                   ['third', '3rd'],
                   'Tre heter three, men den tredje heter third. Ordningstalet för 3 är oregelbundet, precis '
                   'som first och second.'),
+            # Utan on (granskningen 2026-10-27): med on bland brickorna gick också
+            # "My birthday is the fifth of May." att bygga, och den är rätt men nekades.
             ordna('Bygg meningen: Min födelsedag är den femte maj.',
-                  ['My', 'birthday', 'is', 'on', 'the', 'fifth', 'of', 'May.'], extra=['five'],
-                  forklaring='Ett datum säger man med ordningstal: the fifth of May. Före ett datum står '
-                             'on, precis som före en veckodag.'),
+                  ['My', 'birthday', 'is', 'the', 'fifth', 'of', 'May.'], extra=['five'],
+                  forklaring='Ett datum säger man med ordningstal: the fifth of May, inte the five of May.'),
             val("Vad betyder 'the second Monday in May'?",
                 ['den andra måndagen i maj', 'två måndagar i maj', 'måndagen den andra maj'],
                 'den andra måndagen i maj',

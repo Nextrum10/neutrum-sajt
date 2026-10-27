@@ -177,8 +177,8 @@ TILLAGG = [
                 'På danska är frokost lunch, och frukost heter morgenmad. På norska betyder frokost däremot '
                 'frukost, så samma ord betyder olika saker i grannspråken.'),
             skriv('Vad kallas ett ord som liknar ett ord i ett annat språk men betyder något annat? Skriv två ord.',
-                  ['falsk vän', 'falska vänner', 'en falsk vän'],
-                  'En falsk vän ser bekant ut och lurar därför läsaren att gissa fel.'),
+                  ['falsk vän', 'falska vänner', 'en falsk vän', 'lömska ord', 'lömskt ord', 'ett lömskt ord'],
+                  'En falsk vän, eller ett lömskt ord, ser bekant ut och lurar därför läsaren att gissa fel.'),
             val('Vad betyder den norska meningen ”Jeg gleder meg til ferien.”?',
                 ['Jag ser fram emot lovet', 'Jag är glad att lovet är slut', 'Jag har glömt bort lovet'],
                 'Jag ser fram emot lovet',
