@@ -47,7 +47,8 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=8e958f62">
+<link rel="stylesheet" href="nextrum-cinema.css?v=126c1d66">
+<link rel="stylesheet" href="nextrum-landning.css?v=fb0d9169">
 </head>
 <body>
 
@@ -152,7 +153,10 @@
   <div class="rv">
     <span class="nx-et acc">Området</span>
     <h2 class="nx-d2" style="margin-top:18px">Var vi matchar elever</h2>
-    <div class="nx-omr-chips" style="margin-top:clamp(20px,2.4vw,28px)"><span>Vallentuna centrum</span><span>Kragstalund</span><span>Bällsta</span><span>Ormsta</span><span>Molnby</span><span>Lindholmen</span><span>Frösunda</span><span>Kårsta</span><span>Karby</span><span>Brottby</span></div>
+    <div class="lp-linje" data-lp-linje style="--n:10">
+      <span class="lp-linje-spar" aria-hidden="true"></span>
+      <ol aria-label="Platser i Vallentuna"><li><i aria-hidden="true"></i><span>Vallentuna centrum</span></li><li><i aria-hidden="true"></i><span>Kragstalund</span></li><li><i aria-hidden="true"></i><span>Bällsta</span></li><li><i aria-hidden="true"></i><span>Ormsta</span></li><li><i aria-hidden="true"></i><span>Molnby</span></li><li><i aria-hidden="true"></i><span>Lindholmen</span></li><li><i aria-hidden="true"></i><span>Frösunda</span></li><li><i aria-hidden="true"></i><span>Kårsta</span></li><li><i aria-hidden="true"></i><span>Karby</span></li><li><i aria-hidden="true"></i><span>Brottby</span></li></ol>
+    </div>
   </div>
 </section>
 
@@ -163,7 +167,15 @@
       <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Ni skickar en intresseanmälan, vi hör av oss inom 24 timmar och väljer sedan den studiehjälpare som passar eleven bäst. När matchningen är klar låses studievyn upp, med studieplanen, bokningen och en rapport efter varje pass. <a href="/sa-fungerar-nextrum">Så fungerar det, steg för steg</a>.</p>
+      <div class="lp-steg" data-lp-steg>
+        <span class="lp-steg-spar" aria-hidden="true"><span class="lp-steg-fyll"></span></span>
+        <ol>
+        <li><span class="lp-steg-nr" aria-hidden="true">01</span><b>Ni skickar en intresseanmälan</b><p>Ni berättar om eleven och var passen ska hållas. Det kostar ingenting att fråga.</p></li>
+        <li><span class="lp-steg-nr" aria-hidden="true">02</span><b>Vi hör av oss inom 24 timmar</b><p>Sedan väljer vi den studiehjälpare som passar eleven bäst.</p></li>
+        <li><span class="lp-steg-nr" aria-hidden="true">03</span><b>Studievyn låses upp</b><p>När matchningen är klar finns studieplanen, bokningen och en rapport efter varje pass där.</p></li>
+        </ol>
+      </div>
+      <p class="lp-steg-mer"><a href="/sa-fungerar-nextrum">Så fungerar det, steg för steg</a>.</p>
     </div>
   </div>
 </section>
@@ -477,10 +489,10 @@
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=085fa9d6"></script>
-<script src="nextrum-images.js?v=1bcb27bb"></script>
+<script src="nextrum-images.js?v=7864d95b"></script>
 <script src="nextrum-fel.js?v=c6a9a13f"></script>
 <script src="nextrum-app.js?v=9c8ce04d"></script>
-<script src="nextrum-samtycke.js?v=92474eaf"></script>
+<script src="nextrum-samtycke.js?v=3058f423"></script>
 <script src="nextrum-motion.js?v=adb3b960"></script>
 <script src="nextrum-start.js?v=e1d5a4da"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
@@ -502,7 +514,10 @@
   NX.märkInloggad();
 })();
 </script>
-<script type="application/ld+json">
+
+<script src="bibliotek/gsap-3.13.0.min.js"></script>
+<script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js"></script>
+<script src="nextrum-landning.js?v=fecdec11"></script><script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [

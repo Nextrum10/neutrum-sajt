@@ -47,7 +47,8 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=8e958f62">
+<link rel="stylesheet" href="nextrum-cinema.css?v=126c1d66">
+<link rel="stylesheet" href="nextrum-landning.css?v=fb0d9169">
 </head>
 <body>
 
@@ -116,7 +117,7 @@
   </div>
 </div>
 
-<main id="innehall">
+<main id="innehall" data-lp-amne="ma">
 
 <section class="wrap nx-page-hero">
   <a class="nx-back" href="/laxhjalp-stockholm"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Läxhjälp i Stockholm</a>
@@ -126,11 +127,11 @@
   <div class="nx-story-ctas" data-stig data-fördröj="2">
     <a class="btn btn-primary btn-lg" href="/intresseanmalan">Skicka intresseanmälan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
   </div>
-  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#ACA193">
-    <picture><source type="image/webp" srcset="bilder/01-en-till-en-640.webp 640w, bilder/01-en-till-en-960.webp 960w, bilder/01-en-till-en-1280.webp 1280w, bilder/01-en-till-en-1600.webp 1600w, bilder/01-en-till-en-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="bilder/01-en-till-en-1280.jpg"
-         srcset="bilder/01-en-till-en-640.jpg 640w, bilder/01-en-till-en-960.jpg 960w, bilder/01-en-till-en-1280.jpg 1280w, bilder/01-en-till-en-1600.jpg 1600w, bilder/01-en-till-en-1920.jpg 1920w"
+  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#85766B">
+    <picture><source type="image/webp" srcset="bilder/14-matematik-640.webp 640w, bilder/14-matematik-960.webp 960w, bilder/14-matematik-1280.webp 1280w, bilder/14-matematik-1600.webp 1600w, bilder/14-matematik-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="bilder/14-matematik-1280.jpg"
+         srcset="bilder/14-matematik-640.jpg 640w, bilder/14-matematik-960.jpg 960w, bilder/14-matematik-1280.jpg 1280w, bilder/14-matematik-1600.jpg 1600w, bilder/14-matematik-1920.jpg 1920w"
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
-         style="object-position:68% 44%" alt="En studiehjälpare pekar med pennan på en uppgift i elevens räknebok och förklarar medan eleven skriver."></picture>
+         style="object-position:50% 42%" alt="En ung studiehjälpare pekar med pennan på en parabel på rutat papper medan en pojke lutar huvudet mot handen och följer med."></picture>
   </figure>
 </section>
 
@@ -168,8 +169,14 @@
       <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Ni skickar in en intresseanmälan och berättar vilket ämne och vilken kurs det gäller. Vi går igenom behovet tillsammans med er och väljer sedan ut den studiehjälpare som passar bäst, utifrån ämne, nivå och person. Ni bläddrar inte bland profiler: fel match är värre än ingen match.</p>
-      <p>När matchningen är klar låses studievyn upp. Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Passen hålls hemma hos er eller online, och ni väljer för varje pass.</p>
+      <div class="lp-steg" data-lp-steg>
+        <span class="lp-steg-spar" aria-hidden="true"><span class="lp-steg-fyll"></span></span>
+        <ol>
+        <li><span class="lp-steg-nr" aria-hidden="true">01</span><b>Ni skickar en intresseanmälan</b><p>Ni berättar vilket ämne och vilken kurs det gäller.</p></li>
+        <li><span class="lp-steg-nr" aria-hidden="true">02</span><b>Vi väljer studiehjälparen</b><p>Vi går igenom behovet med er och väljer den som passar bäst, utifrån ämne, nivå och person. Ni bläddrar inte bland profiler: fel match är värre än ingen match.</p></li>
+        <li><span class="lp-steg-nr" aria-hidden="true">03</span><b>Studievyn låses upp</b><p>Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Passen hålls hemma hos er eller online, och ni väljer för varje pass.</p></li>
+        </ol>
+      </div>
     </div>
   </div>
 </section>
@@ -578,10 +585,10 @@
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=085fa9d6"></script>
-<script src="nextrum-images.js?v=1bcb27bb"></script>
+<script src="nextrum-images.js?v=7864d95b"></script>
 <script src="nextrum-fel.js?v=c6a9a13f"></script>
 <script src="nextrum-app.js?v=9c8ce04d"></script>
-<script src="nextrum-samtycke.js?v=92474eaf"></script>
+<script src="nextrum-samtycke.js?v=3058f423"></script>
 <script src="nextrum-motion.js?v=adb3b960"></script>
 <script src="nextrum-start.js?v=e1d5a4da"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
@@ -603,7 +610,10 @@
   NX.märkInloggad();
 })();
 </script>
-<script type="application/ld+json">
+
+<script src="bibliotek/gsap-3.13.0.min.js"></script>
+<script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js"></script>
+<script src="nextrum-landning.js?v=fecdec11"></script><script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [

@@ -164,6 +164,131 @@ window.NEXTRUM_IMAGES = {
     tint: '#453B28',
     credit: 'Kvällsplugg — mörk och varm, tonmässig ytterlighet mot resten av serien. '
           + 'Obs: handledaren ser klart äldre ut än 20.'
+  },
+
+  /* ---- Tredje omgången, genererad 2026-10-28 ----
+     Samma recept som de förra (Soul 2.0, 16:9, analog film, ljust ekträ,
+     bar putsvägg, inga händer som rör varandra, ingen text). Tretton
+     bilder: ämnena, hemmet och föräldern, Stockholm utanför fönstret och
+     sex bilder utan människor. De kom i 1024 × 576 och är uppskalade till
+     2048 × 1152 (Lanczos), så de duger i alla utsnitt men är mjukare än
+     de äldre i helbredd. Generera om i 2K när en av dem ska bära en hero. */
+
+  matematik: {
+    file: '14-matematik',
+    w: 2048, h: 1152,
+    alt: 'En ung studiehjälpare pekar med pennan på en parabel på rutat papper medan en pojke lutar huvudet mot handen och följer med.',
+    focal: '50% 42%',
+    tint: '#85766B',
+    credit: 'Matematik. Obs: studiehjälparen ser ut att vara kring 25.'
+  },
+
+  engelska: {
+    file: '16-engelska',
+    w: 2048, h: 1152,
+    alt: 'En pojke skrattar åt ett kort med glosor som han håller upp, medan studiehjälparen bredvid ler åt honom vid ett köksbord.',
+    focal: '46% 38%',
+    tint: '#8B7663',
+    credit: 'Engelska, glosor vid köksbordet.'
+  },
+
+  noNatur: {
+    file: '17-no-naturvetenskap',
+    w: 2048, h: 1152,
+    alt: 'En studiehjälpare ritar i en färglagd skiss av en växtcell medan en flicka lutar kinden mot handen och tittar på.',
+    focal: '48% 38%',
+    tint: '#81776F',
+    credit: 'NO, växtcellen. Obs: studiehjälparen ser ut att vara kring 25.'
+  },
+
+  tunnelbana: {
+    file: '19-tunnelbana',
+    w: 2048, h: 1152,
+    alt: 'Två tonåringar med ryggsäckar sitter på en bänk på en tunnelbaneperrong och bläddrar i ett anteckningsblock medan ett tåg susar förbi.',
+    focal: '46% 40%',
+    tint: '#5C544E',
+    credit: 'Tunnelbanan, för orter där vägen dit är det praktiska. Mörk, blå kakelvägg, rörelseoskärpa i tåget.'
+  },
+
+  hemma: {
+    file: '21-hemma-hos-familjen',
+    w: 2048, h: 1152,
+    alt: 'En ung studiehjälpare och en flicka sitter vid ett matbord hemma, med skolböcker, en fruktskål och ett regnigt höstfönster bakom sig.',
+    focal: '40% 44%',
+    tint: '#634E3D',
+    credit: 'Hemma hos familjen. Varm lampa och grått dagsljus, mörk i tonen. Obs: studiehjälparen ser ut att vara kring 25.'
+  },
+
+  skolvag: {
+    file: '22-skolvag-hostlov',
+    w: 2048, h: 1152,
+    alt: 'En pojke med ryggsäck går ensam längs en höstgata i lågt eftermiddagsljus, med löv på trottoaren och stadens siluett vid vattnet i bakgrunden.',
+    focal: '42% 54%',
+    tint: '#8B6F54',
+    credit: 'Skolvägen. Stockholmsbilden: siluetten vid vattnet, stor slät ockrafasad till höger. Bara för Stockholm som helhet, aldrig en bestämd ort.'
+  },
+
+  valkommenHem: {
+    file: '24-valkommen-hem',
+    w: 2048, h: 1152,
+    alt: 'En pappa vid köksbänken tittar upp med ett varmt leende när en ung studiehjälpare med ryggsäck kommer in från hallen.',
+    focal: '52% 40%',
+    tint: '#69513B',
+    credit: 'Välkommen hem, kvällsljus. Studiehjälparen till höger, pappan till vänster.'
+  },
+
+  forstaMotetForalder: {
+    file: '25-forsta-motet-med-foralder',
+    w: 2048, h: 1152,
+    alt: 'En förälder och en flicka sitter i en soffa med te och möter en ung studiehjälpare som sitter mitt emot i en fåtölj.',
+    focal: '52% 42%',
+    tint: '#827364',
+    credit: 'Första mötet med föräldern. Ljus, lugn bild i vardagsrummet. Obs: studiehjälparen ser ut att vara kring 25.'
+  },
+
+  skrivbord: {
+    file: '28-skrivbord-ordning',
+    w: 2048, h: 1152,
+    alt: 'Ett städat skrivbord i ljust ek sett uppifrån, med ett uppslaget anteckningsblock, två pennor, ett suddgummi, en linjal och en kruka.',
+    focal: '50% 50%',
+    tint: '#A38970',
+    credit: 'Skrivbordet, uppifrån. Ingen människa.'
+  },
+
+  pennan: {
+    file: '29-penna-och-block',
+    w: 2048, h: 1152,
+    alt: 'En penna vilar på ett linjerat anteckningsblock fullt av handskrift, i mjukt dagsljus.',
+    focal: '34% 56%',
+    tint: '#B7A999',
+    credit: 'Pennan och blocket, närbild. Tom, ljus yta till höger. Ingen människa.'
+  },
+
+  fonstret: {
+    file: '30-fonster-och-bocker',
+    w: 2048, h: 1152,
+    alt: 'En bokstapel och ett anteckningsblock på en fönsterbräda, med gula hyreshus och ett höstträd utanför fönstret.',
+    focal: '44% 56%',
+    tint: '#807063',
+    credit: 'Fönstret mot innerstaden. Ingen människa.'
+  },
+
+  laxorna: {
+    file: '32-laxor-pa-koksbordet',
+    w: 2048, h: 1152,
+    alt: 'Läxor och en vässad penna på ett köksbord i kvällsljus, med en skrivbordslampa, en mugg och en halvskalad mandarin.',
+    focal: '50% 56%',
+    tint: '#7F5E42',
+    credit: 'Läxorna på köksbordet, kväll. Ingen människa.'
+  },
+
+  rutatPapper: {
+    file: '33-rutat-papper',
+    w: 2048, h: 1152,
+    alt: 'Ett rutat papper på ett träbord med ett handritat stapeldiagram i blå penna och en penna bredvid.',
+    focal: '46% 56%',
+    tint: '#9D8F84',
+    credit: 'Rutat papper med stapeldiagram. Ingen människa.'
   }
 
 };
@@ -185,68 +310,22 @@ window.NEXTRUM_IMAGE_WIDTHS = [640, 960, 1280, 1600, 1920];
    bild och gömt den. De andra dagarna driver stillbilden långsamt
    (.vy-hero-still), som den alltid gjort när filmen inte spelar.
    Bilderna är "för nu", sa Leo: byt en nyckel här, inget annat.
+
+   Fredagen hade 'anpassning' till 2026-10-27: på en telefon syntes bara
+   studiehjälparens tröja, utan huvud. 'forklaringen' visar båda ansiktena.
+   Söndagen hade 'online' till samma dag, med bara ett halvt ansikte vid
+   kanten på en telefon (Leo: "söndagen bilden gillar jag ej");
+   'studiehjalparen' står hel i utsnittet.
    ------------------------------------------------------------ */
 window.NEXTRUM_HERO_VECKA = [
   { bild: 'hero', film: 'hero-studievy.mp4' },  // måndag
   { bild: 'entillEn' },                          // tisdag
   { bild: 'digitalt' },                          // onsdag
   { bild: 'sjalvfortroende' },                   // torsdag
-  { bild: 'anpassning' },                        // fredag
+  { bild: 'forklaringen' },                      // fredag
   { bild: 'genombrottet' },                      // lördag
-  { bild: 'online' }                             // söndag
+  { bild: 'studiehjalparen' }                    // söndag
 ];
-
-/* ------------------------------------------------------------
-   INTRODUKTIONEN I STUDIEVYN OCH STUDIEHJÄLPARVYN (2026-10-06)
-
-   Skärmdumpar av vyerna i en telefons bredd, med påhittade familjer,
-   som NXIntro (nextrum-introduktion.js) visar en i taget efter första
-   inloggningen och under Profil & inställningar. Nyckeln är delen i
-   vyn, och NXIntro.STEG bär texten till varje bild. Bilderna ritas av
-   verktyg/bygg-introbilder.js (jpg och webp, 780 × 880, dubbel
-   upplösning); ändras en del i vyn som en bild visar, kör det igen.
-   ------------------------------------------------------------ */
-window.NEXTRUM_INTRO = (function () {
-  function introbild(roll, del, alt) {
-    return { file: 'intro-' + roll + '-' + del, w: 780, h: 880, alt: alt };
-  }
-  return {
-  foralder: {
-    oversikt: introbild('foralder', 'oversikt', 'Översikt i studievyn på en telefon: under Att göra en ny tid som '
-      + 'studiehjälparen föreslagit, med knapparna Acceptera ny tid och Avböj, och en rapport att bekräfta.'),
-    boka: introbild('foralder', 'boka', 'Boka pass på en telefon: stegen Välj dag, Ämne, tid och plats och '
-      + 'Föreslå tiden, och kalendern för oktober med dagens datum markerat.'),
-    lektioner: introbild('foralder', 'lektioner', 'Mina lektioner på en telefon: flikarna Pass, Studieplan och '
-      + 'Efter passen, och passen i matematik med dag, tid, plats och om de är betalda.'),
-    betalning: introbild('foralder', 'betalning', 'Betalning och planer på en telefon: att betala och betalt i '
-      + 'oktober, betalsätten kort, Apple Pay, Google Pay och Klarna, och listan Att betala.'),
-    nexlax: introbild('foralder', 'nexlax', 'NexLäx på en telefon: dagar i rad, XP och märket, hur långt barnet '
-      + 'kommit i matematik åk 6, och nästa steg på vägen.'),
-    meddelanden: introbild('foralder', 'meddelanden', 'Meddelanden på en telefon: en tråd mellan föräldern och '
-      + 'studiehjälparen om läxan och om att flytta ett pass.'),
-    profil: introbild('foralder', 'profil', 'Barnens inloggning på en telefon: vad barnet får se och göra, med en '
-      + 'knapp för på eller av för passen, studieplanen och rapporterna.')
-  },
-  studiehjalpare: {
-    oversikt: introbild('studiehjalpare', 'oversikt', 'Översikt i studiehjälparvyn på en telefon: under Att göra '
-      + 'två tider att svara på och en rapport att skriva.'),
-    tider: introbild('studiehjalpare', 'tider', 'Föreslagna tider på en telefon: en tid som familjen föreslagit, med '
-      + 'knapparna Acceptera, Avslå och Föreslå annan tid.'),
-    lektioner: introbild('studiehjalpare', 'lektioner', 'Lektioner och elever på en telefon: flikarna för passen, '
-      + 'eleverna och planen, och de kommande passen med dag, tid och plats.'),
-    rapporter: introbild('studiehjalpare', 'rapporter', 'Skriv rapport på en telefon: ett pass i engelska som väntar '
-      + 'på sin rapport, med knappen Skriv rapport.'),
-    laxor: introbild('studiehjalpare', 'laxor', 'Uppgifter och material på en telefon: knapparna Ny uppgift och '
-      + 'Hämta ur materialet, och elevens öppna uppgifter.'),
-    meddelanden: introbild('studiehjalpare', 'meddelanden', 'Meddelanden på en telefon: en tråd per familj, med det '
-      + 'senaste meddelandet i varje.'),
-    statistik: introbild('studiehjalpare', 'statistik', 'Statistik och ersättning på en telefon: genomförda pass och '
-      + 'undervisade timmar i siffror.'),
-    profil: introbild('studiehjalpare', 'profil', 'Profil och inställningar på en telefon: din profil, det familjerna '
-      + 'och Nextrum ser, med bild och namn.')
-  }
-  };
-})();
 
 /* ------------------------------------------------------------
    Så här skapar du storlekarna för en ny bild (kör i bilder/):

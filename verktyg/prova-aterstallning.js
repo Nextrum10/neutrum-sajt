@@ -473,10 +473,10 @@ async function provaLänken(webb) {
   }
 
   /* En inbjudan från bjud-in (2026-10-01): studievyn och studiehjälparvyn ber om ett lösenord.
-     Sedan 2026-10-06 går rutan inte att hoppa över, och introduktionen följer
-     (verktyg/prova-introduktion.js provar den i detalj). Familjens har sex
-     steg sedan Betala nu (2026-10-21), då Bekräfta rapport togs bort. */
-  for (const [väg, id, sedan, steg] of [['/foralder', 'foralder-1', '#view-app', 6], ['/larare', 'handledare-1', '#view-pending', 8]]) {
+     Sedan 2026-10-06 går rutan inte att hoppa över, och rundturen följer i den
+     färdiga vyn (verktyg/prova-introduktion.js provar den i detalj). En
+     studiehjälpare som inte är godkänd har ingen vy, och får ingen rundtur än. */
+  for (const [väg, id, sedan, tur] of [['/foralder', 'foralder-1', '#view-app', true], ['/larare', 'handledare-1', '#view-pending', false]]) {
     const v = väg.slice(1);
     const { context, page, S, konsol } = await öppna(webb, {});
     await page.goto(BAS + väg + länk(id, 'invite'));
@@ -493,16 +493,26 @@ async function provaLänken(webb) {
     await page.fill('#nylos-1', 'mitt-forsta-losen');
     await page.fill('#nylos-2', 'mitt-forsta-losen');
     await page.click('form[data-nylos] [type="submit"]');
-    await page.waitForSelector('.nx-intro.open', { timeout: 6000 }).catch(() => {});
-    prova(v + ' inbjudan: lösenordet sparas med inbjudans inloggning, och välkomsten går till introduktionen',
+    await page.waitForSelector(sedan + ':not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova(v + ' inbjudan: lösenordet sparas med inbjudans inloggning, och välkomsten går till rundturen',
       S.logg.some(r => r.väg === '/auth/v1/user' && r.metod === 'PUT' && r.vem === id && r.kropp
         && r.kropp.password === 'mitt-forsta-losen' && r.kropp.data && r.kropp.data.valkommen === 'intro'));
-    prova(v + ' inbjudan: introduktionen tar vid', (await text(page, '.nx-intro-nr')) === '1 av ' + steg, await text(page, '.nx-intro-nr'));
-    for (let i = 0; i < steg; i++) await page.click('[data-intro-fram]');
-    await page.waitForSelector(sedan + ':not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova(v + ' inbjudan: vyn fortsätter efter Fortsätt', await synlig(page, sedan) && !(await synlig(page, '.nx-intro')));
-    prova(v + ' inbjudan: välkomsten tas bort', S.logg.some(r => r.väg === '/auth/v1/user' && r.metod === 'PUT'
-      && r.kropp && r.kropp.data && r.kropp.data.valkommen === null && !r.kropp.password));
+    if (tur) {
+      /* Rundturen går i den färdiga vyn (2026-10-27): ett tryck var som
+         helst går vidare, och sista trycket släpper in. */
+      await page.waitForSelector('.nx-tur.open', { timeout: 8000 }).catch(() => {});
+      prova(v + ' inbjudan: rundturen tar vid i vyn', await synlig(page, '.nx-tur .nt-ruta.nt-upp') || await synlig(page, '.nx-tur'));
+      for (let i = 0; i < 20 && await page.locator('.nx-tur').count(); i++) {
+        await page.locator('.nt-yta').click({ force: true }).catch(() => {});
+        await page.waitForTimeout(80);
+      }
+      await page.waitForTimeout(300);
+    }
+    prova(v + ' inbjudan: vyn står kvar efter rundturen', await synlig(page, sedan) && !(await synlig(page, '.nx-tur')));
+    /* Utan vy står välkomsten kvar, så att rundturen kommer när profilen är godkänd. */
+    prova(v + (tur ? ' inbjudan: välkomsten tas bort' : ' inbjudan: välkomsten står kvar till rundturen'),
+      S.logg.some(r => r.väg === '/auth/v1/user' && r.metod === 'PUT'
+        && r.kropp && r.kropp.data && r.kropp.data.valkommen === null && !r.kropp.password) === tur);
     // Familjevyns funktioner som provet inte känner, som ovan.
     const vyns = konsol.filter(k => väg !== '/foralder' || !/status of 404/.test(k));
     prova(v + ' inbjudan: inga fel i konsolen', vyns.length === 0, vyns.join(' | '));

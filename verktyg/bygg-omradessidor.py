@@ -180,7 +180,7 @@ OMRADEN = [
             'Vi matchar elever i Stockholm med en studiehjälpare som nyligen läst samma '
             'kurser själv. Passen sker hemma hos er eller online.'
         ),
-        'bild': '05-av-unga-for-unga',
+        'bild': '22-skolvag-hostlov',
         'delar': [
             'Södermalm', 'Hammarby Sjöstad', 'Vasastan', 'Östermalm', 'Kungsholmen',
             'Norrmalm', 'Årsta', 'Enskede', 'Farsta', 'Hägersten', 'Liljeholmen',
@@ -384,7 +384,7 @@ OMRADEN = [
             'med en studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på '
             'biblioteket eller online.'
         ),
-        'bild': '13-kvallsplugg',
+        'bild': '28-skrivbord-ordning',
         'delar': [
             'Sickla Udde', 'Sickla Kaj', 'Lumaparken', 'Henriksdal', 'Lugnet',
             'Sjöstadsparterren', 'Hammarbyhöjden', 'Hammarby Allé',
@@ -713,7 +713,7 @@ OMRADEN = [
             'Från Bollstanäs till Runby. Vi matchar elever i Upplands Väsby med en studiehjälpare '
             'som nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
-        'bild': '01-en-till-en',
+        'bild': '32-laxor-pa-koksbordet',
         'delar': [
             'Väsby centrum', 'Bollstanäs', 'Grimstaby', 'Vilunda', 'Smedby', 'Runby', 'Fresta',
             'Vik', 'Brunnby', 'Odenslunda',
@@ -757,7 +757,7 @@ OMRADEN = [
             'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
             'eller online.'
         ),
-        'bild': 'hero-nextrum',
+        'bild': '30-fonster-och-bocker',
         'delar': [
             'Fridhemsplan', 'Stadshagen', 'Fredhäll', 'Kristineberg', 'Marieberg', 'Rålambshov',
             'Thorildsplan', 'Hornsberg', 'Lilla Essingen', 'Stora Essingen',
@@ -800,7 +800,7 @@ OMRADEN = [
             'Från Sankt Eriksplan till Norrtull. Vi matchar elever i Vasastan med en '
             'studiehjälpare som nyligen läst samma kurser själv, hemma hos er eller online.'
         ),
-        'bild': '07-genombrottet',
+        'bild': '21-hemma-hos-familjen',
         'delar': [
             'Odenplan', 'Sankt Eriksplan', 'Sibirien', 'Birkastan', 'Röda bergen', 'Atlasområdet',
             'Vanadislunden', 'Hagastaden', 'Norrtull', 'Observatorielunden', 'Tegnérlunden',
@@ -891,7 +891,7 @@ OMRADEN = [
             'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
             'eller online.'
         ),
-        'bild': '12-pa-vag',
+        'bild': '19-tunnelbana',
         'delar': [
             'Liljeholmen', 'Gröndal', 'Aspudden', 'Örnsberg', 'Axelsberg', 'Mälarhöjden',
             'Midsommarkransen', 'Telefonplan', 'Hägerstensåsen', 'Västertorp', 'Fruängen',
@@ -1235,7 +1235,7 @@ OMRADEN = [
             'Från Duvbo till Ursvik. Vi matchar elever i Sundbyberg med en studiehjälpare som '
             'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
-        'bild': '04-sjalvfortroende',
+        'bild': '19-tunnelbana',
         'delar': [
             'Centrala Sundbyberg', 'Duvbo', 'Lilla Alby', 'Storskogen', 'Tulemarken', 'Hallonbergen',
             'Ör', 'Rissne', 'Lilla Ursvik', 'Stora Ursvik', 'Brotorp',
@@ -1278,7 +1278,7 @@ OMRADEN = [
             'Från Stocksund till Enebyberg. Vi matchar elever i Danderyd med en studiehjälpare som '
             'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
-        'bild': '01-en-till-en',
+        'bild': '24-valkommen-hem',
         'delar': [
             'Djursholm', 'Stocksund', 'Enebyberg', 'Danderyd', 'Mörby', 'Djursholms Ösby',
             'Djursholms Ekeby', 'Altorp',
@@ -1325,7 +1325,7 @@ OMRADEN = [
             'Från Näsbypark till Täby kyrkby. Vi matchar elever i Täby med en studiehjälpare som '
             'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
-        'bild': '10-forsta-motet',
+        'bild': '25-forsta-motet-med-foralder',
         'delar': [
             'Täby centrum', 'Tibble', 'Roslags Näsby', 'Näsbypark', 'Lahäll', 'Gribbylund',
             'Skarpäng', 'Täby kyrkby', 'Ensta', 'Viggbyholm', 'Hägernäs', 'Arninge',
@@ -1369,7 +1369,7 @@ OMRADEN = [
             'Från Torsvik till Gåshaga. Vi matchar elever på Lidingö med en studiehjälpare som '
             'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
-        'bild': '06-forklaringen',
+        'bild': '24-valkommen-hem',
         'delar': [
             'Lidingö centrum', 'Torsvik', 'Baggeby', 'Bodal', 'Larsberg', 'Dalénum', 'Hersby',
             'Skärsätra', 'Mölna', 'Brevik', 'Käppala', 'Gåshaga',
@@ -1806,7 +1806,7 @@ AMNEN = [
             'svåra.'
         ),
         'kort': 'Bråk, ekvationer, funktioner och derivata',
-        'bild': '01-en-till-en',
+        'bild': '14-matematik',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Från tabellerna<br>till <em>derivatan.</em>',
         'lista_ingress': (
@@ -1944,7 +1944,7 @@ AMNEN = [
             'språket, inte bara läsa om det.'
         ),
         'kort': 'Ordförråd, grammatik, uppsatser och muntligt',
-        'bild': '04-sjalvfortroende',
+        'bild': '16-engelska',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Från glosorna<br>till <em>essän.</em>',
         'lista_ingress': (
@@ -2011,7 +2011,7 @@ AMNEN = [
             'det i den ordning eleven behöver.'
         ),
         'kort': 'Formler, begrepp och labbrapporter',
-        'bild': '02-personlig-anpassning',
+        'bild': '17-no-naturvetenskap',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Tre ämnen som<br>bygger på <em>sig själva.</em>',
         'lista_ingress': (
@@ -2314,7 +2314,7 @@ STADIER = [
             'barnets takt.'
         ),
         'kort': 'Åk 1–3: läsa, skriva och räkna',
-        'bild': '10-forsta-motet',
+        'bild': '21-hemma-hos-familjen',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Läsa, skriva<br>och <em>räkna.</em>',
         'lista_ingress': (
@@ -2606,7 +2606,7 @@ GUIDER = [
             'Många föräldrar kan matten men märker att hjälpen ändå inte går fram. Oftast '
             'handlar det om hur hjälpen ges, inte om vad man kan. Här är det som brukar fungera.'
         ),
-        'bild': '06-forklaringen',
+        'bild': '14-matematik',
         'lista_etikett': 'Det som brukar fungera',
         'lista_rubrik': 'Sex saker<br>att <em>prova.</em>',
         'lista_ingress': (
@@ -2762,7 +2762,7 @@ GUIDER = [
             'gör skillnad på provet. Här är det som brukar göra det, och hur du hjälper till utan '
             'att kunna ämnet själv.'
         ),
-        'bild': '13-kvallsplugg',
+        'bild': '17-no-naturvetenskap',
         'lista_etikett': 'Det som fungerar',
         'lista_rubrik': 'Från planen<br>till <em>provdagen.</em>',
         'lista_ingress': (
@@ -2852,7 +2852,7 @@ GUIDER = [
             'ensamma. Motståndet går oftast att minska, och ibland säger det något om vad som är '
             'svårt.'
         ),
-        'bild': '04-sjalvfortroende',
+        'bild': '32-laxor-pa-koksbordet',
         'lista_etikett': 'Det som brukar hjälpa',
         'lista_rubrik': 'Mindre förhandling,<br>mer <em>läxa.</em>',
         'lista_ingress': (
@@ -2933,7 +2933,7 @@ GUIDER = [
             'sätts. Här är vad proven prövar, när de kommer och hur ni förbereder er utan att '
             'hela vårterminen handlar om dem.'
         ),
-        'bild': '02-personlig-anpassning',
+        'bild': '29-penna-och-block',
         'lista_etikett': 'Proven',
         'lista_rubrik': 'Fem prov,<br>två <em>terminer.</em>',
         'lista_ingress': (
@@ -3107,7 +3107,7 @@ GUIDER = [
             'inget, men de första veckorna sätter ofta tonen för resten av terminen. Här är hur '
             'ni kommer igång utan att läxan blir ett bråk.'
         ),
-        'bild': '12-pa-vag',
+        'bild': '22-skolvag-hostlov',
         'lista_etikett': 'De första veckorna',
         'lista_rubrik': 'Rutinen först,<br>läxorna <em>sedan.</em>',
         'lista_ingress': (
@@ -3185,7 +3185,7 @@ GUIDER = [
             'plugga upp på en helg, men de sista veckorna är inte heller förlorade. Här är vad '
             'betyget bygger på och vad som faktiskt går att göra.'
         ),
-        'bild': '07-genombrottet',
+        'bild': '28-skrivbord-ordning',
         'lista_etikett': 'Det som går att göra',
         'lista_rubrik': 'Fråga först,<br>plugga <em>sedan.</em>',
         'lista_ingress': (
@@ -3261,7 +3261,7 @@ GUIDER = [
             'avgifter som ligger runt omkring avgör vad en termin faktiskt kostar. Här är det som '
             'styr priset, frågorna att ställa och vårt pris, rakt ut.'
         ),
-        'bild': '10-forsta-motet',
+        'bild': '33-rutat-papper',
         'lista_etikett': 'Det som styr priset',
         'lista_rubrik': 'Mer än<br><em>timpriset.</em>',
         'lista_ingress': (
@@ -3347,7 +3347,7 @@ GUIDER = [
             'en läxhjälpare hjälper eleven med det skolan redan tagit upp. Här är skillnaden, och '
             'när vilken passar bäst, också när svaret inte är vi.'
         ),
-        'bild': '01-en-till-en',
+        'bild': '25-forsta-motet-med-foralder',
         'lista_etikett': 'Tre sorters hjälp',
         'lista_rubrik': 'Vem som<br>passar <em>när.</em>',
         'lista_ingress': (
@@ -3650,8 +3650,51 @@ def head(o):
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css">
 <link rel="stylesheet" href="nextrum-cinema.css">
+<link rel="stylesheet" href="nextrum-landning.css">
 </head>
 <body>"""
+
+
+# Rörelsen på landningssidorna (2026-10-28, Leo: "göra den lite roligare
+# ... främst alla landings sidor"): GSAP med ScrollTrigger, vendorade i
+# bibliotek/ (sidorna laddar inget från andra domäner), efter skalets
+# skript, och nextrum-landning.js sist. Utan dem står sidan färdig.
+LANDNING_SKRIPT = """
+<script src="bibliotek/gsap-3.13.0.min.js"></script>
+<script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js"></script>
+<script src="nextrum-landning.js"></script>"""
+
+# Ämnessidans färg, ur ämnesfärgerna (--amne-*). Stadiesidorna och
+# onlinesidan har inget ämne och står utan.
+AMNESFARG = {
+    'laxhjalp-matematik': 'ma', 'laxhjalp-svenska': 'sv', 'laxhjalp-engelska': 'en',
+    'laxhjalp-no': 'no', 'laxhjalp-so': 'so', 'laxhjalp-moderna-sprak': 'ms',
+}
+
+
+def steg(rader, mer=''):
+    """Så går det till som tre steg på en skena (2026-10-28). Stegen säger
+    samma sak som stycket de ersatte."""
+    li = '\n'.join(
+        f'        <li><span class="lp-steg-nr" aria-hidden="true">{i:02d}</span><b>{esc(r)}</b><p>{esc(t)}</p></li>'
+        for i, (r, t) in enumerate(rader, 1))
+    mer = f'\n      <p class="lp-steg-mer">{mer}</p>' if mer else ''
+    return f"""<div class="lp-steg" data-lp-steg>
+        <span class="lp-steg-spar" aria-hidden="true"><span class="lp-steg-fyll"></span></span>
+        <ol>
+{li}
+        </ol>
+      </div>{mer}"""
+
+
+def linje(o):
+    """Platserna som en linjekarta (2026-10-28). En bild, ingen riktig
+    linje i SL:s nät."""
+    li = ''.join(f'<li><i aria-hidden="true"></i><span>{esc(d)}</span></li>' for d in o['delar'])
+    return f"""<div class="lp-linje" data-lp-linje style="--n:{len(o['delar'])}">
+      <span class="lp-linje-spar" aria-hidden="true"></span>
+      <ol aria-label="Platser {esc(o['i_namn'])}">{li}</ol>
+    </div>"""
 
 
 def omrade(slug):
@@ -3911,11 +3954,22 @@ NASTA_STEG = """<section class="nx-mork nx-final-cinema">
 </section>"""
 
 
+STEG_OMRADE = [
+    ('Ni skickar en intresseanmälan', 'Ni berättar om eleven och var passen ska hållas. Det kostar ingenting att fråga.'),
+    ('Vi hör av oss inom 24 timmar', 'Sedan väljer vi den studiehjälpare som passar eleven bäst.'),
+    ('Studievyn låses upp', 'När matchningen är klar finns studieplanen, bokningen och en rapport efter varje pass där.'),
+]
+STEG_AMNE = [
+    ('Ni skickar en intresseanmälan', 'Ni berättar vilket ämne och vilken kurs det gäller.'),
+    ('Vi väljer studiehjälparen', 'Vi går igenom behovet med er och väljer den som passar bäst, utifrån ämne, nivå och person. Ni bläddrar inte bland profiler: fel match är värre än ingen match.'),
+    ('Studievyn låses upp', 'Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Passen hålls hemma hos er eller online, och ni väljer för varje pass.'),
+]
+
+
 def sida(o):
     huvud, fot = skal()
     huvud = sprakvaxlare(huvud, o['slug'])
 
-    delar = ''.join(f'<span>{esc(d)}</span>' for d in o['delar'])
     tillbaka = ('<a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>'
                 if o.get('hub') else TILLBAKA_NAVET)
 
@@ -3943,7 +3997,7 @@ def sida(o):
   <div class="rv">
     <span class="nx-et acc">Området</span>
     <h2 class="nx-d2" style="margin-top:18px">Var vi matchar elever</h2>
-    <div class="nx-omr-chips" style="margin-top:clamp(20px,2.4vw,28px)">{delar}</div>
+    {linje(o)}
   </div>
 </section>
 
@@ -3954,7 +4008,7 @@ def sida(o):
       <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Ni skickar en intresseanmälan, vi hör av oss inom 24 timmar och väljer sedan den studiehjälpare som passar eleven bäst. När matchningen är klar låses studievyn upp, med studieplanen, bokningen och en rapport efter varje pass. <a href="/sa-fungerar-nextrum">Så fungerar det, steg för steg</a>.</p>
+      {steg(STEG_OMRADE, '<a href="/sa-fungerar-nextrum">Så fungerar det, steg för steg</a>.')}
     </div>
   </div>
 </section>
@@ -3963,7 +4017,7 @@ def sida(o):
 {faq_sektion(o)}{andra_omraden(o)}
 {NASTA_STEG}
 
-</main>{fot}{jsonld(o, OMRADEN)}
+</main>{fot}{LANDNING_SKRIPT}{jsonld(o, OMRADEN)}
 </body>
 </html>
 """
@@ -3991,7 +4045,8 @@ def amnessida(o):
     if o is not ONLINE:
         omrkort += '\n' + kort(ONLINE['slug'], 'Läxhjälp online', ONLINE['kort'])
 
-    return f"""{head(o)}{huvud}<main id="innehall">
+    amnesfarg = f' data-lp-amne="{AMNESFARG[o["slug"]]}"' if o['slug'] in AMNESFARG else ''
+    return f"""{head(o)}{huvud}<main id="innehall"{amnesfarg}>
 
 {hjalte(o, TILLBAKA_NAVET)}
 
@@ -4025,8 +4080,7 @@ def amnessida(o):
       <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Ni skickar in en intresseanmälan och berättar vilket ämne och vilken kurs det gäller. Vi går igenom behovet tillsammans med er och väljer sedan ut den studiehjälpare som passar bäst, utifrån ämne, nivå och person. Ni bläddrar inte bland profiler: fel match är värre än ingen match.</p>
-      <p>När matchningen är klar låses studievyn upp. Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Passen hålls hemma hos er eller online, och ni väljer för varje pass.</p>
+      {steg(STEG_AMNE)}
     </div>
   </div>
 </section>
@@ -4035,7 +4089,7 @@ def amnessida(o):
 {faq_sektion(o)}{kortsektion('Områden', o.get('omraden_rubrik', 'Hemma hos er i Stockholm, eller online'), omrkort)}{amnen_sektion(o)}{stadier_sektion(o)}{kortsektion('Guider', 'För er som hjälper till hemma', guidekort(GUIDER))}
 {NASTA_STEG}
 
-</main>{fot}{jsonld(o, OMRADEN)}
+</main>{fot}{LANDNING_SKRIPT}{jsonld(o, OMRADEN)}
 </body>
 </html>
 """
@@ -4166,7 +4220,7 @@ def guidesida(o):
 {faq_sektion(o)}{amnen_sektion(o)}{fler}
 {NASTA_STEG}
 
-</main>{fot}{jsonld_guide(o)}
+</main>{fot}{LANDNING_SKRIPT}{jsonld_guide(o)}
 </body>
 </html>
 """

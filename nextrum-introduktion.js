@@ -1,5 +1,6 @@
 /* ============================================================
-   NEXTRUM — introduktionen i studievyn och studiehjälparvyn (2026-10-06)
+   NEXTRUM — rundturen i studievyn och studiehjälparvyn (2026-10-06,
+   en rundtur i den riktiga vyn sedan 2026-10-27)
 
    Leo: "skapa också en introduktion med skärmdump och förklaringar som
    finns som en funktion i både anställdas och familjernas plattform ...
@@ -7,112 +8,91 @@
    börja boka lektioner, detta ska ske efter att man bekräftat sitt nya
    lösenord."
 
+   Samma dag som den fick skärmdumpar med rörelse (Leo 2026-10-27:
+   "introduktionen du gjorde på studievyerna var kassa ... de skulle gå
+   igenom en introduktion genom vyn i systemet snyggt ... live när man är
+   inne i vyn första gången, och lite då och då ploppar de upp små rutor
+   med två meningars beskrivningar, och att man går vidare genom att bara
+   trycka var som helst på skärmen"). Nu är det vyn själv som visas:
+   rundturen byter sektion med vyns egen meny, tonar ner allt utom det
+   den pratar om (ett hål i en mörk hinna, som glider mellan stegen) och
+   låter en liten ruta med två meningar ploppa upp bredvid. Ett tryck var
+   som helst går vidare. Inga skärmdumpar längre, så inget att ta om när
+   en del i vyn ändras: hålet mäts mot det som står där.
+
    Den visas av sig själv första gången (NXStudie.introduktion, när
-   user_metadata.valkommen står på 'intro': efter lösenordet för den som
-   tagits in), och går att öppna igen under Profil & inställningar
-   (data-intro="<roll>"). Profilens steg säger var man loggar in nästa
-   gång (2026-10-07): inloggningen är en för alla, och kontot avgör vyn.
+   user_metadata.valkommen står på 'intro'), när vyn står färdig, och
+   går att gå igen under Profil & inställningar (data-intro="<roll>").
+   En studiehjälpare vars profil inte är godkänd har ingen vy att gå
+   runt i; rundturen väntar då tills den är det.
 
-   RÖRELSEN (2026-10-27, Leo: "Introduktionen till studievyn ska vara
-   coolare tänk dig en introduktion som använder motion graphic för att
-   leda kunden genom studievyn"). Fyra sorters steg:
-     valkommen  vyns delar som en karta: märket, och menyns delar med
-                sina ikoner (ur vyns egen meny) som flyger in en i taget.
-                Ett tryck på en del går till dess steg.
-     del        skärmdumpen zoomar långsamt mot det viktigaste i delen,
-                en ring pulserar runt det och ett tryck syns där (ring:
-                x, y, bredd och höjd i procent av bilden).
-     hem        sist, på en telefon som inte redan har vyn som app:
-                telefonen ur NXHemskarm som visar hur vyn läggs på
-                hemskärmen (Leo samma dag: en ruta om det, och samma
-                guide under Profil).
-   Överst ett band med ett streck per steg, som Instagrams berättelser.
-   Steget glider in från det håll man går åt. Skriptet sätter klasser
-   och data-attribut, CSS rör sig (nextrum-vy.css, INTRODUKTIONEN), och
-   med rörelse bortvald står allt stilla.
-
-   KNAPPARNA STÅR STILLA: rutan har samma höjd i varje steg (scenen tar
-   resten och rullar inom sig om texten inte ryms), så Nästa flyttar sig
-   aldrig under fingret.
-
-   Bilderna är skärmdumpar av vyerna med påhittade familjer, tagna i en
-   telefons bredd mot en falsk Supabase (verktyg/bygg-introbilder.js).
-   Vägarna står i NEXTRUM_INTRO i nextrum-images.js, den enda filen där
-   bildvägar står; har den inte laddat visas texten utan bild. Ändras en
-   del i vyn som en bild visar: ta om bilderna, och läs texten och
-   ringen här igen.
+   Första gången går den bara framåt (och bakåt med pilarna): sista
+   trycket är vägen in, som Leo bad om. Gången igen går den att stänga.
 
    Texterna säger bara det vyn själv säger. Betalningen beskrivs inte
    här: villkoren står på de ställen kolla-betalningsvillkor.py räknar,
    och en mening till om hur man betalar vore ett ställe till att glömma.
 
-   Första gången går rutan bara framåt och bakåt: Fortsätt sist är vägen
-   in, som Leo bad om. Öppnad igen går den att stänga när som helst.
+   Skriptet sätter klasser och var hålet och rutan står, en gång per
+   steg; CSS glider och ploppar (nextrum-vy.css, RUNDTUREN). Med rörelse
+   bortvald står allt stilla.
    ============================================================ */
 (function () {
   'use strict';
 
   var STEG = {
     foralder: [
-      { bild: 'oversikt', sek: 'oversikt', rubrik: 'Översikt', ring: [5, 25, 90, 58],
-        text: 'Här börjar ni. Överst står det som väntar på er, som en tid att svara på eller ett pass att '
-          + 'betala. Under det de kommande passen och hur det går.' },
-      { bild: 'boka', sek: 'boka', rubrik: 'Boka pass', ring: [10, 16, 83, 19],
-        text: 'Tryck på en dag och föreslå en tid. Er studiehjälpare accepterar den eller föreslår en annan, '
-          + 'och passet står sedan under Mina lektioner.' },
-      { bild: 'lektioner', sek: 'lektioner', rubrik: 'Mina lektioner', ring: [8, 43, 86, 29],
-        text: 'Era pass, planen bakom dem och vad som hände på varje. Dagen är gul medan en tid väntar på svar, '
-          + 'röd när passet ska betalas och grön när det är betalt. Tryck på ett pass för allt om det.' },
-      { bild: 'betalning', sek: 'betalning', rubrik: 'Betalning & planer', ring: [4, 16, 93, 29],
-        text: 'Vad som är att betala och vad som är betalt, med knappen Betala nu vid varje pass. Under dem '
-          + 'planerna och er timbank.' },
-      { bild: 'nexlax', sek: 'nexlax', rubrik: 'NexLäx', ring: [8, 46, 85, 26],
-        text: 'Övningarna mellan passen, och uppgifterna från er studiehjälpare. Välj ämne och årskurs, och '
-          + 'varje svar rättas direkt. Barnet kan göra dem här eller med en egen inloggning.' },
-      { bild: 'meddelanden', sek: 'meddelanden', rubrik: 'Meddelanden', ring: [10, 25, 85, 53],
-        text: 'Kontakten med er studiehjälpare. Skriv här om något ska ändras, eller om ni undrar något om '
-          + 'passen.' },
-      { bild: 'profil', sek: 'profil', rubrik: 'Profil & inställningar', ring: [5, 30, 90, 26],
-        text: 'Ert konto, barnen och notiserna. Under Barn skapar ni barnets egen inloggning och väljer vad '
-          + 'barnet får se och göra. Nästa gång loggar ni in under Logga in på nextrum.se, och barnet på samma '
-          + 'ställe med sitt användarnamn. Introduktionen finns kvar under Konto & inloggning.' }
+      { sek: 'oversikt', rubrik: 'Översikt',
+        text: 'Här börjar ni varje gång. Överst står det som väntar på er, och under det de kommande passen.' },
+      { sek: 'boka', rubrik: 'Boka pass',
+        text: 'Tryck på en dag och föreslå en tid. Er studiehjälpare accepterar den eller föreslår en annan.' },
+      { sek: 'lektioner', rubrik: 'Mina lektioner',
+        text: 'Era pass, studieplanen och rapporterna. Dagen är gul medan en tid väntar på svar, röd när passet '
+          + 'ska betalas och grön när det är betalt.' },
+      { sek: 'nexlax', rubrik: 'NexLäx',
+        text: 'Övningarna mellan passen, där varje svar rättas direkt. Barnet kan göra dem här eller med en egen '
+          + 'inloggning.' },
+      { sek: 'meddelanden', rubrik: 'Meddelanden',
+        text: 'Här skriver ni till er studiehjälpare. Skriv om något ska ändras eller om ni undrar något.' },
+      { sek: 'betalning', rubrik: 'Betalning & planer',
+        text: 'Det som är att betala, med Betala nu vid varje pass, och det som är betalt. Under det planerna och '
+          + 'er timbank.' },
+      { sek: 'profil', rubrik: 'Profil & inställningar',
+        text: 'Ert konto, notiserna och barnen, där ni skapar barnets egen inloggning. Rundturen finns kvar under '
+          + 'Konto & inloggning.' }
     ],
     studiehjalpare: [
-      { bild: 'oversikt', sek: 'oversikt', rubrik: 'Översikt', ring: [4, 40, 92, 40],
-        text: 'Läget just nu: dina nästa pass och det som väntar på dig, som en tid att svara på eller en '
-          + 'rapport att skriva. Menyn leder vidare till varje del.' },
-      { bild: 'tider', sek: 'tider', rubrik: 'Föreslagna tider', ring: [9, 60, 85, 33],
-        text: 'Familjerna föreslår tider. Acceptera, avslå med några rader om varför, eller föreslå en annan '
-          + 'tid. Ett accepterat pass flyttar till Lektioner & elever.' },
-      { bild: 'lektioner', sek: 'lektioner', rubrik: 'Lektioner & elever', ring: [9, 66, 85, 27],
-        text: 'Dina pass, rapporten familjen läser, och allt om eleven du valt, som studieplanen du skriver '
-          + 'efter första passet.' },
-      { bild: 'rapporter', sek: 'rapporter', rubrik: 'Skriv rapport', ring: [9, 55, 85, 31],
-        text: 'Pass som har varit men saknar rapport. Rapporten är det familjen läser, och först med den blir '
-          + 'passet en arbetad timme.' },
-      { bild: 'laxor', sek: 'laxor', rubrik: 'Uppgifter & material', ring: [9, 60, 55, 30],
-        text: 'Ge eleven uppgifter mellan passen, med material ur biblioteket eller en nivå i NexLäx. '
-          + 'Familjen ser allt direkt.' },
-      { bild: 'meddelanden', sek: 'meddelanden', rubrik: 'Meddelanden', ring: [9, 39, 82, 43],
+      { sek: 'oversikt', rubrik: 'Översikt',
+        text: 'Läget just nu: dina nästa pass och det som väntar på dig. Härifrån leder menyn vidare.' },
+      { sek: 'lektioner', rubrik: 'Lektioner & elever',
+        text: 'Dina pass och allt om eleven du valt. Här skriver du också studieplanen efter första passet.' },
+      { sek: 'tider', rubrik: 'Föreslagna tider',
+        text: 'Familjerna föreslår tider, och du accepterar, avslår eller föreslår en annan. Ett accepterat pass '
+          + 'flyttar till Lektioner & elever.' },
+      { sek: 'rapporter', rubrik: 'Skriv rapport',
+        text: 'Pass som har varit men saknar rapport. Först med rapporten blir passet en arbetad timme.' },
+      { sek: 'laxor', rubrik: 'Uppgifter & material',
+        text: 'Ge eleven uppgifter mellan passen, med material ur biblioteket eller en nivå i NexLäx. Familjen ser '
+          + 'dem direkt.' },
+      { sek: 'meddelanden', rubrik: 'Meddelanden',
         text: 'Kontakten med familjen. Samma tråd som på Översikt.' },
-      { bild: 'statistik', sek: 'statistik', rubrik: 'Statistik & ersättning', ring: [9, 66, 82, 25],
+      { sek: 'statistik', rubrik: 'Statistik & ersättning',
         text: 'Genomförda pass, timmar och vad de gav. Ett pass räknas när rapporten är skriven.' },
-      { bild: 'profil', sek: 'profil', rubrik: 'Profil & inställningar', ring: [6, 37, 88, 50],
-        text: 'Det familjer ser om dig, din inloggning, dokumenten och vilka mejl du vill ha. Nästa gång loggar '
-          + 'du in under Logga in på nextrum.se. Introduktionen finns kvar här, under Min profil.' }
+      { sek: 'profil', rubrik: 'Profil & inställningar',
+        text: 'Det familjer ser om dig, dina dokument och vilka mejl du vill ha. Rundturen finns kvar under Min '
+          + 'profil.' }
     ]
   };
 
-  /* Sista raden när något väntar på oss: familjen är inte matchad (vyn är
-     öppen, men bokningen och köpen väntar, 2026-10-07), eller
-     studiehjälparens profil väntar på att godkännas. */
+  /* Sista rutan när något väntar på oss: familjen är inte matchad (vyn
+     är öppen, men bokningen och köpen väntar, 2026-10-07). */
   var VÄNTAR = {
-    foralder: 'Boka pass och Meddelanden öppnas när vi matchat er med en studiehjälpare, och vi hör av oss när det är klart. '
-      + 'Barnen, NexLäx och profilen kan ni använda redan nu.',
-    studiehjalpare: 'Din profil väntar på att vi godkänner den. Vi hör av oss när det är klart.'
+    foralder: 'Boka pass och Meddelanden öppnas när vi matchat er med en studiehjälpare, och vi hör av oss när det '
+      + 'är klart.'
   };
 
   var VAD = { foralder: 'studievyn', studiehjalpare: 'studiehjälparvyn' };
+  var NI = { foralder: { er: 'er', ni: 'ni' }, studiehjalpare: { er: 'dig', ni: 'du' } };
 
   var öppen = null;
 
@@ -124,210 +104,269 @@
   function lugnt() {
     try { return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
   }
+  function synlig(el) { return !!(el && el.getClientRects().length); }
 
-  function bildFör(roll, nyckel) {
-    var reg = window.NEXTRUM_INTRO && window.NEXTRUM_INTRO[roll];
-    return (reg && reg[nyckel]) || null;
+  function menylänk(sek) { return document.querySelector('#vy-sido a[data-sek="' + sek + '"]'); }
+  function sektion(sek) { return document.querySelector('section.vy-sek[data-sek="' + sek + '"]'); }
+
+  /* Byter sektion som om man tryckt i menyn: NXStudie.sidomeny lyssnar
+     på trycket, och allt den gör vid ett byte (adressen, pillen,
+     hämtningarna) blir gjort. */
+  function gåTill(sek) {
+    var a = menylänk(sek);
+    if (a && !a.classList.contains('ar-har')) a.click();
   }
 
-  /* <picture> med webp först och jpg som reserv, som på de öppna sidorna. */
-  function bildHtml(b) {
-    return '<picture><source type="image/webp" srcset="bilder/' + esc(b.file) + '.webp">'
-      + '<img src="bilder/' + esc(b.file) + '.jpg" alt="' + esc(b.alt) + '" width="' + esc(b.w)
-      + '" height="' + esc(b.h) + '" decoding="async"></picture>';
+  function täckt() {
+    return typeof NXStudie !== 'undefined' && NXStudie.täcktÖverst ? NXStudie.täcktÖverst() : 72;
+  }
+  function scrolla(y) {
+    if (typeof NXStudie !== 'undefined' && NXStudie.scrollaTill) NXStudie.scrollaTill(y);
+    else window.scrollTo(0, Math.max(0, y));
   }
 
-  /* Laddar nästa bild i förväg, så att Nästa inte väntar på nätet. */
-  function förladda(b) {
-    if (!b) return;
-    var i = new Image();
-    i.decoding = 'async';
-    i.src = 'bilder/' + b.file + (window.HTMLPictureElement ? '.webp' : '.jpg');
-  }
-
-  /* Ikonen för en del, ur vyns egen meny: samma tecken som eleven sedan
-     letar efter. Saknas den står bara namnet. */
-  function ikonFör(sek) {
-    var a = document.querySelector('#vy-sido a[data-sek="' + sek + '"] svg, .vy-sido a[data-sek="' + sek + '"] svg');
-    return a ? a.outerHTML : '';
-  }
-
-  /* Hemskärmens steg finns bara där det går att göra något: på en
-     telefon, inte redan som app, och med NXHemskarm laddad. */
-  function medHem() {
-    if (typeof NXHemskarm === 'undefined' || !NXHemskarm.scen) return false;
-    if (NXHemskarm.somApp && NXHemskarm.somApp()) return false;
-    try { return !!(window.matchMedia && matchMedia('(pointer: coarse)').matches); } catch (e) { return false; }
-  }
-  function plattform() {
-    var ua = String(navigator.userAgent || '');
-    return /Android/.test(ua) ? 'android' : 'ios';
+  /* Det hålet ramar in: det första som syns i sektionen (rubriken, och
+     i NexLäx kortet, för där är rubriken dold) och det som står under
+     det, men aldrig längre ner än tak, så att rutan alltid får plats
+     under. Mäts när sektionen glidit klart (vy-in). */
+  function ram(sek, tak) {
+    var s = sektion(sek);
+    if (!synlig(s)) return null;
+    var barn = Array.prototype.filter.call(s.children, function (el) {
+      var r = el.getBoundingClientRect();
+      return r.height > 8 && r.width > 8;
+    });
+    if (!barn.length) return null;
+    var r = barn[0].getBoundingClientRect();
+    var botten = barn[1] ? barn[1].getBoundingClientRect().bottom : r.bottom;
+    var max = Math.max(r.top + 90, Math.min(tak, r.top + window.innerHeight * 0.46));
+    return { top: r.top, left: r.left, right: r.right, bottom: Math.min(Math.max(r.bottom, botten), max) };
   }
 
   /* o.roll        'foralder' eller 'studiehjalpare'
-     o.sparat      första gången (lösenordet valdes nyss): välkomststeget
-                   hälsar välkommen.
-     o.väntar      vyn är inte öppen än (VÄNTAR)
-     o.igen        öppnad från Profil: går att stänga
-     Svarar när Fortsätt (eller Stäng) trycks. */
+     o.sparat      första gången (lösenordet valdes nyss)
+     o.väntar      något väntar på oss (VÄNTAR)
+     o.igen        öppnad från Profil: går att stänga, och slutar där
+     Svarar när sista trycket är gjort (eller Stäng). */
   function visa(o) {
     o = o || {};
     var roll = STEG[o.roll] ? o.roll : 'foralder';
     if (öppen) return öppen;
 
-    var delar = STEG[roll];
-    var alla = [{ typ: 'valkommen' }].concat(delar.map(function (d) { return { typ: 'del', d: d }; }));
-    if (medHem()) alla.push({ typ: 'hem' });
+    /* Bara delarna som finns i den här vyn: en sektion som är dold för
+       inloggningen hoppas över. */
+    var delar = STEG[roll].filter(function (d) { return synlig(menylänk(d.sek)) || synlig(sektion(d.sek)); });
+    var alla = [{ typ: 'start' }].concat(delar.map(function (d) { return { typ: 'del', d: d }; }), [{ typ: 'slut' }]);
+    var nav = document.getElementById('vy-sido');
+    var startSek = (nav && nav.querySelector('a.ar-har')) ? nav.querySelector('a.ar-har').getAttribute('data-sek') : 'oversikt';
+    var p = NI[roll];
 
     öppen = new Promise(function (klar) {
-      var nu = 0;
+      var nu = -1;
+      var vänta = 0;
       var sistaFokus = document.activeElement;
-      var ruta = document.createElement('div');
-      ruta.className = 'nx-fraga nx-intro';
-      ruta.innerHTML =
-        '<div class="nx-fraga-box nx-intro-box" role="dialog" aria-modal="true" aria-labelledby="nx-intro-t"'
-        + ' aria-describedby="nx-intro-text">'
-        + '<div class="nx-intro-topp">'
-        + '<div class="ni-band" aria-hidden="true">' + alla.map(function () { return '<i></i>'; }).join('') + '</div>'
-        + '<div class="ni-topprad">'
-        + '<span class="nx-intro-nr" aria-live="polite"></span>'
-        + (o.igen ? '<button type="button" class="btn btn-ghost btn-sm" data-intro-stang>Stäng</button>' : '')
-        + '</div></div>'
-        + '<div class="nx-intro-scen"></div>'
-        + '<div class="nx-fraga-knappar nx-intro-knappar">'
-        + '<button type="button" class="btn btn-ghost" data-intro-bak>Tillbaka</button>'
-        + '<button type="button" class="btn btn-primary" data-intro-fram>Nästa</button>'
-        + '</div></div>';
 
-      var box = ruta.querySelector('.nx-intro-box');
-      var scen = ruta.querySelector('.nx-intro-scen');
-      var bak = ruta.querySelector('[data-intro-bak]');
-      var fram = ruta.querySelector('[data-intro-fram]');
+      var tur = document.createElement('div');
+      tur.className = 'nx-intro nx-tur';
+      if (lugnt()) tur.classList.add('nt-lugn');
+      tur.innerHTML =
+        '<div class="nt-hal" aria-hidden="true"></div>'
+        + '<div class="nt-yta" aria-hidden="true"></div>'
+        + '<div class="nt-ruta" role="dialog" aria-modal="true" aria-labelledby="nt-t" aria-describedby="nt-text" tabindex="-1">'
+        + '<div class="nt-inne"></div></div>';
+      var hål = tur.querySelector('.nt-hal');
+      var ruta = tur.querySelector('.nt-ruta');
+      var inne = tur.querySelector('.nt-inne');
 
-      function välkommen() {
-        var karta = delar.map(function (d, i) {
-          return '<button type="button" class="ni-del" data-intro-ga="' + (i + 1) + '" style="--i:' + i + '">'
-            + '<span class="ni-del-ik" aria-hidden="true">' + ikonFör(d.sek) + '</span>'
-            + '<span>' + esc(d.rubrik) + '</span></button>';
-        }).join('');
-        return '<div class="ni-valkommen">'
-          + '<span class="ni-mark" aria-hidden="true"><img src="/apple-touch-icon.png" alt="" width="60" height="60"></span>'
-          + (o.sparat ? '<p class="nx-intro-klar">Välkommen till Nextrum!</p>' : '')
-          + '<h3 id="nx-intro-t">Så fungerar ' + esc(VAD[roll]) + '</h3>'
-          + '<p id="nx-intro-text" class="nx-intro-text">' + delar.length + ' delar, och menyn leder till var och en. '
-          + 'Gå igenom dem med Nästa, eller tryck på en del.</p>'
-          + '<div class="ni-karta">' + karta + '</div>'
-          + '</div>';
+      function prickar() {
+        return '<span class="nt-prickar" aria-hidden="true">' + delar.map(function (d, i) {
+          return '<i class="' + (i + 1 < nu ? 'sedd' : i + 1 === nu ? 'nu' : '') + '"></i>';
+        }).join('') + '</span>';
       }
 
-      function del(d, sist) {
-        var b = bildFör(roll, d.bild);
-        var r = d.ring || [10, 30, 80, 30];
-        var mitt = (r[0] + r[2] / 2) + '% ' + (r[1] + r[3] / 2) + '%';
-        return '<div class="nx-intro-mitt">'
-          + (b
-            ? '<figure class="nx-intro-bild"><div class="ni-zoom" style="transform-origin:' + mitt + '">'
-              + bildHtml(b)
-              + '<span class="ni-ring" aria-hidden="true" style="left:' + r[0] + '%;top:' + r[1] + '%;width:' + r[2] + '%;height:' + r[3] + '%"></span>'
-              + '<span class="ni-tryck" aria-hidden="true" style="left:' + (r[0] + r[2] / 2) + '%;top:' + (r[1] + r[3] / 2) + '%"></span>'
-              + '</div></figure>'
-            : '')
-          + '<div class="nx-intro-kropp">'
-          + '<span class="ni-chip"><span class="ni-del-ik" aria-hidden="true">' + ikonFör(d.sek) + '</span>' + esc(d.rubrik) + '</span>'
-          + '<h3 id="nx-intro-t">' + esc(d.rubrik) + '</h3>'
-          + '<p id="nx-intro-text" class="nx-intro-text">' + esc(d.text) + '</p>'
-          + (sist && o.väntar ? '<p class="nx-intro-vantar">' + esc(VÄNTAR[roll]) + '</p>' : '')
-          + '</div></div>';
+      function innehåll(s) {
+        var sist = s.typ === 'slut';
+        var stäng = o.igen && !sist ? '<button type="button" class="nt-stang" data-tur-stang>Stäng</button>' : '';
+        if (s.typ === 'start') {
+          return '<span class="nt-mark" aria-hidden="true"><img src="/apple-touch-icon.png" alt="" width="52" height="52"></span>'
+            + (o.sparat ? '<p class="nt-klar">Välkommen till Nextrum!</p>' : '')
+            + '<h3 id="nt-t">Vi visar ' + p.er + ' runt i ' + esc(VAD[roll]) + '</h3>'
+            + '<p id="nt-text">' + delar.length + ' delar, en i taget, i den riktiga vyn. Tryck var som helst på '
+            + 'skärmen för att gå vidare.</p>'
+            + '<div class="nt-fot"><span class="nt-tips">Tryck för att börja</span>' + stäng + '</div>';
+        }
+        if (sist) {
+          return '<h3 id="nt-t">Nu är ' + p.ni + ' igång</h3>'
+            + '<p id="nt-text">Menyn leder till varje del, och Översikt säger vad som väntar. Nästa gång loggar '
+            + p.ni + ' in under Logga in på nextrum.se.</p>'
+            + (o.väntar && VÄNTAR[roll] ? '<p class="nt-vantar">' + esc(VÄNTAR[roll]) + '</p>' : '')
+            + '<div class="nt-fot"><span class="nt-tips">Tryck för att ' + (o.igen ? 'stänga' : 'börja') + '</span></div>';
+        }
+        return '<span class="nt-et">' + nu + ' av ' + delar.length + '</span>'
+          + '<h3 id="nt-t">' + esc(s.d.rubrik) + '</h3>'
+          + '<p id="nt-text">' + esc(s.d.text) + '</p>'
+          + '<div class="nt-fot">' + prickar() + stäng + '</div>';
       }
 
-      function hem(sist) {
-        return '<div class="nx-intro-mitt ni-hem">'
-          + '<figure class="nx-intro-bild ni-hem-fig">' + NXHemskarm.scen(plattform()) + '</figure>'
-          + '<div class="nx-intro-kropp">'
-          + '<span class="ni-chip">Tips</span>'
-          + '<h3 id="nx-intro-t">Lägg ' + esc(VAD[roll]) + ' på hemskärmen</h3>'
-          + '<p id="nx-intro-text" class="nx-intro-text">Då öppnar du den med ett tryck, som en app och utan adressfältet. '
-          + 'Telefonen visar hur. Hela guiden, för iPhone och Android, finns under Profil &amp; inställningar.</p>'
-          + (sist && o.väntar ? '<p class="nx-intro-vantar">' + esc(VÄNTAR[roll]) + '</p>' : '')
-          + '</div></div>';
+      /* Rutan ploppar upp under hålet, eller över det om det inte ryms,
+         och står annars mitt på skärmen (första och sista). */
+      function läggRuta(r) {
+        var vb = window.innerWidth, vh = window.innerHeight, kant = 12;
+        var b = Math.min(360, vb - kant * 2);
+        ruta.style.width = b + 'px';
+        if (!r) {
+          ruta.style.left = Math.round((vb - b) / 2) + 'px';
+          ruta.style.top = Math.round(Math.max(kant, (vh - ruta.offsetHeight) / 2)) + 'px';
+          ruta.removeAttribute('data-sida');
+          return;
+        }
+        var h = ruta.offsetHeight;
+        var mitt = (r.left + r.right) / 2;
+        var x = Math.max(kant, Math.min(vb - b - kant, mitt - b / 2));
+        var y, sida;
+        if (r.bottom + 14 + h <= vh - kant) { y = r.bottom + 14; sida = 'under'; }
+        else if (r.top - 14 - h >= täckt()) { y = r.top - 14 - h; sida = 'over'; }
+        else { y = vh - h - kant; sida = 'under'; }
+        ruta.style.left = Math.round(x) + 'px';
+        ruta.style.top = Math.round(y) + 'px';
+        ruta.setAttribute('data-sida', sida);
+        ruta.style.setProperty('--pil', Math.round(Math.max(18, Math.min(b - 18, mitt - x))) + 'px');
       }
 
-      function rita(rikt) {
-        var s = alla[nu], sist = nu === alla.length - 1;
-        scen.innerHTML = s.typ === 'valkommen' ? välkommen() : s.typ === 'hem' ? hem(sist) : del(s.d, sist);
-        scen.setAttribute('data-typ', s.typ);
-        /* Klassen sätts om för varje steg, så att inträdet spelas igen. */
-        scen.classList.remove('ni-in');
-        scen.setAttribute('data-rikt', rikt || 'fram');
-        void scen.offsetWidth;
-        scen.classList.add('ni-in');
-        scen.scrollTop = 0;
-        if (s.typ === 'hem') NXHemskarm.spela(scen.querySelector('.ni-hem-fig'));
-        var näst = alla[nu + 1];
-        if (näst && näst.typ === 'del') förladda(bildFör(roll, näst.d.bild));
-        ruta.querySelector('.nx-intro-nr').textContent = (nu + 1) + ' av ' + alla.length;
-        ruta.querySelectorAll('.ni-band i').forEach(function (p, i) {
-          p.classList.toggle('nu', i === nu);
-          p.classList.toggle('sedd', i < nu);
-        });
-        bak.disabled = nu === 0;
-        fram.textContent = sist ? 'Fortsätt' : 'Nästa';
+      function läggHål(r) {
+        if (!r) { tur.classList.remove('har-hal'); return; }
+        var luft = 10;
+        hål.style.left = Math.round(r.left - luft) + 'px';
+        hål.style.top = Math.round(r.top - luft) + 'px';
+        hål.style.width = Math.round(r.right - r.left + luft * 2) + 'px';
+        hål.style.height = Math.round(r.bottom - r.top + luft * 2) + 'px';
+        tur.classList.add('har-hal');
+      }
+
+      /* Innehållet ritas i den dolda rutan först, så att dess höjd är
+         känd när hålet mäts: hålet slutar där rutan får plats under. */
+      function förbered(s) {
+        inne.innerHTML = innehåll(s);
+        ruta.style.width = Math.min(360, window.innerWidth - 24) + 'px';
+        return window.innerHeight - ruta.offsetHeight - 12 - 14 - 10;
+      }
+
+      function plopp(r) {
+        läggRuta(r);
+        ruta.classList.remove('nt-upp');
+        void ruta.offsetWidth;
+        ruta.classList.add('nt-upp');
+        ruta.focus({ preventScroll: true });
+      }
+
+      function lyftMeny(sek) {
+        if (!nav) return;
+        nav.querySelectorAll('a.nt-pek').forEach(function (a) { a.classList.remove('nt-pek'); });
+        nav.classList.toggle('nt-lyft', !!sek);
+        var a = sek && menylänk(sek);
+        if (a) {
+          a.classList.add('nt-pek');
+          /* På en telefon är menyn en rad man sveper i: posten rullas
+             fram i raden, aldrig sidan. */
+          if (nav.scrollWidth > nav.clientWidth) {
+            nav.scrollTo({ left: a.offsetLeft - (nav.clientWidth - a.offsetWidth) / 2, behavior: lugnt() ? 'auto' : 'smooth' });
+          }
+        }
+      }
+
+      function rita() {
+        var s = alla[nu];
+        clearTimeout(vänta);
+        ruta.classList.remove('nt-upp');
+        if (s.typ !== 'del') {
+          lyftMeny(null);
+          läggHål(null);
+          if (s.typ === 'slut') gåTill(o.igen ? startSek : 'oversikt');
+          if (s.typ === 'slut' || s.typ === 'start') scrolla(0);
+          vänta = setTimeout(function () { förbered(s); plopp(null); }, s.typ === 'start' ? 120 : 260);
+          return;
+        }
+        var byter = !menylänk(s.d.sek) || !menylänk(s.d.sek).classList.contains('ar-har');
+        gåTill(s.d.sek);
+        lyftMeny(s.d.sek);
+        /* Sektionen glider in (vy-in, .46 s): hålet mäts och sidan
+           rullas när den står still, och rutan ploppar efter hålet. */
+        vänta = setTimeout(function () {
+          var tak = förbered(s);
+          var r0 = ram(s.d.sek, Infinity);
+          if (r0 && Math.abs(r0.top - täckt() - 18) > 4) scrolla(window.scrollY + r0.top - täckt() - 18);
+          var r = ram(s.d.sek, tak);
+          läggHål(r);
+          vänta = setTimeout(function () { plopp(r); }, lugnt() ? 0 : 280);
+        }, byter && !lugnt() ? 480 : 40);
       }
 
       function stäng() {
-        document.removeEventListener('keydown', tangent);
-        ruta.remove();
-        document.body.style.overflow = '';
+        clearTimeout(vänta);
+        document.removeEventListener('keydown', tangent, true);
+        window.removeEventListener('resize', omRita);
+        lyftMeny(null);
+        tur.classList.remove('open');
+        setTimeout(function () { tur.remove(); }, lugnt() ? 0 : 220);
         öppen = null;
-        if (sistaFokus && sistaFokus.focus && document.contains(sistaFokus)) sistaFokus.focus();
+        if (o.igen) gåTill(startSek);
+        if (sistaFokus && sistaFokus.focus && document.contains(sistaFokus)) sistaFokus.focus({ preventScroll: true });
         klar();
       }
 
       function till(i) {
-        var mål = Math.max(0, Math.min(alla.length - 1, i));
+        if (i >= alla.length) { stäng(); return; }
+        var mål = Math.max(0, i);
         if (mål === nu) return;
-        var rikt = mål > nu ? 'fram' : 'bak';
         nu = mål;
-        rita(rikt);
-        fram.focus({ preventScroll: true });
+        rita();
+      }
+
+      function omRita() {
+        var s = alla[nu];
+        if (!s) return;
+        var r = s.typ === 'del' ? ram(s.d.sek, window.innerHeight - ruta.offsetHeight - 36) : null;
+        läggHål(r);
+        läggRuta(r);
       }
 
       function tangent(e) {
-        if (e.key === 'Escape' && o.igen) { e.preventDefault(); stäng(); return; }
-        if (e.key === 'ArrowRight' && !e.target.closest('input, textarea, select')) { e.preventDefault(); till(nu + 1); return; }
-        if (e.key === 'ArrowLeft' && !e.target.closest('input, textarea, select')) { e.preventDefault(); till(nu - 1); return; }
+        if (e.key === 'Escape' && o.igen) { e.preventDefault(); e.stopPropagation(); stäng(); return; }
+        if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') {
+          if (e.target.closest && e.target.closest('[data-tur-stang]')) return;
+          e.preventDefault(); e.stopPropagation(); till(nu + 1); return;
+        }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); till(nu - 1); return; }
         if (e.key === 'Tab') {
-          var kan = Array.prototype.filter.call(box.querySelectorAll('button'), function (k) { return !k.disabled; });
-          if (!kan.length) return;
-          var f = kan[0], s = kan[kan.length - 1];
-          if (e.shiftKey && document.activeElement === f) { e.preventDefault(); s.focus(); }
-          else if (!e.shiftKey && document.activeElement === s) { e.preventDefault(); f.focus(); }
+          /* Fokus stannar i rutan, som i de andra rutorna. */
+          var k = ruta.querySelector('[data-tur-stang]');
+          e.preventDefault();
+          (document.activeElement === ruta && k ? k : ruta).focus({ preventScroll: true });
         }
       }
 
-      ruta.addEventListener('click', function (e) {
-        if (e.target.closest('[data-intro-stang]')) { stäng(); return; }
-        if (e.target.closest('[data-intro-bak]')) { till(nu - 1); return; }
-        var ga = e.target.closest('[data-intro-ga]');
-        if (ga) { till(Number(ga.getAttribute('data-intro-ga'))); return; }
-        if (e.target.closest('[data-intro-fram]')) {
-          if (nu === alla.length - 1) stäng(); else till(nu + 1);
-        }
+      /* Ett tryck var som helst går vidare (Leo), utom på Stäng. Hinnan
+         tar trycket, så inget i vyn under trycks av misstag. */
+      tur.addEventListener('click', function (e) {
+        if (e.target.closest('[data-tur-stang]')) { stäng(); return; }
+        till(nu + 1);
       });
-      document.addEventListener('keydown', tangent);
+      /* Sidan rullar inte under rundturen: hålet står där det mätts. */
+      ['wheel', 'touchmove'].forEach(function (h) {
+        tur.addEventListener(h, function (e) { e.preventDefault(); }, { passive: false });
+      });
+      document.addEventListener('keydown', tangent, true);
+      window.addEventListener('resize', omRita);
 
-      if (lugnt()) ruta.classList.add('ni-lugn');
-      rita('fram');
-      document.body.appendChild(ruta);
-      document.body.style.overflow = 'hidden';
-      void ruta.offsetWidth;
-      ruta.classList.add('open');
-      fram.focus({ preventScroll: true });
+      document.body.appendChild(tur);
+      void tur.offsetWidth;
+      tur.classList.add('open');
+      till(0);
     });
     return öppen;
   }
 
-  /* Öppnas igen från knappen under Profil & inställningar. */
+  /* Går igen från knappen under Profil & inställningar. */
   document.addEventListener('click', function (e) {
     var k = e.target.closest('[data-intro]');
     if (!k) return;

@@ -47,7 +47,8 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=8e958f62">
+<link rel="stylesheet" href="nextrum-cinema.css?v=126c1d66">
+<link rel="stylesheet" href="nextrum-landning.css?v=fb0d9169">
 </head>
 <body>
 
@@ -126,11 +127,11 @@
   <div class="nx-story-ctas" data-stig data-fördröj="2">
     <a class="btn btn-primary btn-lg" href="/intresseanmalan">Skicka intresseanmälan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
   </div>
-  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#ACA193">
-    <picture><source type="image/webp" srcset="bilder/01-en-till-en-640.webp 640w, bilder/01-en-till-en-960.webp 960w, bilder/01-en-till-en-1280.webp 1280w, bilder/01-en-till-en-1600.webp 1600w, bilder/01-en-till-en-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="bilder/01-en-till-en-1280.jpg"
-         srcset="bilder/01-en-till-en-640.jpg 640w, bilder/01-en-till-en-960.jpg 960w, bilder/01-en-till-en-1280.jpg 1280w, bilder/01-en-till-en-1600.jpg 1600w, bilder/01-en-till-en-1920.jpg 1920w"
+  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#827364">
+    <picture><source type="image/webp" srcset="bilder/25-forsta-motet-med-foralder-640.webp 640w, bilder/25-forsta-motet-med-foralder-960.webp 960w, bilder/25-forsta-motet-med-foralder-1280.webp 1280w, bilder/25-forsta-motet-med-foralder-1600.webp 1600w, bilder/25-forsta-motet-med-foralder-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="bilder/25-forsta-motet-med-foralder-1280.jpg"
+         srcset="bilder/25-forsta-motet-med-foralder-640.jpg 640w, bilder/25-forsta-motet-med-foralder-960.jpg 960w, bilder/25-forsta-motet-med-foralder-1280.jpg 1280w, bilder/25-forsta-motet-med-foralder-1600.jpg 1600w, bilder/25-forsta-motet-med-foralder-1920.jpg 1920w"
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
-         style="object-position:68% 44%" alt="En studiehjälpare pekar med pennan på en uppgift i elevens räknebok och förklarar medan eleven skriver."></picture>
+         style="object-position:52% 42%" alt="En förälder och en flicka sitter i en soffa med te och möter en ung studiehjälpare som sitter mitt emot i en fåtölj."></picture>
   </figure>
 </section>
 
@@ -468,10 +469,10 @@
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=085fa9d6"></script>
-<script src="nextrum-images.js?v=1bcb27bb"></script>
+<script src="nextrum-images.js?v=7864d95b"></script>
 <script src="nextrum-fel.js?v=c6a9a13f"></script>
 <script src="nextrum-app.js?v=9c8ce04d"></script>
-<script src="nextrum-samtycke.js?v=92474eaf"></script>
+<script src="nextrum-samtycke.js?v=3058f423"></script>
 <script src="nextrum-motion.js?v=adb3b960"></script>
 <script src="nextrum-start.js?v=e1d5a4da"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
@@ -493,7 +494,10 @@
   NX.märkInloggad();
 })();
 </script>
-<script type="application/ld+json">
+
+<script src="bibliotek/gsap-3.13.0.min.js"></script>
+<script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js"></script>
+<script src="nextrum-landning.js?v=fecdec11"></script><script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
@@ -502,7 +506,7 @@
       "@id": "https://nextrum.se/laxhjalp-eller-privatlarare#artikel",
       "headline": "Läxhjälp eller privatlärare?",
       "description": "Legitimerad lärare, student eller ung studiehjälpare: vad ni får för pengarna och när vilken passar bäst. En jämförelse där vi inte alltid vinner.",
-      "image": "https://nextrum.se/bilder/01-en-till-en-1280.jpg",
+      "image": "https://nextrum.se/bilder/25-forsta-motet-med-foralder-1280.jpg",
       "inLanguage": "sv",
       "author": { "@id": "https://nextrum.se/#org" },
       "publisher": { "@id": "https://nextrum.se/#org" },

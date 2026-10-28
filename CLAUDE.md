@@ -317,8 +317,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   hållen som hette Ta in i poolen till 2026-10-21, `bjud-in`) med personens adress, och personen väljer lösenordet själv, två gånger, i en
   ruta som inte går att stänga (`user_metadata.valkommen = 'losenord'`, `NXStudie.lösenordFörst`).
   **Inget gemensamt startlösenord**: ett känt lösenord är ett konto vem som helst kan ta före
-  ägaren. Sedan introduktionen (`'intro'`, `NXIntro`), där Fortsätt släpper in; den öppnas igen
-  under Profil. Skicka inbjudan igen står alltid i personens panel (2026-10-07): före första
+  ägaren. Sedan rundturen (`'intro'`, `NXIntro`) i den färdiga vyn, där sista trycket släpper in; den går
+  igen under Profil, och en studiehjälpare som inte är godkänd får den först när vyn finns. Skicka inbjudan igen står alltid i personens panel (2026-10-07): före första
   inloggningen en ny inbjudan, sedan en länk för lösenord (`bjud-in` med `igen`). Bara det senaste
   mejlet fungerar, och en trasig länk ger rutan Länken fungerar inte längre (`'lankfel'`), aldrig
   Glömt lösenordet. Mejlen skickar `bjud-in` själv med tiden i ämnet, så att Gmail aldrig lägger
@@ -705,11 +705,14 @@ Detaljer: `minne/grunden.md`.
 - Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX,
   NXStudie, NXUppgifter och NXArbete för hälsningen) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
   `-admin-*.js`; `-admin-behorighet.js` avgör vad en admin med behörigheter ser.
-  `nextrum-introduktion.js` (`NXIntro`) är introduktionen i studievyn och studiehjälparvyn, med rörelse sedan
-  2026-10-27 (en karta över delarna, skärmdumpar som zoomar mot en ring, `ring` i `STEG`); bilderna
-  står i `NEXTRUM_INTRO` och tas med `bygg-introbilder.js`. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
-  för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna och sist i introduktionen.
-  `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan.
+  `nextrum-introduktion.js` (`NXIntro`) är rundturen i studievyn och studiehjälparvyn, i den riktiga vyn sedan
+  2026-10-27 (Leo: "live när man är inne i vyn första gången ... små rutor med två meningars beskrivningar ... går
+  vidare genom att bara trycka var som helst"): den byter sektion med menyn, tonar ner allt utom ett hål runt
+  sektionens början (`.nt-hal`) och låter en ruta med två meningar ploppa upp bredvid; inga skärmdumpar, och den
+  körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
+  för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
+  `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan. `nextrum-landning.js` och `-css` är
+  landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`.
 - **Loggan** (2026-10-15, Leo: "implementera våran nya logga"): märket och ordet nextrum, spårade i vektor ur Leos
   bild, och källan är `bilder/nextrum-logga.svg`. Sidorna har dem som två inline-svg (`.mark`, `.logo-text`) i samma
   höjd (`--logga-h`); det bruna är `currentColor` (`--logga-brun`, kräm i mörkt läge och på mörka ytor) och det
@@ -769,7 +772,11 @@ Listorna 1–4 (`.nx-holdpunkter`, `.nx-apply-flow`) står två och två på tel
 Studievyns och NexLäx markup kopieras till `for-elever-och-foraldrar.html`, NexLäx direkt under studievyn och
 utan Se studievyn, och Hur hjälper vi till `var-ide.html` i stället för Bakgrunden, med NexLäx-länken till
 `/for-elever-och-foraldrar#nexlax` (2026-10-08; `jamfor-sprak.py` ser bara första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen
-animerad `box-shadow`, och en custom property sätts där den läses, för den ärvs.
+animerad `box-shadow`, och en custom property sätts där den läses, för den ärvs. **Undantaget är landningssidorna**
+(2026-10-28, Leo: "göra den lite roligare ... främst alla landings sidor", med GSAP): `nextrum-landning.js` låter
+GSAP och ScrollTrigger (vendorade i `bibliotek/`, aldrig från en CDN) dra skenan i Så går det till, platserna som
+en linje och korten, bara på de genererade `laxhjalp-*` och guiderna; stegen tänds ändå med en klass, och utan GSAP
+eller med reducerad rörelse står allt färdigt i CSS. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.
 3. `scrollIntoView` i en rad som flyttas med transform rullar sidan; bandet är `overflow:clip`,
@@ -868,7 +875,12 @@ Förhandsvisning (för varje admin) öppnar `/foralder?forhandsvisning` och `/la
 riktiga vyerna med en påhittad familj och studiehjälpare. `nextrum-forhandsvisning.js` laddas före
 `nextrum-app.js` och ger vyn en klient som svarar ur en värld i webbläsaren; de två vyerna delar den
 (`localStorage`), och remsan överst byter vy. Den når aldrig databasen, så inget av det räknas i
-statistik, lön eller betalningar. Börjar vyerna fråga efter en ny tabell eller funktion ska den in i
+statistik, lön eller betalningar. **Två saker frågar ut** (2026-10-27, Leo): Betala nu, Betala alla och
+planerna öppnar Stripes kassa i TESTLÄGE (`forhandsvisning-kassa`, bara superadmin, ingen kassa med en
+skarp nyckel, beloppet ur världen, och webhooken skriver inget för `forhandsvisning=1`), och NexLäx spelar
+den riktiga banan (`forhandsvisning_niva()`, `forhandsvisning_ratta()`, inget sparat); båda med adminens
+inloggning. Går Stripe skarpt sätts `STRIPE_FORHANDSVISNING_SECRET_KEY` och `_PUBLISHABLE_KEY` till
+testnycklarna (`minne/sakerhet.md`). Börjar vyerna fråga efter en ny tabell eller funktion ska den in i
 världen (`prova-forhandsvisning.js` säger vad som saknas). **Adminkontona räknas inte i
 statistiken** (samma dag): Översiktens tal (`räknas()`, `ärAdminkonto()`) och analysvyerna
 (`intern.utanfor_statistiken`) räknar inga pass där familjen eller studiehjälparen har en adminroll;
@@ -1182,7 +1194,6 @@ Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessi
 (`laxhjalp-*` med stadiesidorna, orterna, guiderna, navets kort och ortskatalog, affischens ortslista och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `bygg-logga.js` (för hand: favicons, mejlloggan, BIMI och profilbilden ur
 `bilder/nextrum-logga.svg`),
 `bygg-banken.py` (för hand, och `--facit`; bladen och facit står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar),
-`bygg-introbilder.js` (för hand mot en falsk Supabase, när en del som en bild visar ändras),
 `bygg-delningsbilder.js` (för hand: en delningsbild per sida i kartan, `delning/`, med rubriken och
 priset; körs när en rubrik eller priset ändras, och `kolla-delningsbilder.py` vaktar) och
 `bygg-uppgifter.py --sql` (alltid en ny migration), `bygg-faktablad.py --skriv` (faktabladen i `nexlax-fakta/`).
@@ -1240,12 +1251,28 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
-- **Fripassen i NexLäx** (2026-10-27, `nexlax_fripass` 20261028120000) är inte i drift. Efter merge: Vercel lägger ut
+- **Fripassen i NexLäx** (2026-10-27, `nexlax_fripass` 20261028130000) är inte i drift. Efter merge: Vercel lägger ut
   vyerna och policyn (utan migrationen har `nexlax_lage()` inga fripass, och en låst nivå är bara låst som förut), sedan
   migrationen (en kolumn, tre funktioner och en lapp på `nexlax_lage` med vakt; inget drop eller delete). Ingen
-  edge-funktion. Lokalt: `rls-test.sql` 2237 av 2242 (de 14 nya gröna; de fem som föll var gratistimmarnas och
-  tipstimmarnas datumprov, körda strax efter midnatt i Stockholm men före i UTC) och `prova-nexlax.js` 111 av 111.
+  edge-funktion. Lokalt, mot en databas byggd ur alla 234 migrationer: `rls-test.sql` 2242 av 2242,
+  `prova-nexlax.js` 111 av 111 och `prova-forhandsvisning.js` 75 av 75. Versionen var först 20261028120000, samma som
+  nyhetsbrevets, och flyttades vid sammanslagningen med main.
   Juristen har inte läst policyns nya halvmening om fripassen.
+- **Nyhetsbrevet** (2026-10-28, `nyhetsbrev` 20261028120000, Leo: "gör detta arbete simpelt") är inte i drift.
+  Formuläret står i footern på varje öppen sida och i startsidans Nästa steg (`nextrum-nyhetsbrev.js`, laddat av
+  `nextrum-samtycke.js`, så aldrig i vyerna eller på en sida med en nyckel i adressen); ingen popup, inget i
+  webbläsaren och ingen rabatt. Dubbel opt-in genom edge-funktionen `nyhetsbrev` (`verify_jwt` av, taket fem i timmen
+  per IP-hash och 300 totalt, samma svar om adressen finns), och `/nyhetsbrev` bekräftar (`?b=`) och avslutar (`?a=`)
+  med en knapp. En avanmälan raderar raden, och en obekräftad raderas efter sju dagar. Tabellen är sanningen; Resends
+  Audience (`RESEND_AUDIENCE_ID`) är en kopia att skicka från. Inget skickar nyhetsbrevet än: varje utskick ska ha
+  länken `/nyhetsbrev?a=<token>`. Kvar: migrationen och funktionen efter merge, secreten, att prova flödet, och
+  juristen (rad 40 i `DATASKYDD.md`, policyns stycke).
+- **Förhandsvisningens kassa och NexLäx** (2026-10-27, `forhandsvisningens_nexlax` 20261028110000 och edge-funktionen
+  `forhandsvisning-kassa`) är inte i drift. Efter merge: `forhandsvisning-kassa` (ny, med JWT) och `stripe-webhook`
+  (kvitterar `forhandsvisning=1` utan att skriva; utan den kvitteras sessionen ändå som "session utan pass-id"), sedan
+  migrationen. Utan dem svarar förhandsvisningen som förut: kassan säger att den inte nås, och NexLäx har de påhittade
+  nivåerna. Bara superadmin. Datumrutans förslag har samma enda kant som de andra sedan samma dag (Leo: den gula "har extra
+  streck inuti").
 - **Nextrum AB och bonusarna som godkänns** (2026-10-28, `bonusarna_godkanns` 20261028100000) är inte i drift. Efter
   merge: Vercel lägger ut sidorna (footern, villkoren och policyn), sedan `admin-paminnelse` (känner `bonus_godkann`; utan
   den hoppas raden över, inget går sönder), migrationen (md5-vakter mot driften 2026-10-27 för vakten, `varvning_prova`,

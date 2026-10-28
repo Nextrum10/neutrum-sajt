@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
+<link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/favicon.svg" color="#643820">
+
+<title>The newsletter | Nextrum</title>
+<meta name="description" content="Confirm or cancel the Nextrum newsletter with study tips and news twice a month. If you unsubscribe, we delete your address.">
+<meta name="robots" content="noindex,follow">
+<!-- Adressen bär nyhetsbrevets kod som ?b= eller ?a=. Utan den här raden
+     följer hela adressen med som Referer vid varje klick vidare
+     härifrån — till startsidan, till menyn, till språkbytet — och
+     koden har med flit ingen utgångstid.
+
+     Kvar står att Vercels accessloggar ändå ser frågesträngen. Det
+     går inte att stänga härifrån: koden kommer ur en länk i ett mejl
+     och måste stå i adressen. Vad koden kan är också avgränsat — den
+     bekräftar eller avslutar nyhetsbrevet för EN adress, och kan
+     aldrig läsa något eller logga in någon. -->
+<meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://nextrum.se/en/nyhetsbrev">
+<link rel="alternate" hreflang="sv" href="https://nextrum.se/nyhetsbrev">
+<link rel="alternate" hreflang="en" href="https://nextrum.se/en/nyhetsbrev">
+<link rel="alternate" hreflang="x-default" href="https://nextrum.se/nyhetsbrev">
+<meta name="theme-color" content="#F1EDE6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<!-- delning -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nextrum">
+<meta property="og:locale" content="en_GB">
+<meta property="og:title" content="The newsletter | Nextrum">
+<meta property="og:description" content="Confirm or cancel the Nextrum newsletter.">
+<meta property="og:url" content="https://nextrum.se/en/nyhetsbrev">
+<meta property="og:image" content="https://nextrum.se/bilder/04-sjalvfortroende-1280.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="A young tutor and a student studying together at a light wooden table.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The newsletter | Nextrum">
+<meta name="twitter:description" content="Confirm or cancel the Nextrum newsletter.">
+<meta name="twitter:image" content="https://nextrum.se/bilder/04-sjalvfortroende-1280.jpg">
+
+<!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
+     besökarens IP vid varje sidvisning är därmed borta, och två
+     värdnamn färre ska slås upp innan första texten kan ritas.
+
+     Ingen <link rel="preload"> här med flit: mätt gav den en DUBBEL
+     nedladdning av samma 46 kB. Allt i taggen var rätt — samma
+     adress, as="font", crossorigin, rätt typ — men utan cache-
+     direktiv på svaret återanvänder webbläsaren inte den förladdade
+     kroppen. Cachningen ligger i vercel.json i stället, och där gör
+     den nytta vid varje återbesök i ett år. -->
+<link rel="stylesheet" href="../nextrum-typsnitt.css?v=c20ceeba">
+
+<!-- ordningen spelar roll: bas → startsida → cinema -->
+<link rel="stylesheet" href="../nextrum.css">
+<link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=126c1d66">
+</head>
+<body>
+
+<!-- ==========================================================
+     HEADER — identisk markup på alla fyra publika sidor.
+     Ändrar du här måste du ändra i index.html, priser.html,
+     faq.html och bli-studiehjalpare.html. Länkarna skrivs som
+     "index.html#hur"; på startsidan kortar nextrum-app.js ner dem
+     till rena ankare så att man scrollar istället för att ladda om.
+     ========================================================== -->
+<a class="nx-hoppa" href="#innehall">Skip to content</a>
+
+<header class="hdr" id="hdr">
+  <div class="wrap nav">
+    <!-- Språkval, övre vänstra hörnet. Det aktiva språket är ett
+         <b>, inte en länk: en länk till sidan man redan står på ser
+         ut som ett val men gör ingenting. -->
+    <div class="sprakval" role="group" aria-label="Language / Språk">
+      <a lang="sv" hreflang="sv" href="/nyhetsbrev">SV</a>
+      <i aria-hidden="true"></i>
+      <b lang="en" aria-current="true">ENG</b>
+    </div>
+
+    <a href="/en/" class="logo" aria-label="Nextrum, to the home page">
+      <svg class="mark" viewBox="0 0 223.5 169.5" fill="currentColor" aria-hidden="true"><path d="M17.7 169.3c-8.2-1.1-14.8-6.7-17-14.5c-0.5-1.9-0.6-2.4-0.6-18.8c-0.1-18.3 0-21.2 1.1-24.6c0.7-2.4 2.4-5.8 3.8-8c1.4-2 8.8-9.2 19-18.6c3.2-3 9.6-9.1 24.1-23.1c11.8-11.3 13.2-12.5 18.3-14.5c8.6-3.3 19.1-3 26.8 0.9c3.5 1.7 8.5 5.9 18.7 15.5c2.3 2.2 6.2 5.8 8.6 7.9c2.4 2.1 6.2 5.5 8.4 7.5c5 4.5 6.4 5.6 9.7 7.4c1.5 0.8 2.7 1.5 2.8 1.6c0.2 0.4 0.6 0.3 0.4-0.1c0-0.2 0.1-0.7 0.3-1l0.4-0.7l1.2 0.9c2.3 1.7 13.6 7.7 23.9 12.9c7.4 3.6 9.9 4.7 13.7 6c2.6 0.8 2.9 1.7 0.6 1.7c-1 0-1 0.1-0.5 0.4c1 0.7 0.6 2.2-1.1 3.6c-0.5 0.5-4.1 3.9-7.9 7.5c-3.9 3.7-9.9 9.4-13.3 12.7c-8.1 7.7-10.6 9.4-17.1 11.5c-5.3 1.6-13.9 1.5-19.5-0.4c-6.4-2.1-8-3.2-17.4-12c-2.8-2.5-6.4-5.9-8.1-7.4c-1.7-1.5-4.6-4.2-6.5-6c-5.6-5.4-7.2-6.4-10.4-6.3c-2.1 0-3.8 0.7-5.3 2.2c-1.2 1.3-6.4 7.8-8.5 10.8c-1.8 2.4-8.4 11.2-12.8 16.8c-1.8 2.4-4.2 5.4-5.2 6.9c-9.5 12.9-11.6 15.4-13.6 16.9c-4.5 3.3-11.4 5.1-17 4.4z"/><path fill="#F88740" d="M177.1 106.5c-6.6-2.4-34-16.7-35-18.2c-0.6-0.8-0.3-1.3 2-3.4c2.7-2.5 3-3 3.6-7.3c0.5-3.1 0.5-4.8 0.5-15.2c0.1-15.5 0.1-16.2 2.6-21c1.2-2.4 1.9-3.4 3.2-4.6c1.7-1.7 12.4-11.9 15.9-15c1.1-1.1 4.8-4.7 8.3-8.1c7.2-6.9 9-8.4 11.7-10.2c6-3.8 15.3-4.6 21.3-1.8c4.7 2.3 9.3 7.2 11.1 11.8c1.1 2.9 1.3 6.3 1.1 29.3c-0.2 21.9-0.2 22.1-1.7 25.5c-1.8 3.8-3.5 6-8.6 10.8c-2.6 2.5-7.6 7.3-11.1 10.8c-13.9 13.6-16.9 16.5-18 17.1c-1.6 1.1-2.9 1-6.9-0.5z"/></svg>
+      <svg class="logo-text" viewBox="0 0 751.75 169.5" fill="currentColor" role="img" aria-label="Nextrum"><path d="M518.6 143.1c-2-0.3-6.8-1.2-9.5-1.9c-16.9-4-28.3-15.7-31.7-32.7c-1.1-5.6-1.2-9-1.1-40.7c0.2-32 0.1-30.1 1.6-30.8c0.4-0.2 4-0.2 12.1-0.2c12.6 0 12.9 0 13.5 1.4c0.2 0.5 0.3 8.5 0.3 30c0.1 31.4 0.1 31.4 1.4 34.9c2.4 6.6 6.9 11 13.5 12.9c2.1 0.7 8.6 1 11.2 0.5c6.1-1.1 11.6-4.4 14.7-9.1c1.1-1.7 1.9-3.5 2.7-6.3l0.6-2l0.1-30.2c0.1-24.6 0.2-30.4 0.5-30.9c0.7-1.2 1.1-1.3 13.1-1.2c12.1 0 12.3 0 13.1 1.4c0.2 0.5 0.3 7.3 0.2 32.9c-0.1 35.4 0 33.2-1.6 39.5c-2.3 9.4-7.6 17.3-15.4 23.2c-2.7 2.1-8.7 5.1-12.4 6.3c-3.4 1.1-9.9 2.5-13.1 2.9c-2.2 0.2-12.1 0.3-13.8 0.1zM159.8 142.5c-11.9-1.6-20.7-5-28.2-11c-4.1-3.3-9.1-8.5-11.6-12.2c-2.7-4-5.8-11.5-7.2-17.2c-2.1-8.7-1.9-20.1 0.4-29c4-14.7 13-26.2 25.8-32.7c9.3-4.8 17.6-6.6 28.2-6.3c17.8 0.4 33.9 8.9 42.8 22.4c6 9.2 8.9 19.1 9.2 31.7c0.1 5.5 0.1 5.7-0.4 6.5c-1.1 1.7 1.5 1.5-39.7 1.5c-42.1 0-38.6-0.1-38.6 1.9c0 0.6 0.2 1.9 0.5 2.8c2.8 9 10.5 15.7 20.4 17.6c2.1 0.5 8.1 0.4 10.4 0c5.4-1 11.1-4.1 14.3-7.9c2-2.2 0.9-2.1 15.9-2.1c12.9 0 13.3 0 13.8 0.5c0.8 0.8 0.6 1.8-1.2 5.2c-4.5 8.9-11.1 16.3-18.8 21c-2 1.2-7 3.5-9.6 4.4c-7.5 2.7-18.7 3.9-26.4 2.9zM366.3 141.2c-6.1-0.6-13.8-3.3-17.8-6.4c-4.7-3.6-8.4-8.8-10-14.2c-1.7-5.8-1.6-4.1-1.7-32.3c-0.2-24.1-0.2-25.6-0.6-26c-0.4-0.4-1.1-0.4-6.5-0.6c-6.7-0.1-7.2-0.2-7.7-1.7c-0.2-0.4-0.3-3.9-0.2-10.4c0.1-9 0.1-9.8 0.6-10.7c0.8-1.7 1.4-2 4.9-2.2c3.6-0.2 4.5-0.5 6-2c2-2 3-4.5 5.7-13.2c1.5-5.1 2.8-8.3 3.6-9.4c2.4-3.1 9.2-5.1 17.3-5.1c2.4 0 2.6 0.1 3.3 0.6l0.7 0.6l0.1 13.8c0.1 7.6 0.2 13.9 0.2 13.9c0.6 0.7 1.7 0.7 14.2 0.9l13.1 0.1l0.7 0.7l0.7 0.7l0 10.4c0.1 8.9 0.1 10.7-0.3 11.4c-0.7 1.7-0.6 1.7-14.9 1.6l-12.8 0l-0.4 0.5c-0.8 0.9-0.7 39.5 0 42.9c0.8 4.2 2.8 7 6 8.6c3 1.4 5.7 1.7 13.5 1.2c5-0.2 4.9-0.4 6.5 7.7c1.6 7.9 2.3 13.8 1.7 14.9c-0.7 1.3-3 2.2-8.2 3.1c-4.5 0.8-12.9 1.1-17.7 0.6zM0.9 139.5l-0.8-0.7l0.1-50.1c0-27.5 0.1-50.3 0.2-50.5c0.1-0.2 0.4-0.6 0.8-0.9c0.6-0.4 1.4-0.4 12.3-0.4c12.5 0 12.9 0 13.5 1.3c0.1 0.3 0.3 2 0.4 3.6c0.2 4.9 0.3 5 2.5 3c9.8-9 24.3-12.7 38.7-9.9c4.7 0.9 11.1 3.6 15.4 6.5c2.9 1.9 7.5 6.5 9.4 9.5c4.1 6.3 6.4 12.6 7.4 20.3c0.4 3.3 0.6 65.8 0.2 67.1c-0.6 1.9 0.1 1.8-13.2 1.9c-8.9 0.1-12.1 0-12.6-0.2c-1.6-0.7-1.5 0.7-1.4-30.4c0-26.1 0-28.4-0.4-31c-1.6-9.9-7.5-15.9-17-17.5c-5.2-0.8-12.3 0.1-16.2 2.1c-6.7 3.3-10.6 8.7-12.2 16.4c-0.5 2.5-0.5 3.1-0.6 30.7c0 26.6 0 28.1-0.5 28.8c-0.2 0.4-0.7 0.8-1.1 0.9c-0.3 0.2-5.5 0.2-12.3 0.2l-11.7 0l-0.9-0.7zM216.5 140c-0.4-0.2-0.8-0.6-1-0.9c-0.4-0.9 0.2-2.1 3.3-6.2c1.4-2 3.8-5.2 5.2-7.3c1.5-2 3.8-5.3 5.2-7.2c5.5-7.8 10.3-14.6 13-18.5c1.6-2.3 4-5.6 5.3-7.4c2.4-3.3 3.2-4.7 3.3-5.5c-0.1-0.2-1.4-2.3-3.1-4.6c-1.7-2.2-3.7-5-4.6-6.2c-0.8-1.2-3.6-5.2-6.2-8.8c-5.8-8-7.6-10.5-9.6-13.5c-0.9-1.2-3.6-4.9-6-8c-2.5-3.2-4.6-6-4.8-6.3c-0.4-0.8-0.3-1.7 0.3-2.2c0.5-0.5 1.1-0.5 15-0.5c14.2 0 14.6 0 15.4 0.5c1 0.5 1.7 1.5 6.9 9.1c4 5.9 10.9 15.6 11.9 16.6c1 1.1 1.6 0.9 2.9-0.9c4.7-6.6 7.2-10.2 8.7-12.4c2.6-3.9 6.3-9.2 7.4-10.7c1.8-2.4 0.5-2.2 16.4-2.3c11.7-0.1 14.2 0 14.9 0.3c1.6 0.6 1.4 1.6-1 4.8c-3.8 5.1-6.1 8.3-9.3 13c-2 2.9-3.9 5.6-4.3 6.1c-0.8 1.1-5.1 7.2-8.1 11.6c-1.2 1.8-2.6 3.8-3.1 4.5c-3.5 4.8-6.2 9.2-6.3 10c0.1 0.9 2 4 6.7 10.5c1 1.4 2.8 4 4 5.8c1.3 1.8 3.3 4.6 4.5 6.4c1.2 1.7 3.9 5.5 6 8.4c2.1 3 5.2 7.4 7 9.8c6.7 9.2 7.1 9.8 6.7 11c-0.4 1.2-0.6 1.2-15.4 1.2c-12.3 0.1-13.8 0-14.6-0.4c-1-0.4-2-1.7-5.8-7.3c-2.9-4.3-4.8-6.9-9.2-13.1c-1.9-2.8-4.1-5.9-4.8-7c-1.4-1.9-2.2-2.5-2.9-1.9c-0.4 0.3-4.9 6.7-8.2 11.7c-4.6 6.8-9.7 14.3-10.7 15.6c-1.9 2.6-0.1 2.3-16.2 2.4c-8.7 0-14.4-0.1-14.8-0.2zM406.2 139.5l-0.7-0.7l0-6.3c-0.1-54.7 0.1-93 0.3-93.8c0.5-1.9 0.2-1.8 12.9-1.9c7.8-0.1 11.7 0 12.4 0.2c1.5 0.4 1.6 1 1.7 6.2c-0.1 6.1-0.1 6 3.5 2.2c3.2-3.3 4.3-4.1 7.1-5.7c5.3-3.1 12.8-4.9 19-4.7c3.2 0.1 3.9 0.5 4.3 1.9c0.5 1.6 0.4 24.2-0.1 25.2c-0.6 1.5-0.9 1.6-6.6 1.7c-5.5 0.2-7.4 0.5-11 1.7c-6.4 2.1-10.4 5.5-13.1 11.1c-2.8 5.8-2.9 6.4-2.9 36.8c0 27.7 0.1 26.1-1.7 26.6c-0.6 0.2-5.3 0.2-12.6 0.2l-11.7 0l-0.8-0.7zM589.3 140c-0.3-0.1-0.7-0.5-1-0.9c-0.4-0.7-0.4-2.9-0.4-50.3c0-54.4-0.1-50.9 1.5-51.7c1.3-0.6 23.1-0.5 24.4 0.1c1.2 0.6 1.5 1.6 1.3 4.3c-0.1 2.3 0.1 3.6 0.7 3.7c0.2 0 1.3-0.8 2.5-1.8c8.6-7.9 20.4-11.1 32.3-8.8c8.1 1.6 15.5 5.5 20.7 11.3c1.2 1.3 2.2 2.1 2.5 2.1c0.3 0 1.3-0.9 2.5-2c5.6-5.6 13.2-9.6 21.3-11.3c3.3-0.6 11-0.9 14.9-0.5c9.4 1.1 19.1 5.4 25.2 11.4c7 6.8 11.3 15.1 13 25.4c0.8 4.4 0.8 5.6 0.9 37.5c0 28.4 0 29.9-0.4 30.6c-0.3 0.4-0.8 0.8-1.1 0.9c-0.8 0.3-23.4 0.3-24.2 0c-0.3-0.1-0.8-0.5-1.1-0.9c-0.4-0.7-0.4-2.2-0.4-28.7c-0.1-21.2-0.1-28.6-0.4-30.4c-0.8-6.2-2.3-9.6-6-13.3c-4.1-4.1-7.3-5.3-14.1-5.3c-4.9 0-6.5 0.3-9.8 2.1c-5.4 2.9-8.2 6.5-10 12.7l-0.7 2.4l-0.1 29.9c-0.1 24.2-0.2 30-0.5 30.5c-0.7 1.2-1.2 1.2-13.4 1.2l-11.4 0l-0.8-0.7c-0.8-0.9-0.8 1.7-0.7-24.4c0-10.4-0.1-23-0.2-27.9c-0.3-10.1-0.5-11.7-2.6-15.7c-2.7-5.4-5.7-8.1-10.6-9.5c-2.7-0.8-9.5-0.9-12.2-0.2c-7.5 2-12.7 7.8-14.8 16.2c-0.4 1.4-0.5 5.2-0.6 30.9c-0.1 22-0.2 29.4-0.4 29.9c-0.6 1.4-1 1.5-13.7 1.4c-6.3 0-11.8-0.1-12.1-0.2zM189.4 76.1c1.1-1.4-2-7.5-5.7-11.5c-2.9-3.1-6.3-5-10.8-6.3c-2.4-0.6-2.8-0.7-7.3-0.7c-4.3 0-4.9 0.1-7.2 0.7c-7.5 2.1-13.9 7.5-16.4 14c-0.9 2.4-1.1 3.2-0.8 3.7c0.4 0.5 6 0.6 29.5 0.6c18.1 0 18.3 0 18.7-0.5z"/></svg>
+    </a>
+
+    <nav class="nav-links" aria-label="Main menu">
+      <a href="/en/sa-fungerar-nextrum" data-nav>How Nextrum works</a>
+      <a href="/en/for-elever-och-foraldrar" data-nav>For students &amp; parents</a>
+      <a href="/en/bli-studiehjalpare" data-nav>Become a tutor</a>
+      <a href="/en/priser" data-nav>Pricing</a>
+    </nav>
+
+    <div class="nav-actions">
+      <!-- href pekar på föräldravyn så att länken fungerar utan JS.
+           Med JS öppnas vyväljaren istället — utom när man redan är
+           inloggad, då skriver NX.märkInloggad() om länken. -->
+      <a class="login" href="/foralder" id="login-link" data-vagval>Log in</a>
+      <span class="nx-magnet">
+        <a class="btn btn-primary btn-sm" href="/en/intresseanmalan">Get started</a>
+      </span>
+    </div>
+
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="/en/var-ide">Our idea</a>
+  <a class="m-link" href="/en/sa-fungerar-nextrum">How Nextrum works</a>
+  <a class="m-link" href="/en/for-elever-och-foraldrar">For students &amp; parents</a>
+  <a class="m-link" href="/en/bli-studiehjalpare">Become a tutor</a>
+  <a class="m-link" href="/en/priser">Pricing</a>
+  <a class="m-link" href="/en/faq">FAQ / Contact</a>
+  <div class="m-actions">
+    <a class="btn btn-primary btn-block btn-lg" href="/en/intresseanmalan">Get started</a>
+    <a class="btn btn-ghost btn-block btn-lg" href="/foralder">Log in</a>
+  </div>
+  <div class="m-foot">
+    <span class="xsmall">By young people, for young people.</span>
+    <a class="xsmall" href="mailto:info@nextrum.se">info@nextrum.se</a>
+  </div>
+</div>
+
+<main id="innehall">
+
+<section class="wrap nx-page-hero">
+  <a class="nx-back" href="/en/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> To the home page</a>
+  <span class="nx-et acc" style="margin-top:22px">Newsletter</span>
+  <h1 class="nx-d1">The newsletter</h1>
+  <p class="nx-lede">Study tips and news from Nextrum, twice a month.</p>
+</section>
+
+<!-- Knappen är det enda som bekräftar eller avanmäler; att öppna
+     adressen gör ingenting (länkskannrar). Texterna står i
+     nextrum-nyhetsbrev.js som språkpar. -->
+<section class="wrap" style="padding-bottom:clamp(56px,7vw,96px)">
+  <div class="nx-panel">
+    <p id="nb-fraga"></p>
+    <p id="nb-status" role="status" aria-live="polite"></p>
+    <div class="nx-cta-rad">
+      <button class="btn btn-primary btn-lg" id="nb-ja" type="button" hidden></button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ==========================================================
+     FOOTER — identisk på alla publika sidor, se kommentaren
+     vid headern.
+     ========================================================== -->
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        <a href="/en/" class="logo">
+          <svg class="mark" viewBox="0 0 223.5 169.5" fill="currentColor" aria-hidden="true"><path d="M17.7 169.3c-8.2-1.1-14.8-6.7-17-14.5c-0.5-1.9-0.6-2.4-0.6-18.8c-0.1-18.3 0-21.2 1.1-24.6c0.7-2.4 2.4-5.8 3.8-8c1.4-2 8.8-9.2 19-18.6c3.2-3 9.6-9.1 24.1-23.1c11.8-11.3 13.2-12.5 18.3-14.5c8.6-3.3 19.1-3 26.8 0.9c3.5 1.7 8.5 5.9 18.7 15.5c2.3 2.2 6.2 5.8 8.6 7.9c2.4 2.1 6.2 5.5 8.4 7.5c5 4.5 6.4 5.6 9.7 7.4c1.5 0.8 2.7 1.5 2.8 1.6c0.2 0.4 0.6 0.3 0.4-0.1c0-0.2 0.1-0.7 0.3-1l0.4-0.7l1.2 0.9c2.3 1.7 13.6 7.7 23.9 12.9c7.4 3.6 9.9 4.7 13.7 6c2.6 0.8 2.9 1.7 0.6 1.7c-1 0-1 0.1-0.5 0.4c1 0.7 0.6 2.2-1.1 3.6c-0.5 0.5-4.1 3.9-7.9 7.5c-3.9 3.7-9.9 9.4-13.3 12.7c-8.1 7.7-10.6 9.4-17.1 11.5c-5.3 1.6-13.9 1.5-19.5-0.4c-6.4-2.1-8-3.2-17.4-12c-2.8-2.5-6.4-5.9-8.1-7.4c-1.7-1.5-4.6-4.2-6.5-6c-5.6-5.4-7.2-6.4-10.4-6.3c-2.1 0-3.8 0.7-5.3 2.2c-1.2 1.3-6.4 7.8-8.5 10.8c-1.8 2.4-8.4 11.2-12.8 16.8c-1.8 2.4-4.2 5.4-5.2 6.9c-9.5 12.9-11.6 15.4-13.6 16.9c-4.5 3.3-11.4 5.1-17 4.4z"/><path fill="#F88740" d="M177.1 106.5c-6.6-2.4-34-16.7-35-18.2c-0.6-0.8-0.3-1.3 2-3.4c2.7-2.5 3-3 3.6-7.3c0.5-3.1 0.5-4.8 0.5-15.2c0.1-15.5 0.1-16.2 2.6-21c1.2-2.4 1.9-3.4 3.2-4.6c1.7-1.7 12.4-11.9 15.9-15c1.1-1.1 4.8-4.7 8.3-8.1c7.2-6.9 9-8.4 11.7-10.2c6-3.8 15.3-4.6 21.3-1.8c4.7 2.3 9.3 7.2 11.1 11.8c1.1 2.9 1.3 6.3 1.1 29.3c-0.2 21.9-0.2 22.1-1.7 25.5c-1.8 3.8-3.5 6-8.6 10.8c-2.6 2.5-7.6 7.3-11.1 10.8c-13.9 13.6-16.9 16.5-18 17.1c-1.6 1.1-2.9 1-6.9-0.5z"/></svg>
+          <svg class="logo-text" viewBox="0 0 751.75 169.5" fill="currentColor" role="img" aria-label="Nextrum"><path d="M518.6 143.1c-2-0.3-6.8-1.2-9.5-1.9c-16.9-4-28.3-15.7-31.7-32.7c-1.1-5.6-1.2-9-1.1-40.7c0.2-32 0.1-30.1 1.6-30.8c0.4-0.2 4-0.2 12.1-0.2c12.6 0 12.9 0 13.5 1.4c0.2 0.5 0.3 8.5 0.3 30c0.1 31.4 0.1 31.4 1.4 34.9c2.4 6.6 6.9 11 13.5 12.9c2.1 0.7 8.6 1 11.2 0.5c6.1-1.1 11.6-4.4 14.7-9.1c1.1-1.7 1.9-3.5 2.7-6.3l0.6-2l0.1-30.2c0.1-24.6 0.2-30.4 0.5-30.9c0.7-1.2 1.1-1.3 13.1-1.2c12.1 0 12.3 0 13.1 1.4c0.2 0.5 0.3 7.3 0.2 32.9c-0.1 35.4 0 33.2-1.6 39.5c-2.3 9.4-7.6 17.3-15.4 23.2c-2.7 2.1-8.7 5.1-12.4 6.3c-3.4 1.1-9.9 2.5-13.1 2.9c-2.2 0.2-12.1 0.3-13.8 0.1zM159.8 142.5c-11.9-1.6-20.7-5-28.2-11c-4.1-3.3-9.1-8.5-11.6-12.2c-2.7-4-5.8-11.5-7.2-17.2c-2.1-8.7-1.9-20.1 0.4-29c4-14.7 13-26.2 25.8-32.7c9.3-4.8 17.6-6.6 28.2-6.3c17.8 0.4 33.9 8.9 42.8 22.4c6 9.2 8.9 19.1 9.2 31.7c0.1 5.5 0.1 5.7-0.4 6.5c-1.1 1.7 1.5 1.5-39.7 1.5c-42.1 0-38.6-0.1-38.6 1.9c0 0.6 0.2 1.9 0.5 2.8c2.8 9 10.5 15.7 20.4 17.6c2.1 0.5 8.1 0.4 10.4 0c5.4-1 11.1-4.1 14.3-7.9c2-2.2 0.9-2.1 15.9-2.1c12.9 0 13.3 0 13.8 0.5c0.8 0.8 0.6 1.8-1.2 5.2c-4.5 8.9-11.1 16.3-18.8 21c-2 1.2-7 3.5-9.6 4.4c-7.5 2.7-18.7 3.9-26.4 2.9zM366.3 141.2c-6.1-0.6-13.8-3.3-17.8-6.4c-4.7-3.6-8.4-8.8-10-14.2c-1.7-5.8-1.6-4.1-1.7-32.3c-0.2-24.1-0.2-25.6-0.6-26c-0.4-0.4-1.1-0.4-6.5-0.6c-6.7-0.1-7.2-0.2-7.7-1.7c-0.2-0.4-0.3-3.9-0.2-10.4c0.1-9 0.1-9.8 0.6-10.7c0.8-1.7 1.4-2 4.9-2.2c3.6-0.2 4.5-0.5 6-2c2-2 3-4.5 5.7-13.2c1.5-5.1 2.8-8.3 3.6-9.4c2.4-3.1 9.2-5.1 17.3-5.1c2.4 0 2.6 0.1 3.3 0.6l0.7 0.6l0.1 13.8c0.1 7.6 0.2 13.9 0.2 13.9c0.6 0.7 1.7 0.7 14.2 0.9l13.1 0.1l0.7 0.7l0.7 0.7l0 10.4c0.1 8.9 0.1 10.7-0.3 11.4c-0.7 1.7-0.6 1.7-14.9 1.6l-12.8 0l-0.4 0.5c-0.8 0.9-0.7 39.5 0 42.9c0.8 4.2 2.8 7 6 8.6c3 1.4 5.7 1.7 13.5 1.2c5-0.2 4.9-0.4 6.5 7.7c1.6 7.9 2.3 13.8 1.7 14.9c-0.7 1.3-3 2.2-8.2 3.1c-4.5 0.8-12.9 1.1-17.7 0.6zM0.9 139.5l-0.8-0.7l0.1-50.1c0-27.5 0.1-50.3 0.2-50.5c0.1-0.2 0.4-0.6 0.8-0.9c0.6-0.4 1.4-0.4 12.3-0.4c12.5 0 12.9 0 13.5 1.3c0.1 0.3 0.3 2 0.4 3.6c0.2 4.9 0.3 5 2.5 3c9.8-9 24.3-12.7 38.7-9.9c4.7 0.9 11.1 3.6 15.4 6.5c2.9 1.9 7.5 6.5 9.4 9.5c4.1 6.3 6.4 12.6 7.4 20.3c0.4 3.3 0.6 65.8 0.2 67.1c-0.6 1.9 0.1 1.8-13.2 1.9c-8.9 0.1-12.1 0-12.6-0.2c-1.6-0.7-1.5 0.7-1.4-30.4c0-26.1 0-28.4-0.4-31c-1.6-9.9-7.5-15.9-17-17.5c-5.2-0.8-12.3 0.1-16.2 2.1c-6.7 3.3-10.6 8.7-12.2 16.4c-0.5 2.5-0.5 3.1-0.6 30.7c0 26.6 0 28.1-0.5 28.8c-0.2 0.4-0.7 0.8-1.1 0.9c-0.3 0.2-5.5 0.2-12.3 0.2l-11.7 0l-0.9-0.7zM216.5 140c-0.4-0.2-0.8-0.6-1-0.9c-0.4-0.9 0.2-2.1 3.3-6.2c1.4-2 3.8-5.2 5.2-7.3c1.5-2 3.8-5.3 5.2-7.2c5.5-7.8 10.3-14.6 13-18.5c1.6-2.3 4-5.6 5.3-7.4c2.4-3.3 3.2-4.7 3.3-5.5c-0.1-0.2-1.4-2.3-3.1-4.6c-1.7-2.2-3.7-5-4.6-6.2c-0.8-1.2-3.6-5.2-6.2-8.8c-5.8-8-7.6-10.5-9.6-13.5c-0.9-1.2-3.6-4.9-6-8c-2.5-3.2-4.6-6-4.8-6.3c-0.4-0.8-0.3-1.7 0.3-2.2c0.5-0.5 1.1-0.5 15-0.5c14.2 0 14.6 0 15.4 0.5c1 0.5 1.7 1.5 6.9 9.1c4 5.9 10.9 15.6 11.9 16.6c1 1.1 1.6 0.9 2.9-0.9c4.7-6.6 7.2-10.2 8.7-12.4c2.6-3.9 6.3-9.2 7.4-10.7c1.8-2.4 0.5-2.2 16.4-2.3c11.7-0.1 14.2 0 14.9 0.3c1.6 0.6 1.4 1.6-1 4.8c-3.8 5.1-6.1 8.3-9.3 13c-2 2.9-3.9 5.6-4.3 6.1c-0.8 1.1-5.1 7.2-8.1 11.6c-1.2 1.8-2.6 3.8-3.1 4.5c-3.5 4.8-6.2 9.2-6.3 10c0.1 0.9 2 4 6.7 10.5c1 1.4 2.8 4 4 5.8c1.3 1.8 3.3 4.6 4.5 6.4c1.2 1.7 3.9 5.5 6 8.4c2.1 3 5.2 7.4 7 9.8c6.7 9.2 7.1 9.8 6.7 11c-0.4 1.2-0.6 1.2-15.4 1.2c-12.3 0.1-13.8 0-14.6-0.4c-1-0.4-2-1.7-5.8-7.3c-2.9-4.3-4.8-6.9-9.2-13.1c-1.9-2.8-4.1-5.9-4.8-7c-1.4-1.9-2.2-2.5-2.9-1.9c-0.4 0.3-4.9 6.7-8.2 11.7c-4.6 6.8-9.7 14.3-10.7 15.6c-1.9 2.6-0.1 2.3-16.2 2.4c-8.7 0-14.4-0.1-14.8-0.2zM406.2 139.5l-0.7-0.7l0-6.3c-0.1-54.7 0.1-93 0.3-93.8c0.5-1.9 0.2-1.8 12.9-1.9c7.8-0.1 11.7 0 12.4 0.2c1.5 0.4 1.6 1 1.7 6.2c-0.1 6.1-0.1 6 3.5 2.2c3.2-3.3 4.3-4.1 7.1-5.7c5.3-3.1 12.8-4.9 19-4.7c3.2 0.1 3.9 0.5 4.3 1.9c0.5 1.6 0.4 24.2-0.1 25.2c-0.6 1.5-0.9 1.6-6.6 1.7c-5.5 0.2-7.4 0.5-11 1.7c-6.4 2.1-10.4 5.5-13.1 11.1c-2.8 5.8-2.9 6.4-2.9 36.8c0 27.7 0.1 26.1-1.7 26.6c-0.6 0.2-5.3 0.2-12.6 0.2l-11.7 0l-0.8-0.7zM589.3 140c-0.3-0.1-0.7-0.5-1-0.9c-0.4-0.7-0.4-2.9-0.4-50.3c0-54.4-0.1-50.9 1.5-51.7c1.3-0.6 23.1-0.5 24.4 0.1c1.2 0.6 1.5 1.6 1.3 4.3c-0.1 2.3 0.1 3.6 0.7 3.7c0.2 0 1.3-0.8 2.5-1.8c8.6-7.9 20.4-11.1 32.3-8.8c8.1 1.6 15.5 5.5 20.7 11.3c1.2 1.3 2.2 2.1 2.5 2.1c0.3 0 1.3-0.9 2.5-2c5.6-5.6 13.2-9.6 21.3-11.3c3.3-0.6 11-0.9 14.9-0.5c9.4 1.1 19.1 5.4 25.2 11.4c7 6.8 11.3 15.1 13 25.4c0.8 4.4 0.8 5.6 0.9 37.5c0 28.4 0 29.9-0.4 30.6c-0.3 0.4-0.8 0.8-1.1 0.9c-0.8 0.3-23.4 0.3-24.2 0c-0.3-0.1-0.8-0.5-1.1-0.9c-0.4-0.7-0.4-2.2-0.4-28.7c-0.1-21.2-0.1-28.6-0.4-30.4c-0.8-6.2-2.3-9.6-6-13.3c-4.1-4.1-7.3-5.3-14.1-5.3c-4.9 0-6.5 0.3-9.8 2.1c-5.4 2.9-8.2 6.5-10 12.7l-0.7 2.4l-0.1 29.9c-0.1 24.2-0.2 30-0.5 30.5c-0.7 1.2-1.2 1.2-13.4 1.2l-11.4 0l-0.8-0.7c-0.8-0.9-0.8 1.7-0.7-24.4c0-10.4-0.1-23-0.2-27.9c-0.3-10.1-0.5-11.7-2.6-15.7c-2.7-5.4-5.7-8.1-10.6-9.5c-2.7-0.8-9.5-0.9-12.2-0.2c-7.5 2-12.7 7.8-14.8 16.2c-0.4 1.4-0.5 5.2-0.6 30.9c-0.1 22-0.2 29.4-0.4 29.9c-0.6 1.4-1 1.5-13.7 1.4c-6.3 0-11.8-0.1-12.1-0.2zM189.4 76.1c1.1-1.4-2-7.5-5.7-11.5c-2.9-3.1-6.3-5-10.8-6.3c-2.4-0.6-2.8-0.7-7.3-0.7c-4.3 0-4.9 0.1-7.2 0.7c-7.5 2.1-13.9 7.5-16.4 14c-0.9 2.4-1.1 3.2-0.8 3.7c0.4 0.5 6 0.6 29.5 0.6c18.1 0 18.3 0 18.7-0.5z"/></svg>
+        </a>
+        <p>By young people, for young people.</p>
+        <div class="socials">
+          <a href="https://www.instagram.com/nextrum.se" aria-label="Nextrum on Instagram" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm8.4-11.2a1.55 1.55 0 11-3.1 0 1.55 1.55 0 013.1 0z"/></svg></a>
+          <a href="https://www.tiktok.com/@nextrum.ab" aria-label="Nextrum on TikTok" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.1v13.2a2.6 2.6 0 11-2.2-2.6v-3.2a5.8 5.8 0 105.3 5.8V9.1a6.9 6.9 0 004 1.3V7.2a3.9 3.9 0 01-4-4z"/></svg></a>
+          <a href="https://www.facebook.com/share/1DuLomKfy8/" aria-label="Nextrum on Facebook" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg></a>
+          <a href="https://www.linkedin.com/company/nextrum-se/" aria-label="Nextrum on LinkedIn" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9.5 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.75-1.95 4 0 4.75 2.5 4.75 5.8V21h-4v-5.6c0-1.35-.03-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.7h-4z"/></svg></a>
+        </div>
+      </div>
+
+      <nav aria-labelledby="ftr-nextrum">
+        <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
+        <ul>
+          <li><a href="/en/var-ide">Our idea</a></li>
+          <li><a href="/om-oss">About us (in Swedish)</a></li>
+          <li><a href="/en/sa-fungerar-nextrum">How Nextrum works</a></li>
+          <li><a href="/en/#studiehjalpare">Tutors</a></li>
+          <li><a href="/en/priser">Pricing</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-fordig">
+        <h2 class="ftr-rubrik" id="ftr-fordig">For you</h2>
+        <ul>
+          <li><a href="/en/for-elever-och-foraldrar">For students &amp; parents</a></li>
+          <li><a href="/en/bli-studiehjalpare">Become a tutor</a></li>
+          <li><a href="/en/intresseanmalan">Get started</a></li>
+          <li><a href="/foralder" data-vagval>Log in</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-hjalp">
+        <h2 class="ftr-rubrik" id="ftr-hjalp">Help</h2>
+        <ul>
+          <li><a href="/en/faq">FAQ</a></li>
+          <li><a href="/en/faq#kontakt">Contact</a></li>
+          <li><a href="/en/integritetspolicy">Privacy policy</a></li>
+          <li><a href="/en/anvandarvillkor">Terms of use</a></li>
+          <li><a href="/en/lagring">Cookies and storage</a></li>
+          <li><a href="/en/lagring#ditt-val" data-samtycke-oppna>Cookie settings</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <nav class="ftr-lax" aria-labelledby="ftr-laxhjalp">
+      <div class="ftr-lax-in">
+        <h2 class="ftr-lax-h" id="ftr-laxhjalp">Tutoring</h2>
+        <p>Find the page that fits the subject, the grade or the area.</p>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Subject</h3>
+        <ul>
+          <li><a href="/laxhjalp-matematik">Maths</a></li>
+          <li><a href="/laxhjalp-svenska">Swedish</a></li>
+          <li><a href="/laxhjalp-engelska">English</a></li>
+          <li><a href="/laxhjalp-no">Science</a></li>
+          <li><a href="/laxhjalp-so">Social studies</a></li>
+          <li><a href="/laxhjalp-moderna-sprak">Modern languages</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Grade</h3>
+        <ul>
+          <li><a href="/laxhjalp-lagstadiet">Lower primary</a></li>
+          <li><a href="/laxhjalp-mellanstadiet">Middle primary</a></li>
+          <li><a href="/laxhjalp-hogstadiet">Lower secondary</a></li>
+          <li><a href="/laxhjalp-gymnasiet">Upper secondary</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Area</h3>
+        <ul>
+          <li><a href="/laxhjalp-stockholm">All of Stockholm</a></li>
+          <li><a href="/laxhjalp-stockholm#innerstaden">Central Stockholm</a></li>
+          <li><a href="/laxhjalp-stockholm#soderort">South Stockholm</a></li>
+          <li><a href="/laxhjalp-stockholm#vasterort">West Stockholm</a></li>
+          <li><a href="/laxhjalp-stockholm#norr-och-vaster">North and west of the city</a></li>
+          <li><a href="/laxhjalp-stockholm#soder-och-oster">South and east of the city</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
+          <li><a href="/en/tutoring-stockholm" lang="en" hreflang="en">In English</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Guides</h3>
+        <ul>
+          <li><a href="/vad-kostar-laxhjalp">What does tutoring cost?</a></li>
+          <li><a href="/laxhjalp-eller-privatlarare">Tutoring or a private teacher?</a></li>
+          <li><a href="/nationella-prov-ak-6">National tests in year&nbsp;6</a></li>
+          <li><a href="/nationella-prov-ak-9">National tests in year&nbsp;9</a></li>
+          <li><a href="/plugga-infor-prov">How to study for a test</a></li>
+          <li><a href="/infor-terminsbetyget">Before the term grades</a></li>
+          <li><a href="/barnet-vill-inte-gora-laxorna">When your child won't do homework</a></li>
+          <li><a href="/hjalpa-barn-med-matte">Helping your child with maths</a></li>
+          <li><a href="/hjalpa-barn-med-lasforstaelse">Helping your child with reading comprehension</a></li>
+          <li><a href="/laxhjalp-efter-sommarlovet">Tutoring after the summer break</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="ftr-bot">
+      <span>© <span id="year">2026</span> Nextrum AB · Corporate ID 559609-3269</span>
+      <span>Built in Sweden.</span>
+    </div>
+  </div>
+
+  <!-- sista intrycket: bara ordet, mycket stort, mycket tyst -->
+  <div class="nx-ftr-ord" aria-hidden="true"><span>Nextrum</span></div>
+</footer>
+
+<!-- ==========================================================
+     VYVÄLJARE — dörren in till inloggningen.
+     Inloggningen ligger i foralder.html och larare.html och är
+     densamma på båda (2026-10-07): kontot avgör vyn.
+     ========================================================== -->
+<div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
+  <button class="nx-vagval-stang" data-vagval-stang aria-label="Close"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  <div class="nx-vagval-box">
+    <span class="nx-et">Log in</span>
+    <h2 id="vagval-t" style="margin-top:18px">Welcome back.</h2>
+    <p class="nx-lede-s">Choose the card that matches your account.</p>
+
+    <div class="nx-vagval-val">
+      <a href="/foralder">
+        <span>
+          <b>Family and student</b>
+          <span>Parents with their email, students with their username.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="/larare">
+        <span>
+          <b>Tutors</b>
+          <span>Your students, your schedule, messages and reports.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <p class="nx-vagval-fot">
+      Haven't got in touch yet? <a href="/en/intresseanmalan">Start here</a>.
+    </p>
+  </div>
+</div>
+
+<!-- Biblioteket ligger hos oss, med fast version.
+
+     Låg förr på unpkg.com som @2 — alltså "vad unpkg råkar mena med
+     tvåan just nu". Under en timmes arbete flyttade den sig från
+     2.115.0 till 2.116.0 av sig själv. Den raden körde på varje sida,
+     också de inloggade, där någon skriver sitt lösenord och ett barns
+     namn och anteckningar visas. En tredjepart med fri versionsrätt
+     på just de sidorna är inte en risk värd att bära för att slippa
+     en fil i repot.
+
+     Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
+<script src="../bibliotek/supabase-js-2.116.0.js"></script>
+<!-- INGEN MÄTNING PÅ DEN HÄR SIDAN, till skillnad från de övriga
+     publika sidorna.
+
+     Adressen hit bär nyhetsbrevets kod som ?b= eller ?a=. Vercel Web
+     Analytics sparar frågesträngen om man inte filtrerar bort den, och
+     en kod i en mätlogg vore en anmälan eller avanmälan någon annan
+     kan göra.
+
+     Det finns heller inget att optimera här. Sidan har ett syfte,
+     man är på den i tio sekunder, och den nås bara från ett mejl.
+
+     Därför inte heller samtyckesrutan (nextrum-samtycke.js): det är
+     den som laddar mätningen. Den stod här ändå fram till 2026-10-11,
+     och med statistiken påslagen hade tokenen gått till Vercel och
+     Google. Länken Cookieinställningar i foten går då till
+     lagring#ditt-val. -->
+<script src="../nextrum-config.js?v=085fa9d6"></script>
+<script src="../nextrum-images.js?v=7864d95b"></script>
+<script src="../nextrum-fel.js?v=c6a9a13f"></script>
+<script src="../nextrum-app.js?v=9c8ce04d"></script>
+<script src="../nextrum-motion.js?v=adb3b960"></script>
+<!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
+     bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
+     Inga nätverksanrop. -->
+<script src="../nextrum-maskot-svar.js?v=7e04adf1"></script>
+<script src="../nextrum-maskot.js?v=de45b497" defer></script>
+<script src="../nextrum-nyhetsbrev.js?v=62cea78d"></script>
+<script>
+(function () {
+  'use strict';
+  NX.initHeader();
+  NX.initReveal();
+  NXFin.allt();
+  NX.bildIntoning();
+  NX.initVagval();
+  NX.initFaq();
+  NX.initPris();
+  NX.märkInloggad();
+})();
+</script>
+</body>
+</html>

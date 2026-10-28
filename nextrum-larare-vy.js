@@ -4451,12 +4451,6 @@
        föreslås eller bekräftas (NXStudie.villkorFörst). */
     await NXStudie.villkorFörst(supa, S.user, 'studiehjalpare');
 
-    /* Introduktionen första gången, och Fortsätt sist leder in i vyn
-       (NXStudie.introduktion). En profil som inte är godkänd än får veta
-       att vyn öppnas när den är det. */
-    await NXStudie.introduktion(supa, S.user, 'studiehjalpare',
-      { sparat: nyttLösen, väntar: S.tutorProfil.status !== 'approved' });
-
     if (S.tutorProfil.status !== 'approved') {
       visa('view-pending');
       if (S.tutorProfil.status === 'rejected') {
@@ -4610,6 +4604,11 @@
     await byggElev();
     await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaUpptagna()]);
     ritaNotiser();
+    /* Rundturen första gången (2026-10-27), i den färdiga vyn och före
+       notisrutan. En profil som inte är godkänd har ingen vy att gå runt
+       i: valkommen står kvar på 'intro', och rundturen kommer när den är
+       godkänd (NXStudie.introduktion). */
+    await NXStudie.introduktion(supa, S.user, 'studiehjalpare', { sparat: nyttLösen });
     /* Notiserna vid inloggningen (2026-10-12): passen, förslagen och de
        olästa är hämtade, och det är allt klockan räknar. */
     NXStudie.notisruta({ user: S.user, poster: notisposter(), rubrik: 'Det här väntar på dig' });
