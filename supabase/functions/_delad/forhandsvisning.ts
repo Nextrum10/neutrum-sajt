@@ -30,12 +30,16 @@ export const MAX_ORE = 1_000_000;
 
 export type Rad = { text: string; ore: number };
 
+/* Styrtecknen skrivs som \x, aldrig som \u och fyra siffror: verktyget som
+   driftsätter funktionerna avkodar den formen en gång till (CLAUDE.md
+   avsnitt 7), och då hade ett riktigt NUL hamnat i källan. */
+
 /** Raderna ur anropet, prövade. null när något inte stämmer. */
 export function raderUrAnrop(v: unknown): Rad[] | null {
   if (!Array.isArray(v) || v.length < 1 || v.length > MAX_RADER) return null;
   const ut: Rad[] = [];
   for (const r of v) {
-    const text = String((r as Rad)?.text ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 120);
+    const text = String((r as Rad)?.text ?? '').replace(/[\x00-\x1f\x7f]/g, ' ').trim().slice(0, 120);
     const ore = Number((r as Rad)?.ore);
     if (!text || !Number.isInteger(ore) || ore < MIN_ORE || ore > MAX_ORE) return null;
     ut.push({ text, ore });
