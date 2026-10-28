@@ -73,6 +73,11 @@ const BANKID = n => 'b0000000-0000-4000-8000-' + String(n).padStart(12, '0');
 const BANKEN = [1, 2, 3, 4].map(n => ({ id: BANKID(n), nyckel: 'prov-ma6-' + n, amne: 'Matematik', arskurs: 'ak6',
   omrade: 'Taluppfattning', titel: 'Steg ' + n, beskrivning: 'Steg ' + n + ' i provets bana.', ordning: n,
   antal_fragor: 3, aktiv: true, sort: 'vanlig', lastext: null, spar: 'vag' }))
+  /* Repetitionen (2026-10-28): drar elevens missade frågor genom
+     forhandsvisning_repetition(), som provet svarar på ur listorna. */
+  .concat([{ id: BANKID(5), nyckel: 'prov-ma6-rep', amne: 'Matematik', arskurs: 'ak6', omrade: 'Repetition',
+    titel: 'Repetition', beskrivning: 'Repetera det du missat.', ordning: 99, antal_fragor: 8, aktiv: true,
+    sort: 'repetition', lastext: null, spar: 'vag' }])
   .concat([{ id: BANKID(9), nyckel: 'prov-en9-1', amne: 'Engelska', arskurs: 'ak9', omrade: 'Grammatik', titel: 'Verb',
     beskrivning: 'Verb.', ordning: 1, antal_fragor: 3, aktiv: true, sort: 'vanlig', lastext: null, spar: 'vag' }]);
 const BANKFRÅGOR = n => [0, 1, 2].map(i => ({ id: BANKID(1000 + n * 10 + i), typ: 'val',
@@ -95,7 +100,7 @@ async function bild(page, namn, sel) {
    roll) eller 'utloggad' (ingen inloggning i webbläsaren). */
 async function öppnaFörhandsvisning(webb, o) {
   const context = await webb.newContext(Object.assign({ viewport: { width: 1280, height: 900 } }, o.context || {}));
-  const riktiga = [], grindar = [], dialoger = [], konsol = [], kassor = [];
+  const riktiga = [], grindar = [], dialoger = [], konsol = [], kassor = [], repetitioner = [];
   await context.route(RIKTIG, route => {
     const u = route.request().url();
     const req = route.request();
@@ -110,6 +115,15 @@ async function öppnaFörhandsvisning(webb, o) {
       const n = BANKEN.findIndex(x => x.id === req.postDataJSON().p_niva) + 1;
       const niva = BANKEN[n - 1];
       return svaraRiktig(route, 200, { niva, fragor: BANKFRÅGOR(n).map(f => ({ id: f.id, typ: f.typ, fraga: f.fraga, alternativ: f.alternativ })) });
+    }
+    if (/\/rest\/v1\/rpc\/forhandsvisning_repetition$/.test(u)) {
+      const k = req.postDataJSON();
+      repetitioner.push(k);
+      const alla = [].concat(...BANKEN.map((_, i) => BANKFRÅGOR(i + 1)));
+      const fragor = (k.p_missade || []).map(m => alla.find(f => f.id === m)).filter(Boolean)
+        .map(f => ({ id: f.id, typ: f.typ, fraga: f.fraga, alternativ: f.alternativ }));
+      if (!fragor.length) return svaraRiktig(route, 400, { code: 'P0001', message: 'Det finns inget att repetera än.' });
+      return svaraRiktig(route, 200, { niva: BANKEN.find(x => x.id === k.p_niva), fragor });
     }
     if (/\/rest\/v1\/rpc\/forhandsvisning_ratta$/.test(u)) {
       const k = req.postDataJSON();
@@ -146,7 +160,7 @@ async function öppnaFörhandsvisning(webb, o) {
   page.on('console', m => { if (m.type() === 'error') konsol.push(m.text()); });
   page.on('pageerror', e => konsol.push('pageerror: ' + e.message));
   page.on('dialog', d => { dialoger.push(d.message()); d.dismiss().catch(() => {}); });
-  return { context, page, riktiga, grindar, dialoger, konsol, kassor };
+  return { context, page, riktiga, grindar, dialoger, konsol, kassor, repetitioner };
 }
 
 const logg = page => page.evaluate(() => (window.NXForhandsvisning && NXForhandsvisning.logg) || []);
@@ -226,7 +240,7 @@ async function provaGrinden(webb) {
 }
 
 async function provaStudievyn(webb) {
-  const { context, page, riktiga, grindar, dialoger, konsol, kassor } = await öppnaFörhandsvisning(webb, { grind: 'admin', bank: true, kassa: true });
+  const { context, page, riktiga, grindar, dialoger, konsol, kassor, repetitioner } = await öppnaFörhandsvisning(webb, { grind: 'admin', bank: true, kassa: true });
   await page.goto(BAS + '/foralder?forhandsvisning');
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
   prova('studievyn: vyn laddar', await synlig(page, '#view-app'));
@@ -304,7 +318,9 @@ async function provaStudievyn(webb) {
     await page.click('.upg-spel [data-spel="fakta-klar"]');
     await page.waitForSelector('.upg-spel .upg-alt', { timeout: 5000 }).catch(() => {});
   }
-  let delar = 0;
+  /* Den första frågan besvaras fel en gång: då blir det en stjärna
+     (två av tre direkt), och frågan står bland de missade. */
+  let delar = 0, fel = 0;
   for (let i = 0; i < 10; i++) {
     if (await page.locator('.upg-spel [data-spel="nasta-del"]').count()) {
       delar++;
@@ -316,7 +332,8 @@ async function provaStudievyn(webb) {
     const fråga = (await text(page, '.upg-spel .upg-fraga-text, .upg-spel .upg-fraga h3, .upg-spel .upg-fraga')).trim();
     const m = /Provfråga \d+\.(\d)/.exec(fråga);
     const rätt = m ? Number(m[1]) + 1 : 0;
-    await page.click('.upg-spel .upg-alt[data-alt="' + rätt + '"]');
+    const svar = m && m[1] === '0' && !fel ? (fel++, rätt + 1) : rätt;
+    await page.click('.upg-spel .upg-alt[data-alt="' + svar + '"]');
     await page.click('.upg-spel [data-spel="kolla"]');
     await page.waitForSelector('.upg-spel [data-spel="vidare"]', { timeout: 5000 }).catch(() => {});
     await page.click('.upg-spel [data-spel="vidare"]').catch(() => {});
@@ -325,10 +342,21 @@ async function provaStudievyn(webb) {
   await page.waitForSelector('.upg-spel .upg-slut', { timeout: 5000 }).catch(() => {});
   prova('studievyn: en nivå ur banan går att göra hela vägen, en prick', await synlig(page, '.upg-spel .upg-slut') && delar === 0,
     delar + ' ' + await text(page, '.upg-spel'));
-  const försök = await värld(page, n => NXForhandsvisning.värld.niva_forsok.filter(f => f.niva_id === n && f.klar_at && f.stjarnor === 3).length, BANKID(4));
-  prova('studievyn: försöket är klart i världen, med tre stjärnor', försök === 1, försök);
+  const försök = await värld(page, n => NXForhandsvisning.värld.niva_forsok.filter(f => f.niva_id === n && f.klar_at && f.stjarnor === 1).length, BANKID(4));
+  prova('studievyn: försöket är klart i världen, med en stjärna för ett fel (två av tre direkt, som niva_svara)', försök === 1 && fel === 1, försök + ' ' + fel);
   await bild(page, 'studievyn-nexlax-klar', '.upg-spel');
   await page.click('.upg-spel [data-spel-stang]').catch(() => {});
+
+  /* Repetitionen (2026-10-28): den missade frågan räknas i läget och går
+     till databasen med den klarade nivån, och repetitionen spelas. */
+  const missade = await page.evaluate(async () => (await supa.rpc('nexlax_lage')).data.missade);
+  prova('studievyn: den missade frågan räknas i läget', JSON.stringify(missade) === JSON.stringify([{ amne: 'Matematik', arskurs: 'ak6', antal: 1 }]),
+    JSON.stringify(missade));
+  const rep = await page.evaluate(async n => (await supa.rpc('niva_starta', { p_niva: n })), BANKID(5));
+  prova('studievyn: repetitionen drar den missade frågan och den klarade nivån', !rep.error && rep.data.fragor.length === 1
+    && rep.data.fragor[0].id === BANKID(1040) && repetitioner.length === 1
+    && JSON.stringify(repetitioner[0].p_missade) === JSON.stringify([BANKID(1040)]) && repetitioner[0].p_klara.indexOf(BANKID(4)) !== -1,
+    JSON.stringify({ rep, repetitioner }));
 
   /* Betala nu på det bekräftade passet, före planen: med timmar i
      banken öppnar knappen först valet mellan timmarna och kortet. */

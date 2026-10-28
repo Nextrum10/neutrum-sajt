@@ -183,7 +183,10 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
   området bemästrat (en krona). Repetitionen, en per bana, drar det
   eleven senast svarade fel på första gången, fyllt med frågor ur nivåer
   hen klarat, högst åtta. En fråga ur en nivå med lästext dras aldrig:
-  den handlar om en text provet inte visar. `bygg-uppgifter.py` skriver
+  den handlar om en text provet inte visar. Urvalet står i
+  `intern.nexlax_repetition_ur` (2026-10-28), som tar de missade och de
+  klarade nivåerna som listor: elevens repetition läser dem ur tabellerna,
+  och förhandsvisningen skickar webbläsarens egna. `bygg-uppgifter.py` skriver
   båda sorterna själv ur banan (avsnitt 8); ett område med en enda nivå
   får inget prov, för det hade varit samma frågor i ny ordning och 50
   XP för att göra om nivån.

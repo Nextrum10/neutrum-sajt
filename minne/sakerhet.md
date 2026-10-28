@@ -785,4 +785,8 @@ som gör den säker:
   - **NexLäx** läser `nivaer` (som varje inloggad läser) och spelar frågorna
     genom `forhandsvisning_niva()` och `forhandsvisning_ratta()` (bara
     `is_admin()`, utan facit ut, rättat av `intern.niva_ratta`, inget
-    sparat). Utan migrationen, eller utan nät, är det de påhittade nivåerna.
+    sparat). Repetitionen (2026-10-28) går genom `forhandsvisning_repetition()`,
+    som tar webbläsarens missade frågor och klarade nivåer som listor (högst 500
+    och 2000) och väljer med samma `intern.nexlax_repetition_ur` som elevens
+    repetition; listorna kan bara välja frågor ur banan, som superadmin redan
+    läser med facit. Utan migrationen, eller utan nät, är det de påhittade nivåerna.

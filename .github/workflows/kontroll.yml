@@ -99,6 +99,11 @@ jobs:
       - name: Titlarna och beskrivningarna syns hela i en sökträff
         run: python3 verktyg/kolla-titlar.py
 
+      # 2026-10-28: förhandsvisningen spelar den riktiga banan men räknar
+      # stjärnorna i webbläsaren. Gränserna ska vara niva_svaras.
+      - name: Förhandsvisningen räknar stjärnor som databasen
+        run: python3 verktyg/kolla-forhandsvisning.py
+
       # 2026-10-22: Om oss och exemplen på startsidan säger bara det som
       # går att visa. Inga antal, omdömen, procent, kronor eller namn, och
       # ekvationerna i exemplet räknas om. Platshållarna skrivs ut.
