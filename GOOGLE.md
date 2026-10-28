@@ -25,6 +25,7 @@ Google har alltså inte ens hämtat den. Indexering är begärd; läs av
 den innan något ändras på sidan. Samma dag begärdes också
 `http://nextrum.se/` och `/gratis-laxhjalp-stockholm`, som båda låg
 kvar i indexet, så att Google följer omdirigeringarna (se sist).
+Bing Webmaster Tools sattes upp samma kväll, se `TRAFIK.md` avsnitt 3.
 
 ---
 
@@ -253,9 +254,9 @@ något annat kan Google räkna som en sida som inte finns.
 Google följer omdirigeringen och ersätter den gamla titeln med
 kostnadsguidens. I Bing Webmaster Tools gör ni samma sak under
 **URL-inskickning**. En gång räcker; adressen ska inte in i kartan
-eller i listan i Steg 4, för den är ingen sida längre. *Gjort i Search
-Console 2026-10-28: adressen låg fortfarande i indexet. Bing är inte
-gjort.*
+eller i listan i Steg 4, för den är ingen sida längre. *Gjort
+2026-10-28 i både Search Console och Bing: adressen låg fortfarande i
+Googles index.*
 
 ---
 
