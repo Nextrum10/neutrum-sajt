@@ -63,10 +63,17 @@ första månaden.
 
 ## 3. Search Console och Bing (20 minuter)
 
+**Punkt 1 och 2 är gjorda 2026-10-27–28.** Kartan är inskickad och
+läst, alla sidor i listan nedan är indexerade utom `/laxhjalp-online`
+(begärd, se `GOOGLE.md` "Läget"), den gamla gratisadressen är begärd
+och oktobers säsongsbegäran för `/infor-terminsbetyget` är gjord.
+Kvar: punkt 3 (Bing) och säsongsguiderna i januari och juli.
+
 1. Search Console: lägg till domänen och skicka in `sitemap.xml`
    (`GOOGLE.md` steg 1–3).
 2. Be om indexering av de här, i den här ordningen (kvoten är ungefär
-   tio om dagen, så de sista får vänta till dagen efter):
+   tio per 24 timmar, så de sista får vänta till samma klockslag
+   dagen efter):
    ```
    https://nextrum.se/
    https://nextrum.se/laxhjalp-stockholm

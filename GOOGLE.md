@@ -16,6 +16,16 @@ kryper inte en ny sajt bara för att den finns.** Någon måste be om
 det, och det kan bara göras från ett Google-konto. Därför de här
 stegen.
 
+**Läget 2026-10-28:** steg 1–4 är gjorda. Domänegendomen `nextrum.se`
+finns, kartan är inskickad och läst (80 adresser), och 79 av 80 sidor
+är indexerade, granskade en och en. Kvar är `/laxhjalp-online`:
+*Upptäckt – inte indexerad* sedan den skapades 2026-09-28, trots
+länkar från 84 sidor, en plats i kartan och ett godkänt livetest.
+Google har alltså inte ens hämtat den. Indexering är begärd; läs av
+den innan något ändras på sidan. Samma dag begärdes också
+`http://nextrum.se/` och `/gratis-laxhjalp-stockholm`, som båda låg
+kvar i indexet, så att Google följer omdirigeringarna (se sist).
+
 ---
 
 ## Del 1 — Search Console (det som avgör om sidan syns)
@@ -52,8 +62,10 @@ Syns ingen meny alls är egendomen inte tillagd än — gör Steg 2 först.
 På smal skärm är menyn hopfälld bakom hamburgerikonen uppe till
 vänster.
 
-Väl inne: skriv `sitemap.xml` i rutan och klicka **Skicka**. Status
-ska bli *Lyckades* med 80 upptäckta adresser.
+Väl inne: skriv hela adressen `https://nextrum.se/sitemap.xml` i
+rutan och klicka **Skicka**. Status ska bli *Lyckades* med 80
+upptäckta adresser. Så gjordes det 2026-10-27, och Google läste kartan
+inom en minut.
 
 Kartan är kontrollerad och fungerar — `https://nextrum.se/sitemap.xml`
 svarar 200 med giltig XML. Öppna den i webbläsaren om
@@ -70,9 +82,12 @@ på. **Steg 4 är det som faktiskt betyder något** — hoppa dit.
 Det här är steget som faktiskt sätter fart på det.
 
 1. Klistra in `https://nextrum.se/` i **sökrutan högst upp**
-   (den heter *Inspektera URL*)
-2. Vänta på svaret. Står det *URL:en finns inte på Google* är det
-   väntat — det är hela problemet.
+   (den heter *Granska webbadresser på nextrum.se*; i ett smalt
+   fönster ligger den bakom förstoringsglaset uppe till höger)
+2. Vänta på svaret. Står det *Webbadressen finns inte på Google* är
+   det väntat — det är hela problemet. Klicka inte förrän adressen
+   under rubriken är den du skrev: annars hamnar klicket på förra
+   adressens **Begär på nytt** och bränner en plats i kvoten.
 3. Klicka **Begär indexering**
 4. Vänta ut kontrollen, ungefär en minut
 
@@ -96,7 +111,10 @@ stadsdelar och ämnen, så Google hittar resten därifrån.
 gamla formen ber du Google indexera en vidarebefordran i stället
 för sidan, och du bränner en plats i kvoten på den.
 
-Det finns en kvot på ungefär tio per dygn. Ta startsidan först.
+Det finns en kvot på ungefär tio begäranden, och den verkar räknas 24
+timmar bakåt, inte per kalenderdag: elva begäranden kl. 08.30–08.45
+den 27 oktober gav *Kvoten har överskridits* kl. 08.18 dagen efter,
+men det gick igen kl. 10.05. Ta startsidan först.
 
 ### Steg 5. Vänta
 
@@ -164,7 +182,7 @@ ordet: i 48 pixlar går det inte att läsa ändå.
 
 ### Steg 4. Be Google hämta om startsidan
 
-I Search Console: **Inspektera URL** på `https://nextrum.se/` →
+I Search Console: **Granska webbadress** på `https://nextrum.se/` →
 **Begär indexering**. Ikonen bredvid träffen kommer ofta senare än
 texten, ibland flera veckor efter. Google hämtar om ikoner i sin egen
 takt, och det finns ingen knapp som skyndar på just den.
@@ -198,10 +216,11 @@ Alla vägar leder alltså till rätt sida. Det finns ingenting att laga i
 koden, i DNS eller hos Vercel. Det som saknas är att Google ska hämta
 om den gamla adressen och se omdirigeringen.
 
-**Så snabbar ni på det.** I Search Console: **Inspektera URL** på
+**Så snabbar ni på det.** I Search Console: **Granska webbadress** på
 `http://nextrum.se/` (skriv `http` med flit) och klicka **Begär
 indexering**. Google följer då omdirigeringen och byter ut träffen mot
-den riktiga sidan.
+den riktiga sidan. *Gjort 2026-10-28: adressen låg fortfarande i
+indexet som en egen sida.*
 
 Vill ni ha bort den fortare kan ni be om en tillfällig borttagning
 under **Borttagningar**. Den gäller ungefär ett halvår och döljer bara
@@ -229,12 +248,14 @@ gratis att fråga och när första timmen är gratis. Navet hade gett en
 säljsida i stället för ett svar, och en omdirigering till en sida om
 något annat kan Google räkna som en sida som inte finns.
 
-**Så byts träffen ut.** I Search Console: **Inspektera URL** på
+**Så byts träffen ut.** I Search Console: **Granska webbadress** på
 `https://nextrum.se/gratis-laxhjalp-stockholm` → **Begär indexering**.
 Google följer omdirigeringen och ersätter den gamla titeln med
 kostnadsguidens. I Bing Webmaster Tools gör ni samma sak under
 **URL-inskickning**. En gång räcker; adressen ska inte in i kartan
-eller i listan i Steg 4, för den är ingen sida längre.
+eller i listan i Steg 4, för den är ingen sida längre. *Gjort i Search
+Console 2026-10-28: adressen låg fortfarande i indexet. Bing är inte
+gjort.*
 
 ---
 
