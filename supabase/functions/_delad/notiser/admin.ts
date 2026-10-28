@@ -141,6 +141,7 @@ function direkt(antal: unknown): Renderat | null {
     val: null,
     provrad: null,
     avslutning: 'Inga namn eller uppgifter står i mejlet. Resten finns i adminvyn.',
+    utanSignatur: true,
   };
   return renderaRam(ram);
 }
@@ -172,6 +173,7 @@ function morgon(antal: unknown, prov: boolean): Renderat | null {
       ? 'Det här är ett testmejl, för att visa hur morgonmejlet ser ut. Sakerna är de som ligger i Att göra just nu. Inget behöver göras.'
       : null,
     avslutning: 'Inga namn eller uppgifter står i mejlet. Resten finns i adminvyn.',
+    utanSignatur: true,
   };
   return renderaRam(ram);
 }

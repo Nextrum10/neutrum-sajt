@@ -17,7 +17,7 @@
 // ============================================================
 
 import { assertEquals, assertStringIncludes, assertThrows } from 'jsr:@std/assert@1';
-import { renderaMejl, avregistreringsAdress, vyAdress, FARG, KONTAKT, LOGGA_URL, SAJT } from './rendera.ts';
+import { renderaMejl, renderaRam, avregistreringsAdress, vyAdress, FARG, KONTAKT, LOGGA_URL, SAJT } from './rendera.ts';
 import { renderaKvitto } from './kvitto.ts';
 import { MEJLBARA, type Roll } from './typer.ts';
 
@@ -492,10 +492,14 @@ Deno.test('loggan är den riktiga, och den kan inte spåra någon', () => {
   // systemtypsnittet. Det som gör en bild i ett mejl till en
   // spårningspixel är att adressen skiljer sig per mottagare. Den här
   // är samma för alla — ingen fråga, inget id, ingen annan värd — och
-  // det är den enda bilden i mejlet.
+  // det är den enda bilden i mejlet. Den står två gånger sedan signaturen
+  // (2026-10-28): överst, och större i signaturen sist.
   for (const m of [rendera('meddelande', 'parent'), rendera('pass_nytt', 'tutor'), renderaKvitto('Anna')]) {
     const bilder = m.html.match(/<img\b[^>]*>/g) ?? [];
-    assertEquals(bilder.length, 1, 'exakt en bild: loggan');
+    assertEquals(bilder.length, 2, 'två bilder: loggan överst och i signaturen');
+    for (const b of bilder) assertStringIncludes(b, `src="${LOGGA_URL}"`);
+    assertStringIncludes(bilder[1] ?? '', 'width="84"');
+    assertStringIncludes(bilder[1] ?? '', 'alt="Nextrum"');
     const bild = bilder[0] ?? '';
     assertStringIncludes(bild, `src="${LOGGA_URL}"`);
     assertEquals(LOGGA_URL.startsWith(`${SAJT}/`), true);
@@ -509,4 +513,29 @@ Deno.test('loggan är den riktiga, och den kan inte spåra någon', () => {
     // Med bilder avstängda står namnet kvar som text.
     assertStringIncludes(m.html, '>Nextrum</a>');
   }
+});
+
+Deno.test('signaturen står sist i varje mejl till en mottagare, i HTML och i text', () => {
+  for (const m of [rendera('meddelande', 'parent'), rendera('pass_nytt', 'tutor'), renderaKvitto('Anna')]) {
+    assertStringIncludes(m.html, 'Av unga, för unga.');
+    assertStringIncludes(m.html, 'href="https://instagram.com/nextrum.se"');
+    assertStringIncludes(m.html, 'Org.nr 559609-3269');
+    assertStringIncludes(m.text, 'Av unga, för unga.');
+    assertStringIncludes(m.text, 'instagram.com/nextrum.se');
+    assertStringIncludes(m.text, 'Org.nr 559609-3269');
+    // Före footern, aldrig efter den.
+    assertEquals(m.html.indexOf('Av unga, för unga.') < m.html.indexOf(FARG.fot, m.html.indexOf('Av unga')), true);
+  }
+});
+
+Deno.test('ett internt mejl har ingen signatur', () => {
+  const m = renderaRam({
+    roll: 'parent', halsning: 'Hej,',
+    innehall: { amne: 'Intern', rubrik: 'Intern', mening: 'Till oss.', knapp: null, mal: 'sajten', fakta: [] },
+    knappAdress: `${SAJT}/admin`, varfor: 'Internt.', avregistrera: null, val: null, provrad: null,
+    utanSignatur: true,
+  } as never);
+  assertEquals(m.html.includes('Av unga, för unga.'), false);
+  assertEquals(m.html.includes('Vänliga hälsningar'), false);
+  assertEquals(m.text.includes('Av unga, för unga.'), false);
 });

@@ -180,6 +180,9 @@ export type Ram = {
    * varje mejl hur långt hen kommit, inte bara vad som hänt senast.
    */
   resa?: Resa | null;
+  /** Sant för ett internt mejl (till oss): signaturen är till familjer, studiehjälpare och
+   *  den som sökt, inte till oss själva. */
+  utanSignatur?: boolean;
 };
 
 export type Resesteg = { text: string; lage: 'klar' | 'nu' | 'kommer' };
@@ -235,7 +238,7 @@ function text(r: Ram): string {
   }
   if (r.avslutning) t.push(r.avslutning, '');
   // "-- " är signaturavgränsaren som mejlprogram känner igen.
-  t.push('-- ', 'Nextrum', r.varfor);
+  t.push('-- ', ...(r.utanSignatur ? ['Nextrum'] : SIGNATUR_TEXT), '', r.varfor);
   if (r.avregistrera) t.push(`Sluta få mejl om det här: ${r.avregistrera}`);
   if (r.val) t.push(`Ändra dina val: ${r.val}`);
   t.push(`Frågor? Svara på mejlet eller skriv till ${KONTAKT}.`);
@@ -311,6 +314,47 @@ function logga(): string {
     + `</tr></table>`;
 }
 
+/* ============================================================
+   SIGNATUREN (2026-10-28, Leo: "den följer med i alla de där mailen")
+   ============================================================
+   Sist i varje mejl som går genom renderaRam(): logga, namnet, sloganen, sajten, Instagram,
+   adressen och bolagets uppgifter. Orgnumret är detsamma som sist i sajtens footer.
+   Ordet "Av unga, för unga" är Leos; det står inte på sajten. Länkarna är vanliga <a>, inga
+   ikonbilder: de blockeras av mejlprogram som inte laddar bilder, och loggan är den enda
+   bilden. Orange text i #D9650F och inte sajtens #F88740, som inte klarar kontrast mot papperet. */
+export const INSTAGRAM = 'https://instagram.com/nextrum.se';
+export const ORGNR = '559609-3269';
+export const SLOGAN = 'Av unga, för unga.';
+const SIG_ORANGE = '#F88740';
+const SIG_ORANGE_TEXT = '#D9650F';
+
+export const SIGNATUR_TEXT = [
+  'Nextrum',
+  SLOGAN,
+  `nextrum.se · instagram.com/nextrum.se · ${KONTAKT}`,
+  `Nextrum AB · Org.nr ${ORGNR} · Läxhjälp i Stockholm`,
+];
+
+export function signaturHtml(): string {
+  const lank = (adress: string, text: string, fet: boolean) =>
+    `<a href="${adress}" style="color:${FARG.text};text-decoration:none${fet ? ';font-weight:bold' : ''}">${text}</a>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse">`
+    + `<tr><td style="padding:0 0 12px;font:400 15px/20px ${SANS};color:${FARG.text}">Vänliga hälsningar,</td></tr>`
+    + `<tr><td><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse"><tr>`
+    + `<td valign="top" style="padding:0 18px 0 0;border-right:3px solid ${SIG_ORANGE}">`
+    + `<a href="${SAJT}" style="text-decoration:none"><img src="${LOGGA_URL}" width="84" height="84" alt="Nextrum" `
+    + `style="display:block;border:0;width:84px;height:84px;border-radius:16px"></a></td>`
+    + `<td valign="top" style="padding:0 0 0 18px;font-family:${SANS}">`
+    + `<div style="font-size:18px;line-height:24px;font-weight:bold;color:${FARG.text};padding-bottom:4px">Nextrum</div>`
+    + `<div style="font-size:13px;line-height:18px;font-weight:bold;color:${SIG_ORANGE_TEXT};padding-bottom:8px">${SLOGAN}</div>`
+    + `<div style="font-size:13px;line-height:20px;color:${FARG.text}">${lank(SAJT, 'nextrum.se', true)}`
+    + ` &nbsp;&middot;&nbsp; ${lank(INSTAGRAM, 'Instagram', true)}</div>`
+    + `<div style="font-size:13px;line-height:20px">${lank(`mailto:${KONTAKT}`, KONTAKT, false)}</div>`
+    + `</td></tr></table></td></tr>`
+    + `<tr><td style="padding:14px 0 0;font:400 11px/16px ${SANS};color:${FARG.dampad}">`
+    + `Nextrum AB &middot; Org.nr ${ORGNR} &middot; Läxhjälp i Stockholm</td></tr></table>`;
+}
+
 export type Skal = {
   amne: string;
   /** Det som syns efter ämnesraden i inkorgen. Text, inte HTML. */
@@ -321,6 +365,9 @@ export type Skal = {
   /** Footerns innehåll, färdig HTML som redan gått genom esc(), med färgerna `fotText` och
    *  `fotLank`. Utan den står bara raden om vart man skriver. */
   fot?: string;
+  /** Färdig HTML (signaturHtml()) som står sist i brevet, före footern. Utan den ingen signatur:
+   *  mejlen med Leos egna ord, underlaget, nyhetsbrevet och aviseringen till oss har ingen. */
+  signatur?: string;
 };
 
 /** Raden om vart man skriver, i footerns färger. Notismejlen har den sist i sin footer,
@@ -370,6 +417,7 @@ export function skal(s: Skal): string {
     + provrad
     + `<tr><td style="padding:0 0 32px">${logga()}</td></tr>`
     + `<tr><td>${s.innehall}</td></tr>`
+    + (s.signatur ? `<tr><td style="padding:32px 0 0">${s.signatur}</td></tr>` : '')
     + `</table></td></tr>`
     /* Footern är sajtens egen mörka ton (--ftr-bg) i en remsa över hela bredden,
        som på sidorna: papperet över den, barken under. Den ligger i yttertabellen,
@@ -427,7 +475,10 @@ function html(r: Ram): string {
       : '')
     + fotKontakt();
 
-  return skal({ amne: i.amne, forhandstext: i.mening, innehall, provrad: r.provrad, fot });
+  return skal({
+    amne: i.amne, forhandstext: i.mening, innehall, provrad: r.provrad, fot,
+    signatur: r.utanSignatur ? undefined : signaturHtml(),
+  });
 }
 
 /** Ämne, text och HTML för en rad ur kön. Kastar för en typ som inte mejlas. */
