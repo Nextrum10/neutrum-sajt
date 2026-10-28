@@ -1280,8 +1280,14 @@ Detaljer: `minne/grunden.md`.
   `forhandsvisning-kassa` v1 gick ut från 6da87bf och är hämtad tillbaka. Provat mot driften, tillbakarullat: en annan än
   admin nekas, en superadmin får engelska åk 9 utan facit och en rättning, och inga försök eller svar sparas; funktionen
   svarar 401 ur sin egen kod utan inloggning. Advisorn fick bara de två nya funktionerna för `authenticated`, med flit.
-  **`stripe-webhook` är inte driftsatt** med raden för `forhandsvisning=1`: den i drift kvitterar redan kassans händelser
-  utan att skriva (session utan pass-id, charge utan pass), och raden går ut nästa gång webhooken driftsätts. `#374` bytte
+  `stripe-webhook` v18 med raden för `forhandsvisning=1` gick ut 2026-10-28 från 88dd4b4 (Leo: "kör"), hämtad tillbaka
+  och byte för byte lika i alla tolv filer, och svarar 400 ur sin egen kod utan signatur. **Repetitionen**
+  (`forhandsvisningens_repetition` 20261028140000, PR #382) är i drift sedan samma kväll: urvalet i
+  `intern.nexlax_repetition_ur`, som elevens repetition och `forhandsvisning_repetition()` delar; körd i ett do-block ur
+  88dd4b4 med filens md5 (`60fcfebe…`) och vakten mot driftens `nexlax_repetitionsfragor` (`4e2204bb…`), registrerad
+  med filens text, och de tre funktionerna är byte för byte lika en databas byggd ur filerna. Provat mot driften,
+  tillbakarullat: elevens repetition drar, superadmin får frågorna utan facit och inget sparas, och en annan än admin
+  nekas. Lokalt `rls-test.sql` 2294 av 2294 och `prova-forhandsvisning.js` 77 av 77. `#374` bytte
   `\u`-escapes mot `\x` i `_delad/forhandsvisning.ts`, för verktyget avkodar dem (avsnitt 7). Kvar: ett köp med
   testkortet i förhandsvisningen. Datumrutans förslag har samma enda kant som de andra sedan 2026-10-27 (Leo: den gula
   "har extra streck inuti").
