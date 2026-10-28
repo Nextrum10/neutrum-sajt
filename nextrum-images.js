@@ -164,6 +164,131 @@ window.NEXTRUM_IMAGES = {
     tint: '#453B28',
     credit: 'Kvällsplugg — mörk och varm, tonmässig ytterlighet mot resten av serien. '
           + 'Obs: handledaren ser klart äldre ut än 20.'
+  },
+
+  /* ---- Tredje omgången, genererad 2026-10-28 ----
+     Samma recept som de förra (Soul 2.0, 16:9, analog film, ljust ekträ,
+     bar putsvägg, inga händer som rör varandra, ingen text). Tretton
+     bilder: ämnena, hemmet och föräldern, Stockholm utanför fönstret och
+     sex bilder utan människor. De kom i 1024 × 576 och är uppskalade till
+     2048 × 1152 (Lanczos), så de duger i alla utsnitt men är mjukare än
+     de äldre i helbredd. Generera om i 2K när en av dem ska bära en hero. */
+
+  matematik: {
+    file: '14-matematik',
+    w: 2048, h: 1152,
+    alt: 'En ung studiehjälpare pekar med pennan på en parabel på rutat papper medan en pojke lutar huvudet mot handen och följer med.',
+    focal: '50% 42%',
+    tint: '#85766B',
+    credit: 'Matematik. Obs: studiehjälparen ser ut att vara kring 25.'
+  },
+
+  engelska: {
+    file: '16-engelska',
+    w: 2048, h: 1152,
+    alt: 'En pojke skrattar åt ett kort med glosor som han håller upp, medan studiehjälparen bredvid ler åt honom vid ett köksbord.',
+    focal: '46% 38%',
+    tint: '#8B7663',
+    credit: 'Engelska, glosor vid köksbordet.'
+  },
+
+  noNatur: {
+    file: '17-no-naturvetenskap',
+    w: 2048, h: 1152,
+    alt: 'En studiehjälpare ritar i en färglagd skiss av en växtcell medan en flicka lutar kinden mot handen och tittar på.',
+    focal: '48% 38%',
+    tint: '#81776F',
+    credit: 'NO, växtcellen. Obs: studiehjälparen ser ut att vara kring 25.'
+  },
+
+  tunnelbana: {
+    file: '19-tunnelbana',
+    w: 2048, h: 1152,
+    alt: 'Två tonåringar med ryggsäckar sitter på en bänk på en tunnelbaneperrong och bläddrar i ett anteckningsblock medan ett tåg susar förbi.',
+    focal: '46% 40%',
+    tint: '#5C544E',
+    credit: 'Tunnelbanan, för orter där vägen dit är det praktiska. Mörk, blå kakelvägg, rörelseoskärpa i tåget.'
+  },
+
+  hemma: {
+    file: '21-hemma-hos-familjen',
+    w: 2048, h: 1152,
+    alt: 'En ung studiehjälpare och en flicka sitter vid ett matbord hemma, med skolböcker, en fruktskål och ett regnigt höstfönster bakom sig.',
+    focal: '40% 44%',
+    tint: '#634E3D',
+    credit: 'Hemma hos familjen. Varm lampa och grått dagsljus, mörk i tonen. Obs: studiehjälparen ser ut att vara kring 25.'
+  },
+
+  skolvag: {
+    file: '22-skolvag-hostlov',
+    w: 2048, h: 1152,
+    alt: 'En pojke med ryggsäck går ensam längs en höstgata i lågt eftermiddagsljus, med löv på trottoaren och stadens siluett vid vattnet i bakgrunden.',
+    focal: '42% 54%',
+    tint: '#8B6F54',
+    credit: 'Skolvägen. Stockholmsbilden: siluetten vid vattnet, stor slät ockrafasad till höger. Bara för Stockholm som helhet, aldrig en bestämd ort.'
+  },
+
+  valkommenHem: {
+    file: '24-valkommen-hem',
+    w: 2048, h: 1152,
+    alt: 'En pappa vid köksbänken tittar upp med ett varmt leende när en ung studiehjälpare med ryggsäck kommer in från hallen.',
+    focal: '52% 40%',
+    tint: '#69513B',
+    credit: 'Välkommen hem, kvällsljus. Studiehjälparen till höger, pappan till vänster.'
+  },
+
+  forstaMotetForalder: {
+    file: '25-forsta-motet-med-foralder',
+    w: 2048, h: 1152,
+    alt: 'En förälder och en flicka sitter i en soffa med te och möter en ung studiehjälpare som sitter mitt emot i en fåtölj.',
+    focal: '52% 42%',
+    tint: '#827364',
+    credit: 'Första mötet med föräldern. Ljus, lugn bild i vardagsrummet. Obs: studiehjälparen ser ut att vara kring 25.'
+  },
+
+  skrivbord: {
+    file: '28-skrivbord-ordning',
+    w: 2048, h: 1152,
+    alt: 'Ett städat skrivbord i ljust ek sett uppifrån, med ett uppslaget anteckningsblock, två pennor, ett suddgummi, en linjal och en kruka.',
+    focal: '50% 50%',
+    tint: '#A38970',
+    credit: 'Skrivbordet, uppifrån. Ingen människa.'
+  },
+
+  pennan: {
+    file: '29-penna-och-block',
+    w: 2048, h: 1152,
+    alt: 'En penna vilar på ett linjerat anteckningsblock fullt av handskrift, i mjukt dagsljus.',
+    focal: '34% 56%',
+    tint: '#B7A999',
+    credit: 'Pennan och blocket, närbild. Tom, ljus yta till höger. Ingen människa.'
+  },
+
+  fonstret: {
+    file: '30-fonster-och-bocker',
+    w: 2048, h: 1152,
+    alt: 'En bokstapel och ett anteckningsblock på en fönsterbräda, med gula hyreshus och ett höstträd utanför fönstret.',
+    focal: '44% 56%',
+    tint: '#807063',
+    credit: 'Fönstret mot innerstaden. Ingen människa.'
+  },
+
+  laxorna: {
+    file: '32-laxor-pa-koksbordet',
+    w: 2048, h: 1152,
+    alt: 'Läxor och en vässad penna på ett köksbord i kvällsljus, med en skrivbordslampa, en mugg och en halvskalad mandarin.',
+    focal: '50% 56%',
+    tint: '#7F5E42',
+    credit: 'Läxorna på köksbordet, kväll. Ingen människa.'
+  },
+
+  rutatPapper: {
+    file: '33-rutat-papper',
+    w: 2048, h: 1152,
+    alt: 'Ett rutat papper på ett träbord med ett handritat stapeldiagram i blå penna och en penna bredvid.',
+    focal: '46% 56%',
+    tint: '#9D8F84',
+    credit: 'Rutat papper med stapeldiagram. Ingen människa.'
   }
 
 };

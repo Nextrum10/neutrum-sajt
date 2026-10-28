@@ -180,7 +180,7 @@ OMRADEN = [
             'Vi matchar elever i Stockholm med en studiehjälpare som nyligen läst samma '
             'kurser själv. Passen sker hemma hos er eller online.'
         ),
-        'bild': '05-av-unga-for-unga',
+        'bild': '22-skolvag-hostlov',
         'delar': [
             'Södermalm', 'Hammarby Sjöstad', 'Vasastan', 'Östermalm', 'Kungsholmen',
             'Norrmalm', 'Årsta', 'Enskede', 'Farsta', 'Hägersten', 'Liljeholmen',
@@ -384,7 +384,7 @@ OMRADEN = [
             'med en studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på '
             'biblioteket eller online.'
         ),
-        'bild': '13-kvallsplugg',
+        'bild': '28-skrivbord-ordning',
         'delar': [
             'Sickla Udde', 'Sickla Kaj', 'Lumaparken', 'Henriksdal', 'Lugnet',
             'Sjöstadsparterren', 'Hammarbyhöjden', 'Hammarby Allé',
@@ -713,7 +713,7 @@ OMRADEN = [
             'Från Bollstanäs till Runby. Vi matchar elever i Upplands Väsby med en studiehjälpare '
             'som nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
-        'bild': '01-en-till-en',
+        'bild': '32-laxor-pa-koksbordet',
         'delar': [
             'Väsby centrum', 'Bollstanäs', 'Grimstaby', 'Vilunda', 'Smedby', 'Runby', 'Fresta',
             'Vik', 'Brunnby', 'Odenslunda',
@@ -757,7 +757,7 @@ OMRADEN = [
             'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
             'eller online.'
         ),
-        'bild': 'hero-nextrum',
+        'bild': '30-fonster-och-bocker',
         'delar': [
             'Fridhemsplan', 'Stadshagen', 'Fredhäll', 'Kristineberg', 'Marieberg', 'Rålambshov',
             'Thorildsplan', 'Hornsberg', 'Lilla Essingen', 'Stora Essingen',
@@ -800,7 +800,7 @@ OMRADEN = [
             'Från Sankt Eriksplan till Norrtull. Vi matchar elever i Vasastan med en '
             'studiehjälpare som nyligen läst samma kurser själv, hemma hos er eller online.'
         ),
-        'bild': '07-genombrottet',
+        'bild': '21-hemma-hos-familjen',
         'delar': [
             'Odenplan', 'Sankt Eriksplan', 'Sibirien', 'Birkastan', 'Röda bergen', 'Atlasområdet',
             'Vanadislunden', 'Hagastaden', 'Norrtull', 'Observatorielunden', 'Tegnérlunden',
@@ -891,7 +891,7 @@ OMRADEN = [
             'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
             'eller online.'
         ),
-        'bild': '12-pa-vag',
+        'bild': '19-tunnelbana',
         'delar': [
             'Liljeholmen', 'Gröndal', 'Aspudden', 'Örnsberg', 'Axelsberg', 'Mälarhöjden',
             'Midsommarkransen', 'Telefonplan', 'Hägerstensåsen', 'Västertorp', 'Fruängen',
@@ -1235,7 +1235,7 @@ OMRADEN = [
             'Från Duvbo till Ursvik. Vi matchar elever i Sundbyberg med en studiehjälpare som '
             'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
-        'bild': '04-sjalvfortroende',
+        'bild': '19-tunnelbana',
         'delar': [
             'Centrala Sundbyberg', 'Duvbo', 'Lilla Alby', 'Storskogen', 'Tulemarken', 'Hallonbergen',
             'Ör', 'Rissne', 'Lilla Ursvik', 'Stora Ursvik', 'Brotorp',
@@ -1278,7 +1278,7 @@ OMRADEN = [
             'Från Stocksund till Enebyberg. Vi matchar elever i Danderyd med en studiehjälpare som '
             'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
-        'bild': '01-en-till-en',
+        'bild': '24-valkommen-hem',
         'delar': [
             'Djursholm', 'Stocksund', 'Enebyberg', 'Danderyd', 'Mörby', 'Djursholms Ösby',
             'Djursholms Ekeby', 'Altorp',
@@ -1325,7 +1325,7 @@ OMRADEN = [
             'Från Näsbypark till Täby kyrkby. Vi matchar elever i Täby med en studiehjälpare som '
             'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
-        'bild': '10-forsta-motet',
+        'bild': '25-forsta-motet-med-foralder',
         'delar': [
             'Täby centrum', 'Tibble', 'Roslags Näsby', 'Näsbypark', 'Lahäll', 'Gribbylund',
             'Skarpäng', 'Täby kyrkby', 'Ensta', 'Viggbyholm', 'Hägernäs', 'Arninge',
@@ -1369,7 +1369,7 @@ OMRADEN = [
             'Från Torsvik till Gåshaga. Vi matchar elever på Lidingö med en studiehjälpare som '
             'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
-        'bild': '06-forklaringen',
+        'bild': '24-valkommen-hem',
         'delar': [
             'Lidingö centrum', 'Torsvik', 'Baggeby', 'Bodal', 'Larsberg', 'Dalénum', 'Hersby',
             'Skärsätra', 'Mölna', 'Brevik', 'Käppala', 'Gåshaga',
@@ -1806,7 +1806,7 @@ AMNEN = [
             'svåra.'
         ),
         'kort': 'Bråk, ekvationer, funktioner och derivata',
-        'bild': '01-en-till-en',
+        'bild': '14-matematik',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Från tabellerna<br>till <em>derivatan.</em>',
         'lista_ingress': (
@@ -1944,7 +1944,7 @@ AMNEN = [
             'språket, inte bara läsa om det.'
         ),
         'kort': 'Ordförråd, grammatik, uppsatser och muntligt',
-        'bild': '04-sjalvfortroende',
+        'bild': '16-engelska',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Från glosorna<br>till <em>essän.</em>',
         'lista_ingress': (
@@ -2011,7 +2011,7 @@ AMNEN = [
             'det i den ordning eleven behöver.'
         ),
         'kort': 'Formler, begrepp och labbrapporter',
-        'bild': '02-personlig-anpassning',
+        'bild': '17-no-naturvetenskap',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Tre ämnen som<br>bygger på <em>sig själva.</em>',
         'lista_ingress': (
@@ -2314,7 +2314,7 @@ STADIER = [
             'barnets takt.'
         ),
         'kort': 'Åk 1–3: läsa, skriva och räkna',
-        'bild': '10-forsta-motet',
+        'bild': '21-hemma-hos-familjen',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Läsa, skriva<br>och <em>räkna.</em>',
         'lista_ingress': (
@@ -2606,7 +2606,7 @@ GUIDER = [
             'Många föräldrar kan matten men märker att hjälpen ändå inte går fram. Oftast '
             'handlar det om hur hjälpen ges, inte om vad man kan. Här är det som brukar fungera.'
         ),
-        'bild': '06-forklaringen',
+        'bild': '14-matematik',
         'lista_etikett': 'Det som brukar fungera',
         'lista_rubrik': 'Sex saker<br>att <em>prova.</em>',
         'lista_ingress': (
@@ -2762,7 +2762,7 @@ GUIDER = [
             'gör skillnad på provet. Här är det som brukar göra det, och hur du hjälper till utan '
             'att kunna ämnet själv.'
         ),
-        'bild': '13-kvallsplugg',
+        'bild': '17-no-naturvetenskap',
         'lista_etikett': 'Det som fungerar',
         'lista_rubrik': 'Från planen<br>till <em>provdagen.</em>',
         'lista_ingress': (
@@ -2852,7 +2852,7 @@ GUIDER = [
             'ensamma. Motståndet går oftast att minska, och ibland säger det något om vad som är '
             'svårt.'
         ),
-        'bild': '04-sjalvfortroende',
+        'bild': '32-laxor-pa-koksbordet',
         'lista_etikett': 'Det som brukar hjälpa',
         'lista_rubrik': 'Mindre förhandling,<br>mer <em>läxa.</em>',
         'lista_ingress': (
@@ -2933,7 +2933,7 @@ GUIDER = [
             'sätts. Här är vad proven prövar, när de kommer och hur ni förbereder er utan att '
             'hela vårterminen handlar om dem.'
         ),
-        'bild': '02-personlig-anpassning',
+        'bild': '29-penna-och-block',
         'lista_etikett': 'Proven',
         'lista_rubrik': 'Fem prov,<br>två <em>terminer.</em>',
         'lista_ingress': (
@@ -3107,7 +3107,7 @@ GUIDER = [
             'inget, men de första veckorna sätter ofta tonen för resten av terminen. Här är hur '
             'ni kommer igång utan att läxan blir ett bråk.'
         ),
-        'bild': '12-pa-vag',
+        'bild': '22-skolvag-hostlov',
         'lista_etikett': 'De första veckorna',
         'lista_rubrik': 'Rutinen först,<br>läxorna <em>sedan.</em>',
         'lista_ingress': (
@@ -3185,7 +3185,7 @@ GUIDER = [
             'plugga upp på en helg, men de sista veckorna är inte heller förlorade. Här är vad '
             'betyget bygger på och vad som faktiskt går att göra.'
         ),
-        'bild': '07-genombrottet',
+        'bild': '28-skrivbord-ordning',
         'lista_etikett': 'Det som går att göra',
         'lista_rubrik': 'Fråga först,<br>plugga <em>sedan.</em>',
         'lista_ingress': (
@@ -3261,7 +3261,7 @@ GUIDER = [
             'avgifter som ligger runt omkring avgör vad en termin faktiskt kostar. Här är det som '
             'styr priset, frågorna att ställa och vårt pris, rakt ut.'
         ),
-        'bild': '10-forsta-motet',
+        'bild': '33-rutat-papper',
         'lista_etikett': 'Det som styr priset',
         'lista_rubrik': 'Mer än<br><em>timpriset.</em>',
         'lista_ingress': (
@@ -3347,7 +3347,7 @@ GUIDER = [
             'en läxhjälpare hjälper eleven med det skolan redan tagit upp. Här är skillnaden, och '
             'när vilken passar bäst, också när svaret inte är vi.'
         ),
-        'bild': '01-en-till-en',
+        'bild': '25-forsta-motet-med-foralder',
         'lista_etikett': 'Tre sorters hjälp',
         'lista_rubrik': 'Vem som<br>passar <em>när.</em>',
         'lista_ingress': (
