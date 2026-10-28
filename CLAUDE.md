@@ -1253,13 +1253,16 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
-- **Fripassen i NexLäx** (2026-10-27, `nexlax_fripass` 20261028130000) är inte i drift. Efter merge: Vercel lägger ut
-  vyerna och policyn (utan migrationen har `nexlax_lage()` inga fripass, och en låst nivå är bara låst som förut), sedan
-  migrationen (en kolumn, tre funktioner och en lapp på `nexlax_lage` med vakt; inget drop eller delete). Ingen
-  edge-funktion. Lokalt, mot en databas byggd ur alla 234 migrationer: `rls-test.sql` 2242 av 2242,
-  `prova-nexlax.js` 111 av 111 och `prova-forhandsvisning.js` 75 av 75. Versionen var först 20261028120000, samma som
-  nyhetsbrevets, och flyttades vid sammanslagningen med main.
-  Juristen har inte läst policyns nya halvmening om fripassen.
+- **Fripassen i NexLäx** (2026-10-27, `nexlax_fripass` 20261028130000) är i drift sedan förmiddagen 2026-10-28 (Leo:
+  "Merge", sedan "Kör"): PR #370 mergades (931e821) och Vercel lade ut vyerna och policyn, och migrationen kördes hel i
+  en transaktion ur merge-commiten, prövad mot sin md5 (`1d3148d5…`) och registrerad med filens text i samma
+  transaktion. Före: `nexlax_lage` hade samma md5 som när filen skrevs (`7b055d4c…`). Efter: `niva_hoppa`,
+  `intern.nexlax_fripass`, `intern.nexlax_fripass_per_vecka` och `nexlax_lage` är byte för byte lika en databas byggd ur
+  alla 234 migrationer, `niva_hoppa` nås av `authenticated` och `nextrum_barn` men inte `anon`, de interna inte av någon
+  inloggad, och inget försök är märkt. Ingen edge-funktion. Lokalt före: `rls-test.sql` 2242 av 2242, `prova-nexlax.js`
+  111 av 111 och `prova-forhandsvisning.js` 75 av 75; `rls-test.sql` kördes inte mot driften (ingen policy eller
+  trigger ändrades). Versionen var först 20261028120000, samma som nyhetsbrevets, och flyttades vid sammanslagningen
+  med main. Juristen har inte läst policyns nya halvmening om fripassen.
 - **Nyhetsbrevet** (2026-10-28, `nyhetsbrev` 20261028120000, Leo: "gör detta arbete simpelt") är inte i drift.
   Formuläret står i footern på varje öppen sida och i startsidans Nästa steg (`nextrum-nyhetsbrev.js`, laddat av
   `nextrum-samtycke.js`, så aldrig i vyerna eller på en sida med en nyckel i adressen); ingen popup, inget i
