@@ -165,7 +165,7 @@ Deno.test('samma ram och samma logga som allt annat vi skickar', () => {
     const m = mejl(steg);
     assertStringIncludes(m.html, '<!doctype html>');
     assertStringIncludes(m.html, 'content="light only"');
-    assertEquals((m.html.match(/<img\b/g) ?? []).length, 1, `${steg}: exakt en bild`);
+    assertEquals((m.html.match(/<img\b/g) ?? []).length, 2, `${steg}: loggan överst och i signaturen`);
     assertStringIncludes(m.html, LOGGA_URL);
     assert(m.text.length > 100);
   }

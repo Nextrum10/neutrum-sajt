@@ -112,8 +112,8 @@ Deno.test('både HTML och ren text produceras, och HTML är ett helt dokument', 
   // Samma ram som notismejlen: logga, palett, ljust läge.
   assertStringIncludes(m.html, 'content="light only"');
   assertStringIncludes(m.html, '#9C4520');
-  // Loggan, och ingenting annat som hämtas utifrån (rendera_test.ts).
-  assertEquals((m.html.match(/<img\b/g) ?? []).length, 1);
+  // Loggan överst och i signaturen, och ingenting annat som hämtas utifrån (rendera_test.ts).
+  assertEquals((m.html.match(/<img\b/g) ?? []).length, 2);
   assertStringIncludes(m.html, LOGGA_URL);
 });
 

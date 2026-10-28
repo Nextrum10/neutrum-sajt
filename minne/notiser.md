@@ -725,3 +725,15 @@ Typen `eget_upplagg`, den femtonde i `notis_typer()` och den fjortonde mejlbara,
 - **Provat** i `rls-test.sql` avsnitt 58 (köas, inte till sig själv, hoppas över när upplägget dragits tillbaka) och
   `rendera_test.ts`.
 
+## Signaturen i mejlen (2026-10-28)
+Leo: "den följer med i alla de där mailen". `signaturHtml()` och `SIGNATUR_TEXT` i `_delad/notiser/rendera.ts`,
+och `skal()` tar den som `signatur`; `html(r)` skickar den med om inte `r.utanSignatur`. Texten är
+"Vänliga hälsningar," och sedan loggan (84 px, orange kant), Nextrum, sloganen "Av unga, för unga.", nextrum.se,
+Instagram, `info@` och "Nextrum AB · Org.nr 559609-3269 · Läxhjälp i Stockholm". Textversionen har samma rader
+efter `-- `. Bilden är samma PNG som överst (`LOGGA_URL`, samma adress för alla), så den kan inte spåra någon.
+Sloganen är Leos ord och inget sajten säger; tas den bort ändras den här filen och `SIGNATUR_TEXT` samtidigt.
+Orange text är #D9650F, för sajtens #F88740 klarar inte kontrast mot papperet; kanten får vara #F88740.
+Ingen signatur: mejlen till oss (`utanSignatur`, `admin.ts`), intervjumejlet och adminens egna brev (texten visas
+innan den går, och HTML kan inte säga något annat än den), underlaget, nyhetsbrevet och aviseringen om en anmälan.
+"Exakt en bild" i `rendera_test.ts`, `kvitto_test.ts` och `ansokan_test.ts` är nu två.
+

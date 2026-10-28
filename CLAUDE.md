@@ -1026,6 +1026,14 @@ Detaljer: `minne/grunden.md`.
   tillsammans; rapporten som familjen inte bekräftat och uppgifter systemet lagt finns bara i databasen. Morgonmejlet
   slås av genom att jobbet stängs av med `cron.alter_job` (syns under System → Automationer); det direkta
   följer triggern, inte jobbet.
+- **Signaturen i mejlen** (2026-10-28, Leo: "den följer med i alla de där mailen"): sist i varje mejl som går
+  genom `renderaRam()` (notiserna, kvittot, mejlen till den som sökt, barnets och kontomejlen), före footern:
+  loggan, Nextrum, sloganen "Av unga, för unga." (Leos ord; den står inte på sajten), nextrum.se, Instagram
+  (`instagram.com/nextrum.se`), `info@` och bolagets rad med orgnumret (`signaturHtml()`, `SIGNATUR_TEXT` i
+  `rendera.ts`; ändras de ändras sajtens footer med). Inga ikonbilder, loggan är den enda bilden (nu två gånger).
+  **Ingen signatur** i mejlen till oss (`utanSignatur: true`, `admin.ts`) och i det som inte går genom
+  `renderaRam()`: Leos intervjumejl och admins egna brev (adminvyn visar texten innan den går, och HTML kan inte
+  säga något annat än den), underlaget, nyhetsbrevet och aviseringen om en anmälan; de har `skal()` utan `signatur`.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot och vårdnadshavarens mejl styrs av en INSERT, med samma broms;
@@ -1253,6 +1261,10 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Signaturen i mejlen** (2026-10-28) är inte i drift. Den ligger i `_delad/notiser/rendera.ts` och går ut med de
+  funktioner som importerar den (`notis-ko`, `notis-avanmal`, `ansokan-notis`, `admin-paminnelse`, `bjud-in`,
+  `barn-*`), efter merge och från main, aldrig från en gren. Ingen migration. Lokalt: `deno test _delad/` 523 av 523.
+  Juristen behöver inte läsa något nytt: orgnumret och adressen står redan sist på sajten.
 - **Fripassen i NexLäx** (2026-10-27, `nexlax_fripass` 20261028130000) är i drift sedan förmiddagen 2026-10-28 (Leo:
   "Merge", sedan "Kör"): PR #370 mergades (931e821) och Vercel lade ut vyerna och policyn, och migrationen kördes hel i
   en transaktion ur merge-commiten, prövad mot sin md5 (`1d3148d5…`) och registrerad med filens text i samma
