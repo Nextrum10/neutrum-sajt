@@ -1353,7 +1353,9 @@ Detaljer: `minne/grunden.md`.
   sidor, `kolla-titlar.py` i CI och ämnets, stadiets eller ortens eget foto i delningsbilderna. PR #341 mergades
   (6a20718) efter en provmerge med main där alla kontroller gick igenom, och Vercels driftsättning av merge-commiten
   blev klar med nextrum.se som alias; sidorna är inte hämtade därifrån, för miljön nådde inte nextrum.se. Ingen
-  migration och ingen edge-funktion. Kvar: sitemapen på nytt i Search Console (`GOOGLE.md`). **De sista
+  migration och ingen edge-funktion. Sitemapen skickades in på nytt i Search Console 2026-10-27 och lästes inom en
+  minut; 2026-10-28 var 79 av 80 adresser indexerade, granskade en och en, och kvar är bara `/laxhjalp-online`
+  (`GOOGLE.md`, "Läget"). **De sista
   kommunerna** (Sigtuna, Upplands-Bro, Ekerö, Nykvarn, Haninge, Tyresö, Nynäshamn och Värmdö) är i drift sedan
   morgonen 2026-10-27 (Leo: "Merge"): PR #342 mergades (9c44994) och Vercel lade ut den på nextrum.se, kontrollerat
   från databasen: de nya sidorna svarar, `/laxhjalp-osteraker` leder till navets region och sitemapen har 83 adresser.
