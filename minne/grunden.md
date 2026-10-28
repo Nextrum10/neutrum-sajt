@@ -147,6 +147,13 @@ Fyra saker att veta, alla dyrköpta:
 - **Bilder:** `bilder/*.png` är gitignorerade (originalen, ~50 MB).
   Sajten laddar WebP genom `<picture>`, med JPG som reserv. Tappar du datorn finns
   originalen ingenstans.
+- **Tredje bildomgången** (2026-10-28, `nextrum-images.js`): 13 bilder (14 matematik, 16 engelska, 17 NO, 19 tunnelbana,
+  21 hemma, 22 skolvägen, 24 välkommen hem, 25 första mötet med föräldern och sex utan människor: 28, 29, 30, 32, 33), generade
+  i 1024 × 576 och uppskalade till 2048 × 1152, så de är mjukare än de äldre i helbredd. De sattes in där samma foto
+  upprepades: varje landningssida har sin bild i `bild` i `verktyg/bygg-omradessidor.py`, och ingen bild bär fler än fyra
+  sidor. Navet `/laxhjalp-stockholm` är handskrivet, så dess bild byts i filen och inte i generatorn. Delningsbilden tar sitt
+  foto ur `foto` i `delning/innehall.json`: byts en sidas bild ska det fältet med, och `bygg-delningsbilder.js` köras. 22
+  visar stadens siluett och hör bara till Stockholm som helhet, aldrig en bestämd ort.
 - **`.claude/skills/`, `.agents/`, `skills-lock.json`** är
   gitignorerade Higgsfield-verktyg. De försvinner när miljön återskapas.
 - **En Claude-artefaktlänk kan aldrig prata med Supabase.** Testa mot
