@@ -48,6 +48,23 @@ och musrörelse: stilomräkningen gick från cirka 700 till 165 ms.
 Skriv inte tillbaka stil per bildruta, och animera inte box-shadow —
 lägg skuggan i ett eget lager och tona dess opacitet.
 
+**Landningssidorna rör sig med GSAP** (2026-10-28). Leo ville ha dem
+"lite roligare", med GSAP, Lenis och react-bits som inspiration. react-bits
+är React och Lenis tar över scrollen (som scenerna i nextrum-motion.js och
+de snäppande raderna bygger på), så bara GSAP och ScrollTrigger 3.13.0 kom
+in, vendorade i `bibliotek/` som supabase-js. `nextrum-landning.js` gör tre
+saker och inget mer: skenan i Så går det till fylls med scrollen (scrub)
+och stegen tänds med klassen `lp-tand`, platserna under Var vi matchar
+elever ritas som en linjekarta (vågrät från 861 px, lodrät under, en bild
+och ingen riktig linje i SL:s nät) och korten och listans rader kommer in i
+tur, med högst en halv sekund mellan första och sista. GSAP skriver
+transform per bildruta där; det är undantaget från regeln ovan, och det
+gäller bara de genererade sidorna. Inget göms i CSS: det skriptet visar
+döljer skriptet själv, så en sida utan GSAP eller med reducerad rörelse
+står färdig. Ämnessidorna bär ämnets färg (`data-lp-amne` på main, `-l` i
+mörkt läge) i listans siffror och stegen; annars ger ordningen färgen.
+Navet `laxhjalp-stockholm` är handskrivet och har inte fått det.
+
 Fyra saker som kostade en omgång:
 
 1. **`once`-scenerna i `NXMotion` avslöjade aldrig något.** Scenen

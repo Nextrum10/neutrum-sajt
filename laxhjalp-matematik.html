@@ -48,6 +48,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=126c1d66">
+<link rel="stylesheet" href="nextrum-landning.css?v=fb0d9169">
 </head>
 <body>
 
@@ -116,7 +117,7 @@
   </div>
 </div>
 
-<main id="innehall">
+<main id="innehall" data-lp-amne="ma">
 
 <section class="wrap nx-page-hero">
   <a class="nx-back" href="/laxhjalp-stockholm"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Läxhjälp i Stockholm</a>
@@ -168,8 +169,14 @@
       <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Ni skickar in en intresseanmälan och berättar vilket ämne och vilken kurs det gäller. Vi går igenom behovet tillsammans med er och väljer sedan ut den studiehjälpare som passar bäst, utifrån ämne, nivå och person. Ni bläddrar inte bland profiler: fel match är värre än ingen match.</p>
-      <p>När matchningen är klar låses studievyn upp. Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Passen hålls hemma hos er eller online, och ni väljer för varje pass.</p>
+      <div class="lp-steg" data-lp-steg>
+        <span class="lp-steg-spar" aria-hidden="true"><span class="lp-steg-fyll"></span></span>
+        <ol>
+        <li><span class="lp-steg-nr" aria-hidden="true">01</span><b>Ni skickar en intresseanmälan</b><p>Ni berättar vilket ämne och vilken kurs det gäller.</p></li>
+        <li><span class="lp-steg-nr" aria-hidden="true">02</span><b>Vi väljer studiehjälparen</b><p>Vi går igenom behovet med er och väljer den som passar bäst, utifrån ämne, nivå och person. Ni bläddrar inte bland profiler: fel match är värre än ingen match.</p></li>
+        <li><span class="lp-steg-nr" aria-hidden="true">03</span><b>Studievyn låses upp</b><p>Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Passen hålls hemma hos er eller online, och ni väljer för varje pass.</p></li>
+        </ol>
+      </div>
     </div>
   </div>
 </section>
@@ -603,7 +610,10 @@
   NX.märkInloggad();
 })();
 </script>
-<script type="application/ld+json">
+
+<script src="bibliotek/gsap-3.13.0.min.js"></script>
+<script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js"></script>
+<script src="nextrum-landning.js?v=fecdec11"></script><script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [

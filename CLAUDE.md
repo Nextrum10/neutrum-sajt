@@ -705,7 +705,8 @@ Detaljer: `minne/grunden.md`.
   sektionens början (`.nt-hal`) och låter en ruta med två meningar ploppa upp bredvid; inga skärmdumpar, och den
   körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
   för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
-  `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan.
+  `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan. `nextrum-landning.js` och `-css` är
+  landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`.
 - **Loggan** (2026-10-15, Leo: "implementera våran nya logga"): märket och ordet nextrum, spårade i vektor ur Leos
   bild, och källan är `bilder/nextrum-logga.svg`. Sidorna har dem som två inline-svg (`.mark`, `.logo-text`) i samma
   höjd (`--logga-h`); det bruna är `currentColor` (`--logga-brun`, kräm i mörkt läge och på mörka ytor) och det
@@ -765,7 +766,11 @@ Listorna 1–4 (`.nx-holdpunkter`, `.nx-apply-flow`) står två och två på tel
 Studievyns och NexLäx markup kopieras till `for-elever-och-foraldrar.html`, NexLäx direkt under studievyn och
 utan Se studievyn, och Hur hjälper vi till `var-ide.html` i stället för Bakgrunden, med NexLäx-länken till
 `/for-elever-och-foraldrar#nexlax` (2026-10-08; `jamfor-sprak.py` ser bara första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen
-animerad `box-shadow`, och en custom property sätts där den läses, för den ärvs.
+animerad `box-shadow`, och en custom property sätts där den läses, för den ärvs. **Undantaget är landningssidorna**
+(2026-10-28, Leo: "göra den lite roligare ... främst alla landings sidor", med GSAP): `nextrum-landning.js` låter
+GSAP och ScrollTrigger (vendorade i `bibliotek/`, aldrig från en CDN) dra skenan i Så går det till, platserna som
+en linje och korten, bara på de genererade `laxhjalp-*` och guiderna; stegen tänds ändå med en klass, och utan GSAP
+eller med reducerad rörelse står allt färdigt i CSS. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.
 3. `scrollIntoView` i en rad som flyttas med transform rullar sidan; bandet är `overflow:clip`,
