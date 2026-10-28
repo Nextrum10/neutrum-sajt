@@ -9705,6 +9705,8 @@ select 'Barn: kör bara sina egna funktioner bland SECURITY DEFINER', r = 'inga'
                                       -- Förslagen på pass (barnet_foreslar_pass, 2026-10-12).
                                       'barn_foresla_pass', 'barn_passforslag', 'barn_upptagna_tider',
                                       'barn_aterkalla_forslag',
+                                      -- Fripassen på Din väg (nexlax_fripass, 2026-10-27).
+                                      'niva_hoppa',
                                       'ar_matchade', 'ar_min_elev', 'is_admin', 'is_matched_tutor_of',
                                       'is_my_matched_tutor', 'is_my_student')$q$) r) x;
 
@@ -22885,6 +22887,166 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('EU Egna upplägg', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 59. Fripass på Din väg i NexLäx (nexlax_fripass, 2026-10-27)
+--
+-- Leo: "de ska gå att göra de nivåer som är låsta men då ska de stå är du
+-- säker att du ska göra denna nivå innan denna. och sen har man typ 5 såna
+-- hoppa nivåer fripass per vecka". Låset är vyns spelregel; databasen räknar
+-- fripassen. niva_hoppa() startar som niva_starta() och märker försöket, fem
+-- nivåer i veckan (måndag till söndag, svensk tid), en nivå som redan hoppats
+-- till kostar inget mer, och förra veckans räknas inte. Familjens eget barn
+-- och barnet självt (KE, elev E) får hoppa, ingen annan, och bara
+-- niva_hoppa() sätter fripass. Allt rullas tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  r    jsonb;
+  E    constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  EQ   constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  KE   constant uuid := '00000000-0000-4000-8000-0000000bc0c1';
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  N    uuid[] := array[
+    '00000000-0000-4000-8000-00000059a001', '00000000-0000-4000-8000-00000059a002',
+    '00000000-0000-4000-8000-00000059a003', '00000000-0000-4000-8000-00000059a004',
+    '00000000-0000-4000-8000-00000059a005', '00000000-0000-4000-8000-00000059a006',
+    '00000000-0000-4000-8000-00000059a007']::uuid[];
+  i    int;
+begin
+  if to_regprocedure('public.niva_hoppa(uuid, uuid)') is null then
+    insert into utfall (test, ok, detalj) values ('HP Fripass: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    perform set_config('request.jwt.claims', '', true);
+    for i in 1 .. 7 loop
+      insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning, sort)
+      values (N[i], 'rls-fripass-' || i, 'Matematik', 'gy3', 'Fripassområde', 'Fripass ' || i, i, 'vanlig');
+      insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt)
+      values (gen_random_uuid(), N[i], 1, 'val', 'Vilket är störst?', '["2","1"]', '0');
+    end loop;
+
+    -- ---------- vem som får hoppa ----------
+    t := pg_temp.svar_som(null, format('select public.niva_hoppa(%L, %L)', N[2], E))
+      || ' ' || pg_temp.svar_som(Q, format('select public.niva_hoppa(%L, %L)', N[2], E))
+      || ' ' || pg_temp.svar_som(A, format('select public.niva_hoppa(%L, %L)', N[2], E));
+    ut := ut || jsonb_build_object('t', 'HP anon, en annan familj och studiehjälparen hoppar inte åt eleven',
+            'ok', t = '42501 42501 42501', 'd', t);
+
+    -- ---------- familjen hoppar ----------
+    perform pg_temp.bli(P);
+    r := public.niva_hoppa(N[2], E);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'HP ett hopp startar nivån som niva_starta, utan facit, och tar ett av fem',
+            'ok', r ? 'forsok' and jsonb_array_length(r -> 'fragor') = 1 and position('"ratt"' in r::text) = 0
+                  and (r -> 'fripass' ->> 'kvar')::int = 4 and (r -> 'fripass' ->> 'per_vecka')::int = 5
+                  and (select f.fripass from public.niva_forsok f where f.id = (r ->> 'forsok')::uuid)
+                  and r -> 'fripass' -> 'nivaer' @> to_jsonb(array[N[2]]),
+            'd', left(r::text, 200));
+
+    perform pg_temp.bli(P);
+    r := public.niva_hoppa(N[2], E);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'HP samma nivå igen kostar inget',
+            'ok', (r -> 'fripass' ->> 'kvar')::int = 4, 'd', r -> 'fripass');
+
+    -- Barnet självt, med NexLäx påslaget, hoppar också.
+    perform pg_temp.bli_barn(KE, E, P);
+    r := public.niva_hoppa(N[3], E);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'HP barnet hoppar åt sig självt, och fripassen är elevens',
+            'ok', (r -> 'fripass' ->> 'kvar')::int = 3, 'd', r -> 'fripass');
+    begin
+      perform pg_temp.bli_barn(KE, E, P);
+      perform public.niva_hoppa(N[4], EQ);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'HP barnet hoppar inte åt ett annat barn', 'ok', fel = '42501', 'd', fel);
+
+    perform pg_temp.bli(P);
+    perform public.niva_hoppa(N[4], E);
+    perform public.niva_hoppa(N[5], E);
+    r := public.niva_hoppa(N[6], E);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'HP fem nivåer tar veckans fem', 'ok', (r -> 'fripass' ->> 'kvar')::int = 0, 'd', r -> 'fripass');
+    begin
+      perform pg_temp.bli(P);
+      perform public.niva_hoppa(N[7], E);
+      fel := 'gick';
+    exception when others then fel := sqlstate || ' ' || sqlerrm;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'HP den sjätte nekas med ett besked, och inget försök startas',
+            'ok', fel like 'P0001 Veckans fripass är slut%'
+                  and not exists (select 1 from public.niva_forsok f where f.niva_id = N[7]),
+            'd', fel);
+    perform pg_temp.bli(P);
+    r := public.niva_hoppa(N[2], E);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'HP en nivå som redan hoppats till går att göra också när fripassen är slut',
+            'ok', r ? 'forsok', 'd', left(r::text, 120));
+
+    -- ---------- läget ----------
+    perform pg_temp.bli(A);
+    r := public.nexlax_lage(E);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'HP nexlax_lage säger fripassen, också för studiehjälparen',
+            'ok', (r -> 'fripass' ->> 'kvar')::int = 0 and (r -> 'fripass' ->> 'per_vecka')::int = 5
+                  and jsonb_array_length(r -> 'fripass' -> 'nivaer') = 5
+                  and (r -> 'fripass' ->> 'nya')::date
+                      = (date_trunc('week', now() at time zone 'Europe/Stockholm') + interval '7 days')::date,
+            'd', r -> 'fripass');
+
+    -- Förra veckans räknas inte, men nivån står kvar som hoppad.
+    update public.niva_forsok set startad_at = startad_at - interval '8 days' where niva_id = N[2] and student_id = E;
+    r := intern.nexlax_fripass(E);
+    ut := ut || jsonb_build_object('t', 'HP förra veckans fripass räknas inte, och nivån är fortfarande öppen',
+            'ok', (r ->> 'kvar')::int = 1 and r -> 'nivaer' @> to_jsonb(array[N[2]]), 'd', r);
+
+    -- ---------- bara niva_hoppa sätter fripass ----------
+    perform pg_temp.bli(P);
+    r := public.niva_starta(N[7], E);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'HP niva_starta märker inget fripass',
+            'ok', not (select f.fripass from public.niva_forsok f where f.id = (r ->> 'forsok')::uuid), 'd', null);
+    t := pg_temp.svar_som(P, format('update public.niva_forsok set fripass = true where niva_id = %L', N[7]))
+      || ' ' || pg_temp.svar_som(P, format('insert into public.niva_forsok (niva_id, student_id, fragor, fripass) values (%L, %L, %L, true)',
+                                           N[1], E, array[]::uuid[]))
+      || ' ' || pg_temp.svar_som(null, format('select intern.nexlax_fripass(%L)', E));
+    ut := ut || jsonb_build_object('t', 'HP familjen skriver inget fripass själv, och anon når inte räkningen',
+            'ok', t in ('42501 42501 42501', 'noll 42501 42501'), 'd', t);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('HP Fripass', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

@@ -57,6 +57,21 @@ Läxhjälp är fortfarande tjänstens namn; skolan ger läxor, vi ger uppgifter.
   NP-spåret är helt öppet, och startsidan och För elever och föräldrar säger "Ett steg i taget" i stället för "Allt
   är öppet". Det är fortfarande en spelregel och inget skydd: `niva_starta()` startar vilken nivå som helst. Det som
   klarades i oordning medan allt var öppet står kvar som klart, så en sådan väg har en lucka tills nivån före görs.
+- **Fripass sedan 2026-10-27** (`nexlax_fripass`, Leo: "de ska gå att göra de nivåer som är låsta men då ska de stå
+  är du säker att du ska göra denna nivå innan denna. och sen har man typ 5 såna hoppa nivåer fripass per vecka på
+  nexläx som man kan förbruka"). Kortet vid en låst nivå (hela nivån, inte en låst del i en öppen) frågar "Är du säker
+  på att du vill göra den här nivån före "X"? Det kostar ett fripass, och du har N av 5 kvar den här veckan." med
+  knappen Ja, använd ett fripass (`data-nl-hoppa`), och spelaren startar nivån med `niva_hoppa()` i stället för
+  `niva_starta()` (`o.hopp`). När de är slut säger kortet det och att nya kommer på måndag. Varför i databasen och inte i
+  webbläsaren: räkningen ska följa eleven mellan barnets och förälderns inloggning och mellan enheterna, och en räknare
+  i `localStorage` hade nollställts med en ny webbläsare. Det som sparas är bara `niva_forsok.fripass` (sätts bara av
+  `niva_hoppa`, under ett rådgivande lås per elev); hur många som är kvar räknas ur försöken som XP:n
+  (`intern.nexlax_fripass`: per nivå, måndag till söndag i svensk tid, och talet 5 bara i
+  `intern.nexlax_fripass_per_vecka()`). En nivå som hoppats till någon gång är öppen för gott (`nivaer`), och att göra om
+  den kostar inget. Låset är fortfarande en spelregel: `niva_starta()` startar vilken nivå som helst, så fripassen är
+  ett tak i spelet, inget skydd. Studiehjälparen ser fripassen i `nexlax_lage()` men hoppar inte åt eleven.
+  Förhandsvisningen räknar dem i webbläsaren (`fripass()` i `nextrum-forhandsvisning.js`). Provat i `rls-test.sql`
+  avsnitt 59 och i `prova-nexlax.js`.
 - **Allt var öppet 2026-10-06 till 2026-10-27.** Leo: "hela nexläx ska också vara
   upplåst så att man kan jobba med vad man vill och behöver". Varje nivå
   och varje Mästarprov går att starta, på vägen och i NP-sektionen.

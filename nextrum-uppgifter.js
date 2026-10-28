@@ -485,6 +485,11 @@ window.NXUppgifter = (function () {
     const givna = {};
     (o.uppgifter || []).forEach(h => { if (h.niva_id && h.status !== 'klar') givna[h.niva_id] = h; });
     const xpPer = (o.läge && o.läge.nivaer) || {};
+    /* Fripassen (2026-10-27, Leo: "5 såna hoppa nivåer fripass per vecka"):
+       en låst nivå som eleven hoppat till med ett fripass är öppen för gott.
+       Räknade i databasen (nexlax_lage().fripass); utan dem är vägen som förut. */
+    const fripass = (o.läge && o.läge.fripass) || null;
+    const hoppade = new Set((fripass && fripass.nivaer) || []);
 
     const nod = n => {
       const l = gjort[n.id] || {};
@@ -492,7 +497,7 @@ window.NXUppgifter = (function () {
       return {
         niva: n, sort: n.sort || 'vanlig', klar: !!l.klar, stjarnor: l.stjarnor || 0,
         pågår: !!(l.pågår || p), framsteg: p || null, första: l.första || null, senast: l.senast || null,
-        försök: l.klaraFörsök || 0, given: givna[n.id] || null, öppen: false, aktuell: false,
+        försök: l.klaraFörsök || 0, given: givna[n.id] || null, hoppad: hoppade.has(n.id), öppen: false, aktuell: false,
         xp: xpPer[n.id] ? Number(xpPer[n.id].xp) || 0 : null
       };
     };
@@ -516,17 +521,18 @@ window.NXUppgifter = (function () {
        låst tills stegen före är klara, så det klara aldrig står utspritt
        längs vägen. Ämne och årskurs väljs fritt, och NP-spåret är helt
        öppet. Från 2026-10-06 till dess var allt öppet och vägen bara ett
-       förslag; det som klarades då står kvar som klart. */
+       förslag; det som klarades då står kvar som klart. En nivå som eleven
+       hoppat till med ett fripass är också öppen. */
     let förstaOklara = true;
     områden.forEach(a => a.nivåer.forEach(x => {
-      x.öppen = x.klar || !!x.given || förstaOklara;
+      x.öppen = x.klar || !!x.given || x.hoppad || förstaOklara;
       if (!x.klar) förstaOklara = false;
     }));
     områden.forEach(a => {
       a.klara = a.nivåer.filter(x => x.klar).length;
       a.klart = a.nivåer.length > 0 && a.klara === a.nivåer.length;
       const m = a.mästare;
-      if (m) m.öppen = m.klar || !!m.given || a.klart;
+      if (m) m.öppen = m.klar || !!m.given || m.hoppad || a.klart;
       a.bemästrat = !!(m && m.klar && m.stjarnor >= BEMÄSTRAD);
     });
 
@@ -562,7 +568,7 @@ window.NXUppgifter = (function () {
       klara, totalt: vanliga.length,
       procent: vanliga.length ? Math.round(klara / vanliga.length * 100) : 0,
       helaKlar: vanliga.length > 0 && klara === vanliga.length,
-      bemästrade: områden.filter(a => a.bemästrat).length
+      bemästrade: områden.filter(a => a.bemästrat).length, fripass
     };
   }
 
@@ -1805,8 +1811,20 @@ window.NXUppgifter = (function () {
     if (n.öppen && !n.klar && nd.nu >= 0 && j > nd.nu) {
       text = 'Gör del ' + (nd.nu + 1) + ' först, så öppnas den här.';
     } else if (!n.öppen) {
-      text = mästare ? 'Klara alla nivåer i ' + niva.omrade + ' först, så öppnas provet.'
-        : 'Klara "' + (förra ? förra.niva.titel : 'nivån före') + '" först, så öppnas den här.';
+      /* En låst nivå går att göra med ett fripass (2026-10-27, Leo: "är du
+         säker att du ska göra denna nivå innan denna"): kortet frågar, och
+         knappen tar ett av veckans fripass. Utan fripassen är den bara låst. */
+      const före = mästare ? 'alla nivåer i ' + niva.omrade : '"' + (förra ? förra.niva.titel : 'nivån före') + '"';
+      const fp = väg.fripass;
+      if (fp && fp.kvar > 0) {
+        text = 'Är du säker på att du vill göra ' + (mästare ? 'provet' : 'den här nivån') + ' före ' + före + '? '
+          + 'Det kostar ett fripass, och du har ' + fp.kvar + ' av ' + fp.per_vecka + ' kvar den här veckan.';
+        knapp = '<button type="button" class="btn btn-primary btn-sm" data-nl-hoppa="' + esc(niva.id) + '">Ja, använd ett fripass</button>';
+      } else {
+        text = mästare ? 'Klara alla nivåer i ' + niva.omrade + ' först, så öppnas provet.'
+          : 'Klara ' + före + ' först, så öppnas den här.';
+        if (fp) text += ' Veckans fripass är slut, nya kommer på måndag.';
+      }
     } else if (n.klar) {
       text = 'Klarad med ' + n.stjarnor + (n.stjarnor === 1 ? ' stjärna' : ' stjärnor')
         + (mästare ? (n.stjarnor >= BEMÄSTRAD ? '. Området är bemästrat.' : '. Två stjärnor bemästrar området.') : '. Gör om den för fler, det bästa resultatet räknas.');
@@ -2656,7 +2674,11 @@ window.NXUppgifter = (function () {
       const ark = rot.querySelector('.upg-textark');
       if (ark) ark.remove();
 
-      const { data, error } = await supa.rpc('niva_starta', { p_niva: niva.id, p_elev: o.elev });
+      /* En låst nivå startas med ett fripass (o.hopp, niva_hoppa): databasen
+         räknar veckans fripass, och en nivå som redan hoppats till kostar
+         inget mer. Nästa steg efteråt startas som vanligt. */
+      const rpc = o.hopp && niva.id === o.niva.id ? 'niva_hoppa' : 'niva_starta';
+      const { data, error } = await supa.rpc(rpc, { p_niva: niva.id, p_elev: o.elev });
       if (öppenSpelare !== rot) return;
       if (error) {
         kropp.innerHTML = '<div class="upg-spel-fel"><b>' + esc(niva.sort === 'repetition' ? 'Repetitionen gick inte att starta' : 'Nivån gick inte att starta')
@@ -3576,7 +3598,7 @@ window.NXUppgifter = (function () {
       visaVal();
       return;
     }
-    if (mål.closest('.upg-nod-knapp, .nl-amne, .nl-ak-knapp, .nl-spar-knapp, .nl-cta-knapp, [data-nl-starta], [data-lax-starta]')) {
+    if (mål.closest('.upg-nod-knapp, .nl-amne, .nl-ak-knapp, .nl-spar-knapp, .nl-cta-knapp, [data-nl-starta], [data-nl-hoppa], [data-lax-starta]')) {
       känn('tryck');
     } else if (mål.closest('section[data-sek="nexlax"] .vy-flik, #bv-nexlax .vy-flik')) {
       känn('flik');
@@ -3612,7 +3634,7 @@ window.NXUppgifter = (function () {
        i kortet gör det också: tillbaka från spelaren står vägen utan kort.
        Ett byte av bana kommer hit först och lämnar inget kort öppet. */
     document.querySelectorAll('.nl .upg-nod.vald').forEach(li => {
-      if (!li.contains(mål) || mål.closest('[data-nl-starta]')) stängNoder(li.closest('.nl'));
+      if (!li.contains(mål) || mål.closest('[data-nl-starta], [data-nl-hoppa]')) stängNoder(li.closest('.nl'));
     });
 
     /* Fler ämnen: bara väljaren byts, och knappen hålls under fingret. */

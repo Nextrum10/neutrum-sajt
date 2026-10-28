@@ -731,11 +731,11 @@
     }
   }
 
-  function spelaNivå(niva) {
+  function spelaNivå(niva, hopp) {
     const d = S.nl.data;
     if (!niva || !d) return;
     U.spela({
-      supa, niva, elev: d.elev,
+      supa, niva, elev: d.elev, hopp: !!hopp,
       katalog: d.katalog || [], forsok: d.forsok || [], uppgifter: d.uppgifter || [],
       pågående: d.pagaende || {}, läge: S.nl.läge,
       hämtaLäge: () => U.laddaLäge(supa, d.elev),
@@ -785,6 +785,12 @@
     const k = e.target.closest('[data-nl-starta]');
     if (k) {
       spelaNivå((S.nl.data.katalog || []).find(n => n.id === k.dataset.nlStarta));
+      return;
+    }
+    /* En låst nivå med ett fripass (2026-10-27). */
+    const h = e.target.closest('[data-nl-hoppa]');
+    if (h) {
+      spelaNivå((S.nl.data.katalog || []).find(n => n.id === h.dataset.nlHoppa), true);
       return;
     }
     const u = e.target.closest('[data-lax-starta]');

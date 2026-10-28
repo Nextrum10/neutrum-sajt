@@ -108,6 +108,7 @@ function nexlaxRpc() {
   /* Fyra frågor: rätt svar är alltid alternativ 0. */
   const frågor = [1, 2, 3, 4].map(i => ({ id: 'fr-' + i, typ: 'val', fraga: 'Fråga ' + i + ': vilket är rätt?', alternativ: ['Rätt', 'Fel'] }));
   const rätt = new Set();
+  const hoppade = new Set();
   const forsok = [
     { id: 'f-0', niva_id: 'ma6-brak-2', student_id: 'barn-1', startad_at: nu(-3000), klar_at: nu(-2990), antal: 4, ratt_direkt: 4, stjarnor: 3, godkand: true },
     { id: 'f-1', niva_id: 'ju-gy1-avtal-1', student_id: 'barn-1', startad_at: nu(-2000), klar_at: nu(-1990), antal: 4, ratt_direkt: 3, stjarnor: 1, godkand: true }
@@ -131,7 +132,16 @@ function nexlaxRpc() {
                dagar: [{ dag: dagar(-1), xp: 160, nivaer: 1, uppgifter: 0, pass: 0 }], banor: [],
                nivaer: {}, omraden: efter ? [{ amne: 'Matematik', arskurs: 'ak6', omrade: 'Bråk', klart: nu(0) }] : [],
                missade: [], uppgifter: { klara: 30, direkt: 25, forsta: 40, forsta_ratt: 30 },
-               regler: { val: 10, svarare: 20, niva: 50, omrade: 100 }, uppdrag: uppdrag(efter), idag: dagar(0) };
+               regler: { val: 10, svarare: 20, niva: 50, omrade: 100 }, uppdrag: uppdrag(efter), idag: dagar(0),
+               fripass: { per_vecka: 5, kvar: 5 - hoppade.size, nivaer: [...hoppade], nya: dagar(7) } };
+    },
+    /* Fripassen (2026-10-27): som niva_starta, och nivån räknas som hoppad. */
+    niva_hoppa: k => {
+      anrop.push(['niva_hoppa', k]);
+      hoppade.add(k.p_niva);
+      return { forsok: 'forsok-hopp', niva: { id: k.p_niva, titel: 'Hoppad', amne: 'Matematik', omrade: 'Bråk', arskurs: 'ak6',
+               sort: 'vanlig', lastext: null }, fragor: frågor, klara: [],
+               fripass: { per_vecka: 5, kvar: 5 - hoppade.size, nivaer: [...hoppade], nya: dagar(7) } };
     },
     niva_starta: k => {
       anrop.push(['niva_starta', k]);
@@ -639,6 +649,38 @@ async function provaBarnet(webb) {
   await page.click('.upg-spel [data-spel-stang]');
   await page.waitForFunction(() => !document.querySelector('.upg-spel'), null, { timeout: 5000 }).catch(() => {});
   prova('spelaren: stängs, och inga ljud spelas efteråt', !(await synlig(page, '.upg-spel')));
+
+  /* Fripassen (2026-10-27, Leo: "de ska gå att göra de nivåer som är låsta men
+     då ska de stå är du säker"): en låst prick frågar, och knappen hoppar dit
+     med niva_hoppa. */
+  await page.waitForSelector('#bv-nl-vag .upg-nod.last .upg-nod-knapp', { timeout: 5000 }).catch(() => {});
+  /* En låst del i en öppen nivå säger "Gör del N först" som förut; provet
+     letar upp en nivå som är låst hel. */
+  const låsta = page.locator('#bv-nl-vag .upg-nod.last .upg-nod-knapp');
+  for (let i = 0, n = await låsta.count(); i < n; i++) {
+    /* Ett öppet kort står ovanpå pricken under: trycket går på knappen själv. */
+    await låsta.nth(i).evaluate(el => el.click());
+    await page.waitForSelector('#bv-nl-vag .upg-nod.vald .upg-nod-kort', { timeout: 3000 }).catch(() => {});
+    if (await page.locator('#bv-nl-vag .upg-nod.vald [data-nl-hoppa]').count()) break;
+  }
+  const låstKort = await text(page, '#bv-nl-vag .upg-nod.vald .upg-nod-kort');
+  prova('fripass: en låst prick frågar om man är säker och säger hur många som är kvar',
+    låstKort.includes('Är du säker på att du vill göra') && låstKort.includes('5 av 5 kvar den här veckan')
+    && (await page.locator('#bv-nl-vag .upg-nod.vald [data-nl-hoppa]').count()) === 1, låstKort);
+  await bild(page, 'nexlax-fripass', '#bv-nl-vag .upg-nod.vald .upg-nod-kort');
+  const hoppadNiva = await page.getAttribute('#bv-nl-vag .upg-nod.vald [data-nl-hoppa]', 'data-nl-hoppa');
+  await page.click('#bv-nl-vag .upg-nod.vald [data-nl-hoppa]');
+  await page.waitForSelector('.upg-spel .upg-alt, .upg-spel .upg-fakta-forst', { timeout: 5000 }).catch(() => {});
+  /* En nivå i ett nytt område visar faktabladet först, och startas av Jag är redo. */
+  if (await page.locator('.upg-spel [data-spel="fakta-klar"]').count()) {
+    await page.click('.upg-spel [data-spel="fakta-klar"]');
+    await page.waitForSelector('.upg-spel .upg-alt', { timeout: 5000 }).catch(() => {});
+  }
+  const hopp = anrop.filter(a => a[0] === 'niva_hoppa');
+  prova('fripass: knappen startar nivån med niva_hoppa', hopp.length === 1 && hopp[0][1].p_niva === hoppadNiva
+    && await synlig(page, '.upg-spel'), JSON.stringify(hopp));
+  await page.click('.upg-spel [data-spel-stang]');
+  await page.waitForFunction(() => !document.querySelector('.upg-spel'), null, { timeout: 5000 }).catch(() => {});
 
   /* Din utveckling är en sida, och ranken och märkena har en flik (2026-10-21). */
   await page.click('#bv-flik-rank');

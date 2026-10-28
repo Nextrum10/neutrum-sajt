@@ -195,7 +195,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   sparas aldrig; XP:s regler står bara i `intern.nexlax_*`, och XP minskar aldrig. **Din väg går ett steg i
   taget** (2026-10-27, Leo: "Steg i nexläx din väg ska gå steg för steg"): en nivå öppnas när den före är klar
   (eller studiehjälparen gett den), och delarna i en nivå görs i ordning; ämne och årskurs väljs fritt, och NP-spåret
-  är helt öppet. Från 2026-10-06 till dess var allt öppet, och det som klarades då står kvar som klart. Startsidan visar NexLäx bara som en
+  är helt öppet. Från 2026-10-06 till dess var allt öppet, och det som klarades då står kvar som klart. **Fripassen**
+  (samma kväll, `nexlax_fripass`, Leo: "de ska gå att göra de nivåer som är låsta men då ska de stå är du säker ... 5 såna
+  hoppa nivåer fripass per vecka"): kortet vid en låst nivå frågar "Är du säker på att du vill göra den här nivån före
+  ...?" och tar ett fripass (`niva_hoppa()`), fem i veckan per elev (måndag till söndag, svensk tid,
+  `intern.nexlax_fripass_per_vecka()`), som inte sparas till nästa vecka; en hoppad nivå är öppen för gott och kostar inget
+  mer. Databasen räknar dem ur försöken (`niva_forsok.fripass`, bara `niva_hoppa` sätter den) och vyerna läser
+  `nexlax_lage().fripass`; låset självt är fortfarande vyns spelregel. En låst del i en öppen nivå tar inget fripass. Startsidan visar NexLäx bara som en
   illustration (2026-10-07): exempelfrågan finns inte i banken; XP och uppdrag i den följer
   `intern.nexlax_*`, rank och märke `RANGER` och `MÄRKEN` i `nextrum-uppgifter.js`, och den ändras med dem. Belöningar är märken, inte pengar, och serien påminns aldrig om: båda är
   beslut. `.nl-hopp` går med flit inte att trycka på. **Uppdragen** (Fas 23.4) räknas av
@@ -1247,6 +1253,13 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Fripassen i NexLäx** (2026-10-27, `nexlax_fripass` 20261028130000) är inte i drift. Efter merge: Vercel lägger ut
+  vyerna och policyn (utan migrationen har `nexlax_lage()` inga fripass, och en låst nivå är bara låst som förut), sedan
+  migrationen (en kolumn, tre funktioner och en lapp på `nexlax_lage` med vakt; inget drop eller delete). Ingen
+  edge-funktion. Lokalt, mot en databas byggd ur alla 234 migrationer: `rls-test.sql` 2242 av 2242,
+  `prova-nexlax.js` 111 av 111 och `prova-forhandsvisning.js` 75 av 75. Versionen var först 20261028120000, samma som
+  nyhetsbrevets, och flyttades vid sammanslagningen med main.
+  Juristen har inte läst policyns nya halvmening om fripassen.
 - **Nyhetsbrevet** (2026-10-28, `nyhetsbrev` 20261028120000, Leo: "gör detta arbete simpelt") är inte i drift.
   Formuläret står i footern på varje öppen sida och i startsidans Nästa steg (`nextrum-nyhetsbrev.js`, laddat av
   `nextrum-samtycke.js`, så aldrig i vyerna eller på en sida med en nyckel i adressen); ingen popup, inget i
