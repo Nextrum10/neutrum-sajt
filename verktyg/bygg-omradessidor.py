@@ -3650,8 +3650,51 @@ def head(o):
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css">
 <link rel="stylesheet" href="nextrum-cinema.css">
+<link rel="stylesheet" href="nextrum-landning.css">
 </head>
 <body>"""
+
+
+# Rörelsen på landningssidorna (2026-10-28, Leo: "göra den lite roligare
+# ... främst alla landings sidor"): GSAP med ScrollTrigger, vendorade i
+# bibliotek/ (sidorna laddar inget från andra domäner), efter skalets
+# skript, och nextrum-landning.js sist. Utan dem står sidan färdig.
+LANDNING_SKRIPT = """
+<script src="bibliotek/gsap-3.13.0.min.js"></script>
+<script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js"></script>
+<script src="nextrum-landning.js"></script>"""
+
+# Ämnessidans färg, ur ämnesfärgerna (--amne-*). Stadiesidorna och
+# onlinesidan har inget ämne och står utan.
+AMNESFARG = {
+    'laxhjalp-matematik': 'ma', 'laxhjalp-svenska': 'sv', 'laxhjalp-engelska': 'en',
+    'laxhjalp-no': 'no', 'laxhjalp-so': 'so', 'laxhjalp-moderna-sprak': 'ms',
+}
+
+
+def steg(rader, mer=''):
+    """Så går det till som tre steg på en skena (2026-10-28). Stegen säger
+    samma sak som stycket de ersatte."""
+    li = '\n'.join(
+        f'        <li><span class="lp-steg-nr" aria-hidden="true">{i:02d}</span><b>{esc(r)}</b><p>{esc(t)}</p></li>'
+        for i, (r, t) in enumerate(rader, 1))
+    mer = f'\n      <p class="lp-steg-mer">{mer}</p>' if mer else ''
+    return f"""<div class="lp-steg" data-lp-steg>
+        <span class="lp-steg-spar" aria-hidden="true"><span class="lp-steg-fyll"></span></span>
+        <ol>
+{li}
+        </ol>
+      </div>{mer}"""
+
+
+def linje(o):
+    """Platserna som en linjekarta (2026-10-28). En bild, ingen riktig
+    linje i SL:s nät."""
+    li = ''.join(f'<li><i aria-hidden="true"></i><span>{esc(d)}</span></li>' for d in o['delar'])
+    return f"""<div class="lp-linje" data-lp-linje style="--n:{len(o['delar'])}">
+      <span class="lp-linje-spar" aria-hidden="true"></span>
+      <ol aria-label="Platser {esc(o['i_namn'])}">{li}</ol>
+    </div>"""
 
 
 def omrade(slug):
@@ -3911,11 +3954,22 @@ NASTA_STEG = """<section class="nx-mork nx-final-cinema">
 </section>"""
 
 
+STEG_OMRADE = [
+    ('Ni skickar en intresseanmälan', 'Ni berättar om eleven och var passen ska hållas. Det kostar ingenting att fråga.'),
+    ('Vi hör av oss inom 24 timmar', 'Sedan väljer vi den studiehjälpare som passar eleven bäst.'),
+    ('Studievyn låses upp', 'När matchningen är klar finns studieplanen, bokningen och en rapport efter varje pass där.'),
+]
+STEG_AMNE = [
+    ('Ni skickar en intresseanmälan', 'Ni berättar vilket ämne och vilken kurs det gäller.'),
+    ('Vi väljer studiehjälparen', 'Vi går igenom behovet med er och väljer den som passar bäst, utifrån ämne, nivå och person. Ni bläddrar inte bland profiler: fel match är värre än ingen match.'),
+    ('Studievyn låses upp', 'Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Passen hålls hemma hos er eller online, och ni väljer för varje pass.'),
+]
+
+
 def sida(o):
     huvud, fot = skal()
     huvud = sprakvaxlare(huvud, o['slug'])
 
-    delar = ''.join(f'<span>{esc(d)}</span>' for d in o['delar'])
     tillbaka = ('<a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>'
                 if o.get('hub') else TILLBAKA_NAVET)
 
@@ -3943,7 +3997,7 @@ def sida(o):
   <div class="rv">
     <span class="nx-et acc">Området</span>
     <h2 class="nx-d2" style="margin-top:18px">Var vi matchar elever</h2>
-    <div class="nx-omr-chips" style="margin-top:clamp(20px,2.4vw,28px)">{delar}</div>
+    {linje(o)}
   </div>
 </section>
 
@@ -3954,7 +4008,7 @@ def sida(o):
       <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Ni skickar en intresseanmälan, vi hör av oss inom 24 timmar och väljer sedan den studiehjälpare som passar eleven bäst. När matchningen är klar låses studievyn upp, med studieplanen, bokningen och en rapport efter varje pass. <a href="/sa-fungerar-nextrum">Så fungerar det, steg för steg</a>.</p>
+      {steg(STEG_OMRADE, '<a href="/sa-fungerar-nextrum">Så fungerar det, steg för steg</a>.')}
     </div>
   </div>
 </section>
@@ -3963,7 +4017,7 @@ def sida(o):
 {faq_sektion(o)}{andra_omraden(o)}
 {NASTA_STEG}
 
-</main>{fot}{jsonld(o, OMRADEN)}
+</main>{fot}{LANDNING_SKRIPT}{jsonld(o, OMRADEN)}
 </body>
 </html>
 """
@@ -3991,7 +4045,8 @@ def amnessida(o):
     if o is not ONLINE:
         omrkort += '\n' + kort(ONLINE['slug'], 'Läxhjälp online', ONLINE['kort'])
 
-    return f"""{head(o)}{huvud}<main id="innehall">
+    amnesfarg = f' data-lp-amne="{AMNESFARG[o["slug"]]}"' if o['slug'] in AMNESFARG else ''
+    return f"""{head(o)}{huvud}<main id="innehall"{amnesfarg}>
 
 {hjalte(o, TILLBAKA_NAVET)}
 
@@ -4025,8 +4080,7 @@ def amnessida(o):
       <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Ni skickar in en intresseanmälan och berättar vilket ämne och vilken kurs det gäller. Vi går igenom behovet tillsammans med er och väljer sedan ut den studiehjälpare som passar bäst, utifrån ämne, nivå och person. Ni bläddrar inte bland profiler: fel match är värre än ingen match.</p>
-      <p>När matchningen är klar låses studievyn upp. Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Passen hålls hemma hos er eller online, och ni väljer för varje pass.</p>
+      {steg(STEG_AMNE)}
     </div>
   </div>
 </section>
@@ -4035,7 +4089,7 @@ def amnessida(o):
 {faq_sektion(o)}{kortsektion('Områden', o.get('omraden_rubrik', 'Hemma hos er i Stockholm, eller online'), omrkort)}{amnen_sektion(o)}{stadier_sektion(o)}{kortsektion('Guider', 'För er som hjälper till hemma', guidekort(GUIDER))}
 {NASTA_STEG}
 
-</main>{fot}{jsonld(o, OMRADEN)}
+</main>{fot}{LANDNING_SKRIPT}{jsonld(o, OMRADEN)}
 </body>
 </html>
 """
@@ -4166,7 +4220,7 @@ def guidesida(o):
 {faq_sektion(o)}{amnen_sektion(o)}{fler}
 {NASTA_STEG}
 
-</main>{fot}{jsonld_guide(o)}
+</main>{fot}{LANDNING_SKRIPT}{jsonld_guide(o)}
 </body>
 </html>
 """
