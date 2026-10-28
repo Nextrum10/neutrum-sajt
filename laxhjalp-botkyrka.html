@@ -48,7 +48,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=126c1d66">
-<link rel="stylesheet" href="nextrum-landning.css?v=fb0d9169">
+<link rel="stylesheet" href="nextrum-landning.css?v=b4390c4c">
 </head>
 <body>
 
@@ -142,9 +142,12 @@
       <h2 class="nx-d2" style="margin-top:18px">Hemma, på biblioteket<br>eller <em>online.</em></h2>
     </div>
     <div class="nx-text rv">
-      <p>Röda linjen går till Fittja, Alby, Hallunda och Norsborg, där den slutar, och pendeltåget stannar i Tullinge och Tumba. Till Vårsta går bussen från Tumba station. Norra Botkyrka och Tumba med Tullinge ligger alltså på var sin linje, och vi matchar efter var eleven bor.</p>
-      <p>Vill ni hellre ses på en neutral plats går det bra att hålla passet på Alby bibliotek, Hallunda bibliotek eller Tumba bibliotek. Skriv platsen när ni föreslår tiden.</p>
-      <p>Ni väljer hemma eller online för varje pass. Att ses hemma förutsätter att matchningen ger en studiehjälpare som kan ta sig till er varje vecka; går det inte börjar ni online, med samma person, studieplan och rapport.</p>
+      <p class="lp-plats-not">Ni väljer hemma eller online för varje pass.</p>
+      <div class="lp-plats" data-lp-flikar="Var passen hålls">
+        <div data-lp-flik="Hemma"><p>Röda linjen går till Fittja, Alby, Hallunda och Norsborg, där den slutar, och pendeltåget stannar i Tullinge och Tumba. Till Vårsta går bussen från Tumba station. Norra Botkyrka och Tumba med Tullinge ligger alltså på var sin linje, och vi matchar efter var eleven bor.</p><p>Att ses hemma förutsätter att matchningen ger en studiehjälpare som kan ta sig till er varje vecka.</p></div>
+        <div data-lp-flik="Biblioteket"><p>Vill ni hellre ses på en neutral plats går det bra att hålla passet på Alby bibliotek, Hallunda bibliotek eller Tumba bibliotek. Skriv platsen när ni föreslår tiden.</p></div>
+        <div data-lp-flik="Online"><p>Går det inte att ses hemma börjar ni online, med samma person, studieplan och rapport. <a href="/laxhjalp-online">Så går ett pass online till</a>.</p></div>
+      </div>
     </div>
   </div>
 </section>
@@ -517,7 +520,7 @@
 
 <script src="bibliotek/gsap-3.13.0.min.js"></script>
 <script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js"></script>
-<script src="nextrum-landning.js?v=fecdec11"></script><script type="application/ld+json">
+<script src="nextrum-landning.js?v=5cd528dd"></script><script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [

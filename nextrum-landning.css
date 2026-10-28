@@ -103,3 +103,74 @@
     rotate:32deg;transform-origin:0 0;
   }
 }
+
+/* ---------- Flikarna (2026-10-28) ----------
+   Vad passen går ut på (ämnes-, stadie- och onlinesidan) och Var passen
+   hålls (områdessidorna). Skriptet bygger raden; utan det står panelerna
+   som lista och stycken. Panelerna delar rutnätscell, så behållaren är
+   lika hög som den högsta och inget under den hoppar vid bytet. */
+.lp-flikrad{
+  position:relative;display:flex;gap:4px;width:max-content;max-width:100%;
+  padding:4px;border-radius:100px;background:var(--surface);border:1px solid var(--line);
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;
+  margin-bottom:clamp(20px,2.4vw,28px);
+}
+.lp-flikrad::-webkit-scrollbar{display:none}
+.lp-flik{
+  position:relative;z-index:1;flex:none;
+  min-height:44px;padding:0 18px;border:0;border-radius:100px;background:none;
+  font:inherit;font-size:.92rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;
+  color:var(--muted);cursor:pointer;
+  transition:color .3s var(--ease),scale .2s var(--ease);
+}
+.lp-flik:hover{color:var(--fg)}
+.lp-flik:active{scale:.96}
+.lp-flik[aria-selected="true"]{color:var(--pap)}
+.lp-flik:focus-visible{outline:2px solid var(--lp-f,var(--acc));outline-offset:2px}
+.lp-flikpil{
+  position:absolute;left:0;top:4px;bottom:4px;width:0;border-radius:100px;
+  background:var(--lp-f,var(--fg));
+  transition:translate .45s cubic-bezier(.3,1.35,.5,1),width .45s cubic-bezier(.3,1.35,.5,1);
+}
+.lp-flikrad:not(.lp-klar) .lp-flikpil{transition:none}
+@media (prefers-reduced-motion:reduce){.lp-flikpil,.lp-flik{transition:none}}
+
+.lp-flikar-pa{display:grid}
+.lp-flikar-pa > [data-lp-flik]{grid-area:1/1}
+.lp-flikar-pa > [data-lp-flik]:not(.lp-vald){visibility:hidden}
+/* Listan som flikar: en rad i taget, utan listans streck, i ett kort. */
+.nx-list.lp-flikar-pa > li,
+.nx-list.lp-flikar-pa > li:last-child{
+  border:1px solid var(--line);border-radius:22px;background:var(--surface);
+  padding:clamp(20px,2.6vw,30px);
+}
+.nx-list.lp-flikar-pa b{font-size:1.15rem}
+.nx-list.lp-flikar-pa p{font-size:1rem}
+.lp-plats.lp-flikar-pa > [data-lp-flik] p + p{margin-top:1em}
+.nx-text .lp-plats-not{margin:0 0 clamp(16px,2vw,20px)}
+
+/* ---------- Ljuset över korten ----------
+   Följer musen (skriptet skriver --mx och --my på kortet), i ämnets färg
+   på en ämnessida. Bara med mus. */
+@media (hover:hover) and (pointer:fine){
+  .nx-omr-kort{position:relative;isolation:isolate}
+  .nx-omr-kort::before{
+    content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;
+    background:radial-gradient(240px circle at var(--mx,50%) var(--my,50%),
+      color-mix(in srgb,var(--lp-f,var(--acc)) 16%,transparent),transparent 70%);
+    opacity:0;transition:opacity .3s var(--ease);
+  }
+  .nx-omr-kort:hover::before{opacity:1}
+  /* Stationerna svarar på musen. */
+  .lp-linje i{transition:background .2s var(--ease),scale .25s var(--ease)}
+  .lp-linje li:hover i{background:var(--acc);scale:1.18}
+  .lp-linje li:hover > span{color:var(--acc-text,var(--acc))}
+}
+
+/* ---------- Lästråden ----------
+   Hur långt man kommit på sidan, överst över sidhuvudet. Skriptet skapar
+   den bara när rörelsen är på. */
+.lp-las{
+  position:fixed;left:0;right:0;top:0;height:3px;z-index:801;pointer-events:none;
+  background:var(--lp-f,var(--orange));transform-origin:0 50%;
+}
