@@ -1273,11 +1273,16 @@ Detaljer: `minne/grunden.md`.
   länken `/nyhetsbrev?a=<token>`. Kvar: migrationen och funktionen efter merge, secreten, att prova flödet, och
   juristen (rad 40 i `DATASKYDD.md`, policyns stycke).
 - **Förhandsvisningens kassa och NexLäx** (2026-10-27, `forhandsvisningens_nexlax` 20261028110000 och edge-funktionen
-  `forhandsvisning-kassa`) är inte i drift. Efter merge: `forhandsvisning-kassa` (ny, med JWT) och `stripe-webhook`
-  (kvitterar `forhandsvisning=1` utan att skriva; utan den kvitteras sessionen ändå som "session utan pass-id"), sedan
-  migrationen. Utan dem svarar förhandsvisningen som förut: kassan säger att den inte nås, och NexLäx har de påhittade
-  nivåerna. Bara superadmin. Datumrutans förslag har samma enda kant som de andra sedan samma dag (Leo: den gula "har extra
-  streck inuti").
+  `forhandsvisning-kassa`) är i drift sedan natten till 2026-10-28 (Leo: "Kör"): PR #371 och #374 mergades (6da87bf),
+  migrationen kördes hel i ett do-block med filens md5 (`6a34cd0c…`) och registrerades med filens text, och
+  `forhandsvisning-kassa` v1 gick ut från 6da87bf och är hämtad tillbaka. Provat mot driften, tillbakarullat: en annan än
+  admin nekas, en superadmin får engelska åk 9 utan facit och en rättning, och inga försök eller svar sparas; funktionen
+  svarar 401 ur sin egen kod utan inloggning. Advisorn fick bara de två nya funktionerna för `authenticated`, med flit.
+  **`stripe-webhook` är inte driftsatt** med raden för `forhandsvisning=1`: den i drift kvitterar redan kassans händelser
+  utan att skriva (session utan pass-id, charge utan pass), och raden går ut nästa gång webhooken driftsätts. `#374` bytte
+  `\u`-escapes mot `\x` i `_delad/forhandsvisning.ts`, för verktyget avkodar dem (avsnitt 7). Kvar: ett köp med
+  testkortet i förhandsvisningen. Datumrutans förslag har samma enda kant som de andra sedan 2026-10-27 (Leo: den gula
+  "har extra streck inuti").
 - **Nextrum AB och bonusarna som godkänns** (2026-10-28, `bonusarna_godkanns` 20261028100000) är inte i drift. Efter
   merge: Vercel lägger ut sidorna (footern, villkoren och policyn), sedan `admin-paminnelse` (känner `bonus_godkann`; utan
   den hoppas raden över, inget går sönder), migrationen (md5-vakter mot driften 2026-10-27 för vakten, `varvning_prova`,
