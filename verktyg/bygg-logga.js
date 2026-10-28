@@ -12,6 +12,7 @@
      bilder/nextrum-logo-512.png    strukturerad data och loggan i mejlen
      bilder/nextrum-logo-profil.png profilbilden på info@ (DEPLOY-EPOST.md 5)
      bilder/nextrum-logo-bimi.svg   BIMI, SVG Tiny PS (DEPLOY-EPOST.md 5)
+     bilder/nextrum-logo-signatur.png  hela loggan i Gmail-signaturen för info@
 
    PNG:erna står på papperet (#F1EDE6) ända ut i kanten: Google och
    Gmail beskär till en cirkel, och en genomskinlig ikon blir brun på
@@ -47,6 +48,8 @@ function väg(id) {
   return m[1];
 }
 const BRUN_D = väg('mark-brun'), ORANGE_D = väg('mark-orange');
+const ORD_D = väg('ord'), SLOGAN_D = väg('slogan');
+const ORD_FLYTT = (källa.match(/<path id="ord"[^>]*\stransform="([^"]+)"/) || [])[1] || '';
 
 /* Märket mitt i en kvadrat med sidan s, andel av bredden som märket tar. */
 function placering(s, andel) {
@@ -104,8 +107,34 @@ const PNG = [
   ['bilder/nextrum-logo-profil.png', 1024, 0.6],
 ];
 
+/* Signaturen (2026-10-28): märket, ordet och "av unga, för unga" på papperet
+   i ett kort med rundade hörn. Kortet är ogenomskinligt av samma skäl som
+   ikonerna: Gmail i mörkt läge lägger en genomskinlig brun logga på svart.
+   Hörnen är genomskinliga och inbakade, för Outlook tar bort border-radius.
+   Ritas i tre gånger storleken; mejlet visar det i 232 x 64 px. */
+const SIG_B = 232, SIG_H = 64, SIG_SKALA = 3, SIG_LOGGA_H = 34;
+function signatur() {
+  const k = SIG_LOGGA_H / 193, b = 1027 * k;
+  const x = (SIG_B - b) / 2, y = (SIG_H - SIG_LOGGA_H) / 2;
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + SIG_B + ' ' + SIG_H + '" width="' + SIG_B * SIG_SKALA +
+    '" height="' + SIG_H * SIG_SKALA + '">' +
+    '<rect width="' + SIG_B + '" height="' + SIG_H + '" rx="12" fill="' + PAPPER + '"/>' +
+    '<g transform="translate(' + x.toFixed(3) + ' ' + y.toFixed(3) + ') scale(' + k.toFixed(5) + ')">' +
+    '<path fill="' + BRUN + '" d="' + BRUN_D + '"/>' +
+    '<path fill="' + ORANGE + '" d="' + ORANGE_D + '"/>' +
+    '<path fill="' + BRUN + '" transform="' + ORD_FLYTT + '" d="' + ORD_D + '"/>' +
+    '<path fill="' + ORANGE + '" d="' + SLOGAN_D + '"/></g></svg>';
+}
+
 (async () => {
   const webbläsare = await pw.chromium.launch();
+  {
+    const sida = await webbläsare.newPage({ viewport: { width: SIG_B * SIG_SKALA, height: SIG_H * SIG_SKALA } });
+    await sida.setContent('<!doctype html><style>html,body{margin:0;background:transparent}svg{display:block}</style>' + signatur());
+    await sida.screenshot({ path: path.join(ROT, 'bilder/nextrum-logo-signatur.png'), omitBackground: true });
+    await sida.close();
+    console.log('  bilder/nextrum-logo-signatur.png  ' + SIG_B * SIG_SKALA + ' x ' + SIG_H * SIG_SKALA + ' px');
+  }
   for (const [fil, s, andel] of PNG) {
     const sida = await webbläsare.newPage({ viewport: { width: s, height: s } });
     await sida.setContent('<!doctype html><style>html,body{margin:0}svg{display:block}</style>' +
