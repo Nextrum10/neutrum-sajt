@@ -1263,10 +1263,17 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
-- **Signaturen i mejlen** (2026-10-28) är inte i drift. Den ligger i `_delad/notiser/rendera.ts` och går ut med de
-  funktioner som importerar den (`notis-ko`, `notis-avanmal`, `ansokan-notis`, `admin-paminnelse`, `bjud-in`,
-  `barn-*`), efter merge och från main, aldrig från en gren. Ingen migration. Lokalt: `deno test _delad/` 523 av 523.
-  Juristen behöver inte läsa något nytt: orgnumret och adressen står redan sist på sajten.
+- **Signaturen i mejlen** (2026-10-28, `rendera.ts`, PR #381) är i drift sedan kvällen 2026-10-28 (Leo: "ja, merga och
+  driftsätt"): PR #381 mergades (1f7a4b4) och fem funktioner lades ut från merge-commiten, genom MCP från hjälpagenter:
+  `notis-ko` v41, `ansokan-notis` v11, `bjud-in` v13, `lead-notis` v33 (kvittot till familjen) och `admin-paminnelse`
+  v5. Alla fem är hämtade tillbaka och byte för byte lika main (17, 13, 13, 11 och 12 filer), med verify_jwt som i
+  `config.toml`. `notis-avanmal`, `ansokan-mejl`, `faktura-utskick` och `nyhetsbrev` importerar `rendera.ts` men
+  ändras inte (de har `skal()` utan `signatur`), och `barn-*` importerar den inte. Ingen migration. **Escapen i
+  `mallar.ts` gick fel två gånger** (`notis-ko` v39 och v40 låg ute några minuter med `\\u005cu00a0` i `kronor()`,
+  så ett belopp i ett mejl kunde stå med den texten; v41 rättade det): se avsnitt 7, skicka bakstrecket som
+  `\\u005cu00a0` i JSON och jämför varje fil efteråt. Hur många mejl med belopp som gick under de minuterna är inte
+  kontrollerat. `lead-notis` låg före på v31, äldre än main (saknade `_delad/erbjudanden.ts`), så den fick mer än
+  signaturen. `stripe-webhook` gick v17 till v18 under kvällen utan att den här sessionen rörde den.
 - **Fripassen i NexLäx** (2026-10-27, `nexlax_fripass` 20261028130000) är i drift sedan förmiddagen 2026-10-28 (Leo:
   "Merge", sedan "Kör"): PR #370 mergades (931e821) och Vercel lade ut vyerna och policyn, och migrationen kördes hel i
   en transaktion ur merge-commiten, prövad mot sin md5 (`1d3148d5…`) och registrerad med filens text i samma
