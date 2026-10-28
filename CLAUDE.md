@@ -880,7 +880,9 @@ riktiga vyerna med en påhittad familj och studiehjälpare. `nextrum-forhandsvis
 statistik, lön eller betalningar. **Två saker frågar ut** (2026-10-27, Leo): Betala nu, Betala alla och
 planerna öppnar Stripes kassa i TESTLÄGE (`forhandsvisning-kassa`, bara superadmin, ingen kassa med en
 skarp nyckel, beloppet ur världen, och webhooken skriver inget för `forhandsvisning=1`), och NexLäx spelar
-den riktiga banan (`forhandsvisning_niva()`, `forhandsvisning_ratta()`, inget sparat); båda med adminens
+den riktiga banan (`forhandsvisning_niva()`, `forhandsvisning_ratta()` och, för repetitionen, `forhandsvisning_repetition()`
+med webbläsarens missade frågor, inget sparat; stjärnorna räknas i webbläsaren med niva_svaras gränser, som
+`kolla-forhandsvisning.py` jämför); båda med adminens
 inloggning. Går Stripe skarpt sätts `STRIPE_FORHANDSVISNING_SECRET_KEY` och `_PUBLISHABLE_KEY` till
 testnycklarna (`minne/sakerhet.md`). Börjar vyerna fråga efter en ny tabell eller funktion ska den in i
 världen (`prova-forhandsvisning.js` säger vad som saknas). **Adminkontona räknas inte i
@@ -1219,7 +1221,7 @@ Detaljer: `minne/genererat-och-ci.md`.
 ## 9. CI — `.github/workflows/kontroll.yml`
 Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
 `kolla-betalningsvillkor.py`, `kolla-migrationer.py`, `bygg-uppgifter.py --kolla`, `bygg-faktablad.py --kolla`,
-`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `kolla-villkor.py`, `kolla-delningsbilder.py`, `kolla-titlar.py`, `test/innehall-regler.py`, `satt-version.py --kolla`, de genererade filerna
+`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `kolla-villkor.py`, `kolla-delningsbilder.py`, `kolla-titlar.py`, `kolla-forhandsvisning.py`, `test/innehall-regler.py`, `satt-version.py --kolla`, de genererade filerna
 (`git diff --exit-code`), språkdiffen (också attributnamn), `deno check` och `deno test`.
 - `node --check` ser bara syntax; ett namn som inte hämtats ur `NXAdmin` smäller vid körning.
 - `indexnow.yml` är ingen kontroll. Nyckeln står i roten och i `verktyg/indexnow.py`: byt båda.

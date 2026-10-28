@@ -23053,6 +23053,122 @@ begin
   end if;
 end $$;
 
+-- ------------------------------------------------------------
+-- 60. Repetitionen i förhandsvisningen (forhandsvisningens_repetition, 2026-10-28)
+--
+-- Repetitionens urval bröts ut till intern.nexlax_repetition_ur, som tar de
+-- missade frågorna och de klarade nivåerna som listor. Elevens repetition
+-- läser dem ur tabellerna som förut; förhandsvisningen skickar webbläsarens
+-- egna genom forhandsvisning_repetition(), bara för superadmin, utan facit
+-- och utan att något sparas. Allt rullas tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  t     text;
+  r     jsonb;
+  ids   uuid[];
+  rep   public.nivaer;
+  fors  uuid;
+  fore  bigint;
+  E     constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  P     constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  N     uuid[] := array[
+    '00000000-0000-4000-8000-00000060a001', '00000000-0000-4000-8000-00000060a002',
+    '00000000-0000-4000-8000-00000060a003', '00000000-0000-4000-8000-00000060a004',
+    '00000000-0000-4000-8000-00000060a005']::uuid[];
+  RN    constant uuid := '00000000-0000-4000-8000-00000060a0ff';
+  F     uuid[] := '{}'::uuid[];
+  i     int;
+  j     int;
+begin
+  if to_regprocedure('public.forhandsvisning_repetition(uuid, uuid[], uuid[])') is null then
+    insert into utfall (test, ok, detalj) values ('FR Repetitionen i förhandsvisningen: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    perform set_config('request.jwt.claims', '', true);
+    -- N1–N3 vanliga i ämnet, N4 har en lästext, N5 är ett annat ämne.
+    for i in 1 .. 5 loop
+      insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning, sort, lastext)
+      values (N[i], 'rls-rep-' || i, case when i = 5 then 'Svenska' else 'Matematik' end, 'gy3', 'Repområde',
+              'Rep ' || i, i, 'vanlig', case when i = 4 then 'En text att läsa.' end);
+      for j in 1 .. 4 loop
+        F := F || gen_random_uuid();
+        insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt)
+        values (F[array_length(F, 1)], N[i], j, 'val', 'Vilket är störst?', '["2","1"]', '0');
+      end loop;
+    end loop;
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning, sort)
+    values (RN, 'rls-rep-r', 'Matematik', 'gy3', 'Repetition', 'Repetition', 99, 'repetition');
+    select * into rep from public.nivaer where id = RN;
+
+    -- ---------- urvalet ----------
+    -- F[1..4] är N1:s, F[13..16] N4:s (lästext), F[17..20] N5:s (annat ämne).
+    ids := intern.nexlax_repetition_ur(rep, array[F[13], F[17], F[2], F[1]], array[N[2]]);
+    ut := ut || jsonb_build_object('t', 'FR de missade först, bara vanliga nivåer utan lästext i ämnet, resten ur klarade nivåer',
+            'ok', cardinality(ids) = 6 and ids @> array[F[1], F[2]] and not ids && array[F[13], F[17], F[3], F[4]]
+                  and ids @> array[F[5], F[6], F[7], F[8]],
+            'd', cardinality(ids));
+    ids := intern.nexlax_repetition_ur(rep, array[F[1], F[2], F[3], F[4], F[5], F[6], F[7], F[8], F[9], F[1]], array[N[3]]);
+    ut := ut || jsonb_build_object('t', 'FR högst åtta, de senaste missade först, och en fråga en gång',
+            'ok', cardinality(ids) = 8 and ids @> array[F[1], F[2], F[3], F[4], F[5], F[6], F[7], F[8]],
+            'd', cardinality(ids));
+    ids := intern.nexlax_repetition_ur(rep, null, null);
+    ut := ut || jsonb_build_object('t', 'FR inget missat och inget klarat ger inget', 'ok', ids is null, 'd', ids);
+
+    -- ---------- elevens repetition läser som förut ----------
+    perform pg_temp.bli(P);
+    r := public.niva_starta(N[1], E);
+    fors := (r ->> 'forsok')::uuid;
+    perform public.niva_svara(fors, F[3], '{"val":1}');
+    perform public.niva_svara(fors, F[3], '{"val":0}');
+    perform public.niva_svara(fors, F[4], '{"val":0}');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ids := intern.nexlax_repetitionsfragor(rep, E);
+    ut := ut || jsonb_build_object('t', 'FR elevens repetition tar frågan eleven missade först gången, inte den som gick rätt',
+            'ok', ids @> array[F[3]] and not ids @> array[F[4]], 'd', ids::text);
+
+    -- ---------- vem som når förhandsvisningens ----------
+    t := pg_temp.svar_som(null, format('select public.forhandsvisning_repetition(%L, %L, %L)', RN, array[F[1]], array[N[2]]))
+      || ' ' || pg_temp.svar_som(P, format('select public.forhandsvisning_repetition(%L, %L, %L)', RN, array[F[1]], array[N[2]]))
+      || ' ' || pg_temp.svar_som(null, format('select intern.nexlax_repetition_ur(n, null, null) from public.nivaer n where id = %L', RN));
+    ut := ut || jsonb_build_object('t', 'FR anon och en familj når inte förhandsvisningens repetition, och ingen når urvalet direkt',
+            'ok', t = '42501 42501 42501', 'd', t);
+
+    select (select count(*) from public.niva_forsok) + (select count(*) from public.niva_svar) into fore;
+    perform pg_temp.bli(AD);
+    r := public.forhandsvisning_repetition(RN, array[F[1], F[2]], array[N[2]]);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'FR superadmin får repetitionen utan facit, och inget sparas',
+            'ok', jsonb_array_length(r -> 'fragor') = 6 and r -> 'niva' ->> 'sort' = 'repetition'
+                  and position('"ratt"' in r::text) = 0
+                  and fore = (select count(*) from public.niva_forsok) + (select count(*) from public.niva_svar),
+            'd', left(r::text, 200));
+
+    t := pg_temp.svar_som(AD, format('select public.forhandsvisning_repetition(%L, %L, %L)', N[1], array[F[1]], array[N[2]]))
+      || ' ' || pg_temp.svar_som(AD, format('select public.forhandsvisning_repetition(%L, null, null)', RN));
+    ut := ut || jsonb_build_object('t', 'FR en vanlig nivå och en tom repetition nekas', 'ok', t = 'P0002 P0001', 'd', t);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('FR Repetitionen i förhandsvisningen', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
 reset role;
 select set_config('request.jwt.claims', null, true);
 

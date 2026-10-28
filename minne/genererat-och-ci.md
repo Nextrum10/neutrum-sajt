@@ -891,3 +891,11 @@ från startsidan, och att inget exempel eller någon länk dit står kvar), rubr
 knapparna och länken i Vi är nya. Delningsbilden för Om oss har inget foto (`UTAN_FOTO` i `bygg-delningsbilder.js`) och inget pris; bara
 `delning/om-oss.jpg` byggdes om, de andra bilderna lämnades orörda. `om-oss.html` står i språkbaslinjen som en svensk
 sida utan tvilling; ekvationerna i `#exempel` stod där som svenska kvar i engelskan tills exemplet togs bort.
+
+**Förhandsvisningens stjärnor** (2026-10-28). Förhandsvisningen spelar den
+riktiga banan men sparar inget försök, så stjärnorna räknas i webbläsaren
+(`bokför()` i `nextrum-forhandsvisning.js`). `kolla-forhandsvisning.py` läser
+gränserna ur den senaste migrationen som sätter `v_stj` i `niva_svara` och ur
+`bokför()`, och fäller CI när de skiljer sig. Flyttas regeln ur `niva_svara`
+(till en egen funktion, eller med en lapp utan `v_stj :=`) säger kontrollen att
+den inte hittar regeln: lär den den nya formen i samma ändring.

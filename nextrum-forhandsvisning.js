@@ -34,9 +34,12 @@
      betald blir passet eller planen betalt i världen (kassornaKlara).
    - NexLäx läser den riktiga banan (nivaer) och spelar de riktiga
      frågorna genom forhandsvisning_niva() och forhandsvisning_ratta(),
-     som rättar som niva_svara men inte sparar något. Försöken, stjärnorna
-     och XP står i världen. Före migrationen, eller utan nät, är det de
-     påhittade nivåerna och frågorna här.
+     som rättar som niva_svara men inte sparar något, och repetitionen
+     genom forhandsvisning_repetition() med de missade frågorna och de
+     klarade nivåerna ur världen (2026-10-28). Försöken, stjärnorna och XP
+     står i världen; stjärnornas gränser är niva_svaras
+     (kolla-forhandsvisning.py). Före migrationen, eller utan nät, är det
+     de påhittade nivåerna och frågorna här.
 
    Vem som får se den: den som är inloggad som admin i samma webbläsare.
    Den riktiga inloggningen frågar den riktiga databasen en enda sak,
@@ -828,7 +831,7 @@ window.NXForhandsvisning = (function () {
       xp: xp, xp_idag: idag * 90, xp_vecka: 160 + idag * 90, serie: { nu: 3 + (idag ? 1 : 0), basta: 6, idag: !!idag },
       dagar: [-5, -4, -2].map(function (n) { return { dag: dag(n), xp: 60, nivaer: 1, uppgifter: 1, pass: 0 }; }),
       banor: [], nivaer: {}, omraden: klaraOmråden(),
-      missade: [], uppgifter: { klara: 24, direkt: 20, forsta: 30, forsta_ratt: 24 },
+      missade: missadePerBana(), uppgifter: { klara: 24, direkt: 20, forsta: 30, forsta_ratt: 24 },
       regler: { val: 10, svarare: 20, niva: 50, omrade: 100 }, idag: dag(0), fripass: fripass(),
       uppdrag: { dag: dag(0), idag: [
         { id: 'xp-50', grupp: 'xp', text: 'Samla 50 XP', mal: 50, har: Math.min(50, idag * 90), klart: idag > 0 },
@@ -1186,14 +1189,62 @@ window.NXForhandsvisning = (function () {
     return Object.keys(per).map(function (k) { return per[k]; }).filter(function (o) { return o.alla && o.klart; })
       .map(function (o) { return { amne: o.amne, arskurs: o.arskurs, omrade: o.omrade, klart: o.klart }; });
   }
+  /* De missade frågorna, som senast-urvalet i nexlax_lage och
+     intern.nexlax_repetitionsfragor: per fråga elevens senaste första svar,
+     och de där det var fel. Bara frågor ur banken (försök med fv), och
+     ämne och årskurs är nivåns som försöket gällde: Mästarprovet och
+     repetitionen drar ur samma ämne och årskurs. */
+  function missadeFrågor(elev) {
+    var försök = {};
+    W.niva_forsok.forEach(function (f) { if (f.student_id === elev && f.fv) försök[f.id] = f; });
+    var första = {}, senast = {};
+    W.niva_svar.forEach(function (x) {
+      var f = försök[x.forsok_id];
+      if (!f) return;
+      var nyckel = x.forsok_id + '|' + x.fraga_id;
+      if (första[nyckel]) return;
+      första[nyckel] = true;
+      var n = nivå(f.niva_id);
+      if (!n || (n.sort === 'vanlig' && n.lastext)) return;
+      var förut = senast[x.fraga_id];
+      if (!förut || String(x.created_at) >= String(förut.at)) {
+        senast[x.fraga_id] = { id: x.fraga_id, rätt: !!x.ratt, at: x.created_at, amne: n.amne, arskurs: n.arskurs };
+      }
+    });
+    return Object.keys(senast).map(function (k) { return senast[k]; }).filter(function (x) { return !x.rätt; })
+      .sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); });
+  }
+  function missadePerBana() {
+    var per = {};
+    missadeFrågor(ALVA).forEach(function (x) {
+      var k = x.amne + '|' + x.arskurs;
+      (per[k] = per[k] || { amne: x.amne, arskurs: x.arskurs, antal: 0 }).antal++;
+    });
+    return Object.keys(per).map(function (k) { return per[k]; });
+  }
+  async function hämtaFrågor(n, elev) {
+    if (n.sort !== 'repetition') return riktig.rpc('forhandsvisning_niva', { p_niva: n.id });
+    var klara = W.niva_forsok.filter(function (f) { return f.student_id === elev && f.godkand; })
+      .map(function (f) { return f.niva_id; });
+    return riktig.rpc('forhandsvisning_repetition', {
+      p_niva: n.id,
+      p_missade: missadeFrågor(elev).map(function (x) { return x.id; }).slice(0, 500),
+      p_klara: klara.filter(function (v, i) { return klara.indexOf(v) === i; }).slice(0, 2000)
+    });
+  }
   async function startaRiktig(n, elev) {
     var sedan = Date.now() - 86400000;
     var f = W.niva_forsok.filter(function (x) {
       return x.niva_id === n.id && x.student_id === elev && !x.klar_at && x.fv && Date.parse(x.startad_at) > sedan;
     }).sort(function (a, b) { return String(b.startad_at).localeCompare(String(a.startad_at)); })[0];
     if (!f) {
-      var r = await riktig.rpc('forhandsvisning_niva', { p_niva: n.id });
+      var r = await hämtaFrågor(n, elev);
       if (r.error) {
+        /* Utan repetitionens funktion (migrationen inte körd) faller bara
+           repetitionen bort, aldrig resten av banan. */
+        if (r.error.code === 'PGRST202' && n.sort === 'repetition') {
+          return { __fel: [400, 'P0001', 'Repetitionen går inte att göra i förhandsvisningen än.'] };
+        }
         if (r.error.code === 'PGRST202' || r.error.code === '42501') { riktigaFrågor = false; return null; }
         return { __fel: [400, r.error.code || 'P0001', r.error.message] };
       }
