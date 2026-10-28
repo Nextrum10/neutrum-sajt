@@ -65,6 +65,19 @@ står färdig. Ämnessidorna bär ämnets färg (`data-lp-amne` på main, `-l` i
 mörkt läge) i listans siffror och stegen; annars ger ordningen färgen.
 Navet `laxhjalp-stockholm` är handskrivet och har inte fått det.
 
+Samma natt (Leo: "mer reaktiv och kul att gå igenom") kom flikar, ljus
+och en lästråd. Vad passen går ut på (ämnes-, stadie- och onlinesidan,
+alltid fyra rader) och Var passen hålls (Hemma, Biblioteket när området
+har ett, Online) är flikar med en markering som glider: generatorn
+skriver `data-lp-flikar` och `data-lp-flik`, och skriptet bygger raden.
+Panelerna delar rutnätscell, så sektionen är lika hög som den längsta
+fliken och inget under den hoppar; därför står meningen om att man väljer
+för varje pass ovanför flikarna, där den inte får ett hål över sig.
+Flikarna och ljuset som följer musen över korten (`--mx`, `--my` på
+kortet, bara med mus) går också utan GSAP och med reducerad rörelse;
+lästråden överst bara med rörelsen på. Utan skriptet står flikarnas
+innehåll som förut, lista och stycken.
+
 Fyra saker som kostade en omgång:
 
 1. **`once`-scenerna i `NXMotion` avslöjade aldrig något.** Scenen

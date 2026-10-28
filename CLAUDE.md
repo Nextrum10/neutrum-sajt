@@ -706,7 +706,9 @@ Detaljer: `minne/grunden.md`.
   körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
   för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
   `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan. `nextrum-landning.js` och `-css` är
-  landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`.
+  landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`;
+  flikarna (`data-lp-flikar`, Vad passen går ut på och Var passen hålls) och ljuset över korten fungerar också
+  utan GSAP och med reducerad rörelse, och utan skriptet står flikarnas innehåll som lista och stycken.
 - **Loggan** (2026-10-15, Leo: "implementera våran nya logga"): märket och ordet nextrum, spårade i vektor ur Leos
   bild, och källan är `bilder/nextrum-logga.svg`. Sidorna har dem som två inline-svg (`.mark`, `.logo-text`) i samma
   höjd (`--logga-h`); det bruna är `currentColor` (`--logga-brun`, kräm i mörkt läge och på mörka ytor) och det

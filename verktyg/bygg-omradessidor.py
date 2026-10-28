@@ -3973,8 +3973,10 @@ def sida(o):
     tillbaka = ('<a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>'
                 if o.get('hub') else TILLBAKA_NAVET)
 
+    # Var passen hålls som flikar (2026-10-28): hemma, biblioteket (när
+    # området har ett) och online. Utan skriptet står styckena i ordning.
     bibl = bibliotek_text(o)
-    bibl = f'\n      <p>{esc(bibl)}</p>' if bibl else ''
+    bibl = (f'\n        <div data-lp-flik="Biblioteket"><p>{esc(bibl)}</p></div>' if bibl else '')
 
     return f"""{head(o)}{huvud}<main id="innehall">
 
@@ -3987,8 +3989,11 @@ def sida(o):
       <h2 class="nx-d2" style="margin-top:18px">Hemma, på biblioteket<br>eller <em>online.</em></h2>
     </div>
     <div class="nx-text rv">
-      <p>{esc(o['transport'])}</p>{bibl}
-      <p>Ni väljer hemma eller online för varje pass. Att ses hemma förutsätter att matchningen ger en studiehjälpare som kan ta sig till er varje vecka; går det inte börjar ni online, med samma person, studieplan och rapport.</p>
+      <p class="lp-plats-not">Ni väljer hemma eller online för varje pass.</p>
+      <div class="lp-plats" data-lp-flikar="Var passen hålls">
+        <div data-lp-flik="Hemma"><p>{esc(o['transport'])}</p><p>Att ses hemma förutsätter att matchningen ger en studiehjälpare som kan ta sig till er varje vecka.</p></div>{bibl}
+        <div data-lp-flik="Online"><p>Går det inte att ses hemma börjar ni online, med samma person, studieplan och rapport. <a href="/laxhjalp-online">Så går ett pass online till</a>.</p></div>
+      </div>
     </div>
   </div>
 </section>
@@ -4034,8 +4039,10 @@ def amnessida(o):
     huvud, fot = skal()
     huvud = sprakvaxlare(huvud, o['slug'])
 
+    # Listan är flikar (2026-10-28): skriptet bygger raden ur data-lp-flik,
+    # och utan det står listan som förut.
     lista = '\n'.join(
-        f'      <li><em>{i:02d}</em><div><b>{esc(r)}</b><p>{esc(t)}</p></div></li>'
+        f'      <li data-lp-flik="{esc(r)}"><em>{i:02d}</em><div><b>{esc(r)}</b><p>{esc(t)}</p></div></li>'
         for i, (r, t) in enumerate(o['lista'], 1))
     vinkel = '\n'.join(f'      <p>{esc(p)}</p>' for p in o['vinkel'])
     # Ett kort per region i navet, inte ett per ort: orterna är
@@ -4056,7 +4063,7 @@ def amnessida(o):
       <h2 class="nx-d2" style="margin-top:18px">{o['lista_rubrik']}</h2></div>
     <div class="nx-head-aside"><p class="nx-lede">{esc(o['lista_ingress'])}</p></div>
   </div>
-  <ul class="nx-list rv">
+  <ul class="nx-list rv" data-lp-flikar="{esc(o['lista_etikett'])}">
 {lista}
   </ul>
 </section>
