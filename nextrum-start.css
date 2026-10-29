@@ -3237,43 +3237,10 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
      #A99E88 → 6,7:1), ljus lera #D9814F → 6,1:1; knappen är krämvit
      med barkens text, som förut.
 
-   Nästa steg, som följer direkt efter #bli sedan omdömena flyttade upp,
-   börjar i samma svarta och mörknar mot footern i ljust läge; i mörkt
-   läge står det på sidans papper, som all Nästa steg (cinema, DE MÖRKA
-   YTORNA), alltså samma svarta hela vägen. Lerans sken nere till vänster
-   i #bli fortsätter över gränsen: samma bredd (70 %) och samma mitt, i
-   nederkanten här och i överkanten där, så att skenet är ett och samma
-   och gränsen inte blir en kant där ljuset klipps av. */
-#bli{
-  background:
-    radial-gradient(80% 60% at 100% 0%,var(--bli-glod),transparent 58%),
-    radial-gradient(70% 55% at 0% 100%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 60%),
-    var(--bli-bg);
-}
-#bli::before{
-  content:"";position:absolute;inset:0 0 auto;height:1px;pointer-events:none;
-  background:linear-gradient(90deg,transparent,var(--bli-kant) 22%,var(--bli-kant) 78%,transparent);
-}
-#bli + .nx-mork{
-  background:
-    radial-gradient(70% 40% at 0% 0%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 60%),
-    radial-gradient(60% 45% at 100% 55%,var(--nt-mossa),transparent 62%),
-    linear-gradient(180deg,var(--bli-bg),var(--nt-2));
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) #bli + .nx-mork{
-    background:
-      radial-gradient(70% 40% at 0% 0%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 60%),
-      radial-gradient(48% 46% at 50% 48%,color-mix(in srgb,var(--lera-l) 7%,transparent),transparent 74%),
-      var(--pap);
-  }
-}
-:root[data-theme="dark"] #bli + .nx-mork{
-  background:
-    radial-gradient(70% 40% at 0% 0%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 60%),
-    radial-gradient(48% 46% at 50% 48%,color-mix(in srgb,var(--lera-l) 7%,transparent),transparent 74%),
-    var(--pap);
-}
+   #bli gick från startsidan 2026-10-29 (Leo: "För dig som vill jobba på
+   main sidan ta bort den"). Det som står kvar här är Bli studiehjälpare-
+   sidans. :is(#bli,.bli-svart) står kvar som det var, för :is väger som
+   sitt id, och sidans regler räknar med det. */
 .nx-page-hero.on-band.bli-svart{
   background:
     radial-gradient(80% 60% at 100% 0%,var(--bli-glod),transparent 58%),
@@ -3298,13 +3265,6 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    fyra steg är ytor utan kant. Bli studiehjälpare-sidan (.bli-svart) fick
    samma sak samma kväll (Leo: "ta bort de så de ser ut som denna på main
    sidan"): fotot utan ram, bladen och stegen utan kant. */
-#bli .nx-punkter li,
-#bli .nx-punkter li:last-child{border:0;padding:11px 0}
-#bli .nx-punkter .pk{
-  border:0;
-  background:color-mix(in srgb,var(--lera-l) 16%,transparent);
-}
-#bli .nx-punkter .pk svg{stroke:var(--lera-l)}
 :is(#bli,.bli-svart) .nx-apply-flow > .nx-apply-step,
 .bli-svart .nx-perk{
   background:
@@ -3625,108 +3585,215 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 }
 
 /* ============================================================
-   19. EN NY FORM (2026-10-29) — bentot, manifestet, studievyns
-       tippning och stjärnkanten
+   19. EN NY FORM (2026-10-29) — scenen, trådarna, Nästa steg i sidans
+       läge, texten som rör sig, manifestet, studievyns tippning och
+       stjärnkanten
 
    Leo: "Just nu är mycket bara i kolumner och tråkiga", med React Bits
-   som förebild. Rörelsen som följer musen och scrollen skriver
-   nextrum-start-scen.js; här står formen och slutlägena, och utan
-   skriptet är det de som syns.
+   som förebild, och efter två varv med rutor (ett bentorutnät och en hög
+   kort): "Jag sa ta inspiration av animationer osv på react bits, snygga
+   rörliga bakgrunder, hur texter går osv ... De blir liksom 8 kolumner
+   direkt". Om den mörka scenen som följde: "Jag gillar inte att bakrunden
+   är svart och orange på den sektionen", och de fem budskapen ska gå
+   "sidleds snyggt med en vit rörlig bakrund". Rörelsen som följer
+   scrollen skriver nextrum-start-scen.js; här står formen och
+   slutlägena, och utan skriptet är det de som syns.
 
-   BENTOT (MagicBento). Sju rutor i olika storlekar i ett rutnät med
-   fyra kolumner: läxhjälpen stor (två gånger två), fyra små, och
-   NexLäx och Allt på ett ställe breda. Garantins remsa (avsnitt 17)
-   står under, med samma kolumner. Rutorna är startsidans kort och läser
-   sin färg ur --f som Hur hjälper vis blad gjorde. På en platta och en
-   telefon två och två, med den stora och de breda över hela bredden.
-
-   LJUSET. Med mus (.bn-ljus, satt av skriptet) har rutornas kant ett
-   eget lager: en radiell gradient i rutans färg vid --gx/--gy, klippt
-   till kanten (border-box under en padding-box i kortets färg, som
-   .nx-bubbla), och ett svagt sken inuti (::before) med opaciteten
-   --gn. Variablerna ärver inte (@property nedan): en musrörelse räknar
-   om rutan, aldrig texten i den. .bn-sken är skenet som följer musen
-   över hela rutnätet, flyttat med translate.
+   SCENEN. Hur hjälper vi står på ytans vita (--yta): rubriken ovanför,
+   likadan som de andra sektionernas, och korten i en rad man sveper i
+   själv (overflow-x och scroll-snap; med en mus drar man), så att sidan
+   rullar som vanligt förbi. Leo om raden som scrollen drog: "Vi är ett
+   läxhjälps företag ... inte et tech bolag. Så vi kör istället att man
+   scrollar själv åt vänster". Trådarna (canvas[data-tradar]) står
+   nedtonade i ett band under korten, aldrig bakom texten. Med skriptet
+   (.hjs-igang) går raden att dra med musen och kortet närmast början har .pa; ett kort
+   som kommit in har .inne (.hjs-rorlig, inte med reducerad rörelse).
    ============================================================ */
-@property --gx{syntax:"<length>";inherits:false;initial-value:-999px}
-@property --gy{syntax:"<length>";inherits:false;initial-value:-999px}
-@property --gn{syntax:"<number>";inherits:false;initial-value:0}
-
-.nx-bento-ram{position:relative;isolation:isolate}
-.nx-bento{
-  list-style:none;margin:0;padding:0;
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
-  grid-auto-flow:row dense;
-  gap:clamp(12px,1.4vw,20px);
+.nx-hjs{position:relative;padding:0}
+/* Ytans vita tonar över i sidans papper i bandet med trådarna, så att
+   raden och garantin under inte skiljs av ett streck mellan två färger
+   (Leo: "nu är det ett streck där som skiljer två färger de är ej
+   snyggt, skugga till och ha den där animationen där"). */
+.hjs{
+  --hjs-gap:clamp(14px,1.6vw,24px);
+  --hjs-fot-h:clamp(110px,12vw,170px);
+  position:relative;
+  /* Mjukt i början och slutet, så att ingen kant syns där tonen börjar. */
+  background:linear-gradient(180deg,
+    var(--yta) 0,var(--yta) calc(100% - var(--hjs-fot-h) - 40px),
+    color-mix(in srgb,var(--yta) 85%,var(--pap)) calc(100% - var(--hjs-fot-h) * .7 - 28px),
+    color-mix(in srgb,var(--yta) 50%,var(--pap)) calc(100% - var(--hjs-fot-h) * .45 - 18px),
+    color-mix(in srgb,var(--yta) 15%,var(--pap)) calc(100% - var(--hjs-fot-h) * .2 - 6px),
+    var(--pap) 100%);
+  padding-block:clamp(64px,8vw,112px) 0;
 }
-.bn-ruta{
-  --pad:clamp(22px,2.4vw,32px);
-  --radie:clamp(22px,2.2vw,30px);
-  position:relative;isolation:isolate;min-width:0;
-  display:flex;flex-direction:column;align-items:flex-start;
-  padding:var(--pad);
-  border-radius:var(--radie);
-  border:1px solid transparent;
-  background:
-    radial-gradient(90% 70% at 0% 0%,color-mix(in srgb,var(--f) 10%,transparent),transparent 70%) padding-box,
-    linear-gradient(var(--kort),var(--kort)) padding-box,
-    linear-gradient(var(--kort-kant),var(--kort-kant)) border-box;
-  box-shadow:var(--kort-sk);
-  transition:translate .45s var(--fjader);
+/* Rubriken är likadan som de andra sektionernas (.nx-head split, Leo:
+   "jag gillade hur rubrikerna var likadana", och om ett försök i mitten:
+   "De ska inte vara centrade"), och raden börjar direkt under. */
+.hjs .nx-head{margin-bottom:0}
+/* Bandet med trådarna under raden, där ytans vita tonar i papperet. */
+.hjs-fot{
+  position:relative;pointer-events:none;
+  min-height:var(--hjs-fot-h);margin-top:-34px;
 }
-.bn-ruta::after{
-  content:"";position:absolute;top:-1px;left:var(--pad);
-  width:46px;height:3px;border-radius:0 0 3px 3px;
-  background:var(--f);
-}
-.bn-stor{grid-column:span 2;grid-row:span 2}
-.bn-bred{grid-column:span 2}
-.bn-ruta h3{
-  margin-top:8px;
-  font-size:clamp(1.2rem,1.65vw,1.5rem);font-weight:700;
-  letter-spacing:-.03em;line-height:1.14;color:var(--bl);text-wrap:balance;
-}
-.bn-ruta p{
-  margin-top:10px;max-width:50ch;
-  font-size:clamp(.95rem,1.05vw,1.02rem);line-height:1.56;color:var(--bl-2);text-wrap:pretty;
-}
-.bn-ruta .nx-lank{margin-top:auto;padding-top:18px}
-.bn-ruta .nx-lank::after{bottom:0}
-.bn-ruta .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
-.bn-stor h3{font-size:clamp(1.6rem,2.7vw,2.5rem);letter-spacing:-.04em;line-height:1.04;max-width:14ch}
-.bn-stor p{font-size:clamp(1rem,1.2vw,1.12rem);max-width:42ch}
-.bn-bred .hj-nex-bild{margin-top:clamp(14px,1.6vw,20px)}
+/* Med en mus dras raden (nextrum-start-scen.js, hjscen), för pilarna gick
+   (Leo: "Ta bort dessa pilar"). */
 @media (hover:hover) and (pointer:fine){
-  .bn-ruta:hover{translate:0 -4px}
+  .hjs-igang .hjs-spar{cursor:grab}
+  .hjs-igang .hjs-spar.hjs-drar{cursor:grabbing;scroll-snap-type:none;user-select:none}
+}
+/* Raden rullas, aldrig sidan (overflow-y:hidden, som ämnesbandet), och
+   första kortet står i linje med rubriken (.nx-wrap-bred). Ett tomt
+   element sist ger raden samma luft i slutet, för en rullbar
+   behållare tappar sin högra utfyllnad i vissa webbläsare. */
+.hjs-spar{
+  --hjs-kant:max(var(--m),calc((100% - var(--w-bred)) / 2 + var(--m)));
+  position:relative;margin-top:clamp(26px,3.2vw,42px);
+  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;scroll-padding-inline:var(--hjs-kant);
+  padding:6px var(--hjs-kant) 48px;scrollbar-width:none;
+}
+.hjs-spar::-webkit-scrollbar{display:none}
+.hjs-spar:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;border-radius:18px}
+.hjs-lista{display:flex;gap:var(--hjs-gap);width:max-content;list-style:none;margin:0;padding:0}
+/* Luften sist räknas mot skärmens bredd (100vw), inte med --hjs-kant:
+   dess 100 % blir radens egen bredd här inne, och då blev raden nästan
+   500 px för bred och slutade i tomhet. */
+.hjs-lista::after{content:"";flex:none;width:max(1px,calc(max(var(--m),calc((100vw - var(--w-bred)) / 2 + var(--m))) - var(--hjs-gap)))}
+/* Varje kort har en svag ton av sin färg, starkast i hörnet vid ikonen,
+   och en mjuk skugga i samma färg (Leo: "gör så de blir lite skuggade av
+   färgen de har"). Skuggan står still; bara kanten byter färg vid fokus. */
+.hjs-kort{
+  flex:none;width:clamp(17.5rem,26vw,23.5rem);scroll-snap-align:start;
+  display:flex;flex-direction:column;
+  padding:clamp(22px,2.2vw,32px);border-radius:24px;
+  background:
+    radial-gradient(120% 85% at 0% 0%,color-mix(in srgb,var(--f) 14%,transparent),transparent 68%),
+    color-mix(in srgb,var(--f) 4%,var(--yta));
+  border:1px solid color-mix(in srgb,var(--f) 24%,transparent);
+  box-shadow:0 16px 32px -20px color-mix(in srgb,var(--f) 55%,transparent);
+  transition:border-color .5s var(--e-mjuk);
+}
+/* Ikonen överst i kortet, i kortets färg (.hj-ikon, avsnitt 17), i
+   stället för en siffra (Leo, med en bild av bentots rutor: "ha dessa fem
+   element istället för siffror"); fokus syns på kanten. */
+.hjs-kort .hj-et{margin-top:clamp(16px,2vw,24px);color:var(--f)}
+.hjs-kort h3{
+  margin-top:10px;
+  font-size:clamp(1.4rem,1.9vw,1.9rem);font-weight:800;
+  letter-spacing:-.035em;line-height:1.06;color:var(--bl);text-wrap:balance;
+}
+.hjs-kort p{
+  margin-top:12px;
+  font-size:clamp(.98rem,1.05vw,1.06rem);line-height:1.55;color:var(--bl-2);text-wrap:pretty;
+}
+.hjs-kort .nx-lank{margin-top:auto;padding-top:18px;color:var(--bl)}
+.hjs-kort .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
+.hjs-igang .hjs-kort.pa{border-color:color-mix(in srgb,var(--f) 62%,transparent)}
+/* Bandet med trådarna, under korten: ett mönster som visar att raden
+   fortsätter åt höger, nedtonat så att det aldrig tävlar med texten. */
+.hjs-band{position:absolute;inset:0;pointer-events:none}
+.hjs-bg{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity 1.2s var(--e-mjuk)}
+.hjs-bg.gl-pa{opacity:.6}
+/* Orden i springan: ett korts rubrik stiger upp när kortet kommer in. */
+.hjs-ord{display:inline-block;overflow:clip;vertical-align:top;padding-bottom:.1em;margin-bottom:-.1em}
+.hjs-ord > span{display:inline-block;transition:translate .9s var(--e-ut),rotate .9s var(--e-ut)}
+.hjs-rorlig .hjs-kort:not(.inne) .hjs-ord > span{translate:0 110%;rotate:7deg;transition:none}
+.hjs-rorlig .hjs-kort.inne .hjs-ord > span{transition-delay:calc(.12s + var(--k,0) * 50ms)}
+.hjs-rorlig .hjs-kort p,.hjs-rorlig .hjs-kort .nx-lank{transition:opacity .7s var(--e-mjuk),filter .7s var(--e-mjuk)}
+.hjs-rorlig .hjs-kort:not(.inne) p,
+.hjs-rorlig .hjs-kort:not(.inne) .nx-lank{opacity:0;filter:blur(8px);transition:none}
+.hjs-rorlig .hjs-kort.inne p,.hjs-rorlig .hjs-kort.inne .nx-lank{transition-delay:.4s}
+@media (max-width:760px){
+  .hjs-kort{width:min(20rem,80vw)}
+}
+/* Garantins remsa under scenen, på papperet. */
+.hjs-gar{padding-block:clamp(8px,1.6vw,24px) clamp(36px,4.6vw,68px)}
+.hjs-gar .hj-gar{margin-top:0}
+
+/* Nästa steg på startsidan följer sidans läge (Leo: "Så den ska matcha
+   sidan på mörk och ljus vy"): ingen .nx-mork, alltså sidans papper och
+   bläck i båda lägena, och i stället för barken, skenet och norrskenets
+   fläckar ett nät av punkter som lyser upp kring pekaren (React Bits Dot
+   Grid, efter Leos video: "kör nåt sånt här där i bakrunden"), bara kring
+   musen eller fingret, aldrig av sig självt. Rubrikens ord står i accenten, som andra rubrikers
+   <em> på papperet, och raden under i brödtextens färg. Menysidornas Nästa
+   steg är mörka som förut (cinema, DE MÖRKA YTORNA). */
+.nx-final-ljus{position:relative;isolation:isolate;overflow:clip}
+.nx-final-ljus > *{position:relative;z-index:1}
+.nx-final-ljus > canvas.nx-punkter{position:absolute;inset:0;z-index:0;width:100%;height:100%;display:block;pointer-events:none}
+.nx-final-ljus > .nx-norrsken{display:none}
+.nx-final-ljus h2 em{color:var(--acc)}
+.nx-final-ljus .nx-hero-trust li{color:var(--bl-2)}
+.nx-final-ljus .nx-hero-trust li::before{background:var(--bl-3)}
+
+/* Raden under heroknapparna (priset, första timmen, 24 timmar och
+   bindningstiden) står bara på en större skärm (2026-10-29, Leo: "de på
+   heron ska bara bort på mobilvyn"); på en telefon räcker knapparna. */
+@media (max-width:760px){
+  .nx-start .nx-hero-fakta{display:none}
 }
 
-/* Läxhjälpens foto (hemma hos familjen; inget annat foto på startsidan
-   visar ett hem, och det står inte i stegen eller bildväggen) går ut
-   till rutans kant nedtill och på sidorna. Platserna och rapporten står
-   som lappar ovanpå och poppar fram i tur när rutan stigit in; de är
-   dekor (aria-hidden), meningen ovanför säger samma sak. */
-.bn-foto{
-  position:relative;flex:1 1 auto;align-self:stretch;
-  min-height:clamp(220px,22vw,320px);
-  margin:clamp(22px,2.6vw,34px) calc(-1 * var(--pad)) calc(-1 * var(--pad));
-  border-radius:0 0 calc(var(--radie) - 1px) calc(var(--radie) - 1px);
-  overflow:hidden;background:var(--tint);
+/* ---------- texten som rör sig, på startsidan ----------
+   (.nx-start på main, bara startsidan.) Rubrikernas ord (nextrum-motion.js
+   delar dem, .nx-ov) stiger nu upp och rätar upp sig i stället för att
+   bara tona fram (SplitText), och etiketterna har ett ljus som glider
+   över texten (ShinyText): en gradient i texten, bara bakgrundens läge
+   rör sig. */
+html[data-motion="full"] .nx-start .nx-ov-h:not(.nx-in) .nx-ov,
+html[data-motion="lite"] .nx-start .nx-ov-h:not(.nx-in) .nx-ov{
+  transform:translate3d(0,.8em,0) rotate(8deg);
 }
-.bn-foto picture,.bn-foto img{position:absolute;inset:0;width:100%;height:100%}
-.bn-foto img{object-fit:cover;transition:scale 1.6s var(--e-ut)}
-.bn-foto::after{
+.nx-start .nx-ov{transform-origin:0 100%}
+html[data-motion="full"] .nx-start .nx-et,
+html[data-motion="lite"] .nx-start .nx-et{
+  background:linear-gradient(110deg,currentColor 0 40%,color-mix(in srgb,currentColor 25%,#fff) 50%,currentColor 60% 100%);
+  background-size:250% 100%;background-position:100% 0;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:nx-glans-text 4.2s linear infinite;
+}
+@keyframes nx-glans-text{to{background-position:-150% 0}}
+
+@media (prefers-reduced-motion:reduce){
+  .hjs-ord > span,.hjs-kort{transition:none}
+  .nx-start .nx-et{animation:none}
+}
+
+/* ---------- manifestet: ett eget ögonblick ----------
+   Inga blad längre, bara rubriken, en mening och knapparna, med mer
+   luft. .nx-scrub (skriptet) stänger av ordfyllnadens övergång, så att
+   orden följer scrollen och inte släpar efter den. */
+.nx-manifest-scen{padding-block:clamp(80px,10vw,150px) clamp(96px,12vw,180px)}
+/* Rubriken mindre (Leo: "gör den rubriken mindre"), och bladen under som förut. */
+.nx-manifest-scen h2{font-size:clamp(2.2rem,5vw,4.4rem);line-height:.98;max-width:18ch}
+.nx-manifest-scen .nx-cta-rad{margin-top:clamp(30px,3.6vw,48px)}
+/* Manifestets topp: rubriken till vänster och fotot hemma hos familjen
+   till höger, med platserna och rapporten som lappar ovanpå, som i
+   bentots läxhjälpsruta (Leo: "Info från den tredje bilden lägger du på
+   rätt person kan göra stor skillnad"). Under 980 px under varandra.
+   Lapparna poppar fram i tur när fotot stigit in (.nx-in). */
+.mf-topp{display:grid;gap:clamp(28px,4vw,56px);align-items:center}
+@media (min-width:980px){
+  .mf-topp{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)}
+  .nx-manifest-scen .mf-topp h2{font-size:clamp(2.2rem,4.1vw,3.9rem)}
+}
+.mf-foto{
+  --f:var(--amne-ma);--mf-pad:clamp(14px,1.8vw,22px);
+  position:relative;margin:0;min-height:clamp(250px,27vw,380px);
+  border-radius:28px;overflow:hidden;background:var(--tint);
+}
+.mf-foto picture,.mf-foto img{position:absolute;inset:0;width:100%;height:100%}
+.mf-foto img{object-fit:cover;transition:scale 1.6s var(--e-ut)}
+.mf-foto::after{
   content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(180deg,transparent 45%,rgba(28,22,16,.42));
 }
-html.nx-sr .bn-stor:not(.nx-in) .bn-foto img{scale:1.14}
-@media (hover:hover) and (pointer:fine){
-  .bn-stor:hover .bn-foto img{scale:1.04}
-}
-.bn-platser{
-  position:absolute;z-index:1;left:var(--pad);right:var(--pad);bottom:var(--pad);
+html.nx-sr .mf-foto:not(.nx-in) img{scale:1.14}
+.mf-platser{
+  position:absolute;z-index:1;left:var(--mf-pad);right:var(--mf-pad);bottom:var(--mf-pad);
   display:flex;flex-wrap:wrap;gap:8px;
 }
-.bn-plats,.bn-rapport{
+.mf-plats,.mf-rapport{
   display:inline-flex;align-items:center;gap:8px;
   padding:9px 14px 9px 11px;border-radius:100px;
   font-size:.9rem;font-weight:600;letter-spacing:-.01em;color:var(--bl);
@@ -3734,133 +3801,34 @@ html.nx-sr .bn-stor:not(.nx-in) .bn-foto img{scale:1.14}
   border:1px solid color-mix(in srgb,var(--f) 22%,transparent);
   box-shadow:0 10px 24px -14px rgba(28,22,16,.5);
 }
-.bn-plats svg{
+.mf-plats svg{
   width:17px;height:17px;flex:none;
   fill:none;stroke:var(--f);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
 }
-.bn-rapport{
-  flex-basis:100%;max-width:max-content;
-  border-color:color-mix(in srgb,var(--mossa) 34%,transparent);
-}
-.bn-bock{
-  display:grid;place-items:center;flex:none;
-  width:20px;height:20px;border-radius:50%;background:var(--mossa);
-}
-.bn-bock svg{width:13px;height:13px;fill:none;stroke:var(--kort);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-
-/* Allt på ett ställe: plattformens delar som en rad små märken. */
-.bn-delar{
-  list-style:none;margin:clamp(14px,1.6vw,20px) 0 0;padding:0;
-  display:flex;flex-wrap:wrap;gap:6px;
-}
-.bn-delar li{
-  padding:6px 12px;border-radius:100px;
-  font-family:var(--f-mono);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--bl-2);background:var(--pap);border:1px solid var(--ln);
-}
-
-html.nx-sr .bn-plats,html.nx-sr .bn-rapport,html.nx-sr .bn-delar li{
+.mf-rapport{flex-basis:100%;max-width:max-content;border-color:color-mix(in srgb,var(--mossa) 34%,transparent)}
+.mf-bock{display:grid;place-items:center;flex:none;width:20px;height:20px;border-radius:50%;background:var(--mossa)}
+.mf-bock svg{width:13px;height:13px;fill:none;stroke:var(--kort);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+html.nx-sr .mf-plats,html.nx-sr .mf-rapport{
   transition:opacity .5s var(--e-mjuk),translate .7s var(--fjader),scale .7s var(--fjader);
   transition-delay:calc(.32s + var(--i,0) * 110ms);
 }
-html.nx-sr .bn-ruta:not(.nx-in) .bn-plats,
-html.nx-sr .bn-ruta:not(.nx-in) .bn-rapport,
-html.nx-sr .bn-ruta:not(.nx-in) .bn-delar li{opacity:0;translate:0 14px;scale:.9}
-
-/* Ljuset. Bara med .bn-ljus: utan skriptet och utan mus är rutan ett
-   vanligt kort. --gn går till noll när musen lämnar rutnätet, och
-   skenets opacitet tonar efter. */
-.bn-ljus .bn-ruta{
-  background:
-    radial-gradient(90% 70% at 0% 0%,color-mix(in srgb,var(--f) 10%,transparent),transparent 70%) padding-box,
-    linear-gradient(var(--kort),var(--kort)) padding-box,
-    radial-gradient(calc(90px + var(--gn) * 220px) circle at var(--gx) var(--gy),
-      color-mix(in srgb,var(--f) calc(var(--gn) * 90%),transparent),transparent 100%) border-box,
-    linear-gradient(var(--kort-kant),var(--kort-kant)) border-box;
+html.nx-sr .mf-foto:not(.nx-in) .mf-plats,
+html.nx-sr .mf-foto:not(.nx-in) .mf-rapport{opacity:0;translate:0 14px;scale:.9}
+@media (max-width:560px){
+  .mf-foto{min-height:230px;border-radius:22px}
+  .mf-platser{gap:5px}
+  .mf-plats,.mf-rapport{font-size:.76rem;gap:6px;padding:6px 10px 6px 8px}
+  .mf-plats svg{width:14px;height:14px}
+  .mf-bock{width:17px;height:17px}
 }
-.bn-ljus .hj-gar{
-  --f:var(--acc);
-  isolation:isolate;
-  border-color:transparent;
-  background:
-    radial-gradient(50% 140% at 0% 0%,color-mix(in srgb,var(--acc) 8%,transparent),transparent 70%) padding-box,
-    linear-gradient(var(--kort),var(--kort)) padding-box,
-    radial-gradient(calc(90px + var(--gn) * 220px) circle at var(--gx) var(--gy),
-      color-mix(in srgb,var(--acc) calc(var(--gn) * 90%),transparent),transparent 100%) border-box,
-    linear-gradient(var(--acc-line),var(--acc-line)) border-box;
+@media (prefers-reduced-motion:reduce){
+  .mf-foto img,.mf-plats,.mf-rapport{transition:none}
 }
-.bn-ljus .bn-ruta::before,
-.bn-ljus .hj-gar::before{
-  content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
-  background:radial-gradient(420px circle at var(--gx) var(--gy),
-    color-mix(in srgb,var(--f) 11%,transparent),transparent 62%);
-  opacity:var(--gn);
-}
-.bn-sken{
-  position:absolute;top:0;left:0;z-index:-1;
-  width:640px;height:640px;margin:-320px 0 0 -320px;border-radius:50%;
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--acc) 13%,transparent),transparent);
-  pointer-events:none;opacity:0;
-  transition:opacity .5s var(--e-mjuk);
-}
-.bn-ljus-pa .bn-sken{opacity:1}
-
-@media (max-width:1100px){
-  .nx-bento{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .bn-stor{grid-row:span 1}
-}
-/* Telefon: som Hur hjälper vis blad (avsnitt 17), två och två och
-   tätt, med den stora och de breda över hela bredden. */
-@media (max-width:760px){
-  .nx-bento{gap:10px}
-  .bn-ruta{--pad:14px;--radie:20px;padding:16px 14px 18px}
-  .bn-ruta::after{width:34px}
-  .bn-ruta .hj-ikon{width:32px;height:32px;border-radius:10px}
-  .bn-ruta .hj-ikon svg{width:16px;height:16px}
-  .bn-ruta .hj-et{margin-top:12px;font-size:10px;letter-spacing:.12em}
-  .bn-ruta h3{margin-top:6px;font-size:1rem;line-height:1.16;letter-spacing:-.024em}
-  .bn-ruta p{
-    margin-top:7px;font-size:.875rem;line-height:1.48;
-    -webkit-hyphens:auto;hyphens:auto;hyphenate-limit-chars:8 4 3;
-    overflow-wrap:break-word;
-  }
-  .bn-stor{--pad:18px;padding:20px 18px 18px}
-  .bn-stor h3{font-size:1.5rem;line-height:1.06}
-  .bn-stor p{font-size:.95rem}
-  .bn-ruta .nx-lank{padding-top:12px;font-size:.86rem}
-  .bn-foto{min-height:230px;margin-top:18px}
-  .bn-platser{gap:5px}
-  .bn-plats,.bn-rapport{font-size:.76rem;gap:6px;padding:6px 10px 6px 8px}
-  .bn-plats svg{width:14px;height:14px}
-  .bn-bock{width:17px;height:17px}
-  .bn-delar li{font-size:10px;padding:5px 9px}
-}
-@media (max-width:379px){
-  .nx-bento{gap:8px}
-  .bn-ruta{padding-inline:11px}
-}
-@media (max-width:339px){
-  .nx-bento{grid-template-columns:minmax(0,1fr)}
-  .bn-stor,.bn-bred{grid-column:auto}
-}
-
-/* ---------- manifestet: ett eget ögonblick ----------
-   Inga blad längre, bara rubriken, en mening och knapparna, med mer
-   luft. .nx-scrub (skriptet) stänger av ordfyllnadens övergång, så att
-   orden följer scrollen och inte släpar efter den. */
-.nx-manifest-scen{padding-block:clamp(96px,13vw,190px)}
-.mf-under{
-  margin-top:clamp(26px,3.2vw,44px);max-width:46ch;
-  font-size:clamp(1.1rem,1.65vw,1.5rem);line-height:1.5;letter-spacing:-.012em;
-  color:var(--bl-2);text-wrap:pretty;
-}
-.nx-manifest-scen .nx-cta-rad{margin-top:clamp(30px,3.6vw,48px)}
 html.nx-sr [data-ordfyll].nx-scrub .nx-ord{transition:none;will-change:opacity,filter}
 
 /* ---------- studievyn tippar upp ----------
    .sd-scrub (skriptet, bara tier full med GSAP): fönstrets egen entré
    (avsnitt 8) står av, och GSAP:s värden står inline. */
-.nx-sd-scen .nx-mitt-head{margin-bottom:0}
 html.nx-sr .nx-sd.sd-scrub .sd-rum{transition:none;will-change:transform}
 
 /* ---------- stjärnkanten (StarBorder) ----------
@@ -3890,7 +3858,5 @@ html[data-motion="still"] .nx-stjarnkant::before,
 html[data-motion="still"] .nx-stjarnkant::after{animation:none;opacity:0}
 
 @media (prefers-reduced-motion:reduce){
-  .bn-ruta{transition:none}
-  .bn-plats,.bn-rapport,.bn-delar li{transition:none}
   .nx-stjarnkant::before,.nx-stjarnkant::after{animation:none;opacity:0}
 }

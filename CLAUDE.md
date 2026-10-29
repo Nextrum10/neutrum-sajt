@@ -242,8 +242,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`nx.nexlax.bana.<barn>`, på `lagring.html`).
   Ett klart steg leder vidare med EN knapp, Fortsätt, till nästa del eller nästa steg, och kortet vid en prick har en knapp
   (Leo 2026-10-27: "som duolingo nu gör du de för komplicerat").
-  Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
-  (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt.
+  Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna på För elever och
+  föräldrar (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt;
+  på startsidan står brickorna, meningarna och bildtexterna under NexLäx och studievyn inte sedan 2026-10-29 (Leo: "Allt
+  jag ritade runt ska bort på hemsidan"), och illustrationernas `aria-label` säger fortfarande att innehållet är ett exempel.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare och en kampanjkod per
   affisch. **En familjs kod och en kampanjkod gäller intresseanmälan (`leads.kod`), en studiehjälpares
   jobbansökan (`applications.kod`)** (2026-10-13, Leo: "ansökning ska inte kunna använda koder från
@@ -712,7 +714,8 @@ Detaljer: `minne/grunden.md`.
   körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
   för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
   `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan, och `nextrum-start-scen.js` startsidans
-  scener med GSAP (bentots ljus, manifestets ord och studievyns tippning, 2026-10-29). `nextrum-landning.js` och `-css` är
+  scener (2026-10-29): trådarna och punktnätet, Hur hjälper vis rad,
+  manifestets ord och studievyns tippning. `nextrum-landning.js` och `-css` är
   landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`;
   flikarna (`data-lp-flikar`, Vad passen går ut på och Var passen hålls) och ljuset över korten fungerar också
   utan GSAP och med reducerad rörelse, och utan skriptet står flikarnas innehåll som lista och stycken.
@@ -728,17 +731,35 @@ Detaljer: `minne/grunden.md`.
 De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
 delar som de är; deras text följer inte med formen, och `.faq-item` är orörd (generatorerna läser den).
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
-under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
+under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06), som bara står på en större skärm
+sedan 2026-10-29 (Leo: "de på heron ska bara bort på mobilvyn"; `.nx-hero-fakta`, under 760 px dold). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
-Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdömena (`#rost`), För dig
-som vill jobba (`#bli`) och Nästa steg; Trygg hjälp gick upp i Hur hjälper vi 2026-10-29 (Leo: "Just nu är mycket bara
+Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdömena (`#rost`) och Nästa steg; För dig som
+vill jobba (`#bli`) gick 2026-10-29 (Leo: "För dig som vill jobba på main sidan ta bort den"), och kortet som ersatte den
+sist i Hur hjälper vis rad gick samma kväll ("ta bort för dig som vill jobba kolumnen"): Bli studiehjälpare nås från menyn
+och Nästa steg. Trygg hjälp gick upp i Hur hjälper vi 2026-10-29 (Leo: "Just nu är mycket bara
 i kolumner och tråkiga", med React Bits som förebild, och "Du får göra allt"). **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): ämnena, stadierna och guiderna i var sin grupp med ämnesfärgens prick, och under Område navets regioner (Hela Stockholm, Innerstaden, Söderort, Västerort, Norr och väster om stan, Söder och öster om stan), Online och In English, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp. **Orterna står i navets ortskatalog**, inte en och en i footern (2026-10-26, när stadsdelsområdena och kommunerna fick egna sidor: trettio länkar på varje sida, och trettiofyra efter sidrensningen 2026-10-27, hade varken varit snyggt eller sett ut som något annat än en doorway-lista); en ny ämnes-, stadie- eller guidesida läggs in i footern på alla sidor, en ny ort bara i generatorn, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): på startsidan
-sedan 2026-10-29 ett bentorutnät (`.nx-bento`, avsnitt 19, efter React Bits MagicBento) med sju rutor, läxhjälpen stor med
-fotot hemma hos familjen, expertisen, erfarenheten, matchningen och tryggheten (ur Trygg hjälps band), NexLäx och Allt på
-ett ställe (ur manifestet) breda, var och en med ordningens färg i `--f`, och ett ljus som följer musen (`data-ljus`, bara
-med mus); på Vår idé fyra blad i en rad som förut. Inget nytt påstående i rutorna: varje mening stod redan på sidan.
+sedan 2026-10-29 **en rad man sveper i själv** (`.nx-hjs`, `data-hjscen`, avsnitt 19; Leo: "snygga rörliga bakgrunder",
+"de kolumnerna typ 5 stycken går sidleds snyggt", och sist: "Vi är ett läxhjälps företag ... inte et tech bolag. Så vi
+kör istället att man scrollar själv åt vänster. Och rubriken tar för stor del av sidan"): på ytans vita (`--yta`) står
+rubriken med ingressen, likadan som de andra sektionernas, och under den fem kort i en rullbar rad (`overflow-x`,
+`scroll-snap`; med en mus drar man raden, för pilarna under den togs bort samma kväll: Leo "Ta bort dessa pilar"): läxhjälpen, studiehjälparna, matchningen (ur Trygg hjälps band), NexLäx och
+Allt på ett ställe, var och en med ordningens färg i `--f`. **Ingen scroll drar raden**, och sidan rullar som vanligt
+förbi. Trådar i WebGL (`data-tradar`, efter React Bits Threads) står nedtonade i ett band under korten, **aldrig bakom
+texten**, där ytans vita tonar över i sidans papper före garantin (Leo: "nu är det ett streck där som skiljer två färger
+de är ej snyggt, skugga till och ha den där animationen där") (Leo: "texten syns dålig ... mer som ett mönster att veta vart man ska scrolla"). Varje kort har en svag ton och en mjuk skugga
+i sin färg (Leo: "lite skuggade av färgen de har") och bentots ikon överst (`.hj-ikon`; Leo: "ha dessa fem element istället för siffror", efter en kväll med 01–05; i en timme samma kväll stod bentots små kort i ett rutnät i stället, och
+Leo ville ha raden tillbaka: "Nej de du gjorde ska skicka", med en bild av den), och kortet i fokus (`.pa`)
+får kanten och trådarna dess färg, och ett korts rubrik stiger upp när det kommer in (SplitText). Utan skriptet är
+raden en rad att svepa i, utan pilar. Ingen mörk yta och inget orange bakom raden. På Vår idé fyra blad i en rad som
+förut. **Inga rader av rutor i övrigt** (samma dag prövades ett bentorutnät med sju rutor och en hög med fem kort;
+Leo underkände båda: "minimera alla kolumner"): **sektionernas rubriker är likadana, som före 2026-10-29** (`.nx-head split`, rubriken till vänster och ingressen
+till höger: Hur hjälper vi, studievyn, studiehjälparna och omdömena; Leo: "jag gillade hur rubrikerna var likadana ändra
+tillbaka de du ändrade", och om ett försök i mitten samma kväll: "De ska inte vara centrade"), och
+ansökans steg i `#bli` är en lodrät lista (`.nx-apply-lista`). Inget nytt påstående i scenen: varje mening stod redan på
+sidan.
 Erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
 platt remsa under bladen (`.hj-gar`, `id="betygsgaranti"`, 2026-10-08, Leo: "Gör betygsgarantin mindre"), med bara
 meningen "Vi erbjuder betygsgarantin för att vi är säkra på våra metoder." över, de fyra stegen 01–04 (siffra och
@@ -762,18 +783,23 @@ läser `var(--f, sin gamla färg)`, aldrig texten) och **ämnet** (studiehjälpa
 (blå, lila, rosa) står bara i NexLäx rubrik (`.nlx-rubrik em`); andra rubrikers `<em>` (också "ert barn?", Just nus
 slogan och Nästa steg) och citattecknen är orange eller vita som förut (Leo 2026-10-08: "när de inte gäller nexläx").
 Garantin har leran; på bark byts färgerna mot `-l`; erbjudandena och Just nu har sina egna, och i vyerna står
-de bara i NexLäx. **`#bli` står på mörka
-lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna (`--bli-kant`), och Nästa steg
-efter den börjar i samma svarta; Bli studiehjälpare-sidans sidhuvud och band (`.bli-svart`) står i samma svarta
-med samma lera (2026-10-08). **Nästa steg i mörkt läge** står på sidans papper (`--pap`) på alla sidor, aldrig på
-barken (cinema, DE MÖRKA YTORNA; efter `#bli` fortsätter dess sken över gränsen), och i ljust läge som förut.
+de bara i NexLäx. **Bli
+studiehjälpare-sidans sidhuvud och band** (`.bli-svart`) står på mörka lägets svarta (`--bli-bg`, #1A1813) i båda lägena,
+med lera (`--bli-kant`, 2026-10-08), som startsidans `#bli` gjorde till 2026-10-29; `:is(#bli,.bli-svart)` står kvar i
+avsnitt 10, för :is väger som sitt id och sidans regler räknar med det. **Nästa steg i
+mörkt läge** står på sidans papper (`--pap`) på alla sidor, aldrig på barken (cinema, DE MÖRKA YTORNA), och i ljust läge
+som förut, utom på startsidan: där följer det sidans läge i båda (`.nx-final-ljus`, ingen `.nx-mork`, 2026-10-29, Leo:
+"Så den ska matcha sidan på mörk och ljus vy"), med punktnätet bakom (efter Leos video: "kör nåt sånt här där i
+bakrunden"), och börjar inte längre i `#bli`:s svarta.
 **Footern** står i `--ftr-bg` (#1F1915) i båda lägena (2026-10-08), aldrig i barken.
 Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
 kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
-(`data-bild`), och alt-texten står på steget (`data-alt`). Manifestet har inga blad sedan 2026-10-29: rubriken,
-Rätt matchs mening och knapparna, och orden blir skarpa i takt med scrollen (`data-scrollord`); manifestets och Nästa
-stegs knapp har en kant där ett ljus glider (`.nx-stjarnkant`, StarBorder). Studievyns rubrik står i mitten, och fönstret
+(`data-bild`), och alt-texten står på steget (`data-alt`). Manifestet har sina två blad (Rätt match, Allt på ett
+ställe) och en mindre rubrik (2026-10-29, Leo: "gör den rubriken mindre och ta tillbaka kolumnen där som fanns"; bladen
+var borta några timmar samma dag), och bredvid rubriken fotot hemma hos familjen med platserna och rapporten som lappar
+(`.mf-foto`, ur bentots läxhjälpsruta; Leo: "Info från den tredje bilden lägger du på rätt person kan göra stor skillnad"), och orden blir skarpa i takt med scrollen (`data-scrollord`); manifestets och Nästa
+stegs knapp har en kant där ett ljus glider (`.nx-stjarnkant`, StarBorder). Fönstret i studievyn
 tippar upp med scrollen på dator (`data-tipp`). Studiehjälparna står i en rad
 man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).
 Listorna 1–4 (`.nx-holdpunkter`, `.nx-apply-flow`) står två och två på telefon och har ingen fokuseffekt
@@ -786,9 +812,15 @@ animerad `box-shadow`, och en custom property sätts där den läses, för den �
 GSAP och ScrollTrigger (vendorade i `bibliotek/`, aldrig från en CDN) dra skenan i Så går det till, platserna som
 en linje och korten, bara på de genererade `laxhjalp-*` och guiderna; stegen tänds ändå med en klass, och utan GSAP
 eller med reducerad rörelse står allt färdigt i CSS. **Och startsidan** (2026-10-29): `nextrum-start-scen.js` låter GSAP
-dra manifestets ord (opacitet och sudd) och studievyns `.sd-rum` (bara tier `full`), och ljuset skriver `--gx`, `--gy` och
-`--gn` på den ruta det lyser på, registrerade utan arv (`@property`), så att en musrörelse aldrig räknar om det som står i
-rutan. Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
+dra manifestets ord (opacitet och sudd) och studievyns `.sd-rum` (bara tier `full`); ämnesbandet, som lutade med farten,
+gick från startsidan 2026-10-29. Utan GSAP ritar den trådarna i WebGL under Hur
+hjälper vis rad, i skärmens pixlar (högst 1,5 per CSS-pixel), i sin egen takt och tonade mot bandets kanter: när
+rullningen flyttade deras tid, de klipptes i kanterna och ritades i CSS-pixlar glitchade de (Leo: "den glitchar"). Och
+ett punktnät bakom Nästa steg, knappt synligt så att ytan läses som sidans papper (Leo: "samma färg som resten av sidan i
+den nyansen"; React Bits Dot Grid, en 2d-duk), som lyser upp och viker undan bara kring musen eller fingret, aldrig av sig
+självt (Leo: "man själv när man rör då ska punkterna röra sig inte automatisk"). Båda ritar bara medan de syns, och en
+enda bild med reducerad rörelse. Etiketterna
+har ett ljus som glider (ShinyText, CSS). Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.
 3. `scrollIntoView` i en rad som flyttas med transform rullar sidan; bandet är `overflow:clip`,

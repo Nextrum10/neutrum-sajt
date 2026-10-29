@@ -86,11 +86,177 @@ sektion var samma mall: etikett, rubrik till vänster, ingress till höger
 under ett streck och en rad vita kort, och "Allt på ett ställe" stod två
 gånger. React Bits är React, så inget kom in därifrån: tre av dess idéer är
 skrivna om för hand i `nextrum-start-scen.js`, med GSAP som redan låg i
-`bibliotek/` för landningssidorna. Det som inte togs, med flit: bakgrunderna
-i WebGL (Aurora, Silk och de andra; tunga på en telefon och fel mot
-papperet), effekterna på muspekaren (finns inte på en telefon), glitch- och
-dekrypteringstext (fel ton) och CountUp (sidan visar inga antal).
-- **Bentot** (MagicBento) i Hur hjälper vi: sju rutor i fyra kolumner,
+`bibliotek/` för landningssidorna. Det som inte togs, med flit: effekterna på
+muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
+och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
+(tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
+sedan trådarna i Raden som glider).
+- **Det Leo ringade in** (samma kväll, sist). Leo skickade bilder med ringar och skrev: "Allt jag
+  ritade runt ska bort på hemsidan, de på heron ska bara bort på mobilvyn". Borta från startsidan,
+  på båda språken: bildtexten under studievyn ("Illustration av studievyn — innehållet är ett
+  exempel"), bildtexten under NexLäx ("Frågan och talen är exempel"), NexLäx ämnesbrickor med
+  meningarna om vad vi bygger mest på och från vilka årskurser (`.nlx-fot`; de står kvar på För
+  elever och föräldrar), och ämnesbandet med koden som lutade det. Raden under heroknapparna
+  (priset, första timmen, 24 timmar, bindningstiden) är dold under 760 px. Två av bilderna var
+  gamla, med pilarna (borta sedan förut) och bandet med trådarna under raden, som Leo förra
+  gången ville ha kvar med en mjuk övergång; det står kvar. Illustrationerna säger fortfarande att
+  innehållet är ett exempel i sin `aria-label`, men inte längre synligt: talen i studievyn (12
+  genomförda pass, 15 timmar) är påhittade, och det är Leos val att inte märka dem.
+- **Kortet för den som vill jobba bort** (samma kväll). Leo: "Gör kolumnerna mindre som innan
+  och ta bort för dig som vill jobba kolumnen". Korten hade blivit högre för att det mörka kortet
+  hade mest innehåll (rubrik, mening, tre lappar, knapp och Logga in) och raden sträcker alla kort
+  till det högsta; utan det är de lika höga som före. För dig som vill jobba står inte på startsidan
+  längre; Bli studiehjälpare nås från menyn och från Nästa steg.
+- **Pilarna bort** (samma kväll). Leo, med en ring kring pilarna och en kring strecket under
+  raden: "Ta bort dessa pilar. Här menade jag att den skulle vara så att de ej ser ut sådär att de
+  är tydligt att de är två olika sektioner. Lite fadat under och den där animationen över".
+  Bilderna var tagna före övergången i punkten nedan (hans klocka 22.00 är 21.00 UTC, och den gick
+  ut 21.09), som redan gör just det. Pilarna gick; med en mus dras raden i stället (`pointerdown`
+  på raden, snäppningen av medan man drar, och ett drag öppnar aldrig länken man släppte på).
+- **För dig som vill jobba som ett kort, och övergången utan streck** (samma kväll). Leo:
+  "För dig som vill jobba på main sidan ta bort den, och lägg till någon kolumn i slutet där de
+  står för dig som vill jobba, var kreativ gör de snyggt", och om raden och garantin: "nu är det
+  ett streck där som skiljer två färger de är ej snyggt, skugga till och ha den där animationen
+  där". `#bli` är borta från startsidan (inget länkade dit, varken `#bli` eller `#unga`), och
+  radens sjätte kort (`.hjs-jobb`) är Bli studiehjälpare-sidans svarta med leran i två hörn och i
+  kanten, i båda lägena: etiketten, rubriken "Vill du hjälpa någon annan att lyckas?", sektionens
+  första mening, tre av dess punkter som lappar, knappen och Logga in. Ytans vita tonar över i
+  sidans papper i trådarnas band (`--hjs-fot-h`), så att garantin följer utan streck. **Fällan**:
+  luften sist i raden (`.hjs-lista::after`) räknades med `--hjs-kant`, vars 100 % blir radens egen
+  bredd där inne, så raden var nästan 500 px för bred och slutade i tomhet; den räknas nu mot
+  100vw. Fokus räknas mot sista kortets snäpppunkt, inte radens yttersta kant, för en telefon
+  stannar där. De rena `#bli`-reglerna gick; `:is(#bli,.bli-svart)` står kvar för specificitetens skull.
+- **Korten i sin färg och bandet som glitchade** (samma kväll). Leo: "kolumnerna som du
+  gjorde gör så de blir lite skyggade av färgen de har. Och elementet under de kolumners som rör
+  sig måste blir bättre för den glitchar". Korten har en svag ton av sin färg (4 % över hela
+  kortet och 14 % i hörnet vid ikonen) och en mjuk skugga i samma färg som står still; raden fick
+  48 px luft nedtill, för `overflow-y:hidden` klipper annars skuggan (med 30 px syntes den klippta
+  kanten som ett streck under korten, och bandet ligger 34 px upp över luften). Bandet glitchade av tre skäl:
+  radens rullning lade till trådarnas tid (svep raden, och trådarna vred sig fort), de slog i
+  bandets kanter och klipptes, och de ritades i CSS-pixlar, så att de tunna trådarna flimrade på en
+  retinaskärm. Nu går de i sin egen takt utan pekare och rullning, tonas mot över- och underkanten
+  i shadern, är 24 i stället för 30, och ritas i skärmens pixlar (högst 1,5 per CSS-pixel).
+- **Raden tillbaka efter en timme** (samma kväll). Leo skrev "Asså istället för
+  0102030405 ha de små kolumnerna som fanns förut", och jag satte bentots små kort i ett rutnät i
+  stället för raden (fyra små och NexLäx hög), utan raden, pilarna och trådarna. Han frågade vart
+  "den nya första sektionen" tagit vägen och skickade sedan en bild av raden med ikonerna: "Nej de
+  du gjorde ska skicka". Raden med ikonerna är tillbaka som den var, ur commiten före rutnätet. Det
+  som stod kvar från rutnätets commit är punktnätet i Nästa steg, som står på 9 % bläck i stället
+  för 16 %: Nästa steg hade redan sidans färg (mätt: #F1EDE6 i ljust läge, #1A1813 i mörkt), men
+  punkterna över hela ytan fick den att läsas som en annan ton (Leo: "ska ha samma färg som resten
+  av sidan i den nyansen"). Läs en kort fråga som Leos nästa steg i det han nyss sett, och fråga
+  hellre en gång till än bygger om en hel sektion på en gissning.
+- **Ikonerna och fotot i manifestet** (samma kväll). Leo skickade bilder av bentot som
+  stod i drift och skrev: "Skit i sofforna och kör såhär: ha dessa fel element istället för
+  siffror. Och Info från den tredje bilden lägger du på rätt person kan göra stor skillnad."
+  "sofforna" och "fel" lästes som siffrorna och fem: korten har bentots ikoner (`.hj-ikon`)
+  i stället för 01–05, läxhjälpen folket, studiehjälparna studentmössan (bentots Expertisen),
+  matchningen länken, NexLäx stigen och studievyn dokumentet. Den tredje bilden var bentots
+  läxhjälpsruta med fotot hemma hos familjen och lapparna Hemma hos er, På biblioteket,
+  Online och Rapporten efter passet är klar; fotot och lapparna står nu till höger om
+  manifestets rubrik (`.mf-topp`, `.mf-foto`), under varandra under 980 px, och lapparna
+  poppar fram i tur när fotot stigit in. Läxhjälpens text står kvar i raden.
+- **Rubrikerna likadana, som förut** (samma kväll, efter Raden man sveper i).
+  Leo: "Och jag gillade hur rubrikerna var likadana ändra tillbaka de du ändrade och centrera
+  / 01 02 03 04 05 ska redan vara färgade". Före samma dag hade Hur hjälper vi, studievyn,
+  studiehjälparna och omdömena samma huvud (`.nx-head split`: etiketten och rubriken till
+  vänster, ingressen till höger), och under kvällen fick de fyra olika: en egen liten rubrik
+  med pilar bredvid, studievyns i mitten och två med ingressen under (`.nx-head-en`). Jag
+  läste "centrera" som rubrikerna och ställde alla fyra i mitten (`.nx-mitt-head`); Leo:
+  "De ska inte vara centrade". Nu har alla fyra sitt huvud från före samma dag igen, tecken
+  för tecken, och Hur hjälper vi sin rubrik ("Hur hjälper vi<br><em>ert barn?</em>").
+  Pilarna står i mitten under raden, ovanpå trådarnas band, och korten hade en stund siffran
+  ifylld i sin färg från början (Ikonerna ovan ersatte den); fokus syns bara på kanten. Manifestets rubrik rördes inte: den är
+  större än de andra med flit, och Leo bad om den mindre.
+- **Raden man sveper i** (femte varvet samma kväll). Leo skickade en video
+  och skrev: "texten syns dålig då rörelse grejen tar för mycket plats med den färgen den
+  har, jag gillar iden men vi måste antingen tona ner på färgen eller ej ha den över text
+  utan mer som ett mönster att veta vart man ska scrolla. Jag gillar ej heller att man
+  behöver scrolla ner för att nästa steg ska börja. Vi är ett läxhjälps företag som du vet
+  inte et tech bolag. Så vi kör istället att man scrollar själv åt vänster. Och rubriken tar
+  för stor del av sidan. Samma sak gäller rätt person kan göra stor skillnad gör den
+  rubriken mindre och ta tillbaka kolumnen där som fanns. Samma sak med färg grejen gäller
+  är du redo att ta nästa steg kör nåt sånt här där i bakrunden". Så: ingen sticky och
+  ingen scroll som drar raden. Rubriken står ovanför i en vanlig storlek
+  (clamp(1.9rem, 3.4vw, 3rem), på en rad på dator), korten i en rullbar rad med
+  `scroll-snap` och, på dator, två pilar som rullar raden ett kort med `scrollBy` och står
+  släckta vid ändarna. Trådarna står i ett band under korten (`.hjs-band`, 64–110 px),
+  nedtonade (0,6), med full upplösning och tunna trådar (1,8 px), för i ett så lågt band
+  blev förvalet ett suddigt streck. Fokus (`.pa`) och inträdet (`.inne`) räknas ur radens
+  `scrollLeft`, och inträdet väntar tills raden syns (en observatör på raden, aldrig på
+  korten). Manifestet fick sina två blad tillbaka och en mindre rubrik
+  (clamp(2.2rem, 5vw, 4.4rem) mot cinemas 7,6rem), och meningen under rubriken gick, för
+  den stod i Rätt match; Allt på ett ställe står alltså både där och i raden, som före
+  samma dag. Nästa steg fick ett punktnät som i videon (React Bits Dot Grid, en 2d-duk,
+  26 px mellan punkterna): svaga punkter i bläckets färg som kring pekaren (160 px) blir
+  större, får accentens färg och viker undan, och glider tillbaka; slingan står när inget
+  rör sig. (Ljuset vandrade först av sig självt på en telefon; Leo: "man själv när man rör
+  då ska punkterna röra sig inte automatisk", så det följer fingret i stället, också medan
+  sidan rullas under det, med touchstart och touchmove.)
+- **Raden som glider** (fjärde varvet samma kväll, borttagen med Raden man sveper i). Leo om scenen
+  nedan: "Jag gillar inte att bakrunden är svart och orange på den sektionen, och en
+  grej till när de kolumnerna typ 5 stycken går sidleds snyggt med en vit rörlig
+  bakrund som du hittar på react bits, annars helt ok". Ytan är nu `--yta` (det vita
+  i paletten, mörk i mörkt läge) med trådar i WebGL (React Bits Threads, `data-tradar`:
+  trettio trådar med två perlinbrus var, i WebGL 1), och rubriken och de fem
+  budskapen står i EN rad av kort som glider åt vänster ett till ett med scrollen
+  medan ytan står still. Kortet närmast en punkt som vandrar från en tredjedel till
+  fyra femtedelar av bredden är i fokus (`.pa`: siffran ifylld, kanten i dess färg,
+  de andra en aning mindre med `scale`), och trådarna glider till dess färg, så att
+  ämnesfärgerna bokstavligen blir den röda tråden. Ett korts rubrik stiger upp när
+  kortet kommer in (`.inne`). Pekaren och scrollen rör trådarna lite, som pekaren
+  gör i förlagan. Två ändringar mot förlagans shader: trådens bredd räknas mot
+  dukens höjd (förlagan räknar mot den längsta sidan, och då blir trådarna tjocka på
+  en telefon på högkant), och kanterna skrivs med smoothstep åt rätt håll. Utan GSAP
+  eller med reducerad rörelse är raden en rad att svepa i (`scroll-snap`). Norrskenet
+  i Nästa steg står kvar: den sektionen var mörk med orange sken redan före, och Leo
+  talade om scenen. **Fällorna**: (1) ytan är ett rutnät, och en `auto`-kolumn växte
+  med raden (min-content), så vägen mättes till noll: `minmax(0,1fr)`; (2) trådarna
+  blev trappsteg på en telefon i en tredjedels upplösning, så skalan är 0,62 där
+  (0,5 på dator, där duken är större).
+  **Nästa steg** samma kväll (punktnätet ersatte trådarna där i nästa varv; Leo, när jag frågade om den mörka sektionen längst ned:
+  "Så den ska matcha sidan på mörk och ljus vy"): på startsidan har den ingen `.nx-mork`
+  (`.nx-final-ljus`), så den står på sidans papper och bläck i båda lägena, och
+  norrskenet (Aurora, som stod där några timmar) är bytt mot samma trådar, som går
+  genom scenens fem färger, fyra sekunder var. Rubrikens ord i accenten, som andra
+  rubrikers. Reglerna `#bli + .nx-mork` (Nästa steg som började i `#bli`:s svarta)
+  gick med, för inget matchade dem längre. Menysidornas Nästa steg är mörka som förut.
+- **Scenen** (tredje varvet samma kväll, borttagen med Raden). Leo om högen: "Jag sa
+  ta inspiration av animationer osv på react bits, snygga rörliga bakgrunder, hur
+  texter går osv du gjorde ingenting av det. De blir liksom 8 kolumner direkt du
+  går strukturera om det". Två varv hade bara bytt rutornas form, och ingenting
+  rörde sig så att det syntes. Då blev Hur hjälper vi en mörk scen i helskärm direkt
+  efter heron (`.nx-hjs`, `data-hjscen`): ett norrsken i WebGL bakom (Aurora,
+  samma fragmentshader som React Bits, i WebGL 1 utan bibliotek, med lera, orange
+  och rosa ur `--aurora-1`–`3`), och sex lägen som byts mitt på skärmen medan
+  scenen står still (`position:sticky`, sex gånger 78 vh scroll): rubriken med
+  ingressen, sedan de fem budskapen med en stor konturerad siffra, rubrikens ord
+  som stiger ur en springa (SplitText, `overflow:clip` per ord) och texten som
+  tonar fram ur sudd (BlurText). En linje längst ned fylls med scrollen. Samma
+  norrsken står i Nästa steg i stället för de tre CSS-fläckarna. Etiketterna har
+  ett ljus som glider genom texten (ShinyText, en gradient i texten med
+  `background-clip:text`), rubrikernas ord stiger och rätar upp sig i stället för
+  att bara tona fram, och ämnesbandet lutar med farten (ScrollVelocity, `skewX` på
+  raderna). Kostnaden hålls nere: duken ritas i halv upplösning (en tredjedel på
+  tier `lite`), slingan går bara medan duken syns och fliken är framme, och med
+  reducerad rörelse ritas en bild. Utan WebGL står ytans radiella gradient, och
+  utan GSAP står de sex lägena under varandra. Det andra stycket hos
+  studiehjälparna ("De vet hur det är ...") gick: scenen har en mening per läge.
+  **Fällan**: hela bandet lutat med `skewX` breddade sidan med sju pixlar, för
+  sektionens hörn sticker ut; raderna lutar inuti en sektion som klipper.
+- **Högen** (ScrollStack, andra varvet samma kväll, borttagen med Scenen). Leo om bentot nedan: "Vad fan har du
+  gjort jag sa till dig minimera alla kolumner så skapade massor med nya av kolumner jätte
+  dåligt". Hans "Just nu är mycket bara i kolumner och tråkiga" betydde färre kolumner, och ett
+  rutnät med sju rutor var fler. Då stod Hur hjälper vi i en kolumn: fem kort i full bredd
+  (läxhjälpen på fotot, studiehjälparna, matchningen, NexLäx, Allt på ett ställe) som fastnar
+  under sidhuvudet med `position:sticky`, en kant av det förra synlig, och kortet under krymper
+  en aning med GSAP på dator. Inget kort har spalter inuti. Utan rörelse en vanlig lista. Samma
+  ändring: rubrikerna på startsidan har ingressen under sig (`.nx-head-en`, tillbaka till `.nx-head split`
+  sedan Rubrikerna likadana ovan) och ansökans fyra
+  steg i `#bli` är en lodrät lista (`.nx-apply-lista`). Tryggheten gick som egen punkt, för
+  "intervjuade och utbildade" står redan hos studiehjälparna och betalningen i Allt på ett
+  ställe. Ljuset som följde musen gick med bentot.
+- **Bentot** (MagicBento, borttaget samma kväll, se Högen) i Hur hjälper vi: sju rutor i fyra kolumner,
   läxhjälpen stor (två gånger två) med fotot hemma hos familjen
   (`21-hemma-hos-familjen`, som inget annat på startsidan använder) och
   platserna som lappar ovanpå, fyra små (expertisen, erfarenheten,
@@ -99,7 +265,7 @@ dekrypteringstext (fel ton) och CountUp (sidan visar inga antal).
   hjälps band, Allt på ett ställe ur manifestet, och Trygg hjälp-sektionen
   gick: bandets andra kort sa samma sak som rutorna. Garantins remsa står kvar
   under, oförändrad. Två och två under 1100 px, en spalt under 340 px.
-- **Ljuset**: med mus lyser rutans kant i dess färg där musen är (en
+- **Ljuset** (borta med bentot): med mus lyser rutans kant i dess färg där musen är (en
   radiell gradient i border-box, som `.nx-bubbla`), ett svagt sken lyser
   inuti, och ett stort sken följer musen över rutnätet (`.bn-sken`, med
   translate). `--gx`, `--gy` och `--gn` är registrerade utan arv
@@ -704,7 +870,8 @@ knappen (kräm med barkens text) 12,6:1. Formuläret står på papperet under
 och är orört.
 
 **Nästa steg i mörkt läge** (cinema, DE MÖRKA YTORNA). På alla sidor med
-`.nx-mork.nx-final-cinema` (startsidan, menysidorna, de genererade sidorna)
+`.nx-mork.nx-final-cinema` (menysidorna, de genererade sidorna, och startsidan till
+2026-10-29, då dess Nästa steg började följa sidans läge: Raden som glider ovan)
 står ytan i mörkt läge på `--pap` (#1A1813) med ett svagt ljus av lera mitt
 bakom rubriken som inte når kanterna, i stället för barkens #262319; footern
 under står kvar i barken. Ljust läge som förut. Efter `#bli` (startsidan)
