@@ -78,6 +78,29 @@
       + '<span>' + esc(etikett) + '</span>' + diff + '</div>';
   }
 
+  /* INBETALNINGARNA (2026-10-29): allt som kommit in på kort eller Klarna,
+     en rad per betalning med nettot efter återbetalningar och månaden
+     pengarna kom in. Översiktens intäkt och Statistikens Betalt räknar
+     båda här. Förut räknade Statistik bara passen (analys_ekonomi), så
+     en köpt plan stod med på Översikt men inte i Statistik (Leo: "ja",
+     rätta det). Testbetalningarna räknas aldrig.
+
+     Ett pass betalt med timmarna har inget eget kortbelopp, så inget
+     räknas två gånger: pengarna kom in när timmarna köptes. */
+  const BETALD = ['betald', 'aterbetald', 'tvist'];
+  const netto = r => Number(r.betalt_ore || 0) - Number(r.aterbetald_ore || 0);
+  const betalMånad = tid => isoFor(new Date(tid)).slice(0, 7);
+  function inbetalningar() {
+    const rad = (typ, r) => ({ typ, rad: r, när: r.betald_at, månad: betalMånad(r.betald_at), ore: netto(r) });
+    return S.bokningar.filter(b => b.betald_at && b.stripe_skarp !== false).map(b => rad('pass', b))
+      // Samma urval som Köpta timmar i Månadens ekonomi.
+      .concat((S.klippkort || []).filter(k => BETALD.indexOf(k.status) !== -1 && k.betald_at
+        && !(S.klippkortTest && S.klippkortTest.has(k.id))).map(k => rad('kop', k)))
+      .concat((S.tillagg || []).filter(t => BETALD.indexOf(t.status) !== -1 && t.betald_at
+        && t.stripe_skarp !== false).map(t => rad('tillagg', t)));
+  }
+  const summaIn = (rader, typ) => rader.filter(r => !typ || r.typ === typ).reduce((n, r) => n + r.ore, 0);
+
   function ritaTal() {
     const idag = isoFor(new Date());
     const fram = isoFor(new Date(Date.now() + 365 * DAG));
@@ -104,37 +127,19 @@
        hålls, och det som kom in i september kom in i september.
 
        ALLA kortbetalningar sedan 2026-09-29: passen, köpta timmar (Fas
-       16.1) och tillägg för övertid (Fas 20.1). Förut räknades bara
-       passen, så ett köpt klippkort stod som "inget betalt än" här. Ett
-       pass betalt med timmarna har inget eget kortbelopp, så inget
-       räknas två gånger: pengarna kom in när timmarna köptes.
-       Testbetalningarna räknas aldrig, som i bokslutet och Månadens
-       ekonomi. Förut räknades testbetalningar på passen med här. */
+       16.1) och tillägg för övertid (Fas 20.1), ur inbetalningar(). */
     const period = idag.slice(0, 7);
     const förraPeriod = (() => {
       const d = new Date(); d.setMonth(d.getMonth() - 1);
       return isoFor(d).slice(0, 7);
     })();
-    const iMånad = (tid, mån) => !!tid && isoFor(new Date(tid)).slice(0, 7) === mån;
-    const netto = r => Number(r.betalt_ore || 0) - Number(r.aterbetald_ore || 0);
-    const BETALD = ['betald', 'aterbetald', 'tvist'];
-    const passIn = mån => S.bokningar
-      .filter(b => iMånad(b.betald_at, mån) && b.stripe_skarp !== false)
-      .reduce((n, b) => n + netto(b), 0);
-    // Samma urval som Köpta timmar i Månadens ekonomi.
-    const köptIn = mån => (S.klippkort || [])
-      .filter(k => BETALD.indexOf(k.status) !== -1 && iMånad(k.betald_at, mån)
-        && !(S.klippkortTest && S.klippkortTest.has(k.id)))
-      .reduce((n, k) => n + netto(k), 0);
-    const tilläggIn = mån => (S.tillagg || [])
-      .filter(t => BETALD.indexOf(t.status) !== -1 && iMånad(t.betald_at, mån) && t.stripe_skarp !== false)
-      .reduce((n, t) => n + netto(t), 0);
-    const kortIn = mån => passIn(mån) + köptIn(mån) + tilläggIn(mån);
-    const belopp = kortIn(period);
-    const förraBelopp = kortIn(förraPeriod);
+    const alla = inbetalningar();
+    const iMånad = mån => alla.filter(r => r.månad === mån);
+    const belopp = summaIn(iMånad(period));
+    const förraBelopp = summaIn(iMånad(förraPeriod));
     /* Köpta timmar är pengar in men en skuld till familjen tills
        timmarna använts, och står därför för sig under talet. */
-    const köpt = köptIn(period);
+    const köpt = summaIn(iMånad(period), 'kop');
     const förraText = förraBelopp ? 'förra månaden ' + kronor(förraBelopp)
       : belopp ? 'betalt hittills' : 'inget betalt än';
 
@@ -656,15 +661,13 @@
       });
 
       /* ---- Betalt ----
-         Förut fakturerat belopp per period. Familjen får ingen faktura
-         sedan Fas 14.2, så grafen hade stått tom medan pengarna kom
-         in. Nu: kortbetalningar på betalningsmånaden, efter
-         återbetalningar. betalt_ore var de betalda fakturorna och är noll
-         sedan 2026-10-21. Allt räknat i analys_ekonomi, inte här. */
-      NXArbete.graf($('#stat-intakt'), staplar(A.ekonomi, r =>
-        Number(r.kortbetalt_ore || 0) - Number(r.aterbetalt_ore || 0) + Number(r.betalt_ore || 0)), {
-        nagot: 'Det familjerna betalat, efter återbetalningar, på den månad pengarna kom in. Ett '
-             + 'pass kan ha betalats i förväg, före kortet som reserveras, så pengarna kan stå på månaden före passet.',
+         Kortbetalningar på betalningsmånaden, efter återbetalningar:
+         passen, köpta timmar och tillägg, ur inbetalningar() som
+         Översiktens intäkt (2026-10-29). Förut bara passen, ur
+         analys_ekonomi, så en köpt plan syntes inte här. */
+      NXArbete.graf($('#stat-intakt'), staplar(inbetalningar().map(r => ({ manad: r.månad, ore: r.ore })), r => r.ore), {
+        nagot: 'Det familjerna betalat för pass, timmar och tillägg, efter återbetalningar, på den månad pengarna '
+             + 'kom in. Ett pass betalas när tiden är bekräftad, så pengarna kan stå på månaden före passet.',
         inget: 'Ingen betalning har kommit in de senaste sex månaderna.'
       }, v => kronor(v));
     }
@@ -698,10 +701,10 @@
     const familjer = Object.values(S.personer).filter(p => p.role === 'parent' && !ärRaderad(p)
       && !ärAdminkonto(p.id)).length;
     const elever = S.elevlista.filter(e => !ärAdminkonto(e.parent_id)).length;
-    /* Betalt = kort efter återbetalningar (betalt_ore, fakturorna, är
-       noll sedan 2026-10-21), samma definition som grafen ovanför. ej_betalda är pass som
-       hölls och rapporterades utan att familjen betalat. */
-    const betalt = summa(ek, 'kortbetalt_ore') - summa(ek, 'aterbetalt_ore') + summa(ek, 'betalt_ore');
+    /* Betalt = inbetalningar() efter återbetalningar, samma som grafen
+       ovanför och Översiktens intäkt. ej_betalda är pass som hölls och
+       rapporterades utan att familjen betalat. */
+    const betalt = summaIn(inbetalningar());
     const ejBetalda = summa(ek, 'ej_betalda');
 
     host.innerHTML =
@@ -927,10 +930,18 @@
       .map(p => Object.assign({}, bok.get(p.id) || {}, p))
       .sort(nyastFörst);
   }
-  // analys_ekonomi: kortbetalt är passen med betald_at, utan testbetalningarna.
-  const betaldaPass = mån => S.bokningar
-    .filter(b => b.betald_at && b.stripe_skarp !== false && (!mån || sthlmMånad(b.betald_at) === mån))
-    .sort((a, b) => String(b.betald_at).localeCompare(String(a.betald_at)));
+  // En rad per inbetalning, nyast först, ur samma lista som talen.
+  const inbetalningsSaker = urval => inbetalningar().filter(urval)
+    .sort((a, b) => String(b.när).localeCompare(String(a.när)))
+    .map(({ typ, rad: r, ore }) => {
+      const belopp = [kronor(ore), kortDatum(r.betald_at),
+        Number(r.aterbetald_ore || 0) ? kronor(Number(r.aterbetald_ore)) + ' tillbaka' : null];
+      if (typ === 'pass') return passSak(r, belopp);
+      if (typ === 'kop') return { titel: 'Köpta timmar', meta: [namnFör(r.parent_id)].concat(belopp),
+        dp: r.parent_id ? 'familj:' + r.parent_id : null, ikon: 'kort', gör: 'Öppna' };
+      return { titel: 'Tillägg för övertid', meta: belopp,
+        dp: r.booking_id ? 'pass:' + r.booking_id : null, ikon: 'kort', gör: 'Öppna' };
+    });
   const sthlmMånad = tid => NXAdmin.sthlmDag(tid).slice(0, 7);
   const anmälningar = () => S.leads.map(l => ({ l })).concat((S.intagna || []).map(i => ({ i })));
   const anmälanSak = x => x.l ? sakAnmälan(x.l) : intagenSak(x.i);
@@ -990,15 +1001,12 @@
       };
     },
     st_betalt(mån) {
-      const rader = betaldaPass(mån);
       return {
         titel: 'Betalt' + (mån ? ' i ' + månadNamn(mån) : ''),
-        text: 'Passen familjerna betalat på kort eller Klarna, på dagen pengarna kom in, med återbetalningarna.'
-          + ' Testbetalningar räknas inte.',
-        saker: rader.map(b => passSak(b, [
-          kronor(Number(b.betalt_ore || 0)) + ' ' + kortDatum(b.betald_at),
-          Number(b.aterbetald_ore || 0) ? kronor(Number(b.aterbetald_ore)) + ' tillbaka' : null
-        ])),
+        text: 'Pass, köpta timmar och tillägg som familjerna betalat på kort eller Klarna, på dagen pengarna kom in, '
+          + 'efter återbetalningarna. Testbetalningar räknas inte.',
+        till: '#ekonomi',
+        saker: inbetalningsSaker(r => !mån || r.månad === mån),
         tomt: 'Ingen betalning.'
       };
     },
@@ -1076,21 +1084,8 @@
     },
     ov_intakt() {
       const mån = isoFor(new Date()).slice(0, 7);
-      const iMån = t => !!t && isoFor(new Date(t)).slice(0, 7) === mån;
-      const BETALD = ['betald', 'aterbetald', 'tvist'];
-      const netto = r => Number(r.betalt_ore || 0) - Number(r.aterbetald_ore || 0);
-      const pass = S.bokningar.filter(b => iMån(b.betald_at) && b.stripe_skarp !== false)
-        .map(b => Object.assign(passSak(b, [kronor(netto(b))]), { när: b.betald_at }));
-      const köp = (S.klippkort || []).filter(k => BETALD.indexOf(k.status) !== -1 && iMån(k.betald_at)
-        && !(S.klippkortTest && S.klippkortTest.has(k.id)))
-        .map(k => ({ titel: 'Köpta timmar', meta: [namnFör(k.parent_id), kronor(netto(k)), kortDatum(k.betald_at)],
-          dp: k.parent_id ? 'familj:' + k.parent_id : null, till: '#ekonomi', ikon: 'kort', gör: 'Öppna', när: k.betald_at }));
-      const till = (S.tillagg || []).filter(t => BETALD.indexOf(t.status) !== -1 && iMån(t.betald_at) && t.stripe_skarp !== false)
-        .map(t => ({ titel: 'Tillägg för övertid', meta: [kronor(netto(t)), kortDatum(t.betald_at)],
-          dp: t.booking_id ? 'pass:' + t.booking_id : null, till: '#ekonomi', ikon: 'kort', gör: 'Öppna', när: t.betald_at }));
       return { titel: 'Intäkt denna månad', text: 'Allt som kommit in på kort eller Klarna, efter återbetalningar.',
-        till: '#ekonomi',
-        saker: pass.concat(köp, till).sort((a, b) => String(b.när).localeCompare(String(a.när))) };
+        till: '#ekonomi', saker: inbetalningsSaker(r => r.månad === mån) };
     }
   });
 
