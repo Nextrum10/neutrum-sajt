@@ -453,7 +453,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   skickar en familj ett upplägg i familjens panel (`skicka_eget_upplagg()`, `is_admin()`: ett namn, 1–40 timmar och
   1–60 dagar att köpa det), till planernas timpris (det rabatterade timpriset i `erbjudanden_pris`, 379 kr i dag, satt
   av databasen och fryst på upplägget; admin sätter inget eget pris). Familjen får ett mejl (notistypen `eget_upplagg`,
-  avsnitt 5), ser det överst bland planerna och köper det en gång: när köpet är betalt är upplägget köpt och syns inte
+  avsnitt 5), ser det överst i Betalning & planer och först på Översikt (2026-10-29) och köper det en gång: när köpet är betalt är upplägget köpt och syns inte
   längre, och vill familjen ha ett till skickar vi ett nytt. Köpet är en plan (`klippkort` med erbjudandet `plan_eget`,
   sorten `plan` och `upplagg_id`), och allt som gäller en plan gäller det: 30 dagar från betalningen, timbanken,
   ordningen, påminnelsen, första timmen gratis om det är familjens första plan, familjerabatten, rabattkoden

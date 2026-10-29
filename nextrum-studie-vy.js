@@ -3692,28 +3692,38 @@
     const utan = (per - ned) * Number(u.timmar);
     return { per: per - ned, pris: kod ? Number(S.erb.kod.upplagg[u.id]) : utan, utan: utan, rabatt: ned, kod: kod };
   }
+  /* Kortet står överst i Betalning & planer och på Översikt (2026-10-29,
+     Leo: "gör det egna upplägget lite synligare ... det blandas med massa
+     annat"): namnet stort, timmarna och priset på en egen rad, och sista
+     dagen att köpa som ett märke. Samma kort på båda ställena. */
+  const UPPLAGG_IK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 10h15v10h-15zM3.5 7h17v3h-17zM12 7v13M12 7c-1.6 0-4.5-.6-4.5-2.4C7.5 3.4 8.6 3 9.4 3 11.2 3 12 7 12 7zm0 0c1.6 0 4.5-.6 4.5-2.4 0-1.2-1.1-1.6-1.9-1.6C12.8 3 12 7 12 7z"/></svg>';
   function ritaUpplagg() {
-    const host = $('#erb-upplagg');
-    if (!host) return;
     const lista = S.erb.upplagg || [];
-    if (!lista.length) { host.hidden = true; host.innerHTML = ''; return; }
     const kr = NXBetalning.kronor;
-    host.hidden = false;
-    host.innerHTML = lista.map(u => {
+    const html = lista.map(u => {
       const p = upplaggetsPris(u);
-      return '<article class="erb-upplagg-kort"><div>'
-        + '<h5>Ett upplägg till er</h5>'
-        + '<b>' + esc(u.namn) + ': ' + esc(timmarOrd(Number(u.timmar))) + ', '
-          + (p.kod && p.pris < p.utan ? '<s>' + esc(kr(p.utan)) + '</s> ' : '') + esc(kr(p.pris)) + '</b>'
+      return '<article class="erb-upplagg-kort">'
+        + '<span class="erb-upplagg-ik" aria-hidden="true">' + UPPLAGG_IK + '</span>'
+        + '<div class="erb-upplagg-text">'
+        + '<span class="erb-upplagg-et">Ett upplägg bara till er</span>'
+        + '<b class="erb-upplagg-namn">' + esc(u.namn) + '</b>'
+        + '<span class="erb-upplagg-pris">' + esc(timmarOrd(Number(u.timmar))) + ' för '
+          + (p.kod && p.pris < p.utan ? '<s>' + esc(kr(p.utan)) + '</s> ' : '') + '<strong>' + esc(kr(p.pris)) + '</strong></span>'
         + '<p>' + esc(kr(p.per) + ' i timmen' + (p.rabatt ? ' ' + medErRabatt : '') + (p.kod ? ', med koden ' + p.kod : '')
-          + '. Gäller i ' + PLANENS_DAGAR + ' dagar från köpet, som en plan. Köp det senast '
-          + datumText(u.giltigt_till) + '.') + '</p>'
+          + '. Gäller i ' + PLANENS_DAGAR + ' dagar från köpet, som en plan.') + '</p>'
+        + '<span class="erb-upplagg-senast">Köp senast ' + esc(datumText(u.giltigt_till)) + '</span>'
         + '</div>'
         + (S.erb.aktiv && !S.väntar
-          ? '<button type="button" class="btn btn-orange" data-kop-upplagg="' + esc(u.id) + '">Köp</button>'
-          : '<button type="button" class="btn btn-ghost" disabled>Köp</button>')
+          ? '<button type="button" class="btn btn-orange" data-kop-upplagg="' + esc(u.id) + '">Köp upplägget</button>'
+          : '<button type="button" class="btn btn-ghost" disabled>Köp upplägget</button>')
         + '</article>';
     }).join('');
+    ['#erb-upplagg', '#ov-upplagg'].forEach(sel => {
+      const host = $(sel);
+      if (!host) return;
+      host.hidden = !html;
+      host.innerHTML = html;
+    });
   }
 
   /* Köp på ett upplägg: köpvillkoren med timmarna och priset, och sedan

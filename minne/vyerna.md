@@ -2250,10 +2250,13 @@ att det som inte är med betalas för sig. Högst 20 pass (`ALLA_MAX`, som datab
 ruta listar passen med pris och säger att syskontillägget inte ingår. Pass för pass fungerar som
 förut, i listan och på passet.
 
-**Ett eget upplägg** står överst bland planerna (`#erb-upplagg`, `ritaUpplagg`), ett kort per
-upplägg som väntar: "Ett upplägg till er", namnet, timmarna och priset, timpriset (med "med er
-rabatt" när familjen har en), att det gäller i 30 dagar från köpet som en plan och sista dagen att
-köpa det, och Köp, som går till samma kassa som en plan. Utan studiehjälpare (`S.väntar`) eller
+**Ett eget upplägg** står överst i Betalning & planer, under summan att betala (`#erb-upplagg`), och
+först på Översikt (`#ov-upplagg`), sedan 2026-10-29 (Leo: "gör det egna upplägget lite synligare
+... det blandas med massa annat"; förut bland planerna, under timbanken). `ritaUpplagg` ritar samma
+kort på båda ställena, ett per upplägg som väntar: en ikon, "Ett upplägg bara till er", namnet
+stort, "N timmar för X kr", timpriset (med "med er rabatt" när familjen har en), att det gäller i
+30 dagar från köpet som en plan, sista dagen att köpa det som ett märke, och Köp upplägget, som går
+till samma kassa som en plan. Utan studiehjälpare (`S.väntar`) eller
 med erbjudandena av är Köp släckt. Ett upplägg som väntar står också bland notiserna. Leo samma
 eftermiddag: "rabattkod gäller också för upplägg. Samma sak som vanliga planer bara annat antal
 timmar". **Kodrutan** (Kod till en plan) prövar koden också på uppläggen som väntar
