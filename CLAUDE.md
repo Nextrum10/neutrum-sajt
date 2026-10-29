@@ -941,7 +941,7 @@ Detaljer: `minne/grunden.md`.
   `execute_sql` och registrera filens text sedan i
   `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL
   (det gjordes två gånger 2026-10-20, båda med Leos uttryckliga ja: PR #307:s åtta sista migrationer, avsnitt 11,
-  och rensningen av testkontot, `minne/databasen.md`),
+  och rensningen av testkontot, `minne/databasen.md`; och en tredje 2026-10-29, `anmalningar_raderas_helt`, avsnitt 11),
   och prova den aldrig med objekt som blir kvar i driften (`zz_prov_*` från 2026-10-02 står kvar och väntar
   på ett ja, avsnitt 11).
 - `arkiv/` ändras aldrig; en rättelse är en ny migration. `schema-v22.sql` kördes aldrig, kör
@@ -1286,14 +1286,16 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
-- **Anmälningarna raderas helt** (2026-10-29, `anmalningar_raderas_helt` 20261029100000) är inte i drift. Efter merge:
-  Vercel lägger ut vyerna och policyn, sedan migrationen avsnitt för avsnitt med `execute_sql` (den har `delete` i
-  funktioner och utanför, så verktygets bekräftelse kan fråga), md5-vakter mot driften 2026-10-29, och registrering med
-  filens text. Ersättningarna i `radera_person` och `ta_bort_ur_stallet` träffar en gång var i driften (läst 2026-10-29),
-  och nattjobbets nya kropp är provad mot stubbtabeller i en lokal Postgres 16; den lokala databasen gick inte att bygga
-  (Docker Hub svarade 429), så `rls-test.sql` är inte körd. I driften fanns tre avidentifierade anmälningar, som
-  migrationen raderar, och inga avidentifierade ansökningar. Kopior utanför databasen rörs inte: mejlen om nya
-  anmälningar i info@ (`lead-notis`), Resends logg och Supabases backuper, som går ut av sig själva.
+- **Anmälningarna raderas helt** (2026-10-29, `anmalningar_raderas_helt` 20261029100000) är i drift sedan kvällen
+  2026-10-29 (Leo: "merge och kör", sedan "3"): PR #397 mergades (47b69af), och Vercel lade ut vyerna och policyn.
+  Avsnitt 0, 2 och 3 (vakterna, papperskorgen och `radera_person`) gick som två `execute_sql`; nattjobbet fastnade två
+  gånger på verktygets bekräftelse, som inte syntes i Leos app. Avsnitt 1 och 4 och registreringen kördes därför i ett
+  do-block som hämtade filen ur merge-commiten med `http`, prövade dess md5 (`9819cab1…`) och nattjobbets gamla md5, och
+  körde dem med `execute`: dynamisk SQL förbi spärren, den tredje gången, med Leos uttryckliga ja (avsnitt 5). Efteråt:
+  inga avidentifierade anmälningar (tre raderades), inga intagna utan familj, alla tre funktionerna bär ändringen, och
+  registreringen har filens md5. `rls-test.sql` är inte körd (den lokala databasen gick inte att bygga, Docker Hub 429).
+  Kopior utanför databasen rörs inte: mejlen om nya anmälningar i info@ (`lead-notis`), Resends logg och Supabases
+  backuper, som går ut av sig själva.
 - **Signaturen i mejlen** (2026-10-28, `rendera.ts`, PR #381) är i drift sedan kvällen 2026-10-28 (Leo: "ja, merga och
   driftsätt"): PR #381 mergades (1f7a4b4) och fem funktioner lades ut från merge-commiten, genom MCP från hjälpagenter:
   `notis-ko` v41, `ansokan-notis` v11, `bjud-in` v13, `lead-notis` v33 (kvittot till familjen) och `admin-paminnelse`
