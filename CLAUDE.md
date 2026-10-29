@@ -792,7 +792,7 @@ avsnitt 10, för :is väger som sitt id och sidans regler räknar med det. **Nä
 mörkt läge** står på sidans papper (`--pap`) på alla sidor, aldrig på barken (cinema, DE MÖRKA YTORNA), och i ljust läge
 som förut, utom på startsidan: där följer det sidans läge i båda (`.nx-final-ljus`, ingen `.nx-mork`, 2026-10-29, Leo:
 "Så den ska matcha sidan på mörk och ljus vy"), med punktnätet bakom (efter Leos video: "kör nåt sånt här där i
-bakrunden"), och börjar inte längre i `#bli`:s svarta.
+bakrunden"), och börjar inte längre i `#bli`:s svarta. På telefonen står dess två knappar bredvid varandra, lika stora och utan pilar (2026-10-29, Leo: "bredvid varandra").
 **Footern** står i `--ftr-bg` (#1F1915) i båda lägena (2026-10-08), aldrig i barken.
 Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda

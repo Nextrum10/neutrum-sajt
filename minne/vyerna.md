@@ -2502,3 +2502,9 @@ Möt några av våra studiehjälpare, i `index.html` och `en/index.html`; `amnes
 bred och bandet går långsamt av sig självt som en CSS-animation (en radbredd per varv, pausad utanför bild; scrollstyrt laggade på iPhone); sedan 2026-10-27 alla tolv NexLäx-ämnen i var sin färg, mindre text och inga linjer, Leo) (scrollraden överst togs bort samma kväll, Leo: "ta bort detta") **Klassen `nx-ord` är
 startsidans egen** (`delaOrd` i `nextrum-start.js`, rubriker med `data-ordfyll`); mina ordvisa rubriker heter `nx-ov` och
 hoppar över allt som redan delats. Ämnesbandets ämnen är `NX.AMNEN` utan grupperna plus `NEXLAX_AMNEN`, och ändras med dem.
+
+**Nästa stegs knappar på telefonen** (2026-10-29, Leo: "skicka intresse anmälan och bli
+studiehjälpare är bredvid varandra"): under 560 px står de i ett rutnät med två lika breda
+kolumner, utan pilar (de får inte plats), och en lång text bryts i knappen. Den andra knappen
+får två pixlar marginal, för stjärnkanten lägger två pixlar runt den första, och annars blir
+de olika höga. Bara startsidan (`.nx-final-ljus`); de andra sidornas Nästa steg är som förut.

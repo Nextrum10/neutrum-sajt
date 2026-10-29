@@ -3726,6 +3726,22 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .nx-final-ljus h2 em{color:var(--acc)}
 .nx-final-ljus .nx-hero-trust li{color:var(--bl-2)}
 .nx-final-ljus .nx-hero-trust li::before{background:var(--bl-3)}
+/* På telefonen står de två knapparna bredvid varandra, lika stora
+   (2026-10-29, Leo: "skicka intresse anmälan och bli studiehjälpare är
+   bredvid varandra"). Det får inte plats med pilarna, så de går, och en
+   lång text bryts hellre i knappen än att knappen blir för smal. */
+@media (max-width:560px){
+  .nx-final-ljus .nx-story-ctas{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:stretch}
+  .nx-final-ljus .nx-story-ctas > *{min-width:0}
+  .nx-final-ljus .nx-stjarnkant{display:flex}
+  .nx-final-ljus .nx-story-ctas .btn{
+    width:100%;min-height:56px;padding:12px 10px;
+    font-size:.92rem;line-height:1.2;text-align:center;white-space:normal;text-wrap:balance;
+  }
+  .nx-final-ljus .nx-story-ctas .btn svg{display:none}
+  /* Stjärnkanten lägger två pixlar runt den första; den andra får samma luft. */
+  .nx-final-ljus .nx-story-ctas > .btn{width:auto;margin:2px}
+}
 
 /* Raden under heroknapparna (priset, första timmen, 24 timmar och
    bindningstiden) syns bara på en större skärm (2026-10-29, Leo: "de på
