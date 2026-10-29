@@ -10,8 +10,9 @@
      bakgrunder Threads: trådar i WebGL i ett nedtonat band under Hur
                 hjälper vis rad, i färgen från kortet i fokus. Dot Grid: ett
                 nät av punkter bakom Nästa steg som lyser upp kring pekaren
-                (efter Leos video). Ritas bara medan de syns och fliken är
-                framme, och står still med reducerad rörelse.
+                eller fingret (efter Leos video), aldrig av sig självt.
+                Ritas bara medan de syns och fliken är framme, och står
+                still med reducerad rörelse.
      hjscen     Hur hjälper vi som en rad man sveper i själv, med pilar på
                 dator: Leo om raden som scrollen drog, "Vi är ett läxhjälps
                 företag ... inte et tech bolag. Så vi kör istället att man
@@ -151,7 +152,7 @@
   }
 
   /* ---------- trådarna (Threads), under Hur hjälper vis rad ----------
-     React Bits Threads i WebGL 1: trettio trådar som börjar samlade till
+     React Bits Threads i WebGL 1: tjugofyra trådar som börjar samlade till
      vänster och böljar isär åt höger, varje med två perlinbrus. Två
      ändringar mot förlagan: trådens bredd räknas i duken pixlar mot
      höjden, inte mot den längsta sidan (annars blir trådarna tjocka på en
@@ -160,8 +161,12 @@
      De står i ett nedtonat band under korten, aldrig bakom texten (Leo:
      "texten syns dålig ... mer som ett mönster att veta vart man ska
      scrolla"), och böljar isär åt höger, dit raden fortsätter. Färgen är
-     kortets i fokus (hjscen sätter TRÅD.mål), och den glider dit; pekaren
-     och radens rullning rör trådarna lite, som pekaren gör i förlagan. */
+     kortets i fokus (hjscen sätter TRÅD.mål), och den glider dit. Leo: "den
+     glitchar". Tre saker gjorde det: radens rullning flyttade trådarnas tid,
+     så att de vred sig fort när man svepte; de slog i bandets kanter och
+     klipptes; och i CSS-pixlar flimrade de på en retinaskärm. Nu går de i
+     sin egen takt (ingen pekare, ingen rullning), tonas mot bandets över-
+     och underkant och ritas i skärmens pixlar. */
   const TRÅDAR = [
     '#ifdef GL_FRAGMENT_PRECISION_HIGH',
     'precision highp float;',
@@ -169,7 +174,7 @@
     'precision mediump float;',
     '#endif',
     'uniform float t;uniform vec2 r;uniform vec3 c;uniform vec2 mus;uniform float lw;uniform float amp;uniform float avst;',
-    'const int N=30;',
+    'const int N=24;',
     'float perlin(vec2 P){',
     ' vec2 Pi=floor(P);vec4 Pf=P.xyxy-vec4(Pi,Pi+1.0);vec4 Pt=vec4(Pi.xy,Pi.xy+1.0);',
     ' Pt=Pt-floor(Pt*(1.0/71.0))*71.0;Pt+=vec2(26.0,161.0).xyxy;Pt*=Pt;Pt=Pt.xzxz*Pt.yyww;',
@@ -190,19 +195,19 @@
     'void main(){',
     ' vec2 uv=gl_FragCoord.xy/r;float s=1.0;',
     ' for(int i=0;i<N;i++){float p=float(i)/float(N);s*=1.0-trad(uv,lw*(1.0-p)/r.y,p);}',
-    ' float v=1.0-s;gl_FragColor=vec4(c*v,v);}'
+    ' float v=(1.0-s)*smoothstep(0.0,0.24,uv.y)*(1.0-smoothstep(0.76,1.0,uv.y));',
+    ' gl_FragColor=vec4(c*v,v);}'
   ].join('\n');
 
-  /* Ett läge per duk: färgen den glider mot och den den har, pekaren, och
-     radens framsteg. Radens läge (TRÅD) skriver hjscen. */
-  const nyttLäge = () => ({ mål: null, nu: null, mus: [0.5, 0.5], musMål: [0.5, 0.5], prog: 0, rita: null });
+  /* Ett läge per duk: färgen den glider mot och den den har. Radens läge
+     (TRÅD) skriver hjscen. */
+  const nyttLäge = () => ({ mål: null, nu: null, mus: [0.5, 0.5], rita: null });
   const TRÅD = nyttLäge();
 
-  /* bredd: den tjockaste tråden i CSS-pixlar. yta: där pekaren räknas.
-     skala, amp och avst som i duken och förlagan: ett lågt band behöver
-     full upplösning och trådar som sprids över hela höjden. */
+  /* bredd: den tjockaste tråden i CSS-pixlar. skala, amp och avst som i
+     duken och förlagan. */
   function trådar(el, L, val) {
-    const v = Object.assign({ bredd: 5.2, yta: el.parentElement, skala: [0.5, 0.62], amp: 1.3, avst: 0.3 }, val);
+    const v = Object.assign({ bredd: 5.2, skala: [0.5, 0.62], amp: 1.3, avst: 0.3 }, val);
     L.mål = L.mål || färg(getComputedStyle(el.parentElement).getPropertyValue('--amne-ma'));
     L.nu = L.nu || L.mål.slice();
     const d = duk(el, TRÅDAR, {
@@ -216,22 +221,11 @@
       storlek: (gl, u, skala) => gl.uniform1f(u('lw'), v.bredd * skala),
       varje: (gl, u) => {
         for (let i = 0; i < 3; i++) L.nu[i] += (L.mål[i] - L.nu[i]) * 0.05;
-        for (let i = 0; i < 2; i++) L.mus[i] += (L.musMål[i] - L.mus[i]) * 0.04;
         gl.uniform3fv(u('c'), L.nu);
-        gl.uniform2f(u('mus'), L.mus[0] + (L.prog - 0.5) * 0.8, L.mus[1]);
       }
     });
     if (!d) return false;
     L.rita = d.rita;
-    if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reducerad()) {
-      const yta = v.yta;
-      const in01 = x => Math.max(0, Math.min(1, x));
-      yta.addEventListener('pointermove', e => {
-        const r = yta.getBoundingClientRect();
-        L.musMål = [in01((e.clientX - r.left) / r.width), in01(1 - (e.clientY - r.top) / r.height)];
-      });
-      yta.addEventListener('pointerleave', () => { L.musMål = [0.5, 0.5]; });
-    }
     return true;
   }
 
@@ -241,8 +235,7 @@
      bakrunden". React Bits Dot Grid, i en vanlig 2d-duk: punkterna står
      knappt synliga i bläckets färg, så att ytan läses som sidans papper
      (Leo: "samma färg som resten av sidan i den nyansen"), och kring pekaren blir de större, får
-     accentens färg och viker undan en aning, och glider tillbaka. Utan mus
-     (en telefon) vandrar ljuset långsamt av sig självt. Slingan går bara
+     accentens färg och viker undan en aning, och glider tillbaka. Slingan går bara
      medan nätet syns och något rör sig; med reducerad rörelse ritas
      nätet en gång, utan ljus. Färgerna läses om när sidans läge byts. */
   function punktnät(sek) {
@@ -253,7 +246,6 @@
     const c = el.getContext('2d');
     if (!c) { el.remove(); return; }
     const AVST = 26, R = 160, stilla = reducerad();
-    const mus = matchMedia('(hover: hover) and (pointer: fine)').matches;
     let w = 0, h = 0, pkt = [], bas = [0, 0, 0], ljus = [0, 0, 0];
     let syns = false, ram0 = 0, styrka = 0, inne = false;
     const spot = { x: -999, y: -999 }, mål = { x: -999, y: -999 };
@@ -273,13 +265,8 @@
       const x0 = (w - (kol - 1) * AVST) / 2, y0 = (h - (rad - 1) * AVST) / 2;
       for (let j = 0; j < rad; j++) for (let i = 0; i < kol; i++) pkt.push({ x: x0 + i * AVST, y: y0 + j * AVST, dx: 0, dy: 0 });
     }
-    function rita(t) {
+    function rita() {
       ram0 = 0;
-      if (!mus && !stilla) {
-        mål.x = w * (0.5 + 0.36 * Math.sin(t * 0.00031));
-        mål.y = h * (0.5 + 0.3 * Math.sin(t * 0.00047 + 1.3));
-        inne = true;
-      }
       styrka += ((inne && !stilla ? 1 : 0) - styrka) * 0.08;
       spot.x += (mål.x - spot.x) * 0.22;
       spot.y += (mål.y - spot.y) * 0.22;
@@ -308,19 +295,30 @@
         c.arc(p.x + p.dx, p.y + p.dy, 1.3 + 1.5 * e, 0, Math.PI * 2);
         c.fill();
       }
-      const lever = !mus || inne || styrka > 0.01 || rör;
+      const lever = inne || styrka > 0.01 || rör;
       if (!stilla && syns && !document.hidden && lever) ram0 = requestAnimationFrame(rita);
     }
     const gå = () => { if (!ram0 && syns && !document.hidden) ram0 = requestAnimationFrame(rita); };
     läs(); bygg(); requestAnimationFrame(rita);
-    if (mus && !stilla) {
-      sek.addEventListener('pointermove', e => {
-        const r = el.getBoundingClientRect();
-        mål.x = e.clientX - r.left; mål.y = e.clientY - r.top;
-        if (!inne) { spot.x = mål.x; spot.y = mål.y; }
-        inne = true; gå();
-      });
-      sek.addEventListener('pointerleave', () => { inne = false; gå(); });
+    /* Bara när man själv rör sig (Leo: "man själv när man rör då ska
+       punkterna röra sig inte automatisk"): musen, och på en telefon
+       fingret, också medan sidan rullas under det. Släpps fingret eller
+       lämnar musen tonar ljuset bort. */
+    const mot = (x, y) => {
+      const r = el.getBoundingClientRect();
+      mål.x = x - r.left; mål.y = y - r.top;
+      if (!inne) { spot.x = mål.x; spot.y = mål.y; }
+      inne = true; gå();
+    };
+    const släpp = () => { inne = false; gå(); };
+    if (!stilla) {
+      sek.addEventListener('pointermove', e => { if (e.pointerType !== 'touch') mot(e.clientX, e.clientY); });
+      sek.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') släpp(); });
+      const finger = e => { const f = e.touches && e.touches[0]; if (f) mot(f.clientX, f.clientY); };
+      sek.addEventListener('touchstart', finger, { passive: true });
+      sek.addEventListener('touchmove', finger, { passive: true });
+      sek.addEventListener('touchend', släpp, { passive: true });
+      sek.addEventListener('touchcancel', släpp, { passive: true });
     }
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(es => { syns = es.some(e => e.isIntersecting); if (syns) gå(); }, { rootMargin: '10% 0px' }).observe(el);
@@ -333,9 +331,11 @@
   /* Hur hjälper vi har sin duk i bandet under korten, och pekaren räknas
      över hela raden. Nästa steg får sitt punktnät. */
   function bakgrunder() {
+    /* Bandet ritas i skärmens egna pixlar (högst 1,5 per CSS-pixel): i
+       CSS-pixlar flimrade de tunna trådarna i kanterna på en retinaskärm. */
+    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
     $$('canvas[data-tradar]').forEach(el => trådar(el, TRÅD, {
-      bredd: 1.8, skala: [1, 1], amp: 1.1, avst: 0.85,
-      yta: el.closest('[data-hjscen]') || el.parentElement
+      bredd: 1.6, skala: [dpr, dpr], amp: 0.8, avst: 0.6
     }));
     $$('.nx-final-ljus').forEach(sek => { if (!sek.querySelector('canvas.nx-punkter')) punktnät(sek); });
   }
@@ -410,7 +410,6 @@
           TRÅD.mål = färgen[bäst];
           if (TRÅD.rita) TRÅD.rita();
         }
-        TRÅD.prog = p;
         if (förra) förra.disabled = x0 <= 2;
         if (nästa) nästa.disabled = x0 >= max - 2;
       };

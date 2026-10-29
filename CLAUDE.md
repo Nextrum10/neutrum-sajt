@@ -743,8 +743,8 @@ rubriken med ingressen, likadan som de andra sektionernas, och under den fem kor
 `scroll-snap`, på dator också pilar under raden som rullar den med `scrollBy`): läxhjälpen, studiehjälparna, matchningen (ur Trygg hjälps band), NexLäx och
 Allt på ett ställe, var och en med ordningens färg i `--f`. **Ingen scroll drar raden**, och sidan rullar som vanligt
 förbi. Trådar i WebGL (`data-tradar`, efter React Bits Threads) står nedtonade i ett band under korten, **aldrig bakom
-texten** (Leo: "texten syns dålig ... mer som ett mönster att veta vart man ska scrolla"). Varje kort har bentots ikon i sin färg
-överst (`.hj-ikon`; Leo: "ha dessa fem element istället för siffror", efter en kväll med 01–05; i en timme samma kväll stod bentots små kort i ett rutnät i stället, och
+texten** (Leo: "texten syns dålig ... mer som ett mönster att veta vart man ska scrolla"). Varje kort har en svag ton och en mjuk skugga
+i sin färg (Leo: "lite skuggade av färgen de har") och bentots ikon överst (`.hj-ikon`; Leo: "ha dessa fem element istället för siffror", efter en kväll med 01–05; i en timme samma kväll stod bentots små kort i ett rutnät i stället, och
 Leo ville ha raden tillbaka: "Nej de du gjorde ska skicka", med en bild av den), och kortet i fokus (`.pa`)
 får kanten och trådarna dess färg, och ett korts rubrik stiger upp när det kommer in (SplitText). Utan skriptet är
 raden en rad att svepa i, utan pilar. Ingen mörk yta och inget orange bakom raden. På Vår idé fyra blad i en rad som
@@ -807,9 +807,12 @@ en linje och korten, bara på de genererade `laxhjalp-*` och guiderna; stegen t�
 eller med reducerad rörelse står allt färdigt i CSS. **Och startsidan** (2026-10-29): `nextrum-start-scen.js` låter GSAP
 dra manifestets ord (opacitet och sudd), studievyns `.sd-rum` (bara tier `full`) och ämnesbandets lutning med farten
 (`skewX` på raderna, aldrig sektionen: den breddade sidan sju pixlar). Utan GSAP ritar den trådarna i WebGL under Hur
-hjälper vis rad (full upplösning i det låga bandet, annars blir trådarna ett suddigt streck) och ett punktnät bakom Nästa
-steg, knappt synligt så att ytan läses som sidans papper (Leo: "samma färg som resten av sidan i den nyansen"), (React Bits Dot Grid, en 2d-duk: punkterna lyser upp och viker undan kring pekaren, och på en telefon vandrar ljuset
-av sig självt), bara medan de syns, och en enda bild med reducerad rörelse. Etiketterna
+hjälper vis rad, i skärmens pixlar (högst 1,5 per CSS-pixel), i sin egen takt och tonade mot bandets kanter: när
+rullningen flyttade deras tid, de klipptes i kanterna och ritades i CSS-pixlar glitchade de (Leo: "den glitchar"). Och
+ett punktnät bakom Nästa steg, knappt synligt så att ytan läses som sidans papper (Leo: "samma färg som resten av sidan i
+den nyansen"; React Bits Dot Grid, en 2d-duk), som lyser upp och viker undan bara kring musen eller fingret, aldrig av sig
+självt (Leo: "man själv när man rör då ska punkterna röra sig inte automatisk"). Båda ritar bara medan de syns, och en
+enda bild med reducerad rörelse. Etiketterna
 har ett ljus som glider (ShinyText, CSS). Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.

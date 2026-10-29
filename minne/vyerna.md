@@ -91,7 +91,16 @@ muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
 (tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
 sedan trådarna i Raden som glider).
-- **Raden tillbaka efter en timme** (samma kväll, sist; den som gäller). Leo skrev "Asså istället för
+- **Korten i sin färg och bandet som glitchade** (samma kväll, sist). Leo: "kolumnerna som du
+  gjorde gör så de blir lite skyggade av färgen de har. Och elementet under de kolumners som rör
+  sig måste blir bättre för den glitchar". Korten har en svag ton av sin färg (4 % över hela
+  kortet och 14 % i hörnet vid ikonen) och en mjuk skugga i samma färg som står still; raden fick
+  30 px luft nedtill, för `overflow-y:hidden` klipper annars skuggan. Bandet glitchade av tre skäl:
+  radens rullning lade till trådarnas tid (svep raden, och trådarna vred sig fort), de slog i
+  bandets kanter och klipptes, och de ritades i CSS-pixlar, så att de tunna trådarna flimrade på en
+  retinaskärm. Nu går de i sin egen takt utan pekare och rullning, tonas mot över- och underkanten
+  i shadern, är 24 i stället för 30, och ritas i skärmens pixlar (högst 1,5 per CSS-pixel).
+- **Raden tillbaka efter en timme** (samma kväll). Leo skrev "Asså istället för
   0102030405 ha de små kolumnerna som fanns förut", och jag satte bentots små kort i ett rutnät i
   stället för raden (fyra små och NexLäx hög), utan raden, pilarna och trådarna. Han frågade vart
   "den nya första sektionen" tagit vägen och skickade sedan en bild av raden med ikonerna: "Nej de
@@ -144,8 +153,10 @@ sedan trådarna i Raden som glider).
   den stod i Rätt match; Allt på ett ställe står alltså både där och i raden, som före
   samma dag. Nästa steg fick ett punktnät som i videon (React Bits Dot Grid, en 2d-duk,
   26 px mellan punkterna): svaga punkter i bläckets färg som kring pekaren (160 px) blir
-  större, får accentens färg och viker undan, och glider tillbaka; på en telefon vandrar
-  ljuset långsamt av sig självt, och slingan står när inget rör sig.
+  större, får accentens färg och viker undan, och glider tillbaka; slingan står när inget
+  rör sig. (Ljuset vandrade först av sig självt på en telefon; Leo: "man själv när man rör
+  då ska punkterna röra sig inte automatisk", så det följer fingret i stället, också medan
+  sidan rullas under det, med touchstart och touchmove.)
 - **Raden som glider** (fjärde varvet samma kväll, borttagen med Raden man sveper i). Leo om scenen
   nedan: "Jag gillar inte att bakrunden är svart och orange på den sektionen, och en
   grej till när de kolumnerna typ 5 stycken går sidleds snyggt med en vit rörlig
