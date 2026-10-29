@@ -4126,17 +4126,16 @@ html[data-motion="still"] .nx-amnesband-spar{width:auto}
    ============================================================ */
 /* En egen ruta med loggans orange, så att den inte drunknar bland
    footerns länkar (2026-10-29, Leo: "Denna sektion måste synas bättre
-   ändra färg på rubriken"). */
+   ändra färg på rubriken"). Platt: inget sken och ingen skugga (samma
+   kväll, Leo: "ingen skugga ta bort"). */
 .nb{
   margin-top:26px;max-width:30rem;color:var(--nt-fg);
   padding:clamp(20px,2.4vw,26px);border-radius:22px;
   border:1px solid color-mix(in srgb,var(--orange) 34%,transparent);
-  background:
-    radial-gradient(120% 90% at 0% 0%,color-mix(in srgb,var(--orange) 16%,transparent),transparent 70%),
-    rgba(239,230,214,.04);
+  background:rgba(239,230,214,.04);
 }
 .ftr-brand .nb-rubrik,.nb-rubrik{max-width:none;font-weight:800;font-size:clamp(1.2rem,1.6vw,1.35rem);line-height:1.2;letter-spacing:-.02em;color:var(--orange);margin:0;text-wrap:balance}
-.nb .btn-primary.nb-knapp{background:var(--orange);border-color:var(--orange);color:var(--orange-ink)}
+.nb .btn-primary.nb-knapp{background:var(--orange);border-color:var(--orange);color:var(--orange-ink);box-shadow:none}
 .nb .btn-primary.nb-knapp:hover{background:var(--orange-lugn);border-color:var(--orange-lugn)}
 .ftr-brand .nb-text,.nb-text{font-size:.95rem;color:var(--nt-fg);opacity:.82;margin:8px 0 16px;max-width:none}
 .nb-rad{display:flex;gap:8px;flex-wrap:wrap}
