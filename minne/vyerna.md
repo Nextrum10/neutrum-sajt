@@ -2141,7 +2141,7 @@ vill kunna optimera min admin och flytta folk vart jag vill eller ta bort de hel
   och ett CV som är borta går inte att få tillbaka. Fokus på Avbryt.
 - **Gå vidare och Ta bort** frågar databasen en gång till och vägrar om svaret på "sista stället" ändrats sedan
   rutan öppnades; sedan CV:t genom Storage (svaret läses, och en fil som inte gick ger ingen borttagning), sist
-  `ta_bort_ur_stallet()` med `p_helt`. Listan ritas om ur det vyn redan har (anmälan som avidentifierad, ansökan ur
+  `ta_bort_ur_stallet()` med `p_helt`. Listan ritas om ur det vyn redan har (raden går ur `S.leads` eller
   `S.ansokningar`), utan att hämta allt, så att nästa rad går att ta direkt; panelen stängs om den visade raden.
 - **Radera i panelen står kvar** och är något annat: den tar bort personen ur våra system, med allt från samma adress
   (vägen när någon ber oss radera allt). Familjer och Studiehjälpare har ingen papperskorg; där är Radera vägen.

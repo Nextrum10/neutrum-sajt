@@ -168,9 +168,8 @@
   function ingress(typ, namn, läge) {
     const helt = läge.satt === 'helt';
     if (typ === 'anmalan') {
-      return 'Namnet, adressen och det familjen skrev tas bort ur anmälan, och ur andra anmälningar '
-        + 'och frågor med samma adress. Raden står kvar utan dem, så att statistiken räknar lika '
-        + 'många anmälningar bakåt i tiden.';
+      return 'Anmälan raderas helt, med andra anmälningar och frågor från samma adress. Ingenting '
+        + 'står kvar, inte heller i statistiken.';
     }
     if (typ === 'ansokan') {
       return 'Ansökan tas bort ur våra system, med CV:t och med andra ansökningar och frågor från samma '
@@ -229,7 +228,7 @@
        admin tryckte på. */
     const anmälningar = tas.anmalningar > 0
       ? esc(st(tas.anmalningar, 'intresseanmälan', 'intresseanmälningar')
-        + ' avidentifieras (raden står kvar i statistiken)')
+        + ' raderas')
       : null;
     if (anmälningar && typ === 'anmalan') bort.push(anmälningar);
     Object.keys(TAS_BORT).forEach(k => {
@@ -395,7 +394,7 @@
   function kvitto(typ, namn, svar) {
     const delar = [];
     const gjort = svar.gjort || '';
-    if (typ === 'anmalan') delar.push('Anmälan från ' + namn + ' är avidentifierad.');
+    if (typ === 'anmalan') delar.push('Anmälan från ' + namn + ' är raderad.');
     else if (typ === 'ansokan') delar.push('Ansökan från ' + namn + ' är borttagen.');
     else if (typ === 'kontakt') delar.push('Frågan från ' + namn + ' är borttagen.');
     else if (/^avidentifiera/.test(gjort)) {
@@ -404,9 +403,9 @@
 
     if (svar.avbokade > 0) delar.push(st(svar.avbokade, 'kommande pass', 'kommande pass') + ' avbokades.');
     if (svar.anmalningar > 0 && typ !== 'anmalan') {
-      delar.push(st(svar.anmalningar, 'intresseanmälan', 'intresseanmälningar') + ' avidentifierades.');
+      delar.push(st(svar.anmalningar, 'intresseanmälan', 'intresseanmälningar') + ' raderades.');
     } else if (svar.anmalningar > 1) {
-      delar.push(st(svar.anmalningar - 1, 'anmälan till', 'anmälningar till') + ' med samma adress avidentifierades.');
+      delar.push(st(svar.anmalningar - 1, 'anmälan till', 'anmälningar till') + ' med samma adress raderades.');
     }
     if (svar.ansokningar > (typ === 'ansokan' ? 1 : 0)) {
       delar.push(st(svar.ansokningar - (typ === 'ansokan' ? 1 : 0),
@@ -457,8 +456,8 @@
 
      Radera ovan tar bort en person ur våra system, med allt från samma
      adress. Papperskorgen tar bort EN rad ur EN lista: en anmälan
-     avidentifieras som när Radera gör det, en ansökan tas bort med sitt
-     CV, och allt annat står kvar. Databasen säger var personen finns
+     raderas (sedan 2026-10-29; förut avidentifierades den), en ansökan tas
+     bort med sitt CV, och allt annat står kvar. Databasen säger var personen finns
      kvar (stalle_lage), och rutan säger det. Är raden det sista stället
      säger rutan att personen försvinner helt, med Avbryt och Gå vidare,
      och databasen tar bort den sista raden bara med det svaret (p_helt).
@@ -516,8 +515,8 @@
   function papperskorgInnehåll(stalle, namn, läge) {
     const sista = läge.sista === true;
     const vad = stalle === 'anmalan'
-      ? 'Anmälan försvinner ur Intresseanmälningar: namnet, adressen och det familjen skrev tas bort. En rad '
-        + 'utan namn står kvar i statistiken.'
+      ? 'Anmälan raderas helt och försvinner ur Intresseanmälningar. Ingenting står kvar, inte heller i '
+        + 'statistiken.'
       : 'Ansökan försvinner ur Ansökningar, med ' + ((läge.filer || []).length ? 'CV:t, ' : '')
         + 'stegen och mejlen till hen.';
     return '<p>' + esc(vad) + ' Det går inte att ångra.</p>'
@@ -602,18 +601,10 @@
         if (error) { säg(msg, '⚠️ ' + (saknas(error) ? PK_SAKNAS : felText(error)), false); return; }
 
         /* Listan ritas om ur det vyn redan har, så att nästa rad går att
-           ta direkt: anmälan som nattjobbet lämnar den, ansökan ur listan. */
-        if (stalle === 'anmalan') {
-          const l = (S.leads || []).find(x => x.id === id);
-          if (l) {
-            Object.assign(l, { parent_name: 'Gallrad', email: 'gallrad', child_name: null, message: null,
-                               notering: null,
-                               status: l.status === 'new' || l.status === 'contacted' ? 'declined' : l.status });
-          }
-        } else {
-          const i = (S.ansokningar || []).findIndex(x => x.id === id);
-          if (i >= 0) S.ansokningar.splice(i, 1);
-        }
+           ta direkt: raden går ur listan, för den finns inte längre. */
+        const lista = stalle === 'anmalan' ? S.leads : S.ansokningar;
+        const i = (lista || []).findIndex(x => x.id === id);
+        if (i >= 0) lista.splice(i, 1);
         stäng(false);
         if (DP.typ === stalle && DP.id === id) await kör('stängDetalj');
         await kör(stalle === 'anmalan' ? 'ritaLeads' : 'ritaAnsokningar');
