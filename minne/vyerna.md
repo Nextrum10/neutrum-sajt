@@ -91,7 +91,19 @@ muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
 (tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
 sedan trådarna i Raden som glider).
-- **Ikonerna och fotot i manifestet** (samma kväll, sist). Leo skickade bilder av bentot som
+- **De små korten tillbaka** (samma kväll, sist; den som gäller). Leo: "Och längst ner redo att
+  ta nästa steg ska ha samma färg som resten av sidan i den nyansen / Asså istället för
+  0102030405 ha de små kolumnerna som fanns förut". Det andra rättade min läsning av "ha dessa
+  fem element istället för siffror": inte ikoner i raden, utan bentots små kort i stället för
+  raden. Hur hjälper vi har nu sitt huvud som förut och under det bentots fyra små kort
+  (expertisen, erfarenheten, matchningen, tryggheten) och NexLäx hög bredvid (`.bn-hog`), tre
+  kolumner, två under 1100 px. Läxhjälpens stora ruta och Allt på ett ställe står inte där: den
+  första är fotot och meningen i manifestet, den andra ett av manifestets blad. Raden man svepte
+  i, pilarna och trådarna i WebGL gick, och sektionen står på sidans papper, inte på `--yta`.
+  Nästa steg hade redan sidans färg (mätt: #F1EDE6 i ljust läge, #1A1813 i mörkt), men punkterna
+  över hela ytan (16 % bläck) fick den att läsas som en annan ton; de står på 9 % nu. På
+  nextrum.se var den fortfarande mörk, för det som Leo fotade var bentot i drift.
+- **Ikonerna och fotot i manifestet** (samma kväll). Leo skickade bilder av bentot som
   stod i drift och skrev: "Skit i sofforna och kör såhär: ha dessa fel element istället för
   siffror. Och Info från den tredje bilden lägger du på rätt person kan göra stor skillnad."
   "sofforna" och "fel" lästes som siffrorna och fem: korten har bentots ikoner (`.hj-ikon`)

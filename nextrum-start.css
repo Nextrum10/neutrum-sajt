@@ -3601,7 +3601,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 }
 
 /* ============================================================
-   19. EN NY FORM (2026-10-29) — scenen, trådarna, Nästa steg i sidans
+   19. EN NY FORM (2026-10-29) — de små korten, Nästa steg i sidans
        läge, texten som rör sig, manifestet, studievyns tippning och
        stjärnkanten
 
@@ -3615,103 +3615,87 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    scrollen skriver nextrum-start-scen.js; här står formen och
    slutlägena, och utan skriptet är det de som syns.
 
-   SCENEN. Hur hjälper vi står på ytans vita (--yta): rubriken ovanför,
-   likadan som de andra sektionernas, och de fem korten i en rad man sveper
-   i själv (overflow-x och scroll-snap; på dator också med pilarna under), så att sidan
-   rullar som vanligt förbi. Leo om raden som scrollen drog: "Vi är ett
-   läxhjälps företag ... inte et tech bolag. Så vi kör istället att man
-   scrollar själv åt vänster". Trådarna (canvas[data-tradar]) står
-   nedtonade i ett band under korten, aldrig bakom texten. Med skriptet
-   (.hjs-igang) syns pilarna och kortet närmast början har .pa; ett kort
-   som kommit in har .inne (.hjs-rorlig, inte med reducerad rörelse).
+   HUR HJÄLPER VI. Sektionens huvud som de andra (.nx-head split), och
+   under det bentots små kort (.nx-bento, .bn-ruta): fyra små och NexLäx
+   hög bredvid dem (.bn-hog), i tre kolumner, två på en platta och en
+   telefon. Leo efter en kväll med en rad man svepte i: "Asså istället för
+   0102030405 ha de små kolumnerna som fanns förut". Varje kort har sin
+   färg ur --f, fliken överst och ikonen (.hj-ikon, avsnitt 17).
    ============================================================ */
-.nx-hjs{position:relative;padding:0}
-.hjs{
-  --hjs-gap:clamp(14px,1.6vw,24px);
-  position:relative;background:var(--yta);
-  padding-block:clamp(64px,8vw,112px) clamp(18px,2.4vw,32px);
+.nx-bento{
+  list-style:none;margin:0;padding:0;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-auto-flow:row dense;
+  gap:clamp(12px,1.4vw,20px);
 }
-/* Rubriken är likadan som de andra sektionernas (.nx-head split, Leo:
-   "jag gillade hur rubrikerna var likadana", och om ett försök i mitten:
-   "De ska inte vara centrade"), och raden börjar direkt under. */
-.hjs .nx-head{margin-bottom:0}
-/* Pilarna: bara med skriptet och en mus, i mitten under raden, ovanpå
-   trådarnas band. På en telefon sveper man. */
-.hjs-fot{
-  position:relative;display:grid;place-items:center;
-  min-height:clamp(64px,8vw,110px);margin-top:clamp(4px,1vw,12px);
+.bn-ruta{
+  --pad:clamp(22px,2.4vw,32px);
+  --radie:clamp(22px,2.2vw,30px);
+  position:relative;isolation:isolate;min-width:0;
+  display:flex;flex-direction:column;align-items:flex-start;
+  padding:var(--pad);
+  border-radius:var(--radie);
+  border:1px solid transparent;
+  background:
+    radial-gradient(90% 70% at 0% 0%,color-mix(in srgb,var(--f) 10%,transparent),transparent 70%) padding-box,
+    linear-gradient(var(--kort),var(--kort)) padding-box,
+    linear-gradient(var(--kort-kant),var(--kort-kant)) border-box;
+  box-shadow:var(--kort-sk);
+  transition:scale .45s var(--fjader);
 }
-.hjs-pilar{position:relative;z-index:1;display:none;gap:10px}
-.hjs-igang .hjs-pilar{display:flex}
-@media (hover:none),(pointer:coarse){.hjs-igang .hjs-pilar{display:none}}
-.hjs-pil{
-  display:grid;place-items:center;width:48px;height:48px;border-radius:50%;
-  border:1px solid color-mix(in srgb,var(--bl) 22%,transparent);
-  background:var(--yta);color:var(--bl);cursor:pointer;
-  transition:scale .25s var(--e-ut),opacity .25s var(--e-mjuk),border-color .25s var(--e-mjuk);
+/* Fliken i kortets färg överst, som i bentot. */
+.bn-ruta::after{
+  content:"";position:absolute;top:-1px;left:var(--pad);
+  width:46px;height:3px;border-radius:0 0 3px 3px;
+  background:var(--f);
 }
-.hjs-pil svg{width:18px;height:18px}
-.hjs-pil:hover:not(:disabled){border-color:var(--bl);scale:1.05}
-.hjs-pil:disabled{opacity:.32;cursor:default}
-/* Raden rullas, aldrig sidan (overflow-y:hidden, som ämnesbandet), och
-   första kortet står i linje med rubriken (.nx-wrap-bred). Ett tomt
-   element sist ger raden samma luft i slutet, för en rullbar
-   behållare tappar sin högra utfyllnad i vissa webbläsare. */
-.hjs-spar{
-  --hjs-kant:max(var(--m),calc((100% - var(--w-bred)) / 2 + var(--m)));
-  position:relative;margin-top:clamp(26px,3.2vw,42px);
-  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
-  scroll-snap-type:x mandatory;scroll-padding-inline:var(--hjs-kant);
-  padding:6px var(--hjs-kant) 10px;scrollbar-width:none;
+/* NexLäx står hög bredvid de fyra små, med stigen och länken nederst. */
+.bn-hog{grid-column:3;grid-row:1 / span 2}
+.bn-ruta h3{
+  margin-top:8px;
+  font-size:clamp(1.2rem,1.65vw,1.5rem);font-weight:700;
+  letter-spacing:-.03em;line-height:1.14;color:var(--bl);text-wrap:balance;
 }
-.hjs-spar::-webkit-scrollbar{display:none}
-.hjs-spar:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;border-radius:18px}
-.hjs-lista{display:flex;gap:var(--hjs-gap);width:max-content;list-style:none;margin:0;padding:0}
-.hjs-lista::after{content:"";flex:none;width:max(1px,calc(var(--hjs-kant) - var(--hjs-gap)))}
-.hjs-kort{
-  flex:none;width:clamp(17.5rem,26vw,23.5rem);scroll-snap-align:start;
-  display:flex;flex-direction:column;
-  padding:clamp(22px,2.2vw,32px);border-radius:24px;
-  background:var(--yta);
-  border:1px solid color-mix(in srgb,var(--f) 24%,transparent);
-  transition:border-color .5s var(--e-mjuk);
+.bn-ruta p{
+  margin-top:10px;max-width:50ch;
+  font-size:clamp(.95rem,1.05vw,1.02rem);line-height:1.56;color:var(--bl-2);text-wrap:pretty;
 }
-/* Ikonen överst i kortet, i kortets färg (.hj-ikon, avsnitt 17), i
-   stället för en siffra (Leo, med en bild av bentots rutor: "ha dessa fem
-   element istället för siffror"); fokus syns på kanten. */
-.hjs-kort .hj-et{margin-top:clamp(16px,2vw,24px);color:var(--f)}
-.hjs-kort h3{
-  margin-top:10px;
-  font-size:clamp(1.4rem,1.9vw,1.9rem);font-weight:800;
-  letter-spacing:-.035em;line-height:1.06;color:var(--bl);text-wrap:balance;
+.bn-ruta .nx-lank{margin-top:auto;padding-top:18px}
+.bn-ruta .nx-lank::after{bottom:0}
+.bn-ruta .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
+.bn-hog .hj-nex-bild{margin-top:clamp(18px,2.4vw,32px)}
+@media (hover:hover) and (pointer:fine){
+  .bn-ruta:hover{scale:1.012}
 }
-.hjs-kort p{
-  margin-top:12px;
-  font-size:clamp(.98rem,1.05vw,1.06rem);line-height:1.55;color:var(--bl-2);text-wrap:pretty;
+@media (max-width:1100px){
+  .nx-bento{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bn-hog{grid-column:1 / -1;grid-row:auto}
 }
-.hjs-kort .nx-lank{margin-top:auto;padding-top:18px;color:var(--bl)}
-.hjs-kort .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
-.hjs-igang .hjs-kort.pa{border-color:color-mix(in srgb,var(--f) 62%,transparent)}
-/* Bandet med trådarna, under korten: ett mönster som visar att raden
-   fortsätter åt höger, nedtonat så att det aldrig tävlar med texten. */
-.hjs-band{position:absolute;inset:0;pointer-events:none}
-.hjs-bg{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity 1.2s var(--e-mjuk)}
-.hjs-bg.gl-pa{opacity:.6}
-/* Orden i springan: ett korts rubrik stiger upp när kortet kommer in. */
-.hjs-ord{display:inline-block;overflow:clip;vertical-align:top;padding-bottom:.1em;margin-bottom:-.1em}
-.hjs-ord > span{display:inline-block;transition:translate .9s var(--e-ut),rotate .9s var(--e-ut)}
-.hjs-rorlig .hjs-kort:not(.inne) .hjs-ord > span{translate:0 110%;rotate:7deg;transition:none}
-.hjs-rorlig .hjs-kort.inne .hjs-ord > span{transition-delay:calc(.12s + var(--k,0) * 50ms)}
-.hjs-rorlig .hjs-kort p,.hjs-rorlig .hjs-kort .nx-lank{transition:opacity .7s var(--e-mjuk),filter .7s var(--e-mjuk)}
-.hjs-rorlig .hjs-kort:not(.inne) p,
-.hjs-rorlig .hjs-kort:not(.inne) .nx-lank{opacity:0;filter:blur(8px);transition:none}
-.hjs-rorlig .hjs-kort.inne p,.hjs-rorlig .hjs-kort.inne .nx-lank{transition-delay:.4s}
+/* Telefon: två och två och tätt, som bentot, med NexLäx över hela bredden. */
 @media (max-width:760px){
-  .hjs-kort{width:min(20rem,80vw)}
+  .nx-bento{gap:10px}
+  .bn-ruta{--pad:14px;--radie:20px;padding:16px 14px 18px}
+  .bn-ruta::after{width:34px}
+  .bn-ruta .hj-ikon{width:32px;height:32px;border-radius:10px}
+  .bn-ruta .hj-ikon svg{width:16px;height:16px}
+  .bn-ruta .hj-et{margin-top:12px;font-size:10px;letter-spacing:.12em}
+  .bn-ruta h3{margin-top:6px;font-size:1rem;line-height:1.16;letter-spacing:-.024em}
+  .bn-ruta p{
+    margin-top:7px;font-size:.875rem;line-height:1.48;
+    -webkit-hyphens:auto;hyphens:auto;hyphenate-limit-chars:8 4 3;
+    overflow-wrap:break-word;
+  }
+  .bn-ruta .nx-lank{padding-top:12px;font-size:.86rem}
 }
-/* Garantins remsa under scenen, på papperet. */
-.hjs-gar{padding-block:clamp(40px,6vw,72px) clamp(36px,4.6vw,68px)}
-.hjs-gar .hj-gar{margin-top:0}
+@media (max-width:379px){
+  .nx-bento{gap:8px}
+  .bn-ruta{padding-inline:11px}
+}
+@media (max-width:339px){
+  .nx-bento{grid-template-columns:minmax(0,1fr)}
+  .bn-hog{grid-column:auto}
+}
+.nx-hj .nx-bento + .hj-gar{margin-top:clamp(28px,3.6vw,48px)}
 
 /* Nästa steg på startsidan följer sidans läge (Leo: "Så den ska matcha
    sidan på mörk och ljus vy"): ingen .nx-mork, alltså sidans papper och
@@ -3750,7 +3734,7 @@ html[data-motion="lite"] .nx-start .nx-et{
 @keyframes nx-glans-text{to{background-position:-150% 0}}
 
 @media (prefers-reduced-motion:reduce){
-  .hjs-ord > span,.hjs-kort{transition:none}
+  .bn-ruta{transition:none}
   .nx-start .nx-et{animation:none}
 }
 
@@ -3764,10 +3748,13 @@ html[data-motion="lite"] .nx-start .nx-et{
 .nx-manifest-scen .nx-cta-rad{margin-top:clamp(30px,3.6vw,48px)}
 /* Manifestets topp: rubriken till vänster och fotot hemma hos familjen
    till höger, med platserna och rapporten som lappar ovanpå, som i
-   bentots läxhjälpsruta (Leo: "Info från den tredje bilden lägger du på
-   rätt person kan göra stor skillnad"). Under 980 px under varandra.
+   bentots läxhjälpsruta, och dess mening under rubriken (Leo: "Info från
+   den tredje bilden lägger du på rätt person kan göra stor skillnad").
+   Under 980 px under varandra.
    Lapparna poppar fram i tur när fotot stigit in (.nx-in). */
 .mf-topp{display:grid;gap:clamp(28px,4vw,56px);align-items:center}
+/* Läxhjälpens mening ur samma ruta, under rubriken. */
+.mf-rubrik .mf-lede{margin-top:clamp(18px,2vw,26px);max-width:44ch}
 @media (min-width:980px){
   .mf-topp{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)}
   .nx-manifest-scen .mf-topp h2{font-size:clamp(2.2rem,4.1vw,3.9rem)}
