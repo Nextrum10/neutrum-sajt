@@ -112,6 +112,13 @@ sedan trådarna i Raden som glider).
   med raden (min-content), så vägen mättes till noll: `minmax(0,1fr)`; (2) trådarna
   blev trappsteg på en telefon i en tredjedels upplösning, så skalan är 0,62 där
   (0,5 på dator, där duken är större).
+  **Nästa steg** samma kväll (Leo, när jag frågade om den mörka sektionen längst ned:
+  "Så den ska matcha sidan på mörk och ljus vy"): på startsidan har den ingen `.nx-mork`
+  (`.nx-final-ljus`), så den står på sidans papper och bläck i båda lägena, och
+  norrskenet (Aurora, som stod där några timmar) är bytt mot samma trådar, som går
+  genom scenens fem färger, fyra sekunder var. Rubrikens ord i accenten, som andra
+  rubrikers. Reglerna `#bli + .nx-mork` (Nästa steg som började i `#bli`:s svarta)
+  gick med, för inget matchade dem längre. Menysidornas Nästa steg är mörka som förut.
 - **Scenen** (tredje varvet samma kväll, borttagen med Raden). Leo om högen: "Jag sa
   ta inspiration av animationer osv på react bits, snygga rörliga bakgrunder, hur
   texter går osv du gjorde ingenting av det. De blir liksom 8 kolumner direkt du
@@ -760,7 +767,8 @@ knappen (kräm med barkens text) 12,6:1. Formuläret står på papperet under
 och är orört.
 
 **Nästa steg i mörkt läge** (cinema, DE MÖRKA YTORNA). På alla sidor med
-`.nx-mork.nx-final-cinema` (startsidan, menysidorna, de genererade sidorna)
+`.nx-mork.nx-final-cinema` (menysidorna, de genererade sidorna, och startsidan till
+2026-10-29, då dess Nästa steg började följa sidans läge: Raden som glider ovan)
 står ytan i mörkt läge på `--pap` (#1A1813) med ett svagt ljus av lera mitt
 bakom rubriken som inte når kanterna, i stället för barkens #262319; footern
 under står kvar i barken. Ljust läge som förut. Efter `#bli` (startsidan)

@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=b9a03a57">
-<link rel="stylesheet" href="nextrum-start.css?v=023788c0">
+<link rel="stylesheet" href="nextrum-start.css?v=355a289a">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -244,7 +244,8 @@
      (ScrollVelocity), rubrikerna har ingressen under sig och ansökans fyra
      steg är en lodrät lista; manifestet är ett eget ögonblick där orden blir
      skarpa medan man scrollar (ScrollReveal); studievyn tippar upp ur
-     papperet, och Nästa steg har ett norrsken i WebGL (nextrum-start-scen.js).
+     papperet, och Nästa steg följer sidans läge med samma trådar
+     (nextrum-start-scen.js).
      Trygg hjälp har ingen egen sektion längre. Ordningen i övrigt är Leos
      från 2026-10-08. -->
 <!-- ==========================================================
@@ -1385,7 +1386,11 @@
 <!-- ==========================================================
      15 — SISTA STEGET
      ========================================================== -->
-<section class="nx-mork nx-final-cinema">
+<!-- Nästa steg följer sidans läge, ljust i ljust och mörkt i mörkt
+     (2026-10-29, Leo: "Så den ska matcha sidan på mörk och ljus vy"):
+     ingen .nx-mork här, och trådarna bakom (nextrum-start-scen.js) i
+     stället för barken och norrskenet. Formen: nextrum-start.css avsnitt 19. -->
+<section class="nx-final-cinema nx-final-ljus">
   <div class="nx-wrap-bred">
     <div class="nx-final-inner">
       <span class="nx-et" data-stig>Nästa steg</span>
@@ -1600,7 +1605,7 @@
      de inte står allt som nextrum-start.js lämnade det. -->
 <script src="bibliotek/gsap-3.13.0.min.js" defer></script>
 <script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js" defer></script>
-<script src="nextrum-start-scen.js?v=b7982b1c" defer></script>
+<script src="nextrum-start-scen.js?v=9802c686" defer></script>
 <script src="nextrum-socialt.js?v=7ba4ec99"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

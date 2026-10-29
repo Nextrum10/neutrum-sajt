@@ -3237,13 +3237,9 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
      #A99E88 → 6,7:1), ljus lera #D9814F → 6,1:1; knappen är krämvit
      med barkens text, som förut.
 
-   Nästa steg, som följer direkt efter #bli sedan omdömena flyttade upp,
-   börjar i samma svarta och mörknar mot footern i ljust läge; i mörkt
-   läge står det på sidans papper, som all Nästa steg (cinema, DE MÖRKA
-   YTORNA), alltså samma svarta hela vägen. Lerans sken nere till vänster
-   i #bli fortsätter över gränsen: samma bredd (70 %) och samma mitt, i
-   nederkanten här och i överkanten där, så att skenet är ett och samma
-   och gränsen inte blir en kant där ljuset klipps av. */
+   Nästa steg, som följer direkt efter #bli, började till 2026-10-29 i
+   samma svarta (#bli + .nx-mork). Nu följer det sidans läge i båda lägena
+   (avsnitt 19, .nx-final-ljus), och #bli slutar mot papperet. */
 #bli{
   background:
     radial-gradient(80% 60% at 100% 0%,var(--bli-glod),transparent 58%),
@@ -3253,26 +3249,6 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 #bli::before{
   content:"";position:absolute;inset:0 0 auto;height:1px;pointer-events:none;
   background:linear-gradient(90deg,transparent,var(--bli-kant) 22%,var(--bli-kant) 78%,transparent);
-}
-#bli + .nx-mork{
-  background:
-    radial-gradient(70% 40% at 0% 0%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 60%),
-    radial-gradient(60% 45% at 100% 55%,var(--nt-mossa),transparent 62%),
-    linear-gradient(180deg,var(--bli-bg),var(--nt-2));
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) #bli + .nx-mork{
-    background:
-      radial-gradient(70% 40% at 0% 0%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 60%),
-      radial-gradient(48% 46% at 50% 48%,color-mix(in srgb,var(--lera-l) 7%,transparent),transparent 74%),
-      var(--pap);
-  }
-}
-:root[data-theme="dark"] #bli + .nx-mork{
-  background:
-    radial-gradient(70% 40% at 0% 0%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 60%),
-    radial-gradient(48% 46% at 50% 48%,color-mix(in srgb,var(--lera-l) 7%,transparent),transparent 74%),
-    var(--pap);
 }
 .nx-page-hero.on-band.bli-svart{
   background:
@@ -3625,8 +3601,9 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 }
 
 /* ============================================================
-   19. EN NY FORM (2026-10-29) — scenen, trådarna, norrskenet, texten
-       som rör sig, manifestet, studievyns tippning och stjärnkanten
+   19. EN NY FORM (2026-10-29) — scenen, trådarna, Nästa steg i sidans
+       läge, texten som rör sig, manifestet, studievyns tippning och
+       stjärnkanten
 
    Leo: "Just nu är mycket bara i kolumner och tråkiga", med React Bits
    som förebild, och efter två varv med rutor (ett bentorutnät och en hög
@@ -3654,12 +3631,12 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   background:var(--yta);
   padding-block:clamp(72px,10vw,128px) clamp(64px,8vw,112px);
 }
-.hjs-bg,.nx-aurora{
+.hjs-bg,.nx-tradar{
   position:absolute;inset:0;z-index:0;width:100%;height:100%;display:block;
   pointer-events:none;opacity:0;transition:opacity 1.2s var(--e-mjuk);
 }
 .hjs-bg.gl-pa{opacity:1}
-.nx-aurora.gl-pa{opacity:1}
+.nx-final-ljus > canvas.nx-tradar.gl-pa{opacity:.75}
 /* Raden. Utan skriptet en rad att svepa i: raden rullas, aldrig sidan
    (overflow-y:hidden, som ämnesbandet), och kanten följer sidans marginal. */
 .hjs-spar{
@@ -3753,9 +3730,19 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .hjs-gar{padding-block:clamp(40px,6vw,72px) clamp(36px,4.6vw,68px)}
 .hjs-gar .hj-gar{margin-top:0}
 
-/* Nästa steg: norrskenet i WebGL i stället för de tre fläckarna. */
-.nx-final-cinema{--aurora-1:#7A3417;--aurora-2:#F07A1E;--aurora-3:#D9814F;--aurora-styrka:.9}
-.nx-final-cinema > canvas.nx-aurora{position:absolute;z-index:0}
+/* Nästa steg på startsidan följer sidans läge (Leo: "Så den ska matcha
+   sidan på mörk och ljus vy"): ingen .nx-mork, alltså sidans papper och
+   bläck i båda lägena, och trådarna bakom i stället för barken, skenet och
+   norrskenets fläckar. Rubrikens ord står i accenten, som andra rubrikers
+   <em> på papperet, och raden under i brödtextens färg. Menysidornas Nästa
+   steg är mörka som förut (cinema, DE MÖRKA YTORNA). */
+.nx-final-ljus{position:relative;isolation:isolate;overflow:clip}
+.nx-final-ljus > *{position:relative;z-index:1}
+.nx-final-ljus > canvas.nx-tradar{position:absolute;z-index:0}
+.nx-final-ljus > .nx-norrsken{display:none}
+.nx-final-ljus h2 em{color:var(--acc)}
+.nx-final-ljus .nx-hero-trust li{color:var(--bl-2)}
+.nx-final-ljus .nx-hero-trust li::before{background:var(--bl-3)}
 
 /* ---------- texten som rör sig, på startsidan ----------
    (.nx-start på main, bara startsidan.) Rubrikernas ord (nextrum-motion.js

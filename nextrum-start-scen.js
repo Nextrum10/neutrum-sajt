@@ -7,12 +7,11 @@
    finns inget ramverk och inget byggsteg, så det som togs därifrån är
    skrivet om för hand, i sidans egen stil:
 
-     trådar     Threads: trådar i WebGL som böljar bakom Hur hjälper vi,
-                på ytans vita, i färgen från budskapet i fokus. Ritas i
+     bakgrunder Threads: trådar i WebGL som böljar bakom Hur hjälper vi,
+                på ytans vita, i färgen från budskapet i fokus, och bakom
+                Nästa steg, där de går genom samma fem färger. Ritas i
                 låg upplösning, bara medan de syns och fliken är framme,
                 och står still med reducerad rörelse.
-     norrsken   Aurora: ett norrsken i WebGL i Nästa steg, i sidans lera
-                och orange, på samma villkor.
      hjscen     Hur hjälper vi som en rad som glider: ytan står still
                 medan man scrollar, och rubriken och de fem budskapen går
                 åt vänster i EN rad. Ett korts rubrik stiger upp ur en
@@ -59,8 +58,8 @@
   }
 
   /* ---------- duken (WebGL) ----------
-     Norrskenet och trådarna delar allt utom sin fragmentshader: en
-     triangel över hela duken, ett program, och slingan. Det som håller
+     En triangel över hela duken, ett program och slingan; shadern och
+     det som ändras per bild kommer utifrån. Det som håller
      det billigt: duken ritas i en bråkdel av sin storlek (skala) och
      skalas upp av webbläsaren, slingan går bara medan duken syns och
      fliken är framme, och med reducerad rörelse ritas en enda bild.
@@ -153,55 +152,6 @@
     return { färger, rita: () => { if (stilla || !ram0) requestAnimationFrame(rita); } };
   }
 
-  /* ---------- norrskenet (Aurora), i Nästa steg ----------
-     Samma fragmentshader som React Bits Aurora, i WebGL 1: ett
-     simplexbrus som höjer och sänker en färgramp med tre stopp, så att
-     ljuset böljar. Färgerna ur --aurora-1, -2 och -3. */
-  const AURORA = [
-    'precision mediump float;',
-    'uniform float t;uniform vec2 r;uniform vec3 c0;uniform vec3 c1;uniform vec3 c2;uniform float amp;',
-    'vec3 permute(vec3 x){return mod(((x*34.0)+1.0)*x,289.0);}',
-    'float snoise(vec2 v){',
-    ' const vec4 C=vec4(0.211324865405187,0.366025403784439,-0.577350269189626,0.024390243902439);',
-    ' vec2 i=floor(v+dot(v,C.yy));vec2 x0=v-i+dot(i,C.xx);',
-    ' vec2 i1=(x0.x>x0.y)?vec2(1.0,0.0):vec2(0.0,1.0);',
-    ' vec4 x12=x0.xyxy+C.xxzz;x12.xy-=i1;i=mod(i,289.0);',
-    ' vec3 p=permute(permute(i.y+vec3(0.0,i1.y,1.0))+i.x+vec3(0.0,i1.x,1.0));',
-    ' vec3 m=max(0.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.0);m=m*m;m=m*m;',
-    ' vec3 x=2.0*fract(p*C.www)-1.0;vec3 h=abs(x)-0.5;vec3 ox=floor(x+0.5);vec3 a0=x-ox;',
-    ' m*=1.79284291400159-0.85373472095314*(a0*a0+h*h);',
-    ' vec3 g;g.x=a0.x*x0.x+h.x*x0.y;g.yz=a0.yz*x12.xz+h.yz*x12.yw;return 130.0*dot(m,g);}',
-    'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/r;',
-    ' vec3 ramp=uv.x<0.5?mix(c0,c1,uv.x*2.0):mix(c1,c2,(uv.x-0.5)*2.0);',
-    ' float h=snoise(vec2(uv.x*2.0+t*0.1,t*0.25))*0.5*amp;h=exp(h);h=(uv.y*2.0-h+0.2);',
-    ' float i=0.6*h;float a=smoothstep(0.2-0.3,0.2+0.3,i);',
-    ' gl_FragColor=vec4(i*ramp*a,a);}'
-  ].join('\n');
-
-  function norrsken() {
-    /* Nästa steg hade tre CSS-fläckar (norrsken i nextrum-motion.js).
-       Här byts de mot norrskenet i WebGL, och fläckarna går. */
-    $$('.nx-final-cinema').forEach(sek => {
-      if (sek.querySelector('canvas.nx-aurora')) return;
-      const el = document.createElement('canvas');
-      el.className = 'nx-aurora';
-      el.setAttribute('aria-hidden', 'true');
-      sek.insertBefore(el, sek.firstChild);
-      const ok = duk(el, AURORA, {
-        skala: [0.5, 0.34], fart: 0.9, stillaTid: 12.0,
-        färger: (gl, u, cs) => {
-          gl.uniform3fv(u('c0'), färg(cs.getPropertyValue('--aurora-1')));
-          gl.uniform3fv(u('c1'), färg(cs.getPropertyValue('--aurora-2')));
-          gl.uniform3fv(u('c2'), färg(cs.getPropertyValue('--aurora-3')));
-          gl.uniform1f(u('amp'), parseFloat(cs.getPropertyValue('--aurora-styrka')) || 1);
-        }
-      });
-      if (ok) $$('.nx-norrsken', sek).forEach(n => n.remove());
-      else el.remove();
-    });
-  }
-
   /* ---------- trådarna (Threads), bakom Hur hjälper vi ----------
      React Bits Threads i WebGL 1: trettio trådar som börjar samlade till
      vänster och böljar isär åt höger, varje med två perlinbrus. Två
@@ -243,40 +193,68 @@
     ' float v=1.0-s;gl_FragColor=vec4(c*v,v);}'
   ].join('\n');
 
-  const TRÅD = { mål: null, nu: null, mus: [0.5, 0.5], musMål: [0.5, 0.5], prog: 0 };
+  /* Ett läge per duk: färgen den glider mot och den den har, pekaren, och
+     scenens framsteg. Scenens läge (TRÅD) skriver hjscen. */
+  const nyttLäge = () => ({ mål: null, nu: null, mus: [0.5, 0.5], musMål: [0.5, 0.5], prog: 0, rita: null });
+  const TRÅD = nyttLäge();
 
-  function trådar() {
-    $$('canvas[data-tradar]').forEach(el => {
-      const bas = () => färg(getComputedStyle(el.parentElement).getPropertyValue('--amne-ma'));
-      TRÅD.mål = TRÅD.mål || bas();
-      TRÅD.nu = TRÅD.nu || TRÅD.mål.slice();
-      const d = duk(el, TRÅDAR, {
-        skala: [0.5, 0.62], fart: 1, stillaTid: 18.0,
-        färger: (gl, u) => {
-          gl.uniform1f(u('amp'), 1.3);
-          gl.uniform1f(u('avst'), 0.3);
-          gl.uniform3fv(u('c'), TRÅD.nu);
-          gl.uniform2fv(u('mus'), TRÅD.mus);
-        },
-        /* Den tjockaste tråden är ungefär fem CSS-pixlar, i dukens pixlar. */
-        storlek: (gl, u, skala) => gl.uniform1f(u('lw'), 5.2 * skala),
-        varje: (gl, u) => {
-          for (let i = 0; i < 3; i++) TRÅD.nu[i] += (TRÅD.mål[i] - TRÅD.nu[i]) * 0.05;
-          for (let i = 0; i < 2; i++) TRÅD.mus[i] += (TRÅD.musMål[i] - TRÅD.mus[i]) * 0.04;
-          gl.uniform3fv(u('c'), TRÅD.nu);
-          gl.uniform2f(u('mus'), TRÅD.mus[0] + (TRÅD.prog - 0.5) * 0.5, TRÅD.mus[1]);
-        }
-      });
-      if (!d) return;
-      TRÅD.rita = d.rita;
-      if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reducerad()) {
-        const yta = el.parentElement;
-        yta.addEventListener('pointermove', e => {
-          const b = yta.getBoundingClientRect();
-          TRÅD.musMål = [(e.clientX - b.left) / b.width, 1 - (e.clientY - b.top) / b.height];
-        });
-        yta.addEventListener('pointerleave', () => { TRÅD.musMål = [0.5, 0.5]; });
+  function trådar(el, L, varjeTid) {
+    L.mål = L.mål || färg(getComputedStyle(el.parentElement).getPropertyValue('--amne-ma'));
+    L.nu = L.nu || L.mål.slice();
+    const d = duk(el, TRÅDAR, {
+      skala: [0.5, 0.62], fart: 1, stillaTid: 18.0,
+      färger: (gl, u) => {
+        gl.uniform1f(u('amp'), 1.3);
+        gl.uniform1f(u('avst'), 0.3);
+        gl.uniform3fv(u('c'), L.nu);
+        gl.uniform2fv(u('mus'), L.mus);
+      },
+      /* Den tjockaste tråden är ungefär fem CSS-pixlar, i dukens pixlar. */
+      storlek: (gl, u, skala) => gl.uniform1f(u('lw'), 5.2 * skala),
+      varje: (gl, u, t) => {
+        if (varjeTid) varjeTid(t);
+        for (let i = 0; i < 3; i++) L.nu[i] += (L.mål[i] - L.nu[i]) * 0.05;
+        for (let i = 0; i < 2; i++) L.mus[i] += (L.musMål[i] - L.mus[i]) * 0.04;
+        gl.uniform3fv(u('c'), L.nu);
+        gl.uniform2f(u('mus'), L.mus[0] + (L.prog - 0.5) * 0.5, L.mus[1]);
       }
+    });
+    if (!d) return false;
+    L.rita = d.rita;
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reducerad()) {
+      const yta = el.parentElement;
+      yta.addEventListener('pointermove', e => {
+        const r = yta.getBoundingClientRect();
+        L.musMål = [(e.clientX - r.left) / r.width, 1 - (e.clientY - r.top) / r.height];
+      });
+      yta.addEventListener('pointerleave', () => { L.musMål = [0.5, 0.5]; });
+    }
+    return true;
+  }
+
+  /* Hur hjälper vi har sin duk i markupen. Nästa steg får en här, och dess
+     trådar går långsamt genom scenens fem färger, några sekunder var, så
+     att sidan slutar med samma tråd som den började med. Färgerna läses om
+     när sidans läge byts. */
+  const NÄSTA_FÄRGER = ['--amne-ma', '--amne-en', '--amne-no', '--acc', '--amne-ms'];
+  function bakgrunder() {
+    $$('canvas[data-tradar]').forEach(el => trådar(el, TRÅD));
+    $$('.nx-final-ljus').forEach(sek => {
+      if (sek.querySelector('canvas.nx-tradar')) return;
+      const el = document.createElement('canvas');
+      el.className = 'nx-tradar';
+      el.setAttribute('aria-hidden', 'true');
+      sek.insertBefore(el, sek.firstChild);
+      let färgerna = [];
+      const läs = () => {
+        const cs = getComputedStyle(sek);
+        färgerna = NÄSTA_FÄRGER.map(n => färg(cs.getPropertyValue(n)));
+      };
+      läs();
+      matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', läs);
+      const L = nyttLäge();
+      L.mål = färgerna[0];
+      if (!trådar(el, L, t => { L.mål = färgerna[Math.floor(t / 4) % färgerna.length]; })) el.remove();
     });
   }
 
@@ -320,7 +298,9 @@
       const kort = $$('.hjs-kort', scen);
       if (!spår || !rad || kort.length < 2) return;
       kort.forEach(k => { const h = $('h3', k); if (h) delaRubrik(h); });
-      const färgen = kort.map(k => färg(getComputedStyle(k).getPropertyValue('--f')));
+      let färgen = [];
+      const läsFärgen = () => { färgen = kort.map(k => färg(getComputedStyle(k).getPropertyValue('--f'))); };
+      läsFärgen();
       const fyll = $('.hjs-matare-fyll', scen);
       scen.classList.add('hjs-pa');
 
@@ -363,6 +343,10 @@
         }
       });
       läge(0);
+      matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
+        läsFärgen();
+        if (nu >= 0) TRÅD.mål = färgen[nu];
+      });
 
       scen.addEventListener('focusin', e => {
         const k = e.target.closest('.hjs-kort');
@@ -461,8 +445,7 @@
   }
 
   if (medGsap) gsap.registerPlugin(ST);
-  prova('norrsken', norrsken);
-  prova('trådar', trådar);
+  prova('bakgrunder', bakgrunder);
   prova('hjscen', hjscen);
   prova('bandfart', bandfart);
   prova('scrollord', scrollord);

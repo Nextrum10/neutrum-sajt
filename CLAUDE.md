@@ -712,7 +712,7 @@ Detaljer: `minne/grunden.md`.
   körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
   för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
   `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan, och `nextrum-start-scen.js` startsidans
-  scener (2026-10-29): trådarna och norrskenet i WebGL, Hur hjälper vis rad som glider, ämnesbandets lutning,
+  scener (2026-10-29): trådarna i WebGL, Hur hjälper vis rad som glider, ämnesbandets lutning,
   manifestets ord och studievyns tippning. `nextrum-landning.js` och `-css` är
   landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`;
   flikarna (`data-lp-flikar`, Vad passen går ut på och Var passen hålls) och ljuset över korten fungerar också
@@ -772,10 +772,11 @@ läser `var(--f, sin gamla färg)`, aldrig texten) och **ämnet** (studiehjälpa
 slogan och Nästa steg) och citattecknen är orange eller vita som förut (Leo 2026-10-08: "när de inte gäller nexläx").
 Garantin har leran; på bark byts färgerna mot `-l`; erbjudandena och Just nu har sina egna, och i vyerna står
 de bara i NexLäx. **`#bli` står på mörka
-lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna (`--bli-kant`), och Nästa steg
-efter den börjar i samma svarta; Bli studiehjälpare-sidans sidhuvud och band (`.bli-svart`) står i samma svarta
-med samma lera (2026-10-08). **Nästa steg i mörkt läge** står på sidans papper (`--pap`) på alla sidor, aldrig på
-barken (cinema, DE MÖRKA YTORNA; efter `#bli` fortsätter dess sken över gränsen), och i ljust läge som förut.
+lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna (`--bli-kant`); Bli
+studiehjälpare-sidans sidhuvud och band (`.bli-svart`) står i samma svarta med samma lera (2026-10-08). **Nästa steg i
+mörkt läge** står på sidans papper (`--pap`) på alla sidor, aldrig på barken (cinema, DE MÖRKA YTORNA), och i ljust läge
+som förut, utom på startsidan: där följer det sidans läge i båda (`.nx-final-ljus`, ingen `.nx-mork`, 2026-10-29, Leo:
+"Så den ska matcha sidan på mörk och ljus vy"), med trådar bakom, och börjar inte längre i `#bli`:s svarta.
 **Footern** står i `--ftr-bg` (#1F1915) i båda lägena (2026-10-08), aldrig i barken.
 Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
@@ -797,8 +798,8 @@ en linje och korten, bara på de genererade `laxhjalp-*` och guiderna; stegen t�
 eller med reducerad rörelse står allt färdigt i CSS. **Och startsidan** (2026-10-29): `nextrum-start-scen.js` låter GSAP
 dra manifestets ord (opacitet och sudd), studievyns `.sd-rum` (bara tier `full`), scenens rad (`x`) och framstegslinje
 och ämnesbandets lutning med farten (`skewX` på raderna, aldrig sektionen: den breddade sidan sju pixlar), och trådar i
-WebGL bakom scenen och ett norrsken i Nästa steg (i låg upplösning, bara medan det syns, en enda bild med reducerad
-rörelse). Scenens höjd är radens väg plus en skärm (`--hjs-x`, mätt före varje omräkning), och ytan är ett rutnät med
+WebGL bakom scenen och Nästa steg, som där går genom scenens fem färger (i låg upplösning, bara medan de syns, en enda
+bild med reducerad rörelse). Scenens höjd är radens väg plus en skärm (`--hjs-x`, mätt före varje omräkning), och ytan är ett rutnät med
 `minmax(0,1fr)`: med `auto` växte kolumnen med raden och vägen blev noll. Etiketterna
 har ett ljus som glider (ShinyText, CSS). Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
