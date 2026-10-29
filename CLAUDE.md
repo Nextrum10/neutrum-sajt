@@ -1050,6 +1050,12 @@ Detaljer: `minne/grunden.md`.
   **Ingen signatur** i mejlen till oss (`utanSignatur: true`, `admin.ts`) och i det som inte går genom
   `renderaRam()`: Leos intervjumejl och admins egna brev (adminvyn visar texten innan den går, och HTML kan inte
   säga något annat än den), underlaget, nyhetsbrevet och aviseringen om en anmälan; de har `skal()` utan `signatur`.
+  **Det vi skriver själva** (2026-10-29, Leo: "samma signatur på vanliga mail som vi skickar själva"): `ansokan-mejl` (Skriv
+  till hen och Skicka utbildningen, från info@) lägger signaturen under texten, i HTML och i text, utan eget
+  "Vänliga hälsningar" (`signaturHtml(false)`; den som skriver har sin egen), och rutan säger det. Det som öppnas i Gmail
+  (Öppna i Gmail, `gmailLänk()`) får Gmails egen signatur: länkens `body` är bara text, och Gmail lägger sin signatur på
+  av sig själv, så koden lägger ingen dit (den skulle dubblas). Den läggs in i Gmails inställningar, för varje konto
+  som skickar, från `signatur.html` (HTML med kopieringsknapp; ligger inte i repot).
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot och vårdnadshavarens mejl styrs av en INSERT, med samma broms;
