@@ -156,9 +156,8 @@
       ? ['ja', pass + (pass === 1 ? ' genomfört pass' : ' genomförda pass')]
       : ['vet-ej', 'Inga genomförda pass än']);
 
-    /* Studiehjälparens val om kön (kon_i_matchningen). Bara elevens
-       nuvarande studiehjälpare kan stå här och krocka med det: de andra
-       som krockar visas inte alls (krockarMedValet). */
+    /* Studiehjälparens val om kön (kon_i_matchningen). Den som krockar
+       står kvar i listan som Kan inte ta emot, med det här som skäl. */
     if (krockarMedValet(tutor, elev)) {
       skäl.push(['nej', elev.kon ? 'Vill bara hjälpa elever av samma kön som hen'
         : 'Vill bara hjälpa elever av samma kön, och elevens kön är inte angivet']);
@@ -277,19 +276,19 @@
     const poängFörTutor = {};
     (poäng || []).forEach(r => { poängFörTutor[r.tutor_id] = r; });
 
-    /* Den som bara vill hjälpa elever av samma kön och inte kan hjälpa den
-       här eleven visas inte (Leo 2026-10-26: "syns då inte den
-       studiehjälparen i matchning"), utom den nuvarande. Raden ovanför
-       korten säger vilka det är, så att ingen letar efter dem. */
-    const dolda = S.matchunderlag.filter(t => t.tutor_id !== nuvarande && krockarMedValet(t, elev));
-
+    /* Den som bara vill hjälpa elever av samma kön och inte kan ta emot den
+       här eleven (kon_i_matchningen) står kvar, sist och utan Matcha-knapp:
+       databasen nekar matchningen ändå (students_vakt_kon), och att se vilka
+       som kan och inte kan är det man behöver. Admin filtrerar själv. Den
+       nuvarande studiehjälparen räknas aldrig hit, en matchning som står
+       rivs inte. */
     const förslag = S.matchunderlag
-      .filter(t => dolda.indexOf(t) === -1)
       .map(t => {
         const r = poängFörTutor[t.tutor_id]
           || { poang: 0, amne_utfall: 'vet_ej', arskurs_utfall: 'vet_ej',
                antal_elever: t.antal_elever, genomforda_pass: t.genomforda_pass, hart_nej: false };
-        return { tutor: t, poäng: r.poang, hårtNej: !!r.hart_nej, skäl: skälFör(r, elev, t) };
+        return { tutor: t, poäng: r.poang, hårtNej: !!r.hart_nej, skäl: skälFör(r, elev, t),
+                 kanInte: t.tutor_id !== nuvarande && krockarMedValet(t, elev) };
       })
       .sort((a, b) => {
         /* Den nuvarande studiehjälparen ligger alltid först,
@@ -297,11 +296,17 @@
            ligger till, inte för att leta rätt på den. */
         if (a.tutor.tutor_id === nuvarande) return -1;
         if (b.tutor.tutor_id === nuvarande) return 1;
+        if (a.kanInte !== b.kanInte) return a.kanInte ? 1 : -1;
         return b.poäng - a.poäng;
       });
 
+    const antalKan = förslag.filter(x => !x.kanInte).length;
+    const antalKanInte = förslag.length - antalKan;
+    const filter = antalKanInte ? (S.matchFilter || 'alla') : 'alla';
+    const visas = förslag.filter(x => filter === 'alla' || (filter === 'kan') === !x.kanInte);
+
     $('#mt-forslag-antal').textContent = förslag.length
-      ? förslag.length + ' godkända' + (dolda.length ? ', ' + dolda.length + ' visas inte' : '') : '';
+      ? antalKan + ' kan ta emot' + (antalKanInte ? ', ' + antalKanInte + ' kan inte' : '') : '';
 
     const fakta = [];
     if (elev.grade) fakta.push(['', elev.grade]);
@@ -365,34 +370,38 @@
       return;
     }
 
-    if (dolda.length) {
-      const namn = dolda.map(t => t.namn || '—');
-      ut += '<p class="mt-dolda">' + esc('Visas inte: ' + namn.join(', ') + '. '
-        + (dolda.length === 1 ? 'Hen vill' : 'De vill') + ' bara hjälpa elever av samma kön som '
-        + (dolda.length === 1 ? 'hen själv' : 'de själva')
-        + (elev.kon ? ', och eleven är inte det.'
-          : ', och eleven har inget kön angivet. Ange det under Redigera på eleven, så visas de som är av samma kön.'))
-        + '</p>';
-    }
-
     if (!förslag.length) {
-      host.innerHTML = ut + (dolda.length
-        ? tomt('Ingen studiehjälpare att visa', 'Alla som är godkända vill bara hjälpa elever av samma kön som de själva.')
-        : tomt('Inga godkända studiehjälpare', 'Godkänn någon under Studiehjälpare, så dyker de upp här.'));
+      host.innerHTML = ut + tomt('Inga godkända studiehjälpare', 'Godkänn någon under Studiehjälpare, så dyker de upp här.');
       return;
     }
 
-    ut += '<div class="mt-forslag">' + förslag.map(x => {
+    /* Filtret finns bara när någon inte kan ta emot eleven. */
+    if (antalKanInte) {
+      ut += '<div class="mt-filter">'
+        + lägesväljare({
+          alla: ['Alla (' + förslag.length + ')'],
+          kan: ['Kan ta emot (' + antalKan + ')'],
+          kaninte: ['Kan inte (' + antalKanInte + ')']
+        }, filter === 'kan' ? 'kan' : filter === 'kaninte' ? 'kaninte' : 'alla', 'data-mt-filter')
+        + '</div>';
+    }
+
+    if (!visas.length) {
+      host.innerHTML = ut + tomt('Ingen här', 'Ingen studiehjälpare passar filtret.');
+      return;
+    }
+
+    ut += '<div class="mt-forslag">' + visas.map(x => {
       const t = x.tutor;
       const är = t.tutor_id === nuvarande;
-      return '<div class="mt-kort' + (är ? ' ar-nuvarande' : '') + '">'
+      return '<div class="mt-kort' + (är ? ' ar-nuvarande' : '') + (x.kanInte ? ' ar-kan-inte' : '') + '">'
         + '<div class="mt-kort-topp">'
         + M.avatar(t.namn || '?', null, { liten: true })
         + '<span class="mt-kort-namn"><b>' + esc(t.namn || '—') + '</b>'
         + '<span>' + esc([t.ort, (t.amnen || []).join(', ')].filter(Boolean).join(' · ') || 'Inga ämnen angivna') + '</span></span>'
         + '<span class="mt-poang"><b>' + x.poäng + '%</b>'
-        + '<span>' + (x.hårtNej ? 'Passar illa' : 'Passar') + '</span>'
-        + '<span class="mt-stapel' + (x.hårtNej ? ' ar-svag' : '') + '">'
+        + '<span>' + (x.kanInte ? 'Kan inte' : x.hårtNej ? 'Passar illa' : 'Passar') + '</span>'
+        + '<span class="mt-stapel' + (x.hårtNej || x.kanInte ? ' ar-svag' : '') + '">'
         + '<i style="width:' + Math.max(3, x.poäng) + '%"></i></span></span>'
         + '</div>'
         + '<div class="mt-skal">' + x.skäl.map(s =>
@@ -400,6 +409,9 @@
         + '<div class="mt-kort-fot">'
         + (är
           ? '<span class="mt-nuvarande-marke">Nuvarande</span>'
+          : x.kanInte
+          ? '<span class="xsmall">' + (elev.kon ? 'Kan inte matchas med den här eleven.'
+            : 'Ange elevens kön under Redigera på eleven, så kan hen matchas med en elev av samma kön.') + '</span>'
           /* Den som passar illa får en dämpad knapp, inte en
              saknad. Ibland vet den som sitter här något systemet
              inte vet — familjen känner personen, eller ämnet står
@@ -523,6 +535,14 @@
       if (!ja) return;
       await sättMatchning(elev.id, null);
     }
+  });
+
+  /* Filtret i förslagen: ett tryck byter vilka som visas, inget skrivs. */
+  document.addEventListener('change', e => {
+    const grupp = e.target.closest('[data-mt-filter]');
+    if (!grupp) return;
+    S.matchFilter = grupp.value;
+    ritaMatchPanel();
   });
 
   const mtSök = $('#mt-sok');
