@@ -3728,10 +3728,26 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .nx-final-ljus .nx-hero-trust li::before{background:var(--bl-3)}
 
 /* Raden under heroknapparna (priset, första timmen, 24 timmar och
-   bindningstiden) står bara på en större skärm (2026-10-29, Leo: "de på
-   heron ska bara bort på mobilvyn"); på en telefon räcker knapparna. */
+   bindningstiden) syns bara på en större skärm (2026-10-29, Leo: "de på
+   heron ska bara bort på mobilvyn"). Den står kvar osynlig och tar sin
+   plats, för på en telefon är heron så hög som innehållet, och utan raden
+   blev den kortare (Leo: "Korta inte ner på videon den ska vara lika lång
+   som förut"). */
 @media (max-width:760px){
-  .nx-start .nx-hero-fakta{display:none}
+  .nx-start .nx-hero-fakta{visibility:hidden}
+}
+/* Heron tonar mjukt över i Hur hjälper vis yta i nederkanten, så att
+   videon inte slutar i ett streck (Leo: "skugga lite så de ej blir ett
+   tydligt streck där"). Över filmen och slöjan, under texten. */
+.nx-start .nx-hero-film::after{
+  content:"";position:absolute;inset:auto 0 0;z-index:0;pointer-events:none;
+  height:clamp(56px,9vh,110px);
+  background:linear-gradient(180deg,
+    transparent 0,
+    color-mix(in srgb,var(--yta) 12%,transparent) 30%,
+    color-mix(in srgb,var(--yta) 45%,transparent) 62%,
+    color-mix(in srgb,var(--yta) 82%,transparent) 86%,
+    var(--yta) 100%);
 }
 
 /* ---------- texten som rör sig, på startsidan ----------
