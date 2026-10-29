@@ -7,18 +7,17 @@
    finns inget ramverk och inget byggsteg, så det som togs därifrån är
    skrivet om för hand, i sidans egen stil:
 
-     bakgrunder Threads: trådar i WebGL som böljar bakom Hur hjälper vi,
-                på ytans vita, i färgen från budskapet i fokus, och bakom
-                Nästa steg, där de går genom samma fem färger. Ritas i
-                låg upplösning, bara medan de syns och fliken är framme,
-                och står still med reducerad rörelse.
-     hjscen     Hur hjälper vi som en rad som glider: ytan står still
-                medan man scrollar, och rubriken och de fem budskapen går
-                åt vänster i EN rad. Ett korts rubrik stiger upp ur en
-                springa när kortet kommer in (SplitText), texten tonar
-                fram ur sudd (BlurText). Leo om den mörka scenen före:
-                "Jag gillar inte att bakrunden är svart och orange", och
-                korten ska gå "sidleds snyggt med en vit rörlig bakrund".
+     bakgrunder Threads: trådar i WebGL i ett nedtonat band under Hur
+                hjälper vis rad, i färgen från kortet i fokus. Dot Grid: ett
+                nät av punkter bakom Nästa steg som lyser upp kring pekaren
+                (efter Leos video). Ritas bara medan de syns och fliken är
+                framme, och står still med reducerad rörelse.
+     hjscen     Hur hjälper vi som en rad man sveper i själv, med pilar på
+                dator: Leo om raden som scrollen drog, "Vi är ett läxhjälps
+                företag ... inte et tech bolag. Så vi kör istället att man
+                scrollar själv åt vänster". Ett korts rubrik stiger upp ur
+                en springa när kortet kommer in (SplitText), och texten
+                tonar fram ur sudd (BlurText).
      bandfart   ScrollVelocity: ämnesbandet lutar åt det håll man
                 scrollar, mer ju fortare, och rätar upp sig när man
                 stannar.
@@ -30,14 +29,13 @@
 
    Undantaget från "skriptet sätter klasser, CSS rör sig", som på
    landningssidorna (nextrum-landning.js): GSAP skriver transform,
-   opacitet och filter per bildruta på rubriken, fönstret, bandet och
-   scenens rad, och framstegslinjen får sin skala. Fokus och inträde i
-   scenen sätts med klasser, och övergångarna är CSS. Inget här räknar
-   om sidans layout utom scenens höjd, en gång per omräkning.
+   opacitet och filter per bildruta på rubriken, fönstret och bandet.
+   Fokus och inträde i raden sätts med klasser, och övergångarna är CSS.
+   Inget här räknar om sidans layout.
 
    Utan det här skriptet, utan GSAP eller med reducerad rörelse står
-   allt som nextrum-start.js lämnar det: scenens kort i en rad att svepa
-   i, orden som tonar fram när rubriken syns och fönstret som reser sig.
+   allt som nextrum-start.js lämnar det: korten i en rad att svepa i,
+   orden som tonar fram när rubriken syns och fönstret som reser sig.
    Inget startläge här gömmer något.
    Ingen text skrivs härifrån (CLAUDE.md, avsnitt 4).
    ============================================================ */
@@ -152,16 +150,18 @@
     return { färger, rita: () => { if (stilla || !ram0) requestAnimationFrame(rita); } };
   }
 
-  /* ---------- trådarna (Threads), bakom Hur hjälper vi ----------
+  /* ---------- trådarna (Threads), under Hur hjälper vis rad ----------
      React Bits Threads i WebGL 1: trettio trådar som börjar samlade till
      vänster och böljar isär åt höger, varje med två perlinbrus. Två
      ändringar mot förlagan: trådens bredd räknas i duken pixlar mot
      höjden, inte mot den längsta sidan (annars blir trådarna tjocka på en
      telefon på högkant), och kanterna skrivs med smoothstep åt rätt håll
      (förlagan vänder argumenten, vilket GLSL inte lovar något om).
-     Färgen är budskapets i fokus (scenen sätter TRÅD.mål), och den glider
-     dit; pekaren och scrollen rör trådarna lite, som pekaren gör i
-     förlagan. */
+     De står i ett nedtonat band under korten, aldrig bakom texten (Leo:
+     "texten syns dålig ... mer som ett mönster att veta vart man ska
+     scrolla"), och böljar isär åt höger, dit raden fortsätter. Färgen är
+     kortets i fokus (hjscen sätter TRÅD.mål), och den glider dit; pekaren
+     och radens rullning rör trådarna lite, som pekaren gör i förlagan. */
   const TRÅDAR = [
     '#ifdef GL_FRAGMENT_PRECISION_HIGH',
     'precision highp float;',
@@ -194,80 +194,161 @@
   ].join('\n');
 
   /* Ett läge per duk: färgen den glider mot och den den har, pekaren, och
-     scenens framsteg. Scenens läge (TRÅD) skriver hjscen. */
+     radens framsteg. Radens läge (TRÅD) skriver hjscen. */
   const nyttLäge = () => ({ mål: null, nu: null, mus: [0.5, 0.5], musMål: [0.5, 0.5], prog: 0, rita: null });
   const TRÅD = nyttLäge();
 
-  function trådar(el, L, varjeTid) {
+  /* bredd: den tjockaste tråden i CSS-pixlar. yta: där pekaren räknas.
+     skala, amp och avst som i duken och förlagan: ett lågt band behöver
+     full upplösning och trådar som sprids över hela höjden. */
+  function trådar(el, L, val) {
+    const v = Object.assign({ bredd: 5.2, yta: el.parentElement, skala: [0.5, 0.62], amp: 1.3, avst: 0.3 }, val);
     L.mål = L.mål || färg(getComputedStyle(el.parentElement).getPropertyValue('--amne-ma'));
     L.nu = L.nu || L.mål.slice();
     const d = duk(el, TRÅDAR, {
-      skala: [0.5, 0.62], fart: 1, stillaTid: 18.0,
+      skala: v.skala, fart: 1, stillaTid: 18.0,
       färger: (gl, u) => {
-        gl.uniform1f(u('amp'), 1.3);
-        gl.uniform1f(u('avst'), 0.3);
+        gl.uniform1f(u('amp'), v.amp);
+        gl.uniform1f(u('avst'), v.avst);
         gl.uniform3fv(u('c'), L.nu);
         gl.uniform2fv(u('mus'), L.mus);
       },
-      /* Den tjockaste tråden är ungefär fem CSS-pixlar, i dukens pixlar. */
-      storlek: (gl, u, skala) => gl.uniform1f(u('lw'), 5.2 * skala),
-      varje: (gl, u, t) => {
-        if (varjeTid) varjeTid(t);
+      storlek: (gl, u, skala) => gl.uniform1f(u('lw'), v.bredd * skala),
+      varje: (gl, u) => {
         for (let i = 0; i < 3; i++) L.nu[i] += (L.mål[i] - L.nu[i]) * 0.05;
         for (let i = 0; i < 2; i++) L.mus[i] += (L.musMål[i] - L.mus[i]) * 0.04;
         gl.uniform3fv(u('c'), L.nu);
-        gl.uniform2f(u('mus'), L.mus[0] + (L.prog - 0.5) * 0.5, L.mus[1]);
+        gl.uniform2f(u('mus'), L.mus[0] + (L.prog - 0.5) * 0.8, L.mus[1]);
       }
     });
     if (!d) return false;
     L.rita = d.rita;
     if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reducerad()) {
-      const yta = el.parentElement;
+      const yta = v.yta;
+      const in01 = x => Math.max(0, Math.min(1, x));
       yta.addEventListener('pointermove', e => {
         const r = yta.getBoundingClientRect();
-        L.musMål = [(e.clientX - r.left) / r.width, 1 - (e.clientY - r.top) / r.height];
+        L.musMål = [in01((e.clientX - r.left) / r.width), in01(1 - (e.clientY - r.top) / r.height)];
       });
       yta.addEventListener('pointerleave', () => { L.musMål = [0.5, 0.5]; });
     }
     return true;
   }
 
-  /* Hur hjälper vi har sin duk i markupen. Nästa steg får en här, och dess
-     trådar går långsamt genom scenens fem färger, några sekunder var, så
-     att sidan slutar med samma tråd som den började med. Färgerna läses om
-     när sidans läge byts. */
-  const NÄSTA_FÄRGER = ['--amne-ma', '--amne-en', '--amne-no', '--acc', '--amne-ms'];
-  function bakgrunder() {
-    $$('canvas[data-tradar]').forEach(el => trådar(el, TRÅD));
-    $$('.nx-final-ljus').forEach(sek => {
-      if (sek.querySelector('canvas.nx-tradar')) return;
-      const el = document.createElement('canvas');
-      el.className = 'nx-tradar';
-      el.setAttribute('aria-hidden', 'true');
-      sek.insertBefore(el, sek.firstChild);
-      let färgerna = [];
-      const läs = () => {
-        const cs = getComputedStyle(sek);
-        färgerna = NÄSTA_FÄRGER.map(n => färg(cs.getPropertyValue(n)));
-      };
-      läs();
-      matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', läs);
-      const L = nyttLäge();
-      L.mål = färgerna[0];
-      if (!trådar(el, L, t => { L.mål = färgerna[Math.floor(t / 4) % färgerna.length]; })) el.remove();
-    });
+  /* ---------- punktnätet (Dot Grid), i Nästa steg ----------
+     Leo skickade en video (en sajt där ett nät av punkter lyser upp kring
+     pekaren bakom "Want to train together?"): "kör nåt sånt här där i
+     bakrunden". React Bits Dot Grid, i en vanlig 2d-duk: punkterna står
+     svagt i bläckets färg, och kring pekaren blir de större, får
+     accentens färg och viker undan en aning, och glider tillbaka. Utan mus
+     (en telefon) vandrar ljuset långsamt av sig självt. Slingan går bara
+     medan nätet syns och något rör sig; med reducerad rörelse ritas
+     nätet en gång, utan ljus. Färgerna läses om när sidans läge byts. */
+  function punktnät(sek) {
+    const el = document.createElement('canvas');
+    el.className = 'nx-punkter';
+    el.setAttribute('aria-hidden', 'true');
+    sek.insertBefore(el, sek.firstChild);
+    const c = el.getContext('2d');
+    if (!c) { el.remove(); return; }
+    const AVST = 26, R = 160, stilla = reducerad();
+    const mus = matchMedia('(hover: hover) and (pointer: fine)').matches;
+    let w = 0, h = 0, pkt = [], bas = [0, 0, 0], ljus = [0, 0, 0];
+    let syns = false, ram0 = 0, styrka = 0, inne = false;
+    const spot = { x: -999, y: -999 }, mål = { x: -999, y: -999 };
+    const rgb = (f, a) => 'rgba(' + f.map(x => Math.round(x * 255)).join(',') + ',' + a.toFixed(3) + ')';
+    function läs() {
+      const cs = getComputedStyle(sek);
+      bas = färg(cs.getPropertyValue('--bl'));
+      ljus = färg(cs.getPropertyValue('--acc'));
+    }
+    function bygg() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      w = el.clientWidth; h = el.clientHeight;
+      el.width = Math.max(1, Math.round(w * dpr)); el.height = Math.max(1, Math.round(h * dpr));
+      c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      pkt = [];
+      const kol = Math.floor(w / AVST), rad = Math.floor(h / AVST);
+      const x0 = (w - (kol - 1) * AVST) / 2, y0 = (h - (rad - 1) * AVST) / 2;
+      for (let j = 0; j < rad; j++) for (let i = 0; i < kol; i++) pkt.push({ x: x0 + i * AVST, y: y0 + j * AVST, dx: 0, dy: 0 });
+    }
+    function rita(t) {
+      ram0 = 0;
+      if (!mus && !stilla) {
+        mål.x = w * (0.5 + 0.36 * Math.sin(t * 0.00031));
+        mål.y = h * (0.5 + 0.3 * Math.sin(t * 0.00047 + 1.3));
+        inne = true;
+      }
+      styrka += ((inne && !stilla ? 1 : 0) - styrka) * 0.08;
+      spot.x += (mål.x - spot.x) * 0.22;
+      spot.y += (mål.y - spot.y) * 0.22;
+      c.clearRect(0, 0, w, h);
+      c.fillStyle = rgb(bas, 0.16);
+      c.beginPath();
+      const lysande = [];
+      let rör = false;
+      for (const p of pkt) {
+        const ax = p.x - spot.x, ay = p.y - spot.y;
+        const d = Math.sqrt(ax * ax + ay * ay);
+        let e = d < R ? 1 - d / R : 0;
+        e = e * e * (3 - 2 * e) * styrka;
+        const tx = d > 0.1 ? ax / d * e * 9 : 0, ty = d > 0.1 ? ay / d * e * 9 : 0;
+        p.dx += (tx - p.dx) * 0.14; p.dy += (ty - p.dy) * 0.14;
+        if (Math.abs(p.dx - tx) > 0.05 || Math.abs(p.dy - ty) > 0.05) rör = true;
+        if (e > 0.02) { lysande.push(p, e); continue; }
+        c.moveTo(p.x + p.dx + 1.3, p.y + p.dy);
+        c.arc(p.x + p.dx, p.y + p.dy, 1.3, 0, Math.PI * 2);
+      }
+      c.fill();
+      for (let i = 0; i < lysande.length; i += 2) {
+        const p = lysande[i], e = lysande[i + 1];
+        c.fillStyle = 'rgba(' + [0, 1, 2].map(k => Math.round((bas[k] + (ljus[k] - bas[k]) * e) * 255)).join(',') + ',' + (0.16 + 0.8 * e).toFixed(3) + ')';
+        c.beginPath();
+        c.arc(p.x + p.dx, p.y + p.dy, 1.3 + 1.5 * e, 0, Math.PI * 2);
+        c.fill();
+      }
+      const lever = !mus || inne || styrka > 0.01 || rör;
+      if (!stilla && syns && !document.hidden && lever) ram0 = requestAnimationFrame(rita);
+    }
+    const gå = () => { if (!ram0 && syns && !document.hidden) ram0 = requestAnimationFrame(rita); };
+    läs(); bygg(); requestAnimationFrame(rita);
+    if (mus && !stilla) {
+      sek.addEventListener('pointermove', e => {
+        const r = el.getBoundingClientRect();
+        mål.x = e.clientX - r.left; mål.y = e.clientY - r.top;
+        if (!inne) { spot.x = mål.x; spot.y = mål.y; }
+        inne = true; gå();
+      });
+      sek.addEventListener('pointerleave', () => { inne = false; gå(); });
+    }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(es => { syns = es.some(e => e.isIntersecting); if (syns) gå(); }, { rootMargin: '10% 0px' }).observe(el);
+    } else { syns = true; gå(); }
+    document.addEventListener('visibilitychange', gå);
+    if ('ResizeObserver' in window) new ResizeObserver(() => { bygg(); requestAnimationFrame(rita); }).observe(el);
+    matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { läs(); requestAnimationFrame(rita); });
   }
 
-  /* ---------- Hur hjälper vi som en rad som glider ----------
-     .hjs-pa gör scenen lika hög som raden har väg att gå plus en skärm,
-     och ytan klistrad (CSS); scrollen flyttar raden åt vänster, ett till
-     ett. Vägen mäts före varje omräkning (refreshInit), så att höjden och
-     ScrollTrigger alltid är överens. Kortet närmast en punkt som går från
-     en tredjedel till fyra femtedelar av bredden har .pa (så att det första
-     är i fokus från början och det sista vid slutet), och trådarna tar dess
-     färg. Ett kort som kommit in har .inne, och dess rubrik stiger upp;
-     ord delas en gång, i spans som texten står kvar i. En länk som får
-     fokus rullar sidan dit kortet syns. */
+  /* Hur hjälper vi har sin duk i bandet under korten, och pekaren räknas
+     över hela raden. Nästa steg får sitt punktnät. */
+  function bakgrunder() {
+    $$('canvas[data-tradar]').forEach(el => trådar(el, TRÅD, {
+      bredd: 1.8, skala: [1, 1], amp: 1.1, avst: 0.85,
+      yta: el.closest('[data-hjscen]') || el.parentElement
+    }));
+    $$('.nx-final-ljus').forEach(sek => { if (!sek.querySelector('canvas.nx-punkter')) punktnät(sek); });
+  }
+
+  /* ---------- Hur hjälper vi som en rad man sveper i ----------
+     Raden är en vanlig rullbar rad (CSS); här kommer pilarna, fokus och
+     inträdet. Pilarna rullar raden ett kort åt gången med scrollBy, aldrig
+     sidan, och står släckta vid ändarna. Kortet närmast en punkt som går
+     från första kortets mitt till sista kortets mitt medan raden rullas
+     har .pa (så att det första är i fokus från början och det sista vid
+     slutet), och trådarna tar dess färg. Ett kort som kommit in i raden
+     har .inne, och dess rubrik stiger upp (.hjs-rorlig); ord delas en
+     gång, i spans som texten står kvar i. Inträdet observerar raden,
+     aldrig korten (CLAUDE.md, snäppande rader). */
   function delaRubrik(h) {
     let k = 0;
     const gå = n => Array.from(n.childNodes).forEach(c => {
@@ -292,34 +373,33 @@
   }
 
   function hjscen() {
-    if (!medGsap) return;
     $$('[data-hjscen]').forEach(scen => {
-      const spår = $('.hjs-spar', scen), rad = $('.hjs-rad', scen);
+      const spår = $('.hjs-spar', scen);
       const kort = $$('.hjs-kort', scen);
-      if (!spår || !rad || kort.length < 2) return;
-      kort.forEach(k => { const h = $('h3', k); if (h) delaRubrik(h); });
+      if (!spår || kort.length < 2) return;
+      const rörlig = !reducerad();
+      if (rörlig) kort.forEach(k => { const h = $('h3', k); if (h) delaRubrik(h); });
       let färgen = [];
       const läsFärgen = () => { färgen = kort.map(k => färg(getComputedStyle(k).getPropertyValue('--f'))); };
       läsFärgen();
-      const fyll = $('.hjs-matare-fyll', scen);
-      scen.classList.add('hjs-pa');
+      const förra = $('[data-hjs-pil="-1"]', scen), nästa = $('[data-hjs-pil="1"]', scen);
+      scen.classList.add('hjs-igang');
+      if (rörlig) scen.classList.add('hjs-rorlig');
 
-      const väg = () => {
-        const m = parseFloat(getComputedStyle(spår).paddingLeft) || 0;
-        return Math.max(0, rad.offsetWidth - (spår.clientWidth - 2 * m));
-      };
-      const mät = () => scen.style.setProperty('--hjs-x', väg() + 'px');
-      mät();
-      ST.addEventListener('refreshInit', mät);
-
-      let nu = -1;
-      const läge = p => {
-        const x = -p * väg(), b = spår.clientWidth;
-        const punkt = b * (0.33 + p * 0.47);
+      let nu = -1, synlig = !rörlig, ram = 0;
+      const läge = () => {
+        ram = 0;
+        const max = spår.scrollWidth - spår.clientWidth;
+        const x0 = spår.scrollLeft, b = spår.clientWidth;
+        const p = max > 1 ? Math.min(1, x0 / max) : 0;
+        const först = kort[0], sist = kort[kort.length - 1];
+        const a = först.offsetLeft + först.offsetWidth / 2;
+        const ö = sist.offsetLeft + sist.offsetWidth / 2 - max;
+        const punkt = a + (ö - a) * p;
         let bäst = 0, avst = Infinity;
         kort.forEach((k, i) => {
-          const vä = k.offsetLeft + x;
-          if (vä < b * 1.02) k.classList.add('inne');
+          const vä = k.offsetLeft - x0;
+          if (synlig && vä < b) k.classList.add('inne');
           const d = Math.abs(vä + k.offsetWidth / 2 - punkt);
           if (d < avst) { avst = d; bäst = i; }
         });
@@ -330,32 +410,30 @@
           if (TRÅD.rita) TRÅD.rita();
         }
         TRÅD.prog = p;
-        if (fyll) fyll.style.transform = 'scaleX(' + p.toFixed(3) + ')';
+        if (förra) förra.disabled = x0 <= 2;
+        if (nästa) nästa.disabled = x0 >= max - 2;
       };
-
-      gsap.to(rad, {
-        x: () => -väg(), ease: 'none',
-        scrollTrigger: {
-          trigger: scen, start: 'top top', end: 'bottom bottom',
-          scrub: 0.4, invalidateOnRefresh: true,
-          onUpdate: s => läge(s.progress),
-          onRefresh: s => läge(s.progress)
-        }
+      const snart = () => { if (!ram) ram = requestAnimationFrame(läge); };
+      spår.addEventListener('scroll', snart, { passive: true });
+      window.addEventListener('resize', snart, { passive: true });
+      [förra, nästa].forEach(knapp => {
+        if (!knapp) return;
+        knapp.addEventListener('click', () => {
+          const steg = kort[1].offsetLeft - kort[0].offsetLeft;
+          spår.scrollBy({ left: Number(knapp.dataset.hjsPil) * steg, behavior: rörlig ? 'smooth' : 'auto' });
+        });
       });
-      läge(0);
+      if (!synlig && 'IntersectionObserver' in window) {
+        const io = new IntersectionObserver(es => {
+          if (!es.some(e => e.isIntersecting)) return;
+          synlig = true; io.disconnect(); läge();
+        }, { threshold: 0.25 });
+        io.observe(spår);
+      } else synlig = true;
+      läge();
       matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
         läsFärgen();
         if (nu >= 0) TRÅD.mål = färgen[nu];
-      });
-
-      scen.addEventListener('focusin', e => {
-        const k = e.target.closest('.hjs-kort');
-        if (!k) return;
-        const v = väg();
-        if (!v) return;
-        const p = Math.min(1, Math.max(0, (k.offsetLeft - spår.clientWidth * 0.3) / v));
-        const topp = scen.getBoundingClientRect().top + scrollY;
-        scrollTo(0, topp + p * (scen.offsetHeight - innerHeight));
       });
     });
   }

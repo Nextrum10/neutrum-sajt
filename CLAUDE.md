@@ -712,7 +712,7 @@ Detaljer: `minne/grunden.md`.
   körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
   för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
   `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan, och `nextrum-start-scen.js` startsidans
-  scener (2026-10-29): trådarna i WebGL, Hur hjälper vis rad som glider, ämnesbandets lutning,
+  scener (2026-10-29): trådarna och punktnätet, Hur hjälper vis rad, ämnesbandets lutning,
   manifestets ord och studievyns tippning. `nextrum-landning.js` och `-css` är
   landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`;
   flikarna (`data-lp-flikar`, Vad passen går ut på och Var passen hålls) och ljuset över korten fungerar också
@@ -736,15 +736,17 @@ Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdö
 som vill jobba (`#bli`) och Nästa steg; Trygg hjälp gick upp i Hur hjälper vi 2026-10-29 (Leo: "Just nu är mycket bara
 i kolumner och tråkiga", med React Bits som förebild, och "Du får göra allt"). **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): ämnena, stadierna och guiderna i var sin grupp med ämnesfärgens prick, och under Område navets regioner (Hela Stockholm, Innerstaden, Söderort, Västerort, Norr och väster om stan, Söder och öster om stan), Online och In English, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp. **Orterna står i navets ortskatalog**, inte en och en i footern (2026-10-26, när stadsdelsområdena och kommunerna fick egna sidor: trettio länkar på varje sida, och trettiofyra efter sidrensningen 2026-10-27, hade varken varit snyggt eller sett ut som något annat än en doorway-lista); en ny ämnes-, stadie- eller guidesida läggs in i footern på alla sidor, en ny ort bara i generatorn, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): på startsidan
-sedan 2026-10-29 **en rad som glider** (`.nx-hjs`, `data-hjscen`, avsnitt 19; Leo: "snygga rörliga bakgrunder, hur
-texter går osv", och om den mörka scenen före: "Jag gillar inte att bakrunden är svart och orange ... de kolumnerna typ 5
-stycken går sidleds snyggt med en vit rörlig bakrund"): ytans vita (`--yta`) med trådar i WebGL bakom (`data-tradar`,
-efter React Bits Threads), som står still (`position:sticky`) medan rubriken med ingressen och fem kort glider åt
-vänster i EN rad: läxhjälpen, studiehjälparna, matchningen (ur Trygg hjälps band), NexLäx och Allt på ett ställe (ur
-manifestet), var och en med ordningens färg i `--f`. Kortet i fokus (`.pa`) får sin siffra ifylld och trådarna dess färg,
-och ett korts rubrik stiger upp när det kommer in (SplitText). Utan GSAP eller med reducerad rörelse är raden en rad att
-svepa i, och utan WebGL står ytan utan trådar. Ingen mörk yta och inget orange bakom scenen. På Vår idé fyra blad i en rad
-som förut. **Inga rader av rutor i övrigt** (samma dag prövades ett bentorutnät med sju rutor och en hög med fem kort;
+sedan 2026-10-29 **en rad man sveper i själv** (`.nx-hjs`, `data-hjscen`, avsnitt 19; Leo: "snygga rörliga bakgrunder",
+"de kolumnerna typ 5 stycken går sidleds snyggt", och sist: "Vi är ett läxhjälps företag ... inte et tech bolag. Så vi
+kör istället att man scrollar själv åt vänster. Och rubriken tar för stor del av sidan"): på ytans vita (`--yta`) står
+rubriken i en vanlig storlek med ingressen, och under den fem kort i en rullbar rad (`overflow-x`, `scroll-snap`, på dator
+också pilar som rullar raden med `scrollBy`): läxhjälpen, studiehjälparna, matchningen (ur Trygg hjälps band), NexLäx och
+Allt på ett ställe, var och en med ordningens färg i `--f`. **Ingen scroll drar raden**, och sidan rullar som vanligt
+förbi. Trådar i WebGL (`data-tradar`, efter React Bits Threads) står nedtonade i ett band under korten, **aldrig bakom
+texten** (Leo: "texten syns dålig ... mer som ett mönster att veta vart man ska scrolla"). Kortet i fokus (`.pa`) får sin
+siffra ifylld och trådarna dess färg, och ett korts rubrik stiger upp när det kommer in (SplitText). Utan skriptet är
+raden en rad att svepa i, utan pilar. Ingen mörk yta och inget orange bakom raden. På Vår idé fyra blad i en rad som
+förut. **Inga rader av rutor i övrigt** (samma dag prövades ett bentorutnät med sju rutor och en hög med fem kort;
 Leo underkände båda: "minimera alla kolumner"): rubrikerna har ingressen under sig (`.nx-head-en`, inte `split`), och
 ansökans steg i `#bli` är en lodrät lista (`.nx-apply-lista`). Inget nytt påstående i scenen: varje mening stod redan på
 sidan.
@@ -776,13 +778,15 @@ lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna
 studiehjälpare-sidans sidhuvud och band (`.bli-svart`) står i samma svarta med samma lera (2026-10-08). **Nästa steg i
 mörkt läge** står på sidans papper (`--pap`) på alla sidor, aldrig på barken (cinema, DE MÖRKA YTORNA), och i ljust läge
 som förut, utom på startsidan: där följer det sidans läge i båda (`.nx-final-ljus`, ingen `.nx-mork`, 2026-10-29, Leo:
-"Så den ska matcha sidan på mörk och ljus vy"), med trådar bakom, och börjar inte längre i `#bli`:s svarta.
+"Så den ska matcha sidan på mörk och ljus vy"), med punktnätet bakom (efter Leos video: "kör nåt sånt här där i
+bakrunden"), och börjar inte längre i `#bli`:s svarta.
 **Footern** står i `--ftr-bg` (#1F1915) i båda lägena (2026-10-08), aldrig i barken.
 Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
 kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
-(`data-bild`), och alt-texten står på steget (`data-alt`). Manifestet har inga blad sedan 2026-10-29: rubriken,
-Rätt matchs mening och knapparna, och orden blir skarpa i takt med scrollen (`data-scrollord`); manifestets och Nästa
+(`data-bild`), och alt-texten står på steget (`data-alt`). Manifestet har sina två blad (Rätt match, Allt på ett
+ställe) och en mindre rubrik (2026-10-29, Leo: "gör den rubriken mindre och ta tillbaka kolumnen där som fanns"; bladen
+var borta några timmar samma dag), och orden blir skarpa i takt med scrollen (`data-scrollord`); manifestets och Nästa
 stegs knapp har en kant där ett ljus glider (`.nx-stjarnkant`, StarBorder). Studievyns rubrik står i mitten, och fönstret
 tippar upp med scrollen på dator (`data-tipp`). Studiehjälparna står i en rad
 man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).
@@ -796,11 +800,11 @@ animerad `box-shadow`, och en custom property sätts där den läses, för den �
 GSAP och ScrollTrigger (vendorade i `bibliotek/`, aldrig från en CDN) dra skenan i Så går det till, platserna som
 en linje och korten, bara på de genererade `laxhjalp-*` och guiderna; stegen tänds ändå med en klass, och utan GSAP
 eller med reducerad rörelse står allt färdigt i CSS. **Och startsidan** (2026-10-29): `nextrum-start-scen.js` låter GSAP
-dra manifestets ord (opacitet och sudd), studievyns `.sd-rum` (bara tier `full`), scenens rad (`x`) och framstegslinje
-och ämnesbandets lutning med farten (`skewX` på raderna, aldrig sektionen: den breddade sidan sju pixlar), och trådar i
-WebGL bakom scenen och Nästa steg, som där går genom scenens fem färger (i låg upplösning, bara medan de syns, en enda
-bild med reducerad rörelse). Scenens höjd är radens väg plus en skärm (`--hjs-x`, mätt före varje omräkning), och ytan är ett rutnät med
-`minmax(0,1fr)`: med `auto` växte kolumnen med raden och vägen blev noll. Etiketterna
+dra manifestets ord (opacitet och sudd), studievyns `.sd-rum` (bara tier `full`) och ämnesbandets lutning med farten
+(`skewX` på raderna, aldrig sektionen: den breddade sidan sju pixlar). Utan GSAP ritar den trådarna i WebGL under Hur
+hjälper vis rad (full upplösning i det låga bandet, annars blir trådarna ett suddigt streck) och ett punktnät bakom Nästa
+steg (React Bits Dot Grid, en 2d-duk: punkterna lyser upp och viker undan kring pekaren, och på en telefon vandrar ljuset
+av sig självt), bara medan de syns, och en enda bild med reducerad rörelse. Etiketterna
 har ett ljus som glider (ShinyText, CSS). Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.

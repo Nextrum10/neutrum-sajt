@@ -91,7 +91,30 @@ muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
 (tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
 sedan trådarna i Raden som glider).
-- **Raden som glider** (fjärde varvet samma kväll, den som gäller). Leo om scenen
+- **Raden man sveper i** (femte varvet samma kväll, den som gäller). Leo skickade en video
+  och skrev: "texten syns dålig då rörelse grejen tar för mycket plats med den färgen den
+  har, jag gillar iden men vi måste antingen tona ner på färgen eller ej ha den över text
+  utan mer som ett mönster att veta vart man ska scrolla. Jag gillar ej heller att man
+  behöver scrolla ner för att nästa steg ska börja. Vi är ett läxhjälps företag som du vet
+  inte et tech bolag. Så vi kör istället att man scrollar själv åt vänster. Och rubriken tar
+  för stor del av sidan. Samma sak gäller rätt person kan göra stor skillnad gör den
+  rubriken mindre och ta tillbaka kolumnen där som fanns. Samma sak med färg grejen gäller
+  är du redo att ta nästa steg kör nåt sånt här där i bakrunden". Så: ingen sticky och
+  ingen scroll som drar raden. Rubriken står ovanför i en vanlig storlek
+  (clamp(1.9rem, 3.4vw, 3rem), på en rad på dator), korten i en rullbar rad med
+  `scroll-snap` och, på dator, två pilar som rullar raden ett kort med `scrollBy` och står
+  släckta vid ändarna. Trådarna står i ett band under korten (`.hjs-band`, 64–110 px),
+  nedtonade (0,6), med full upplösning och tunna trådar (1,8 px), för i ett så lågt band
+  blev förvalet ett suddigt streck. Fokus (`.pa`) och inträdet (`.inne`) räknas ur radens
+  `scrollLeft`, och inträdet väntar tills raden syns (en observatör på raden, aldrig på
+  korten). Manifestet fick sina två blad tillbaka och en mindre rubrik
+  (clamp(2.2rem, 5vw, 4.4rem) mot cinemas 7,6rem), och meningen under rubriken gick, för
+  den stod i Rätt match; Allt på ett ställe står alltså både där och i raden, som före
+  samma dag. Nästa steg fick ett punktnät som i videon (React Bits Dot Grid, en 2d-duk,
+  26 px mellan punkterna): svaga punkter i bläckets färg som kring pekaren (160 px) blir
+  större, får accentens färg och viker undan, och glider tillbaka; på en telefon vandrar
+  ljuset långsamt av sig självt, och slingan står när inget rör sig.
+- **Raden som glider** (fjärde varvet samma kväll, borttagen med Raden man sveper i). Leo om scenen
   nedan: "Jag gillar inte att bakrunden är svart och orange på den sektionen, och en
   grej till när de kolumnerna typ 5 stycken går sidleds snyggt med en vit rörlig
   bakrund som du hittar på react bits, annars helt ok". Ytan är nu `--yta` (det vita
@@ -112,7 +135,7 @@ sedan trådarna i Raden som glider).
   med raden (min-content), så vägen mättes till noll: `minmax(0,1fr)`; (2) trådarna
   blev trappsteg på en telefon i en tredjedels upplösning, så skalan är 0,62 där
   (0,5 på dator, där duken är större).
-  **Nästa steg** samma kväll (Leo, när jag frågade om den mörka sektionen längst ned:
+  **Nästa steg** samma kväll (punktnätet ersatte trådarna där i nästa varv; Leo, när jag frågade om den mörka sektionen längst ned:
   "Så den ska matcha sidan på mörk och ljus vy"): på startsidan har den ingen `.nx-mork`
   (`.nx-final-ljus`), så den står på sidans papper och bläck i båda lägena, och
   norrskenet (Aurora, som stod där några timmar) är bytt mot samma trådar, som går

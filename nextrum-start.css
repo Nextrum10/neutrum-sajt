@@ -3615,116 +3615,99 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    scrollen skriver nextrum-start-scen.js; här står formen och
    slutlägena, och utan skriptet är det de som syns.
 
-   SCENEN. Hur hjälper vi står på ytans vita (--yta), med trådar i WebGL
-   bakom (canvas[data-tradar], React Bits Threads), och rubriken och de
-   fem korten står i EN rad. Utan skriptet är raden en vanlig rad att
-   svepa i (overflow-x, scroll-snap). Med skriptet (.hjs-pa) blir scenen
-   lika hög som raden är bred, ytan fastnar (position:sticky) och raden
-   glider åt vänster med scrollen; kortet närmast mitten har .pa, och ett
-   kort som kommit in har .inne. Sticky kräver att ingen förälder har
-   overflow:hidden: .nx-hjs har inte det, bara ytan inuti, som inte rullar.
+   SCENEN. Hur hjälper vi står på ytans vita (--yta): rubriken ovanför i
+   en vanlig storlek, och de fem korten i en rad man sveper i själv
+   (overflow-x och scroll-snap; på dator också med pilarna), så att sidan
+   rullar som vanligt förbi. Leo om raden som scrollen drog: "Vi är ett
+   läxhjälps företag ... inte et tech bolag. Så vi kör istället att man
+   scrollar själv åt vänster". Trådarna (canvas[data-tradar]) står
+   nedtonade i ett band under korten, aldrig bakom texten. Med skriptet
+   (.hjs-igang) syns pilarna och kortet närmast början har .pa; ett kort
+   som kommit in har .inne (.hjs-rorlig, inte med reducerad rörelse).
    ============================================================ */
 .nx-hjs{position:relative;padding:0}
-.hjs{position:relative}
-.hjs-fast{
-  position:relative;isolation:isolate;overflow:hidden;
-  background:var(--yta);
-  padding-block:clamp(72px,10vw,128px) clamp(64px,8vw,112px);
+.hjs{
+  --hjs-gap:clamp(14px,1.6vw,24px);
+  position:relative;background:var(--yta);
+  padding-block:clamp(64px,8vw,112px) clamp(18px,2.4vw,32px);
 }
-.hjs-bg,.nx-tradar{
-  position:absolute;inset:0;z-index:0;width:100%;height:100%;display:block;
-  pointer-events:none;opacity:0;transition:opacity 1.2s var(--e-mjuk);
+.hjs-huvud{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+.nx-hjs .hj-rubrik{margin-top:16px;font-size:clamp(1.9rem,3.4vw,3rem);line-height:1.02;letter-spacing:-.04em}
+.nx-hjs .nx-lede{margin-top:clamp(12px,1.4vw,18px);max-width:52ch}
+/* Pilarna: bara med skriptet och en mus. På en telefon sveper man. */
+.hjs-pilar{display:none;flex:none;gap:10px}
+.hjs-igang .hjs-pilar{display:flex}
+@media (hover:none),(pointer:coarse){.hjs-igang .hjs-pilar{display:none}}
+.hjs-pil{
+  display:grid;place-items:center;width:48px;height:48px;border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--bl) 22%,transparent);
+  background:var(--yta);color:var(--bl);cursor:pointer;
+  transition:scale .25s var(--e-ut),opacity .25s var(--e-mjuk),border-color .25s var(--e-mjuk);
 }
-.hjs-bg.gl-pa{opacity:1}
-.nx-final-ljus > canvas.nx-tradar.gl-pa{opacity:.75}
-/* Raden. Utan skriptet en rad att svepa i: raden rullas, aldrig sidan
-   (overflow-y:hidden, som ämnesbandet), och kanten följer sidans marginal. */
+.hjs-pil svg{width:18px;height:18px}
+.hjs-pil:hover:not(:disabled){border-color:var(--bl);scale:1.05}
+.hjs-pil:disabled{opacity:.32;cursor:default}
+/* Raden rullas, aldrig sidan (overflow-y:hidden, som ämnesbandet), och
+   första kortet står i linje med rubriken (.nx-wrap-bred). Ett tomt
+   element sist ger raden samma luft i slutet, för en rullbar
+   behållare tappar sin högra utfyllnad i vissa webbläsare. */
 .hjs-spar{
-  position:relative;z-index:1;
+  --hjs-kant:max(var(--m),calc((100% - var(--w-bred)) / 2 + var(--m)));
+  position:relative;margin-top:clamp(26px,3.2vw,42px);
   overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
-  scroll-snap-type:x mandatory;scroll-padding-inline:var(--m);
-  padding-inline:var(--m);scrollbar-width:none;
+  scroll-snap-type:x mandatory;scroll-padding-inline:var(--hjs-kant);
+  padding:6px var(--hjs-kant) 10px;scrollbar-width:none;
 }
 .hjs-spar::-webkit-scrollbar{display:none}
-.hjs-rad{display:flex;align-items:center;gap:clamp(14px,1.8vw,28px);width:max-content}
-.hjs-intro{
-  flex:none;width:min(34rem,84vw);scroll-snap-align:start;
-  padding-right:clamp(0px,3vw,56px);
-}
-.nx-hjs .hj-rubrik{
-  margin-top:18px;
-  font-size:clamp(2.6rem,min(6vw,9.5vh),5.2rem);line-height:.94;letter-spacing:-.05em;max-width:11ch;
-}
-.nx-hjs .nx-lede{margin-top:clamp(16px,2vw,26px);max-width:44ch}
-.hjs-lista{
-  display:flex;align-items:stretch;gap:clamp(14px,1.8vw,28px);
-  list-style:none;margin:0;padding:0;
-}
+.hjs-spar:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;border-radius:18px}
+.hjs-lista{display:flex;gap:var(--hjs-gap);width:max-content;list-style:none;margin:0;padding:0}
+.hjs-lista::after{content:"";flex:none;width:max(1px,calc(var(--hjs-kant) - var(--hjs-gap)))}
 .hjs-kort{
-  flex:none;width:clamp(17.5rem,27vw,25rem);scroll-snap-align:start;
+  flex:none;width:clamp(17.5rem,26vw,23.5rem);scroll-snap-align:start;
   display:flex;flex-direction:column;
-  padding:clamp(22px,2.4vw,34px);border-radius:26px;
-  background:color-mix(in srgb,var(--yta) 72%,transparent);
+  padding:clamp(22px,2.2vw,32px);border-radius:24px;
+  background:var(--yta);
   border:1px solid color-mix(in srgb,var(--f) 24%,transparent);
-  transition:scale .7s var(--e-ut),border-color .5s var(--e-mjuk);
+  transition:border-color .5s var(--e-mjuk);
 }
 .hjs-nr{
   display:block;
-  font-size:clamp(3.2rem,min(5.4vw,9vh),5rem);font-weight:800;letter-spacing:-.06em;line-height:.8;
+  font-size:clamp(2.8rem,4.4vw,4.2rem);font-weight:800;letter-spacing:-.06em;line-height:.8;
   font-variant-numeric:tabular-nums;
-  color:transparent;-webkit-text-stroke:1.6px var(--f);
+  color:transparent;-webkit-text-stroke:1.5px var(--f);
   transition:color .5s var(--e-mjuk);
 }
-.hjs-kort .hj-et{margin-top:clamp(18px,2.6vh,28px);color:var(--f)}
+.hjs-kort .hj-et{margin-top:clamp(16px,2vw,24px);color:var(--f)}
 .hjs-kort h3{
   margin-top:10px;
-  font-size:clamp(1.55rem,min(2.3vw,4.2vh),2.2rem);font-weight:800;
-  letter-spacing:-.04em;line-height:1.04;color:var(--bl);text-wrap:balance;
+  font-size:clamp(1.4rem,1.9vw,1.9rem);font-weight:800;
+  letter-spacing:-.035em;line-height:1.06;color:var(--bl);text-wrap:balance;
 }
 .hjs-kort p{
   margin-top:12px;
-  font-size:clamp(.98rem,1.1vw,1.08rem);line-height:1.55;color:var(--bl-2);text-wrap:pretty;
+  font-size:clamp(.98rem,1.05vw,1.06rem);line-height:1.55;color:var(--bl-2);text-wrap:pretty;
 }
 .hjs-kort .nx-lank{margin-top:auto;padding-top:18px;color:var(--bl)}
 .hjs-kort .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
-.hjs-matare{display:none}
-
-/* Scenen på. Höjden är radens väg (--hjs-x, satt av skriptet) plus en
-   skärm, och raden flyttas med transform; inget annat räknas om. */
-.hjs.hjs-pa{height:calc(var(--hjs-x,180vw) + 100vh)}
-.hjs.hjs-pa .hjs-fast{
-  position:sticky;top:0;height:100vh;height:100svh;
-  display:grid;grid-template-columns:minmax(0,1fr);align-content:center;
-  padding-block:clamp(64px,9vh,104px) clamp(56px,8vh,88px);
-}
-.hjs.hjs-pa .hjs-spar{overflow:visible;scroll-snap-type:none}
-.hjs.hjs-pa .hjs-rad{will-change:transform}
-.hjs.hjs-pa .hjs-kort{scale:.955}
-.hjs.hjs-pa .hjs-kort.pa{scale:1;border-color:color-mix(in srgb,var(--f) 62%,transparent)}
-.hjs.hjs-pa .hjs-kort.pa .hjs-nr{color:var(--f)}
+.hjs-igang .hjs-kort.pa{border-color:color-mix(in srgb,var(--f) 62%,transparent)}
+.hjs-igang .hjs-kort.pa .hjs-nr{color:var(--f)}
+/* Bandet med trådarna, under korten: ett mönster som visar att raden
+   fortsätter åt höger, nedtonat så att det aldrig tävlar med texten. */
+.hjs-band{position:relative;height:clamp(64px,8vw,110px);margin-top:clamp(4px,1vw,12px);pointer-events:none}
+.hjs-bg{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity 1.2s var(--e-mjuk)}
+.hjs-bg.gl-pa{opacity:.6}
 /* Orden i springan: ett korts rubrik stiger upp när kortet kommer in. */
 .hjs-ord{display:inline-block;overflow:clip;vertical-align:top;padding-bottom:.1em;margin-bottom:-.1em}
 .hjs-ord > span{display:inline-block;transition:translate .9s var(--e-ut),rotate .9s var(--e-ut)}
-.hjs.hjs-pa .hjs-kort:not(.inne) .hjs-ord > span{translate:0 110%;rotate:7deg;transition:none}
-.hjs.hjs-pa .hjs-kort.inne .hjs-ord > span{transition-delay:calc(.12s + var(--k,0) * 50ms)}
-.hjs.hjs-pa .hjs-kort p,.hjs.hjs-pa .hjs-kort .nx-lank{transition:opacity .7s var(--e-mjuk),filter .7s var(--e-mjuk)}
-.hjs.hjs-pa .hjs-kort:not(.inne) p,
-.hjs.hjs-pa .hjs-kort:not(.inne) .nx-lank{opacity:0;filter:blur(8px);transition:none}
-.hjs.hjs-pa .hjs-kort.inne p,.hjs.hjs-pa .hjs-kort.inne .nx-lank{transition-delay:.4s}
-/* Framstegslinjen längst ner. */
-.hjs.hjs-pa .hjs-matare{
-  display:block;position:absolute;z-index:1;left:var(--m);bottom:clamp(26px,5vh,48px);
-  width:min(320px,calc(100% - 2 * var(--m)));height:2px;border-radius:2px;
-  background:color-mix(in srgb,var(--bl) 14%,transparent);overflow:hidden;
-}
-.hjs-matare-fyll{
-  position:absolute;inset:0;transform-origin:0 50%;transform:scaleX(0);
-  background:var(--bl);
-}
+.hjs-rorlig .hjs-kort:not(.inne) .hjs-ord > span{translate:0 110%;rotate:7deg;transition:none}
+.hjs-rorlig .hjs-kort.inne .hjs-ord > span{transition-delay:calc(.12s + var(--k,0) * 50ms)}
+.hjs-rorlig .hjs-kort p,.hjs-rorlig .hjs-kort .nx-lank{transition:opacity .7s var(--e-mjuk),filter .7s var(--e-mjuk)}
+.hjs-rorlig .hjs-kort:not(.inne) p,
+.hjs-rorlig .hjs-kort:not(.inne) .nx-lank{opacity:0;filter:blur(8px);transition:none}
+.hjs-rorlig .hjs-kort.inne p,.hjs-rorlig .hjs-kort.inne .nx-lank{transition-delay:.4s}
 @media (max-width:760px){
   .hjs-kort{width:min(20rem,80vw)}
-  .nx-hjs .hj-rubrik{font-size:clamp(2.5rem,12vw,3.6rem)}
-  .hjs-nr{font-size:clamp(3rem,16vw,4rem);-webkit-text-stroke-width:1.3px}
+  .hjs-nr{font-size:clamp(2.6rem,13vw,3.4rem);-webkit-text-stroke-width:1.3px}
 }
 /* Garantins remsa under scenen, på papperet. */
 .hjs-gar{padding-block:clamp(40px,6vw,72px) clamp(36px,4.6vw,68px)}
@@ -3732,13 +3715,15 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 
 /* Nästa steg på startsidan följer sidans läge (Leo: "Så den ska matcha
    sidan på mörk och ljus vy"): ingen .nx-mork, alltså sidans papper och
-   bläck i båda lägena, och trådarna bakom i stället för barken, skenet och
-   norrskenets fläckar. Rubrikens ord står i accenten, som andra rubrikers
+   bläck i båda lägena, och i stället för barken, skenet och norrskenets
+   fläckar ett nät av punkter som lyser upp kring pekaren (React Bits Dot
+   Grid, efter Leos video: "kör nåt sånt här där i bakrunden"; på en
+   telefon vandrar ljuset av sig självt). Rubrikens ord står i accenten, som andra rubrikers
    <em> på papperet, och raden under i brödtextens färg. Menysidornas Nästa
    steg är mörka som förut (cinema, DE MÖRKA YTORNA). */
 .nx-final-ljus{position:relative;isolation:isolate;overflow:clip}
 .nx-final-ljus > *{position:relative;z-index:1}
-.nx-final-ljus > canvas.nx-tradar{position:absolute;z-index:0}
+.nx-final-ljus > canvas.nx-punkter{position:absolute;inset:0;z-index:0;width:100%;height:100%;display:block;pointer-events:none}
 .nx-final-ljus > .nx-norrsken{display:none}
 .nx-final-ljus h2 em{color:var(--acc)}
 .nx-final-ljus .nx-hero-trust li{color:var(--bl-2)}
@@ -3773,12 +3758,9 @@ html[data-motion="lite"] .nx-start .nx-et{
    Inga blad längre, bara rubriken, en mening och knapparna, med mer
    luft. .nx-scrub (skriptet) stänger av ordfyllnadens övergång, så att
    orden följer scrollen och inte släpar efter den. */
-.nx-manifest-scen{padding-block:clamp(96px,13vw,190px)}
-.mf-under{
-  margin-top:clamp(26px,3.2vw,44px);max-width:46ch;
-  font-size:clamp(1.1rem,1.65vw,1.5rem);line-height:1.5;letter-spacing:-.012em;
-  color:var(--bl-2);text-wrap:pretty;
-}
+.nx-manifest-scen{padding-block:clamp(80px,10vw,150px) clamp(96px,12vw,180px)}
+/* Rubriken mindre (Leo: "gör den rubriken mindre"), och bladen under som förut. */
+.nx-manifest-scen h2{font-size:clamp(2.2rem,5vw,4.4rem);line-height:.98;max-width:18ch}
 .nx-manifest-scen .nx-cta-rad{margin-top:clamp(30px,3.6vw,48px)}
 html.nx-sr [data-ordfyll].nx-scrub .nx-ord{transition:none;will-change:opacity,filter}
 
