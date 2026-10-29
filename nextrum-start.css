@@ -3238,8 +3238,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
      med barkens text, som förut.
 
    #bli gick från startsidan 2026-10-29 (Leo: "För dig som vill jobba på
-   main sidan ta bort den"): den är radens sista kort i Hur hjälper vi
-   (avsnitt 19, .hjs-jobb). Det som står kvar här är Bli studiehjälpare-
+   main sidan ta bort den"). Det som står kvar här är Bli studiehjälpare-
    sidans. :is(#bli,.bli-svart) står kvar som det var, för :is väger som
    sitt id, och sidans regler räknar med det. */
 .nx-page-hero.on-band.bli-svart{
@@ -3675,40 +3674,6 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   box-shadow:0 16px 32px -20px color-mix(in srgb,var(--f) 55%,transparent);
   transition:border-color .5s var(--e-mjuk);
 }
-/* För dig som vill jobba, radens sista kort: Bli studiehjälpare-sidans
-   svarta (--bli-bg) med leran i två hörn och i kanten, i båda lägena, så
-   att det står ut mot de ljusa korten före och säger att raden slutar med
-   något annat. Lapparna är tre av sektionens punkter, och knappen är
-   sidans. */
-.hjs-kort.hjs-jobb{
-  background:
-    radial-gradient(90% 70% at 100% 0%,var(--bli-glod),transparent 60%),
-    radial-gradient(80% 60% at 0% 100%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 62%),
-    var(--bli-bg);
-  border-color:var(--bli-kant);
-  box-shadow:0 18px 36px -20px rgba(26,24,19,.55);
-  color:var(--nt-fg);
-}
-.hjs-igang .hjs-kort.hjs-jobb.pa{border-color:var(--lera-l)}
-.hjs-jobb .hj-ikon{background:color-mix(in srgb,var(--lera-l) 18%,transparent)}
-.hjs-jobb .hj-ikon svg{stroke:var(--lera-l)}
-.hjs-jobb .hj-et{color:var(--lera-l)}
-.hjs-kort.hjs-jobb h3{color:var(--nt-fg)}
-.hjs-kort.hjs-jobb p{color:var(--nt-mut)}
-.hjs-jobb-lappar{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:16px 0 22px;padding:0}
-.hjs-jobb-lappar li{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:6px 11px 6px 9px;border-radius:100px;
-  font-size:.8rem;font-weight:600;letter-spacing:-.005em;color:var(--nt-fg);
-  background:color-mix(in srgb,var(--lera-l) 14%,transparent);
-  border:1px solid color-mix(in srgb,var(--lera-l) 30%,transparent);
-}
-.hjs-jobb-lappar li::before{
-  content:"";width:6px;height:6px;border-radius:50%;flex:none;background:var(--lera-l);
-}
-.hjs-kort .hjs-jobb-knapp{margin-top:auto;align-self:flex-start}
-.hjs-kort.hjs-jobb .hjs-jobb-in{margin-top:12px;font-size:.84rem;color:var(--nt-mut)}
-.hjs-jobb-in a{color:var(--nt-fg);text-decoration:underline;text-underline-offset:3px}
 /* Ikonen överst i kortet, i kortets färg (.hj-ikon, avsnitt 17), i
    stället för en siffra (Leo, med en bild av bentots rutor: "ha dessa fem
    element istället för siffror"); fokus syns på kanten. */

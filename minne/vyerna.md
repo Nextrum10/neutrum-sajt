@@ -91,7 +91,12 @@ muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
 (tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
 sedan trådarna i Raden som glider).
-- **Pilarna bort** (samma kväll, sist). Leo, med en ring kring pilarna och en kring strecket under
+- **Kortet för den som vill jobba bort** (samma kväll, sist). Leo: "Gör kolumnerna mindre som innan
+  och ta bort för dig som vill jobba kolumnen". Korten hade blivit högre för att det mörka kortet
+  hade mest innehåll (rubrik, mening, tre lappar, knapp och Logga in) och raden sträcker alla kort
+  till det högsta; utan det är de lika höga som före. För dig som vill jobba står inte på startsidan
+  längre; Bli studiehjälpare nås från menyn och från Nästa steg.
+- **Pilarna bort** (samma kväll). Leo, med en ring kring pilarna och en kring strecket under
   raden: "Ta bort dessa pilar. Här menade jag att den skulle vara så att de ej ser ut sådär att de
   är tydligt att de är två olika sektioner. Lite fadat under och den där animationen över".
   Bilderna var tagna före övergången i punkten nedan (hans klocka 22.00 är 21.00 UTC, och den gick
