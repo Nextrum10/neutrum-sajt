@@ -5,9 +5,12 @@
    React; här finns inget ramverk och inget byggsteg, så det som togs
    därifrån är skrivet om för hand, i sidans egen stil:
 
-     ljus       MagicBento: kanten och ytan på bentots rutor lyser där
-                musen är, och ett mjukt sken följer musen över rutnätet.
-                Bara med mus; på en telefon finns ingen mus att följa.
+     hog        ScrollStack: Hur hjälper vis fem kort i en kolumn läggs på
+                varandra (position:sticky, i CSS), och kortet under krymper
+                en aning när nästa glider över. Bara på dator (tier full).
+                Bentot med ljuset som följde musen (MagicBento) gick samma
+                dag: sju rutor i fyra kolumner var fel svar på "för mycket
+                kolumner" (Leo).
      scrollord  ScrollReveal: manifestets ord går från suddiga till
                 skarpa i takt med scrollen, och rubriken rätar upp sig.
      tipp       Studievyns fönster tippar upp ur papperet medan man
@@ -17,11 +20,9 @@
 
    Undantaget från "skriptet sätter klasser, CSS rör sig", som på
    landningssidorna (nextrum-landning.js): GSAP skriver transform,
-   opacitet och filter per bildruta på rubriken och fönstret, och ljuset
-   skriver tre custom properties på den ruta det lyser på. Variablerna är
-   registrerade utan arv (@property i nextrum-start.css avsnitt 19), så en
-   musrörelse räknar bara om rutan själv, aldrig allt under den, vilket
-   var det som hackade i studievyns gamla lutning.
+   opacitet och filter per bildruta på rubriken, fönstret och korten i
+   högen, och bara transform, opacity och filter: inget som räknar om
+   sidans layout.
 
    Utan det här skriptet, utan GSAP eller med reducerad rörelse står
    allt som nextrum-start.js lämnar det: orden tonar fram när rubriken
@@ -43,55 +44,22 @@
     try { fn(); } catch (e) { if (window.console) console.warn('nextrum-start-scen: ' + namn, e); }
   }
 
-  /* ---------- ljuset över bentot ----------
-     MagicBentos två delar: kanten som lyser upp på rutorna närmast musen
-     (--gx, --gy, --gn på rutan, läst av rutans bakgrund och ::before),
-     och ett stort, mjukt sken som följer musen (.bn-sken, flyttat med
-     translate, som grafikkortet sköter). En ruta längre bort än RÄCKVIDD
-     från musen släcks. Positionerna läses en gång per bildruta, aldrig i
-     scrollen: utan musrörelse händer ingenting. */
-  const RÄCKVIDD = 280;
-  function ljus() {
-    if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-    $$('[data-ljus]').forEach(ram => {
-      const rutor = $$('.bn-ruta, .hj-gar', ram);
-      if (!rutor.length) return;
-      const sken = document.createElement('span');
-      sken.className = 'bn-sken';
-      sken.setAttribute('aria-hidden', 'true');
-      ram.prepend(sken);
-      ram.classList.add('bn-ljus');
-
-      let x = 0, y = 0, väntar = 0;
-      function rita() {
-        väntar = 0;
-        const r = ram.getBoundingClientRect();
-        sken.style.translate = (x - r.left) + 'px ' + (y - r.top) + 'px';
-        rutor.forEach(k => {
-          const b = k.getBoundingClientRect();
-          const dx = Math.max(b.left - x, 0, x - b.right);
-          const dy = Math.max(b.top - y, 0, y - b.bottom);
-          const n = Math.max(0, 1 - Math.hypot(dx, dy) / RÄCKVIDD);
-          const förra = k._gn || 0;
-          if (n === 0 && förra === 0) return;
-          k._gn = n;
-          k.style.setProperty('--gx', (x - b.left).toFixed(0) + 'px');
-          k.style.setProperty('--gy', (y - b.top).toFixed(0) + 'px');
-          k.style.setProperty('--gn', n.toFixed(3));
+  /* ---------- högen ----------
+     Korten fastnar av sig själva (sticky i CSS). Här krymper kortet
+     under medan nästa glider upp över det, så att högen får djup: det
+     första mest, det sista inte alls. Det sista kortet har inget som
+     täcker det och rörs inte. */
+  function hog() {
+    if (!medGsap || tier() !== 'full') return;
+    $$('[data-hog]').forEach(lista => {
+      const kort = $$(':scope > .hog-kort', lista);
+      kort.forEach((k, i) => {
+        const nästa = kort[i + 1];
+        if (!nästa) return;
+        gsap.fromTo(k, { scale: 1 }, {
+          scale: 0.9 + 0.02 * i, ease: 'none', transformOrigin: '50% 0%',
+          scrollTrigger: { trigger: nästa, start: 'top bottom', end: 'top 30%', scrub: true }
         });
-      }
-      ram.addEventListener('pointermove', e => {
-        if (e.pointerType !== 'mouse') return;
-        x = e.clientX; y = e.clientY;
-        if (!väntar) väntar = requestAnimationFrame(rita);
-      }, { passive: true });
-      ram.addEventListener('pointerenter', e => {
-        if (e.pointerType === 'mouse') ram.classList.add('bn-ljus-pa');
-      });
-      ram.addEventListener('pointerleave', () => {
-        ram.classList.remove('bn-ljus-pa');
-        if (väntar) { cancelAnimationFrame(väntar); väntar = 0; }
-        rutor.forEach(k => { k._gn = 0; k.style.setProperty('--gn', '0'); });
       });
     });
   }
@@ -161,7 +129,7 @@
   }
 
   if (medGsap) gsap.registerPlugin(ST);
-  prova('ljus', ljus);
+  prova('hog', hog);
   prova('scrollord', scrollord);
   prova('tipp', tipp);
   prova('mätOm', mätOm);

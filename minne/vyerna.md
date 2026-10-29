@@ -90,7 +90,18 @@ skrivna om för hand i `nextrum-start-scen.js`, med GSAP som redan låg i
 i WebGL (Aurora, Silk och de andra; tunga på en telefon och fel mot
 papperet), effekterna på muspekaren (finns inte på en telefon), glitch- och
 dekrypteringstext (fel ton) och CountUp (sidan visar inga antal).
-- **Bentot** (MagicBento) i Hur hjälper vi: sju rutor i fyra kolumner,
+- **Högen** (ScrollStack, andra varvet samma kväll). Leo om bentot nedan: "Vad fan har du
+  gjort jag sa till dig minimera alla kolumner så skapade massor med nya av kolumner jätte
+  dåligt". Hans "Just nu är mycket bara i kolumner och tråkiga" betydde färre kolumner, och ett
+  rutnät med sju rutor var fler. Nu står Hur hjälper vi i en kolumn: fem kort i full bredd
+  (läxhjälpen på fotot, studiehjälparna, matchningen, NexLäx, Allt på ett ställe) som fastnar
+  under sidhuvudet med `position:sticky`, en kant av det förra synlig, och kortet under krymper
+  en aning med GSAP på dator. Inget kort har spalter inuti. Utan rörelse en vanlig lista. Samma
+  ändring: rubrikerna på startsidan har ingressen under sig (`.nx-head-en`) och ansökans fyra
+  steg i `#bli` är en lodrät lista (`.nx-apply-lista`). Tryggheten gick som egen punkt, för
+  "intervjuade och utbildade" står redan hos studiehjälparna och betalningen i Allt på ett
+  ställe. Ljuset som följde musen gick med bentot.
+- **Bentot** (MagicBento, borttaget samma kväll, se Högen) i Hur hjälper vi: sju rutor i fyra kolumner,
   läxhjälpen stor (två gånger två) med fotot hemma hos familjen
   (`21-hemma-hos-familjen`, som inget annat på startsidan använder) och
   platserna som lappar ovanpå, fyra små (expertisen, erfarenheten,
@@ -99,7 +110,7 @@ dekrypteringstext (fel ton) och CountUp (sidan visar inga antal).
   hjälps band, Allt på ett ställe ur manifestet, och Trygg hjälp-sektionen
   gick: bandets andra kort sa samma sak som rutorna. Garantins remsa står kvar
   under, oförändrad. Två och två under 1100 px, en spalt under 340 px.
-- **Ljuset**: med mus lyser rutans kant i dess färg där musen är (en
+- **Ljuset** (borta med bentot): med mus lyser rutans kant i dess färg där musen är (en
   radiell gradient i border-box, som `.nx-bubbla`), ett svagt sken lyser
   inuti, och ett stort sken följer musen över rutnätet (`.bn-sken`, med
   translate). `--gx`, `--gy` och `--gn` är registrerade utan arv

@@ -52,7 +52,7 @@
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="../nextrum-cinema.css?v=b9a03a57">
-<link rel="stylesheet" href="../nextrum-start.css?v=1d179aa2">
+<link rel="stylesheet" href="../nextrum-start.css?v=19711dd4">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -213,9 +213,12 @@
      EN NY FORM (2026-10-29). Leo: "Just nu är mycket bara i kolumner och
      tråkiga", med React Bits som förebild, och "Du får göra allt".
      Nästan varje sektion var samma mall: etikett, rubrik, ingress och en
-     rad vita kort. Nu: Hur hjälper vi är ett bentorutnät (MagicBento) som
-     också bär Trygg hjälp och Vår idés två blad, så att "Allt på ett
-     ställe" inte står två gånger; manifestet är ett eget ögonblick där
+     rad vita kort. Nu: Hur hjälper vi är en hög med fem kort i EN kolumn som
+     läggs på varandra medan man scrollar (ScrollStack; samma dag ett
+     bentorutnät med sju rutor, som Leo underkände: "minimera alla kolumner"),
+     och den bär också Trygg hjälp och Vår idés två blad, så att "Allt på ett
+     ställe" inte står två gånger; rubrikerna har ingressen under sig och
+     ansökans fyra steg är en lodrät lista; manifestet är ett eget ögonblick där
      orden blir skarpa medan man scrollar (ScrollReveal); studievyn tippar
      upp ur papperet (nextrum-start-scen.js). Trygg hjälp har ingen egen
      sektion längre. Ordningen i övrigt är Leos från 2026-10-08. -->
@@ -310,7 +313,7 @@
      ========================================================== -->
 <section class="nx-sek nx-hj" id="sa-hjalper-vi" aria-labelledby="hj-t">
   <div class="nx-wrap-bred">
-    <div class="nx-head split" data-stig>
+    <div class="nx-head nx-head-en" data-stig>
       <div>
         <span class="nx-et acc">What is Nextrum</span>
         <h2 class="nx-d2 hj-rubrik" id="hj-t">How do we help<br><em>your child?</em></h2>
@@ -320,87 +323,71 @@
       </div>
     </div>
 
-    <!-- BENTOT (2026-10-29). Sju rutor i olika storlekar i stället för
-         fyra lika blad, med Trygg hjälps och Vår idés poäng inbakade:
-         matchningen och tryggheten ur bandet, Allt på ett ställe ur
-         manifestet. Inget nytt påstående: varje mening stod redan på
-         sidan. Ordningens färger (avsnitt 18) gäller rutorna i tur, och
-         NexLäx-rutan har SO:s ockra som sjätte, som bandet hade.
-         data-ljus: ljuset som följer musen över rutorna och garantins
-         remsa (nextrum-start-scen.js, bara med mus). Formen:
-         nextrum-start.css avsnitt 19. Samma markup i en/index.html. -->
-    <div class="nx-bento-ram" data-ljus>
-    <ul class="nx-bento">
-      <li class="bn-ruta bn-stor" data-stig style="--f:var(--amne-ma)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8.5" r="3"/><circle cx="16.6" cy="9.6" r="2.4"/><path d="M2.8 19.2c0-2.9 2.3-5.1 5.2-5.1s5.2 2.2 5.2 5.1"/><path d="M14 14.7a4.6 4.6 0 0 1 2.6-.8c2.5 0 4.6 1.9 4.6 4.5"/></svg></span>
-        <span class="hj-et">Tutoring</span>
-        <h3>The right help, in the right place</h3>
-        <p>Your child gets their own tutor, a study plan and sessions at home, at the library or online. After every session you get a report.</p>
-        <figure class="bn-foto" style="--tint:#634E3D">
-          <picture><source type="image/webp" srcset="../bilder/21-hemma-hos-familjen-640.webp 640w, ../bilder/21-hemma-hos-familjen-960.webp 960w, ../bilder/21-hemma-hos-familjen-1280.webp 1280w" sizes="(max-width:1100px) 92vw, 46vw"><img class="nx-img" src="../bilder/21-hemma-hos-familjen-960.jpg"
-               srcset="../bilder/21-hemma-hos-familjen-640.jpg 640w, ../bilder/21-hemma-hos-familjen-960.jpg 960w, ../bilder/21-hemma-hos-familjen-1280.jpg 1280w"
-               sizes="(max-width:1100px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
-               style="object-position:40% 44%"
-               alt="A tutor and a student sit at a dining table at home, with school books, a fruit bowl and an autumn window behind them."></picture>
-        <div class="bn-platser" aria-hidden="true">
-          <span class="bn-plats" style="--i:0"><svg viewBox="0 0 24 24"><path d="M4 11.2 12 4.5l8 6.7"/><path d="M6.2 9.6V19.5h11.6V9.6"/><path d="M10 19.5v-5h4v5"/></svg>At your home</span>
-          <span class="bn-plats" style="--i:1"><svg viewBox="0 0 24 24"><path d="M12 6.6c-1.8-1.3-4.3-2-7.5-2v13c3.2 0 5.7.7 7.5 2 1.8-1.3 4.3-2 7.5-2v-13c-3.2 0-5.7.7-7.5 2z"/><path d="M12 6.6v13"/></svg>At the library</span>
-          <span class="bn-plats" style="--i:2"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="11" rx="1.8"/><path d="M2 19.5h20"/></svg>Online</span>
-          <span class="bn-rapport" style="--i:3"><span class="bn-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>The report from the session is ready</span>
+    <!-- HÖGEN (2026-10-29, andra varvet). Leo: "jag sa till dig minimera alla
+         kolumner så skapade massor med nya av kolumner". Bentot från samma dag
+         (sju rutor i fyra kolumner) var fel svar på "för mycket kolumner". Nu
+         står Hur hjälper vi i EN kolumn: fem kort i full bredd som läggs på
+         varandra medan man scrollar (React Bits ScrollStack, position:sticky),
+         och kortet under krymper en aning när nästa läggs över (GSAP, bara på
+         dator). Utan rörelse är det en vanlig lista, kort för kort. Varje
+         mening stod redan på sidan; färgen per kort följer ordningen
+         (avsnitt 18). Formen: nextrum-start.css avsnitt 19. Samma markup i
+         en/index.html. -->
+    <ol class="nx-hog" data-hog>
+      <li class="hog-kort hog-foto" style="--i:0;--f:var(--amne-ma)">
+        <picture><source type="image/webp" srcset="../bilder/21-hemma-hos-familjen-640.webp 640w, ../bilder/21-hemma-hos-familjen-960.webp 960w, ../bilder/21-hemma-hos-familjen-1280.webp 1280w, ../bilder/21-hemma-hos-familjen-1600.webp 1600w" sizes="(max-width:1100px) 96vw, 1280px"><img class="hog-bild" src="../bilder/21-hemma-hos-familjen-1280.jpg"
+             srcset="../bilder/21-hemma-hos-familjen-640.jpg 640w, ../bilder/21-hemma-hos-familjen-960.jpg 960w, ../bilder/21-hemma-hos-familjen-1280.jpg 1280w, ../bilder/21-hemma-hos-familjen-1600.jpg 1600w"
+             sizes="(max-width:1100px) 96vw, 1280px" width="2048" height="1152" loading="lazy" decoding="async"
+             style="object-position:40% 44%"
+             alt="A tutor and a student sit at a dining table at home, with school books, a fruit bowl and an autumn window behind them."></picture>
+        <div class="hog-inne">
+          <span class="hog-nr" aria-hidden="true">01</span>
+          <span class="hj-et">Tutoring</span>
+          <h3>The right help, in the right place</h3>
+          <p>Your child gets their own tutor, a study plan and sessions at home, at the library or online. After every session you get a report.</p>
         </div>
-        </figure>
       </li>
-      <li class="bn-ruta" data-stig data-fördröj="1" style="--f:var(--amne-en)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4.5 2.5 9 12 13.5 21.5 9z"/><path d="M6.5 11v4.3c1.4 1.4 3.3 2.2 5.5 2.2s4.1-.8 5.5-2.2V11"/><path d="M21.5 9v5"/></svg></span>
-        <span class="hj-et">Expertise</span>
-        <h3>Selected and interviewed</h3>
-        <p>Our tutors recently took the same courses themselves. We interview and train them, and match on subject, level, needs and personality.</p>
+      <li class="hog-kort" style="--i:1;--f:var(--amne-en)">
+        <div class="hog-inne">
+          <span class="hog-nr" aria-hidden="true">02</span>
+          <span class="hj-et">The tutors</span>
+          <h3>Selected and interviewed, from the same school desk</h3>
+          <p>Our tutors recently took the same courses themselves. We interview and train them, and match on subject, level, needs and personality.</p>
+          <p>They know what it is like to study for a test, get stuck on a task and understand something for the first time, because they did it themselves not long ago.</p>
+        </div>
       </li>
-      <li class="bn-ruta" data-stig data-fördröj="2" style="--f:var(--amne-no)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6.6c-1.8-1.3-4.3-2-7.5-2v13c3.2 0 5.7.7 7.5 2 1.8-1.3 4.3-2 7.5-2v-13c-3.2 0-5.7.7-7.5 2z"/><path d="M12 6.6v13"/></svg></span>
-        <span class="hj-et">Experience</span>
-        <h3>From the same school desk</h3>
-        <p>They know what it is like to study for a test, get stuck on a task and understand something for the first time, because they did it themselves not long ago.</p>
+      <li class="hog-kort" style="--i:2;--f:var(--amne-no)">
+        <div class="hog-inne">
+          <span class="hog-nr" aria-hidden="true">03</span>
+          <span class="hj-et">Matching</span>
+          <h3>A match we stand behind</h3>
+          <p>You do not browse a catalogue. We choose, because the wrong match is worse than no match.</p>
+        </div>
       </li>
-      <li class="bn-ruta" data-stig data-fördröj="3" style="--f:var(--acc)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
-        <span class="hj-et">Matching</span>
-        <h3>A match we stand behind</h3>
-        <p>You do not browse a catalogue. We choose, because the wrong match is worse than no match.</p>
+      <li class="hog-kort hj-nex" style="--i:3;--f:var(--acc)">
+        <div class="hog-inne">
+          <span class="hog-nr" aria-hidden="true">04</span>
+          <span class="hj-et">NexLäx</span>
+          <h3>Practice between sessions</h3>
+          <p>Nextrum’s own digital practice: short levels where every answer is marked straight away, with XP and badges. The tutor sees what has stuck.</p>
+          <svg class="hj-nex-bild" viewBox="0 0 240 72" aria-hidden="true"><path d="M16 54C56 54 58 22 98 22s46 32 84 32 42-28 42-28"/><circle cx="16" cy="54" r="10" style="--c:var(--amne-ma)"/><circle cx="98" cy="22" r="10" style="--c:var(--amne-no)"/><circle cx="182" cy="54" r="10" style="--c:var(--amne-en)"/><circle cx="224" cy="26" r="10" style="--c:var(--amne-ms)"/></svg>
+          <a class="nx-lank" href="#nexlax">How NexLäx works
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </div>
       </li>
-      <li class="bn-ruta" data-stig data-fördröj="4" style="--f:var(--amne-ms)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span>
-        <span class="hj-et">Safety</span>
-        <h3>Safety at every step</h3>
-        <p>Interviewed and trained tutors, payment through Nextrum and follow-up after sessions.</p>
+      <li class="hog-kort" style="--i:4;--f:var(--amne-ms)">
+        <div class="hog-inne">
+          <span class="hog-nr" aria-hidden="true">05</span>
+          <span class="hj-et">The student view</span>
+          <h3>All in one place</h3>
+          <p>Everything is on one and the same platform: study plan, booking, reports, NexLäx and payment. Sessions online or in person, no registration fee.</p>
+          <a class="nx-lank" href="#studievy">See the student view
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </div>
       </li>
-      <li class="bn-ruta bn-bred hj-nex" data-stig style="--f:var(--amne-so)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg></span>
-        <span class="hj-et">NexLäx</span>
-        <h3>Practice between sessions</h3>
-        <p>Nextrum’s own digital practice: short levels where every answer is marked straight away, with XP and badges. The tutor sees what has stuck.</p>
-        <svg class="hj-nex-bild" viewBox="0 0 240 72" aria-hidden="true"><path d="M16 54C56 54 58 22 98 22s46 32 84 32 42-28 42-28"/><circle cx="16" cy="54" r="10" style="--c:var(--amne-ma)"/><circle cx="98" cy="22" r="10" style="--c:var(--amne-no)"/><circle cx="182" cy="54" r="10" style="--c:var(--amne-en)"/><circle cx="224" cy="26" r="10" style="--c:var(--amne-ms)"/></svg>
-        <a class="nx-lank" href="#nexlax">How NexLäx works
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </a>
-      </li>
-      <li class="bn-ruta bn-bred" data-stig data-fördröj="1" style="--f:var(--amne-ma)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
-        <span class="hj-et">The student view</span>
-        <h3>All in one place</h3>
-        <p>Everything is on one and the same platform: study plan, booking, reports, NexLäx and payment. Sessions online or in person, no registration fee.</p>
-        <ul class="bn-delar" aria-hidden="true">
-          <li style="--i:0">Study plan</li>
-          <li style="--i:1">Booking</li>
-          <li style="--i:2">Reports</li>
-          <li style="--i:3">NexLäx</li>
-          <li style="--i:4">Payment</li>
-        </ul>
-        <a class="nx-lank" href="#studievy">See the student view
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </a>
-      </li>
-    </ul>
+    </ol>
 
     <div class="hj-gar" id="betygsgaranti" data-stig>
       <p class="hj-gar-mening"><span class="hj-gar-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span><span>We offer the <em>grade guarantee</em> because we are confident in our methods.</span></p>
@@ -413,7 +400,6 @@
       <p class="hj-gar-villkor">Terms apply. <a class="nx-lank" href="/en/anvandarvillkor#betygsgaranti">Read the guarantee terms
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a></p>
-    </div>
     </div>
   </div>
 </section>
@@ -1107,7 +1093,7 @@
      lästes som ett. Trygg hjälp gick 2026-10-29 (bentot bär den). -->
 <section class="nx-sek" id="studiehjalpare">
   <div class="nx-wrap-bred">
-  <div class="nx-head split" data-stig>
+  <div class="nx-head nx-head-en" data-stig>
     <div>
       <span class="nx-et acc">Some of the people who help</span>
       <h2 class="nx-d2" style="margin-top:20px">Meet some of our tutors.</h2>
@@ -1228,7 +1214,7 @@
      omdöme. Ändras sektionen: samma taggar på båda språken.
      ========================================================== -->
 <section class="nx-wrap-bred nx-sek" id="rost">
-  <div class="nx-head split" data-stig>
+  <div class="nx-head nx-head-en" data-stig>
     <div>
       <span class="nx-et acc">From us</span>
       <h2 class="nx-d2" style="margin-top:20px">Before the first reviews.</h2>
@@ -1329,7 +1315,7 @@
 
   <div class="nx-wrap-bred" style="margin-top:clamp(56px,7vw,96px)">
     <span class="nx-et" data-stig style="margin-bottom:22px;display:inline-flex">How applying works</span>
-    <div class="nx-apply-flow" data-stig data-fördröj="1">
+    <div class="nx-apply-flow nx-apply-lista" data-stig data-fördröj="1">
       <div class="nx-apply-step"><em>1</em><b>Apply</b><p>Fill in the application with subjects, year groups and times that suit you.</p></div>
       <div class="nx-apply-step"><em>2</em><b>Interview</b><p>A short conversation where we get to know you and how you explain things.</p></div>
       <div class="nx-apply-step"><em>3</em><b>Get approved</b><p>We run our checks and you get your tutor profile.</p></div>
@@ -1566,7 +1552,7 @@
      de inte står allt som nextrum-start.js lämnade det. -->
 <script src="../bibliotek/gsap-3.13.0.min.js" defer></script>
 <script src="../bibliotek/gsap-scrolltrigger-3.13.0.min.js" defer></script>
-<script src="../nextrum-start-scen.js?v=94d2d95f" defer></script>
+<script src="../nextrum-start-scen.js?v=0819a890" defer></script>
 <script src="../nextrum-socialt.js?v=7ba4ec99"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

@@ -712,7 +712,7 @@ Detaljer: `minne/grunden.md`.
   körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
   för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
   `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan, och `nextrum-start-scen.js` startsidans
-  scener med GSAP (bentots ljus, manifestets ord och studievyns tippning, 2026-10-29). `nextrum-landning.js` och `-css` är
+  scener med GSAP (högen, manifestets ord och studievyns tippning, 2026-10-29). `nextrum-landning.js` och `-css` är
   landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`;
   flikarna (`data-lp-flikar`, Vad passen går ut på och Var passen hålls) och ljuset över korten fungerar också
   utan GSAP och med reducerad rörelse, och utan skriptet står flikarnas innehåll som lista och stycken.
@@ -735,10 +735,13 @@ Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdö
 som vill jobba (`#bli`) och Nästa steg; Trygg hjälp gick upp i Hur hjälper vi 2026-10-29 (Leo: "Just nu är mycket bara
 i kolumner och tråkiga", med React Bits som förebild, och "Du får göra allt"). **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): ämnena, stadierna och guiderna i var sin grupp med ämnesfärgens prick, och under Område navets regioner (Hela Stockholm, Innerstaden, Söderort, Västerort, Norr och väster om stan, Söder och öster om stan), Online och In English, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp. **Orterna står i navets ortskatalog**, inte en och en i footern (2026-10-26, när stadsdelsområdena och kommunerna fick egna sidor: trettio länkar på varje sida, och trettiofyra efter sidrensningen 2026-10-27, hade varken varit snyggt eller sett ut som något annat än en doorway-lista); en ny ämnes-, stadie- eller guidesida läggs in i footern på alla sidor, en ny ort bara i generatorn, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): på startsidan
-sedan 2026-10-29 ett bentorutnät (`.nx-bento`, avsnitt 19, efter React Bits MagicBento) med sju rutor, läxhjälpen stor med
-fotot hemma hos familjen, expertisen, erfarenheten, matchningen och tryggheten (ur Trygg hjälps band), NexLäx och Allt på
-ett ställe (ur manifestet) breda, var och en med ordningens färg i `--f`, och ett ljus som följer musen (`data-ljus`, bara
-med mus); på Vår idé fyra blad i en rad som förut. Inget nytt påstående i rutorna: varje mening stod redan på sidan.
+sedan 2026-10-29 **en kolumn**: fem kort i full bredd som läggs på varandra medan man scrollar (`.nx-hog`, `data-hog`,
+avsnitt 19, efter React Bits ScrollStack; `position:sticky`, och kortet under krymper med GSAP på dator), läxhjälpen på
+fotot hemma hos familjen, studiehjälparna, matchningen (ur Trygg hjälps band), NexLäx och Allt på ett ställe (ur
+manifestet), var och en med ordningens färg i `--f`; på Vår idé fyra blad i en rad som förut. **Startsidan har inga rader
+av rutor** (samma dag, Leo: "jag sa till dig minimera alla kolumner så skapade massor med nya av kolumner": ett bentorutnät
+med sju rutor stod där i några timmar): rubrikerna har ingressen under sig (`.nx-head-en`, inte `split`), och ansökans steg
+i `#bli` är en lodrät lista (`.nx-apply-lista`). Inget nytt påstående i rutorna: varje mening stod redan på sidan.
 Erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
 platt remsa under bladen (`.hj-gar`, `id="betygsgaranti"`, 2026-10-08, Leo: "Gör betygsgarantin mindre"), med bara
 meningen "Vi erbjuder betygsgarantin för att vi är säkra på våra metoder." över, de fyra stegen 01–04 (siffra och
@@ -786,9 +789,7 @@ animerad `box-shadow`, och en custom property sätts där den läses, för den �
 GSAP och ScrollTrigger (vendorade i `bibliotek/`, aldrig från en CDN) dra skenan i Så går det till, platserna som
 en linje och korten, bara på de genererade `laxhjalp-*` och guiderna; stegen tänds ändå med en klass, och utan GSAP
 eller med reducerad rörelse står allt färdigt i CSS. **Och startsidan** (2026-10-29): `nextrum-start-scen.js` låter GSAP
-dra manifestets ord (opacitet och sudd) och studievyns `.sd-rum` (bara tier `full`), och ljuset skriver `--gx`, `--gy` och
-`--gn` på den ruta det lyser på, registrerade utan arv (`@property`), så att en musrörelse aldrig räknar om det som står i
-rutan. Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
+dra manifestets ord (opacitet och sudd), studievyns `.sd-rum` och skalan på högens kort (de två sista bara tier `full`). Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.
 3. `scrollIntoView` i en rad som flyttas med transform rullar sidan; bandet är `overflow:clip`,

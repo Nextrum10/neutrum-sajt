@@ -3625,223 +3625,99 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 }
 
 /* ============================================================
-   19. EN NY FORM (2026-10-29) — bentot, manifestet, studievyns
+   19. EN NY FORM (2026-10-29) — högen, manifestet, studievyns
        tippning och stjärnkanten
 
    Leo: "Just nu är mycket bara i kolumner och tråkiga", med React Bits
-   som förebild. Rörelsen som följer musen och scrollen skriver
+   som förebild. Rörelsen som följer scrollen skriver
    nextrum-start-scen.js; här står formen och slutlägena, och utan
    skriptet är det de som syns.
 
-   BENTOT (MagicBento). Sju rutor i olika storlekar i ett rutnät med
-   fyra kolumner: läxhjälpen stor (två gånger två), fyra små, och
-   NexLäx och Allt på ett ställe breda. Garantins remsa (avsnitt 17)
-   står under, med samma kolumner. Rutorna är startsidans kort och läser
-   sin färg ur --f som Hur hjälper vis blad gjorde. På en platta och en
-   telefon två och två, med den stora och de breda över hela bredden.
+   HÖGEN (ScrollStack, andra varvet samma dag). Första varvet var ett
+   bentorutnät med sju rutor i fyra kolumner, och Leo: "jag sa till dig
+   minimera alla kolumner så skapade massor med nya av kolumner". Nu står
+   Hur hjälper vi i EN kolumn: fem kort i full bredd, ett i taget, som
+   fastnar under sidhuvudet (position:sticky) och läggs på varandra med
+   en kant av det förra synlig ovanför. Inget kort har spalter inuti:
+   etikett, rubrik och text står under varandra. Det första kortet är
+   fotot hemma hos familjen, med texten på en mörk toning nedtill.
+   Kortet under krymper en aning när nästa läggs över (GSAP, bara på
+   dator, scale på .hog-kort, som inget annat rör). Med reducerad rörelse
+   står korten som en vanlig lista.
 
-   LJUSET. Med mus (.bn-ljus, satt av skriptet) har rutornas kant ett
-   eget lager: en radiell gradient i rutans färg vid --gx/--gy, klippt
-   till kanten (border-box under en padding-box i kortets färg, som
-   .nx-bubbla), och ett svagt sken inuti (::before) med opaciteten
-   --gn. Variablerna ärver inte (@property nedan): en musrörelse räknar
-   om rutan, aldrig texten i den. .bn-sken är skenet som följer musen
-   över hela rutnätet, flyttat med translate.
+   Sticky kräver att ingen förälder har overflow:hidden; .nx-hj har det
+   inte, och .nx-wrap-bred inte heller.
    ============================================================ */
-@property --gx{syntax:"<length>";inherits:false;initial-value:-999px}
-@property --gy{syntax:"<length>";inherits:false;initial-value:-999px}
-@property --gn{syntax:"<number>";inherits:false;initial-value:0}
-
-.nx-bento-ram{position:relative;isolation:isolate}
-.nx-bento{
+.nx-hog{
+  --hog-topp:clamp(84px,9vh,104px);
   list-style:none;margin:0;padding:0;
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
-  grid-auto-flow:row dense;
-  gap:clamp(12px,1.4vw,20px);
+  display:grid;gap:clamp(18px,3vh,32px);
 }
-.bn-ruta{
-  --pad:clamp(22px,2.4vw,32px);
-  --radie:clamp(22px,2.2vw,30px);
-  position:relative;isolation:isolate;min-width:0;
-  display:flex;flex-direction:column;align-items:flex-start;
-  padding:var(--pad);
+.hog-kort{
+  --pad:clamp(26px,3.4vw,56px);
+  --radie:clamp(24px,2.6vw,36px);
+  position:sticky;top:calc(var(--hog-topp) + var(--i,0) * 14px);
+  isolation:isolate;overflow:hidden;
+  min-height:clamp(300px,46vh,440px);
+  display:flex;flex-direction:column;justify-content:flex-end;
   border-radius:var(--radie);
-  border:1px solid transparent;
   background:
-    radial-gradient(90% 70% at 0% 0%,color-mix(in srgb,var(--f) 10%,transparent),transparent 70%) padding-box,
-    linear-gradient(var(--kort),var(--kort)) padding-box,
-    linear-gradient(var(--kort-kant),var(--kort-kant)) border-box;
-  box-shadow:var(--kort-sk);
-  transition:translate .45s var(--fjader);
+    radial-gradient(70% 90% at 100% 0%,color-mix(in srgb,var(--f) 12%,transparent),transparent 70%),
+    var(--kort);
+  border:1px solid var(--kort-kant);
+  box-shadow:0 -1px 0 rgba(255,255,255,.6) inset,0 30px 60px -36px rgba(46,42,32,.42);
+  transform-origin:50% 0;
 }
-.bn-ruta::after{
-  content:"";position:absolute;top:-1px;left:var(--pad);
-  width:46px;height:3px;border-radius:0 0 3px 3px;
-  background:var(--f);
+.hog-inne{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:flex-start;
+  padding:var(--pad);max-width:64rem;
 }
-.bn-stor{grid-column:span 2;grid-row:span 2}
-.bn-bred{grid-column:span 2}
-.bn-ruta h3{
-  margin-top:8px;
-  font-size:clamp(1.2rem,1.65vw,1.5rem);font-weight:700;
-  letter-spacing:-.03em;line-height:1.14;color:var(--bl);text-wrap:balance;
+.hog-nr{
+  font-size:clamp(3rem,7vw,6.2rem);font-weight:800;
+  letter-spacing:-.06em;line-height:.8;
+  font-variant-numeric:tabular-nums;color:var(--f);
 }
-.bn-ruta p{
-  margin-top:10px;max-width:50ch;
-  font-size:clamp(.95rem,1.05vw,1.02rem);line-height:1.56;color:var(--bl-2);text-wrap:pretty;
+.hog-kort .hj-et{margin-top:clamp(18px,2.2vw,28px)}
+.hog-kort h3{
+  margin-top:10px;max-width:22ch;
+  font-size:clamp(1.7rem,3.6vw,3.2rem);font-weight:800;
+  letter-spacing:-.045em;line-height:1.02;color:var(--bl);text-wrap:balance;
 }
-.bn-ruta .nx-lank{margin-top:auto;padding-top:18px}
-.bn-ruta .nx-lank::after{bottom:0}
-.bn-ruta .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
-.bn-stor h3{font-size:clamp(1.6rem,2.7vw,2.5rem);letter-spacing:-.04em;line-height:1.04;max-width:14ch}
-.bn-stor p{font-size:clamp(1rem,1.2vw,1.12rem);max-width:42ch}
-.bn-bred .hj-nex-bild{margin-top:clamp(14px,1.6vw,20px)}
-@media (hover:hover) and (pointer:fine){
-  .bn-ruta:hover{translate:0 -4px}
+.hog-kort p{
+  margin-top:clamp(12px,1.4vw,18px);max-width:58ch;
+  font-size:clamp(1rem,1.3vw,1.18rem);line-height:1.58;color:var(--bl-2);text-wrap:pretty;
 }
+.hog-kort p + p{margin-top:10px}
+.hog-kort .nx-lank{margin-top:clamp(18px,2vw,26px)}
+.hog-kort .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
+.hog-kort .hj-nex-bild{margin-top:clamp(16px,1.8vw,24px)}
 
-/* Läxhjälpens foto (hemma hos familjen; inget annat foto på startsidan
-   visar ett hem, och det står inte i stegen eller bildväggen) går ut
-   till rutans kant nedtill och på sidorna. Platserna och rapporten står
-   som lappar ovanpå och poppar fram i tur när rutan stigit in; de är
-   dekor (aria-hidden), meningen ovanför säger samma sak. */
-.bn-foto{
-  position:relative;flex:1 1 auto;align-self:stretch;
-  min-height:clamp(220px,22vw,320px);
-  margin:clamp(22px,2.6vw,34px) calc(-1 * var(--pad)) calc(-1 * var(--pad));
-  border-radius:0 0 calc(var(--radie) - 1px) calc(var(--radie) - 1px);
-  overflow:hidden;background:var(--tint);
+/* Fotokortet: bilden täcker kortet, och texten står i ljust på en
+   mörk toning nedtill, i båda lägena. */
+.hog-foto{background:#3A2E24;border-color:transparent}
+.hog-foto picture,.hog-bild{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.hog-bild{object-fit:cover;transition:scale 1.6s var(--e-ut)}
+.hog-foto::after{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(26,20,14,0) 25%,rgba(26,20,14,.55) 58%,rgba(26,20,14,.86));
 }
-.bn-foto picture,.bn-foto img{position:absolute;inset:0;width:100%;height:100%}
-.bn-foto img{object-fit:cover;transition:scale 1.6s var(--e-ut)}
-.bn-foto::after{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(180deg,transparent 45%,rgba(28,22,16,.42));
-}
-html.nx-sr .bn-stor:not(.nx-in) .bn-foto img{scale:1.14}
-@media (hover:hover) and (pointer:fine){
-  .bn-stor:hover .bn-foto img{scale:1.04}
-}
-.bn-platser{
-  position:absolute;z-index:1;left:var(--pad);right:var(--pad);bottom:var(--pad);
-  display:flex;flex-wrap:wrap;gap:8px;
-}
-.bn-plats,.bn-rapport{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:9px 14px 9px 11px;border-radius:100px;
-  font-size:.9rem;font-weight:600;letter-spacing:-.01em;color:var(--bl);
-  background:var(--kort);
-  border:1px solid color-mix(in srgb,var(--f) 22%,transparent);
-  box-shadow:0 10px 24px -14px rgba(28,22,16,.5);
-}
-.bn-plats svg{
-  width:17px;height:17px;flex:none;
-  fill:none;stroke:var(--f);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
-}
-.bn-rapport{
-  flex-basis:100%;max-width:max-content;
-  border-color:color-mix(in srgb,var(--mossa) 34%,transparent);
-}
-.bn-bock{
-  display:grid;place-items:center;flex:none;
-  width:20px;height:20px;border-radius:50%;background:var(--mossa);
-}
-.bn-bock svg{width:13px;height:13px;fill:none;stroke:var(--kort);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.hog-foto .hog-nr{color:#F1E7D6}
+.hog-foto .hj-et{color:#E9C9A8}
+.hog-foto h3{color:#FBF6EE}
+.hog-foto p{color:rgba(251,246,238,.86)}
 
-/* Allt på ett ställe: plattformens delar som en rad små märken. */
-.bn-delar{
-  list-style:none;margin:clamp(14px,1.6vw,20px) 0 0;padding:0;
-  display:flex;flex-wrap:wrap;gap:6px;
-}
-.bn-delar li{
-  padding:6px 12px;border-radius:100px;
-  font-family:var(--f-mono);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--bl-2);background:var(--pap);border:1px solid var(--ln);
-}
-
-html.nx-sr .bn-plats,html.nx-sr .bn-rapport,html.nx-sr .bn-delar li{
-  transition:opacity .5s var(--e-mjuk),translate .7s var(--fjader),scale .7s var(--fjader);
-  transition-delay:calc(.32s + var(--i,0) * 110ms);
-}
-html.nx-sr .bn-ruta:not(.nx-in) .bn-plats,
-html.nx-sr .bn-ruta:not(.nx-in) .bn-rapport,
-html.nx-sr .bn-ruta:not(.nx-in) .bn-delar li{opacity:0;translate:0 14px;scale:.9}
-
-/* Ljuset. Bara med .bn-ljus: utan skriptet och utan mus är rutan ett
-   vanligt kort. --gn går till noll när musen lämnar rutnätet, och
-   skenets opacitet tonar efter. */
-.bn-ljus .bn-ruta{
-  background:
-    radial-gradient(90% 70% at 0% 0%,color-mix(in srgb,var(--f) 10%,transparent),transparent 70%) padding-box,
-    linear-gradient(var(--kort),var(--kort)) padding-box,
-    radial-gradient(calc(90px + var(--gn) * 220px) circle at var(--gx) var(--gy),
-      color-mix(in srgb,var(--f) calc(var(--gn) * 90%),transparent),transparent 100%) border-box,
-    linear-gradient(var(--kort-kant),var(--kort-kant)) border-box;
-}
-.bn-ljus .hj-gar{
-  --f:var(--acc);
-  isolation:isolate;
-  border-color:transparent;
-  background:
-    radial-gradient(50% 140% at 0% 0%,color-mix(in srgb,var(--acc) 8%,transparent),transparent 70%) padding-box,
-    linear-gradient(var(--kort),var(--kort)) padding-box,
-    radial-gradient(calc(90px + var(--gn) * 220px) circle at var(--gx) var(--gy),
-      color-mix(in srgb,var(--acc) calc(var(--gn) * 90%),transparent),transparent 100%) border-box,
-    linear-gradient(var(--acc-line),var(--acc-line)) border-box;
-}
-.bn-ljus .bn-ruta::before,
-.bn-ljus .hj-gar::before{
-  content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
-  background:radial-gradient(420px circle at var(--gx) var(--gy),
-    color-mix(in srgb,var(--f) 11%,transparent),transparent 62%);
-  opacity:var(--gn);
-}
-.bn-sken{
-  position:absolute;top:0;left:0;z-index:-1;
-  width:640px;height:640px;margin:-320px 0 0 -320px;border-radius:50%;
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--acc) 13%,transparent),transparent);
-  pointer-events:none;opacity:0;
-  transition:opacity .5s var(--e-mjuk);
-}
-.bn-ljus-pa .bn-sken{opacity:1}
-
-@media (max-width:1100px){
-  .nx-bento{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .bn-stor{grid-row:span 1}
-}
-/* Telefon: som Hur hjälper vis blad (avsnitt 17), två och två och
-   tätt, med den stora och de breda över hela bredden. */
 @media (max-width:760px){
-  .nx-bento{gap:10px}
-  .bn-ruta{--pad:14px;--radie:20px;padding:16px 14px 18px}
-  .bn-ruta::after{width:34px}
-  .bn-ruta .hj-ikon{width:32px;height:32px;border-radius:10px}
-  .bn-ruta .hj-ikon svg{width:16px;height:16px}
-  .bn-ruta .hj-et{margin-top:12px;font-size:10px;letter-spacing:.12em}
-  .bn-ruta h3{margin-top:6px;font-size:1rem;line-height:1.16;letter-spacing:-.024em}
-  .bn-ruta p{
-    margin-top:7px;font-size:.875rem;line-height:1.48;
-    -webkit-hyphens:auto;hyphens:auto;hyphenate-limit-chars:8 4 3;
-    overflow-wrap:break-word;
-  }
-  .bn-stor{--pad:18px;padding:20px 18px 18px}
-  .bn-stor h3{font-size:1.5rem;line-height:1.06}
-  .bn-stor p{font-size:.95rem}
-  .bn-ruta .nx-lank{padding-top:12px;font-size:.86rem}
-  .bn-foto{min-height:230px;margin-top:18px}
-  .bn-platser{gap:5px}
-  .bn-plats,.bn-rapport{font-size:.76rem;gap:6px;padding:6px 10px 6px 8px}
-  .bn-plats svg{width:14px;height:14px}
-  .bn-bock{width:17px;height:17px}
-  .bn-delar li{font-size:10px;padding:5px 9px}
+  .nx-hog{--hog-topp:72px;gap:16px}
+  .hog-kort{--pad:22px 20px 24px;--radie:22px;top:calc(var(--hog-topp) + var(--i,0) * 10px);min-height:340px}
+  .hog-kort h3{font-size:clamp(1.55rem,7vw,2rem)}
+  .hog-kort p{font-size:.98rem;line-height:1.52}
 }
-@media (max-width:379px){
-  .nx-bento{gap:8px}
-  .bn-ruta{padding-inline:11px}
-}
-@media (max-width:339px){
-  .nx-bento{grid-template-columns:minmax(0,1fr)}
-  .bn-stor,.bn-bred{grid-column:auto}
+/* Med reducerad rörelse, och när skriptet inte satt nx-sr: en vanlig
+   lista, inget som fastnar. */
+@media (prefers-reduced-motion:reduce){
+  .hog-kort{position:relative;top:auto;min-height:0}
+  .hog-bild{transition:none}
 }
 
 /* ---------- manifestet: ett eget ögonblick ----------
@@ -3889,8 +3765,37 @@ html[data-motion] .nx-stjarnkant::after{animation:nx-stjarna-upp 5.5s linear inf
 html[data-motion="still"] .nx-stjarnkant::before,
 html[data-motion="still"] .nx-stjarnkant::after{animation:none;opacity:0}
 
+/* ---------- rubrikerna och ansökans steg i en kolumn ----------
+   Samma dag och av samma skäl: på startsidan står ingressen under
+   rubriken (.nx-head-en, i stället för split med texten till höger), och
+   Bli studiehjälpares fyra steg är en lodrät lista med siffran framför,
+   inte fyra rutor i rad. Menysidorna behåller sina. */
+.nx-head-en .nx-head-aside{margin-top:-4px}
+.nx-head-en .nx-head-aside .nx-lede{max-width:60ch}
+.nx-apply-flow.nx-apply-lista{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:0;max-width:760px;
+  border-top:1px solid rgba(239,230,214,.14);
+}
+/* #bli väger som bladens regel ovan (avsnitt 10), som annars ger varje
+   rad en egen yta igen. */
+#bli .nx-apply-lista > .nx-apply-step{
+  display:grid;grid-template-columns:3.2rem minmax(0,1fr);column-gap:clamp(14px,2vw,26px);
+  align-items:center;
+  padding:clamp(18px,2.2vw,24px) 0;border:0;border-radius:0;background:none;
+  border-bottom:1px solid rgba(239,230,214,.14);
+}
+#bli .nx-apply-lista > .nx-apply-step em{grid-row:1 / span 2;margin:0;font-size:clamp(2.2rem,3.2vw,2.8rem)}
+#bli .nx-apply-lista > .nx-apply-step b{grid-column:2}
+#bli .nx-apply-lista > .nx-apply-step p{grid-column:2;margin-top:4px;font-size:.92rem}
+@media (hover:hover) and (pointer:fine){
+  #bli .nx-apply-lista > .nx-apply-step:hover{background:none}
+}
+@media (max-width:760px){
+  #bli .nx-apply-lista > .nx-apply-step{padding:16px 0;grid-template-columns:2.4rem minmax(0,1fr)}
+  #bli .nx-apply-lista > .nx-apply-step:last-child:nth-child(odd){grid-column:auto}
+  #bli .nx-apply-lista > .nx-apply-step em{font-size:2rem}
+}
+
 @media (prefers-reduced-motion:reduce){
-  .bn-ruta{transition:none}
-  .bn-plats,.bn-rapport,.bn-delar li{transition:none}
   .nx-stjarnkant::before,.nx-stjarnkant::after{animation:none;opacity:0}
 }
