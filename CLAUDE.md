@@ -1213,7 +1213,7 @@ Detaljer: `minne/funktioner.md`.
 
 ## 8. Genererade filer — ändra aldrig för hand
 Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessidor.py`
-(`laxhjalp-*` med stadiesidorna, orterna, guiderna, navets kort och ortskatalog, affischens ortslista och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `bygg-logga.js` (för hand: favicons, mejlloggan, BIMI och profilbilden ur
+(`laxhjalp-*` med stadiesidorna, orterna, guiderna, navets kort och ortskatalog, affischens ortslista och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `bygg-llms.py` (`llms.txt` till AI-sökmotorerna, ur kartan och sidornas titel och beskrivning; fakta bara som sajten redan säger dem), `bygg-logga.js` (för hand: favicons, mejlloggan, BIMI och profilbilden ur
 `bilder/nextrum-logga.svg`),
 `bygg-banken.py` (för hand, och `--facit`; bladen och facit står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar),
 `bygg-delningsbilder.js` (för hand: en delningsbild per sida i kartan, `delning/`, med rubriken och
