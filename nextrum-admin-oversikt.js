@@ -28,14 +28,15 @@
      — det finns ingen "aktiv"-kolumn — och därför står den också i
      hjälptexten under talet, så att ingen tolkar siffran som något
      annat än vad den är. */
-  function aktivaElever(från, till) {
+  function aktivaEleverIdn(från, till) {
     const set = {};
     S.bokningar.forEach(b => {
       if (!b.student_id || b.status === 'cancelled' || !räknas(b)) return;
       if (b.wanted_date >= från && b.wanted_date <= till) set[b.student_id] = 1;
     });
-    return Object.keys(set).length;
+    return Object.keys(set);
   }
+  const aktivaElever = (från, till) => aktivaEleverIdn(från, till).length;
 
   function pil(upp) {
     return '<svg viewBox="0 0 24 24" aria-hidden="true">'
@@ -56,7 +57,13 @@
   /* Talet, etiketten, och en förändring bara när den är sann.
      jämför === null betyder "ingen föregående period", och då
      ritas raden inte alls. */
-  function kpi(tal, etikett, jämför, extra, ikon) {
+  /* Ett tal man kan trycka på (2026-10-29): rutan med vad det står för
+     öppnas av nextrum-admin-konsol.js ur NXAdmin.urval[nyckel]. */
+  const klick = (nyckel, arg) => ' data-urval="' + esc(nyckel) + '"'
+    + (arg ? ' data-urval-arg="' + esc(arg) + '"' : '')
+    + ' role="button" tabindex="0" title="Visa vad talet står för"';
+
+  function kpi(tal, etikett, jämför, extra, ikon, urval) {
     let diff = '';
     if (jämför !== null && jämför !== undefined) {
       const upp = jämför >= 0;
@@ -65,11 +72,34 @@
     } else if (extra) {
       diff = '<span class="adm-kpi-diff">' + esc(extra) + '</span>';
     }
-    return '<div class="adm-kpi">'
+    return '<div class="adm-kpi"' + (urval ? klick(urval) : '') + '>'
       + (ikon ? '<i class="adm-kpi-ikon" aria-hidden="true"><svg viewBox="0 0 24 24">' + KPI_IKON[ikon] + '</svg></i>' : '')
       + '<b>' + esc(String(tal)) + '</b>'
       + '<span>' + esc(etikett) + '</span>' + diff + '</div>';
   }
+
+  /* INBETALNINGARNA (2026-10-29): allt som kommit in på kort eller Klarna,
+     en rad per betalning med nettot efter återbetalningar och månaden
+     pengarna kom in. Översiktens intäkt och Statistikens Betalt räknar
+     båda här. Förut räknade Statistik bara passen (analys_ekonomi), så
+     en köpt plan stod med på Översikt men inte i Statistik (Leo: "ja",
+     rätta det). Testbetalningarna räknas aldrig.
+
+     Ett pass betalt med timmarna har inget eget kortbelopp, så inget
+     räknas två gånger: pengarna kom in när timmarna köptes. */
+  const BETALD = ['betald', 'aterbetald', 'tvist'];
+  const netto = r => Number(r.betalt_ore || 0) - Number(r.aterbetald_ore || 0);
+  const betalMånad = tid => isoFor(new Date(tid)).slice(0, 7);
+  function inbetalningar() {
+    const rad = (typ, r) => ({ typ, rad: r, när: r.betald_at, månad: betalMånad(r.betald_at), ore: netto(r) });
+    return S.bokningar.filter(b => b.betald_at && b.stripe_skarp !== false).map(b => rad('pass', b))
+      // Samma urval som Köpta timmar i Månadens ekonomi.
+      .concat((S.klippkort || []).filter(k => BETALD.indexOf(k.status) !== -1 && k.betald_at
+        && !(S.klippkortTest && S.klippkortTest.has(k.id))).map(k => rad('kop', k)))
+      .concat((S.tillagg || []).filter(t => BETALD.indexOf(t.status) !== -1 && t.betald_at
+        && t.stripe_skarp !== false).map(t => rad('tillagg', t)));
+  }
+  const summaIn = (rader, typ) => rader.filter(r => !typ || r.typ === typ).reduce((n, r) => n + r.ore, 0);
 
   function ritaTal() {
     const idag = isoFor(new Date());
@@ -97,37 +127,19 @@
        hålls, och det som kom in i september kom in i september.
 
        ALLA kortbetalningar sedan 2026-09-29: passen, köpta timmar (Fas
-       16.1) och tillägg för övertid (Fas 20.1). Förut räknades bara
-       passen, så ett köpt klippkort stod som "inget betalt än" här. Ett
-       pass betalt med timmarna har inget eget kortbelopp, så inget
-       räknas två gånger: pengarna kom in när timmarna köptes.
-       Testbetalningarna räknas aldrig, som i bokslutet och Månadens
-       ekonomi. Förut räknades testbetalningar på passen med här. */
+       16.1) och tillägg för övertid (Fas 20.1), ur inbetalningar(). */
     const period = idag.slice(0, 7);
     const förraPeriod = (() => {
       const d = new Date(); d.setMonth(d.getMonth() - 1);
       return isoFor(d).slice(0, 7);
     })();
-    const iMånad = (tid, mån) => !!tid && isoFor(new Date(tid)).slice(0, 7) === mån;
-    const netto = r => Number(r.betalt_ore || 0) - Number(r.aterbetald_ore || 0);
-    const BETALD = ['betald', 'aterbetald', 'tvist'];
-    const passIn = mån => S.bokningar
-      .filter(b => iMånad(b.betald_at, mån) && b.stripe_skarp !== false)
-      .reduce((n, b) => n + netto(b), 0);
-    // Samma urval som Köpta timmar i Månadens ekonomi.
-    const köptIn = mån => (S.klippkort || [])
-      .filter(k => BETALD.indexOf(k.status) !== -1 && iMånad(k.betald_at, mån)
-        && !(S.klippkortTest && S.klippkortTest.has(k.id)))
-      .reduce((n, k) => n + netto(k), 0);
-    const tilläggIn = mån => (S.tillagg || [])
-      .filter(t => BETALD.indexOf(t.status) !== -1 && iMånad(t.betald_at, mån) && t.stripe_skarp !== false)
-      .reduce((n, t) => n + netto(t), 0);
-    const kortIn = mån => passIn(mån) + köptIn(mån) + tilläggIn(mån);
-    const belopp = kortIn(period);
-    const förraBelopp = kortIn(förraPeriod);
+    const alla = inbetalningar();
+    const iMånad = mån => alla.filter(r => r.månad === mån);
+    const belopp = summaIn(iMånad(period));
+    const förraBelopp = summaIn(iMånad(förraPeriod));
     /* Köpta timmar är pengar in men en skuld till familjen tills
        timmarna använts, och står därför för sig under talet. */
-    const köpt = köptIn(period);
+    const köpt = summaIn(iMånad(period), 'kop');
     const förraText = förraBelopp ? 'förra månaden ' + kronor(förraBelopp)
       : belopp ? 'betalt hittills' : 'inget betalt än';
 
@@ -138,13 +150,13 @@
        i stället, och den är entydig. */
     $('#adm-tal').innerHTML =
       kpi(nu, 'Aktiva elever', förr ? nu - förr : null,
-        förr ? null : 'pass senaste 30 dagarna', 'elever')
+        förr ? null : 'pass senaste 30 dagarna', 'elever', 'ov_elever')
       + kpi(godkända.length, 'Aktiva studiehjälpare', null,
-        nyaShDennaMånad ? '+' + nyaShDennaMånad + ' denna månad' : 'godkända konton', 'hjalpare')
-      + kpi(kommande, 'Kommande lektioner', null, 'bekräftade och önskade', 'pass')
+        nyaShDennaMånad ? '+' + nyaShDennaMånad + ' denna månad' : 'godkända konton', 'hjalpare', 'ov_hjalpare')
+      + kpi(kommande, 'Kommande lektioner', null, 'bekräftade och önskade', 'pass', 'ov_kommande')
       + kpi(kronor(belopp), 'Intäkt denna månad', null,
         köpt ? 'varav ' + kronor(köpt) + ' köpta timmar' + (förraBelopp ? ' · ' + förraText : '')
-          : förraText, 'intakt');
+          : förraText, 'intakt', 'ov_intakt');
   }
 
   /* ------------------------------------------------------------
@@ -649,19 +661,22 @@
       });
 
       /* ---- Betalt ----
-         Förut fakturerat belopp per period. Familjen får ingen faktura
-         sedan Fas 14.2, så grafen hade stått tom medan pengarna kom
-         in. Nu: kortbetalningar på betalningsmånaden, efter
-         återbetalningar. betalt_ore var de betalda fakturorna och är noll
-         sedan 2026-10-21. Allt räknat i analys_ekonomi, inte här. */
-      NXArbete.graf($('#stat-intakt'), staplar(A.ekonomi, r =>
-        Number(r.kortbetalt_ore || 0) - Number(r.aterbetalt_ore || 0) + Number(r.betalt_ore || 0)), {
-        nagot: 'Det familjerna betalat, efter återbetalningar, på den månad pengarna kom in. Ett '
-             + 'pass kan ha betalats i förväg, före kortet som reserveras, så pengarna kan stå på månaden före passet.',
+         Kortbetalningar på betalningsmånaden, efter återbetalningar:
+         passen, köpta timmar och tillägg, ur inbetalningar() som
+         Översiktens intäkt (2026-10-29). Förut bara passen, ur
+         analys_ekonomi, så en köpt plan syntes inte här. */
+      NXArbete.graf($('#stat-intakt'), staplar(inbetalningar().map(r => ({ manad: r.månad, ore: r.ore })), r => r.ore), {
+        nagot: 'Det familjerna betalat för pass, timmar och tillägg, efter återbetalningar, på den månad pengarna '
+             + 'kom in. Ett pass betalas när tiden är bekräftad, så pengarna kan stå på månaden före passet.',
         inget: 'Ingen betalning har kommit in de senaste sex månaderna.'
       }, v => kronor(v));
     }
 
+    if (!S.analysFel) {
+      klickStaplar($('#stat-pass'), 'st_pass');
+      klickStaplar($('#stat-elever'), 'st_elever');
+      klickStaplar($('#stat-intakt'), 'st_betalt');
+    }
     ritaStatTal();
     ritaTratt();
     ritaKallor();
@@ -686,21 +701,21 @@
     const familjer = Object.values(S.personer).filter(p => p.role === 'parent' && !ärRaderad(p)
       && !ärAdminkonto(p.id)).length;
     const elever = S.elevlista.filter(e => !ärAdminkonto(e.parent_id)).length;
-    /* Betalt = kort efter återbetalningar (betalt_ore, fakturorna, är
-       noll sedan 2026-10-21), samma definition som grafen ovanför. ej_betalda är pass som
-       hölls och rapporterades utan att familjen betalat. */
-    const betalt = summa(ek, 'kortbetalt_ore') - summa(ek, 'aterbetalt_ore') + summa(ek, 'betalt_ore');
+    /* Betalt = inbetalningar() efter återbetalningar, samma som grafen
+       ovanför och Översiktens intäkt. ej_betalda är pass som hölls och
+       rapporterades utan att familjen betalat. */
+    const betalt = summaIn(inbetalningar());
     const ejBetalda = summa(ek, 'ej_betalda');
 
     host.innerHTML =
-      '<div class="adm-kpi"><b>' + pass + '</b><span>Genomförda pass</span>'
+      '<div class="adm-kpi"' + klick('st_pass') + '><b>' + pass + '</b><span>Genomförda pass</span>'
       + '<span class="adm-kpi-diff">sedan starten, med rapport</span></div>'
-      + '<div class="adm-kpi"><b>' + NXBetalning.timmar(minuter) + '</b><span>Undervisad tid</span>'
+      + '<div class="adm-kpi"' + klick('st_tid') + '><b>' + NXBetalning.timmar(minuter) + '</b><span>Undervisad tid</span>'
       + '<span class="adm-kpi-diff">i genomförda pass</span></div>'
-      + '<div class="adm-kpi"><b>' + familjer + '</b><span>Familjer</span>'
+      + '<div class="adm-kpi"' + klick('st_familjer') + '><b>' + familjer + '</b><span>Familjer</span>'
       + '<span class="adm-kpi-diff">' + elever
       + (elever === 1 ? ' elev' : ' elever') + '</span></div>'
-      + '<div class="adm-kpi"><b>' + kronor(betalt) + '</b><span>Betalt</span>'
+      + '<div class="adm-kpi"' + klick('st_betalt') + '><b>' + kronor(betalt) + '</b><span>Betalt</span>'
       + '<span class="adm-kpi-diff">' + (ejBetalda
         ? ejBetalda + (ejBetalda === 1 ? ' pass hölls' : ' pass hölls') + ' utan betalning'
         : 'sedan starten, efter återbetalningar') + '</span></div>';
@@ -740,10 +755,10 @@
     if (!rader.length) { host.innerHTML = tomt('Ingen intresseanmälan än', ''); return; }
 
     host.innerHTML = tabell([
-      { namn: 'Kanal', rita: r => r.kalla
+      { namn: 'Kanal', rita: r => '<span class="adm-urval-lank"' + klick('st_kalla', r.kalla || '-') + '>' + (r.kalla
         ? '<b>' + esc(r.kalla) + '</b>'
           + (r.medium ? '<span class="adm-und">' + esc(r.medium) + '</span>' : '')
-        : '<b>Okänd</b><span class="adm-und">landningen gick inte att se, eller före Fas 9.5</span>' },
+        : '<b>Okänd</b><span class="adm-und">landningen gick inte att se, eller före Fas 9.5</span>') + '</span>' },
       { namn: 'Anmälningar', höger: true, rita: r => '<span class="adm-tal">' + r.anmalningar + '</span>' },
       { namn: 'Matchade', höger: true, rita: r => '<span class="adm-tal">' + r.matchade + '</span>' },
       { namn: 'Blev kund', höger: true, rita: r => '<span class="adm-tal">' + r.blev_kund + '</span>' }
@@ -772,12 +787,13 @@
       .reduce((n, r) => n + Number(r.avbokningar || 0), 0);
 
     NXArbete.graf(host, staplar(rader, r => r.avbokningar), false);
+    klickStaplar(host, 'st_avbok');
 
     const summa = falt => rader.reduce((n, r) => n + Number(r[falt] || 0), 0);
     host.innerHTML += '<div class="adm-tal-rad">'
-      + '<div class="adm-kpi"><b>' + summa('av_familjen') + '</b><span>Av familjen</span></div>'
-      + '<div class="adm-kpi"><b>' + summa('av_studiehjalparen') + '</b><span>Av studiehjälparen</span></div>'
-      + '<div class="adm-kpi"><b>' + summa('utan_avsandare') + '</b><span>Utan avsändare</span>'
+      + '<div class="adm-kpi"' + klick('st_avbok', 'familjen') + '><b>' + summa('av_familjen') + '</b><span>Av familjen</span></div>'
+      + '<div class="adm-kpi"' + klick('st_avbok', 'hjalparen') + '><b>' + summa('av_studiehjalparen') + '</b><span>Av studiehjälparen</span></div>'
+      + '<div class="adm-kpi"' + klick('st_avbok', 'ingen') + '><b>' + summa('utan_avsandare') + '</b><span>Utan avsändare</span>'
       + '<span class="adm-kpi-diff">schemalagt eller före 9.4</span></div>'
       + '</div>'
       + '<p class="graf-not">'
@@ -830,10 +846,10 @@
       .reduce((n, r) => n + Number(r.ej_sparbara || 0), 0);
 
     const steg = [
-      ['Intresseanmälningar', 'allt som kommit in', kom],
-      ['Kontaktade', 'någon har hört av sig tillbaka', kontaktade],
-      ['Intagna', 'anmälan blev en familj med ett barn i systemet', matchade],
-      ['Aktiva familjer', 'har minst ett matchat barn i systemet', kunder]
+      ['Intresseanmälningar', 'allt som kommit in', kom, 'tr_alla'],
+      ['Kontaktade', 'någon har hört av sig tillbaka', kontaktade, 'tr_kontaktade'],
+      ['Intagna', 'anmälan blev en familj med ett barn i systemet', matchade, 'tr_intagna'],
+      ['Aktiva familjer', 'har minst ett matchat barn i systemet', kunder, 'tr_kunder']
     ];
 
     const störst = Math.max(1, ...steg.map(s => s[2]));
@@ -846,7 +862,7 @@
       else if (tapp > 0) under = '−' + tapp + ' här';
       else if (s[2] > föregående) under = '+' + (s[2] - föregående) + ' utanför';
       else under = 'inget tapp';
-      return '<div class="tratt-steg"><div>'
+      return '<div class="tratt-steg"' + klick(s[3]) + '><div>'
         + '<span class="tratt-namn"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></span>'
         + '<span class="tratt-stapel"><i style="width:'
         + Math.max(2, Math.round((s[2] / störst) * 100)) + '%"></i></span>'
@@ -868,6 +884,224 @@
   }
 
 
+
+  /* ============================================================
+     VAD TALEN STÅR FÖR (2026-10-29)
+
+     Leo: "jag vill kunna klicka på allt för att få upp mer info om det".
+     Varje tal och stapel ovan bär data-urval, och funktionerna här
+     svarar med raderna det är räknat ur. Samma urval som talet, rad för
+     rad: Statistikens tal kommer ur analysvyerna, så raderna här följer
+     vyernas villkor (passunderlag.har_rapport, betald_at och stripe_skarp,
+     status cancelled), inte Översiktens. Ett tal som räknas på en annan
+     källa än raderna hade varit ett tal rutan inte kan förklara.
+     ============================================================ */
+  const vecka = ['sön', 'mån', 'tis', 'ons', 'tor', 'fre', 'lör'];
+  const passSak = (b, extra) => {
+    const [vem, hjälpare] = passVem(b);
+    return { titel: passTitel(b), meta: [vem, hjälpare].concat(extra || []), dp: 'pass:' + b.id, ikon: 'pass', gör: 'Öppna' };
+  };
+  const familjSak = (p, meta) => ({
+    titel: namnFör(p.id), meta: meta || [p.email], dp: 'familj:' + p.id, person: true, gör: 'Öppna'
+  });
+  const elevSak = (e, meta) => ({
+    titel: e.name || '(namn saknas)',
+    meta: [e.grade, namnFör(e.parent_id)].concat(meta || []), dp: 'elev:' + e.id, person: true, gör: 'Öppna'
+  });
+  const intagenSak = i => ({
+    titel: i.parent_id ? namnFör(i.parent_id) : 'Familj (kontot borttaget)',
+    meta: ['intagen ' + kortDatum(i.intagen_at), i.kalla, i.subject],
+    dp: i.parent_id ? 'familj:' + i.parent_id : null, till: '#familjer', person: true, gör: 'Öppna'
+  });
+  const iMånad = (datum, mån) => !mån || String(datum || '').slice(0, 7) === mån;
+  const månadNamn = mån => {
+    const m = NXArbete.sexMånader().find(x => x.nyckel === mån);
+    return m ? m.namn : mån;
+  };
+  const nyastFörst = (a, b) => String(b.wanted_date || '').localeCompare(String(a.wanted_date || ''));
+
+  /* Passunderlaget hämtas med Ekonomi; Statistik kan öppnas före. */
+  async function genomförda(mån) {
+    if (!S.passunderlag) await NXAdmin.hämtaEkonomiunderlag();
+    if (S.passunderlagFel) throw new Error('Passunderlaget gick inte att läsa: ' + S.passunderlagFel);
+    const bok = new Map(S.bokningar.map(b => [b.id, b]));
+    return (S.passunderlag || [])
+      .filter(p => p.har_rapport && räknas(p) && iMånad(p.wanted_date, mån))
+      .map(p => Object.assign({}, bok.get(p.id) || {}, p))
+      .sort(nyastFörst);
+  }
+  // En rad per inbetalning, nyast först, ur samma lista som talen.
+  const inbetalningsSaker = urval => inbetalningar().filter(urval)
+    .sort((a, b) => String(b.när).localeCompare(String(a.när)))
+    .map(({ typ, rad: r, ore }) => {
+      const belopp = [kronor(ore), kortDatum(r.betald_at),
+        Number(r.aterbetald_ore || 0) ? kronor(Number(r.aterbetald_ore)) + ' tillbaka' : null];
+      if (typ === 'pass') return passSak(r, belopp);
+      if (typ === 'kop') return { titel: 'Köpta timmar', meta: [namnFör(r.parent_id)].concat(belopp),
+        dp: r.parent_id ? 'familj:' + r.parent_id : null, ikon: 'kort', gör: 'Öppna' };
+      return { titel: 'Tillägg för övertid', meta: belopp,
+        dp: r.booking_id ? 'pass:' + r.booking_id : null, ikon: 'kort', gör: 'Öppna' };
+    });
+  const sthlmMånad = tid => NXAdmin.sthlmDag(tid).slice(0, 7);
+  const anmälningar = () => S.leads.map(l => ({ l })).concat((S.intagna || []).map(i => ({ i })));
+  const anmälanSak = x => x.l ? sakAnmälan(x.l) : intagenSak(x.i);
+
+  Object.assign(NXAdmin.urval, {
+    async st_pass(mån) {
+      const rader = await genomförda(mån);
+      return {
+        titel: 'Genomförda pass' + (mån ? ' i ' + månadNamn(mån) : ''),
+        text: 'Pass med rapport' + (mån ? '' : ', sedan starten') + '. Ett pass utan rapport räknas inte.',
+        saker: rader.map(b => passSak(b, [b.duration_min ? NXBetalning.timmar(b.duration_min) : null])),
+        tomt: 'Inget genomfört pass.'
+      };
+    },
+    async st_tid() {
+      const rader = await genomförda();
+      const per = {};
+      rader.forEach(b => {
+        if (!b.tutor_id) return;
+        const r = per[b.tutor_id] || (per[b.tutor_id] = { id: b.tutor_id, min: 0, pass: 0 });
+        r.min += Number(b.duration_min || 0); r.pass += 1;
+      });
+      return {
+        titel: 'Undervisad tid',
+        text: 'Per studiehjälpare, i genomförda pass med rapport.',
+        saker: Object.values(per).sort((a, b) => b.min - a.min).map(r => ({
+          titel: namnFör(r.id), meta: [NXBetalning.timmar(r.min), r.pass + ' pass'],
+          dp: 'studiehjalpare:' + r.id, person: true, gör: 'Öppna'
+        })),
+        tomt: 'Ingen undervisad tid än.'
+      };
+    },
+    st_familjer() {
+      const fam = Object.values(S.personer).filter(p => p.role === 'parent' && !ärRaderad(p) && !ärAdminkonto(p.id))
+        .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+      return {
+        titel: 'Familjer',
+        text: 'Alla familjekonton, nyaste först, utan våra egna.',
+        saker: fam.map(p => {
+          const barn = (S.elever[p.id] || []);
+          return familjSak(p, [barn.length + ' barn', 'konto sedan ' + kortDatum(p.created_at)]);
+        })
+      };
+    },
+    async st_elever(mån) {
+      // Samma rader som passens staplar; en elev en gång per månad, som analys_aktiva.
+      const antal = new Map();
+      (await genomförda(mån)).forEach(b => {
+        if (b.student_id) antal.set(b.student_id, (antal.get(b.student_id) || 0) + 1);
+      });
+      const e = id => S.allaElever.find(x => x.id === id) || { id, name: elevNamn(id) };
+      return {
+        titel: 'Aktiva elever' + (mån ? ' i ' + månadNamn(mån) : ''),
+        text: 'Elever med minst ett genomfört pass' + (mån ? ' under månaden.' : '.'),
+        saker: [...antal.entries()].sort((a, b) => b[1] - a[1]).map(([id, n]) => elevSak(e(id), [n + ' pass'])),
+        tomt: 'Ingen elev har haft ett genomfört pass.'
+      };
+    },
+    st_betalt(mån) {
+      return {
+        titel: 'Betalt' + (mån ? ' i ' + månadNamn(mån) : ''),
+        text: 'Pass, köpta timmar och tillägg som familjerna betalat på kort eller Klarna, på dagen pengarna kom in, '
+          + 'efter återbetalningarna. Testbetalningar räknas inte.',
+        till: '#ekonomi',
+        saker: inbetalningsSaker(r => !mån || r.månad === mån),
+        tomt: 'Ingen betalning.'
+      };
+    },
+    st_kalla(kalla) {
+      const k = kalla === '-' ? null : kalla;
+      const rader = anmälningar().filter(x => ((x.l || x.i).kalla || null) === k);
+      return {
+        titel: k ? 'Från ' + k : 'Okänd källa',
+        text: 'Anmälningarna med den här källan, också de som flyttats till familjen.',
+        saker: rader.map(anmälanSak)
+      };
+    },
+    st_avbok(arg) {
+      const mån = /^\d{4}-\d{2}$/.test(arg || '') ? arg : null;
+      const vem = mån ? null : arg;
+      const rader = S.bokningar.filter(b => b.status === 'cancelled'
+        && (!mån || (b.avbokad_at && sthlmMånad(b.avbokad_at) === mån))
+        && (vem !== 'familjen' || (b.avbokad_av && b.avbokad_av === b.parent_id))
+        && (vem !== 'hjalparen' || (b.avbokad_av && b.avbokad_av === b.tutor_id))
+        && (vem !== 'ingen' || !b.avbokad_av))
+        .sort((a, b) => String(b.avbokad_at || '').localeCompare(String(a.avbokad_at || '')));
+      const skäl = b => (NXAdmin.AVBOKNINGSSKAL[b.avbokningsskal || ''] || [b.avbokningsskal])[0];
+      return {
+        titel: 'Avbokningar' + (mån ? ' i ' + månadNamn(mån)
+          : vem === 'familjen' ? ' av familjen' : vem === 'hjalparen' ? ' av studiehjälparen'
+          : vem === 'ingen' ? ' utan avsändare' : ''),
+        saker: rader.map(b => passSak(b, [skäl(b), b.avbokad_at ? 'avbokat ' + kortDatum(b.avbokad_at) : 'okänd tid'])),
+        tomt: 'Ingen avbokning.'
+      };
+    },
+    tr_alla() {
+      return { titel: 'Intresseanmälningar', text: 'Allt som kommit in, också det som flyttats till familjen.',
+        saker: anmälningar().map(anmälanSak) };
+    },
+    tr_kontaktade() {
+      return { titel: 'Kontaktade', text: 'Anmälningar där någon hört av sig tillbaka.',
+        saker: anmälningar().filter(x => x.i || x.l.status !== 'new').map(anmälanSak) };
+    },
+    tr_intagna() {
+      return { titel: 'Intagna', text: 'Anmälningar som blivit en familj.',
+        saker: anmälningar().filter(x => x.i || x.l.status === 'matched').map(anmälanSak) };
+    },
+    tr_kunder() {
+      const fam = Object.values(S.personer).filter(p => p.role === 'parent' && !ärAdminkonto(p.id)
+        && (S.elever[p.id] || []).some(e => e.matched_tutor_id && e.match_status === 'matched'));
+      return { titel: 'Aktiva familjer', text: 'Familjer med minst ett matchat barn.',
+        saker: fam.map(p => familjSak(p, (S.elever[p.id] || []).filter(e => e.matched_tutor_id)
+          .map(e => e.name + ' med ' + namnFör(e.matched_tutor_id)))) };
+    },
+
+    /* Översiktens tal, med samma urval som ritaTal. */
+    ov_elever() {
+      const idn = aktivaEleverIdn(dagarSedan(30), isoFor(new Date(Date.now() + 365 * DAG)));
+      const e = id => S.allaElever.find(x => x.id === id) || { id, name: elevNamn(id) };
+      return { titel: 'Aktiva elever', text: 'Elever med ett pass de senaste 30 dagarna eller ett inbokat framåt.',
+        saker: idn.map(id => elevSak(e(id))) };
+    },
+    ov_hjalpare() {
+      const t = Object.values(S.tutorProfiler).filter(x => x.status === 'approved' && !ärAdminkonto(x.id));
+      return { titel: 'Aktiva studiehjälpare', text: 'Godkända konton.',
+        saker: t.map(x => {
+          const elever = S.elevlista.filter(e => e.matched_tutor_id === x.id).length;
+          return { titel: namnFör(x.id), meta: [elever + (elever === 1 ? ' elev' : ' elever'), 'sedan ' + kortDatum(x.created_at)],
+            dp: 'studiehjalpare:' + x.id, person: true, gör: 'Öppna' };
+        }) };
+    },
+    ov_kommande() {
+      const idag = isoFor(new Date());
+      const rader = S.bokningar.filter(b => b.wanted_date >= idag
+        && (b.status === 'requested' || b.status === 'confirmed') && räknas(b))
+        .sort((a, b) => String(a.wanted_date + (a.wanted_time || '')).localeCompare(String(b.wanted_date + (b.wanted_time || ''))));
+      return { titel: 'Kommande lektioner', text: 'Bekräftade och önskade, närmast först.',
+        saker: rader.map(b => passSak(b, [b.status === 'confirmed' ? 'bekräftat' : 'önskat',
+          vecka[new Date(b.wanted_date + 'T12:00').getDay()]])) };
+    },
+    ov_intakt() {
+      const mån = isoFor(new Date()).slice(0, 7);
+      return { titel: 'Intäkt denna månad', text: 'Allt som kommit in på kort eller Klarna, efter återbetalningar.',
+        till: '#ekonomi', saker: inbetalningsSaker(r => r.månad === mån) };
+    }
+  });
+
+  /* NXArbete.graf ritar staplarna i sexMånader-ordning; varje stapel får sin månad. */
+  function klickStaplar(host, nyckel) {
+    if (!host) return;
+    const m = NXArbete.sexMånader();
+    host.querySelectorAll('.graf-stapel').forEach((el, i) => {
+      if (!m[i]) return;
+      el.setAttribute('data-urval', nyckel);
+      el.setAttribute('data-urval-arg', m[i].nyckel);
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('title', 'Visa ' + m[i].namn);
+    });
+  }
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {

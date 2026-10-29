@@ -453,7 +453,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   skickar en familj ett upplägg i familjens panel (`skicka_eget_upplagg()`, `is_admin()`: ett namn, 1–40 timmar och
   1–60 dagar att köpa det), till planernas timpris (det rabatterade timpriset i `erbjudanden_pris`, 379 kr i dag, satt
   av databasen och fryst på upplägget; admin sätter inget eget pris). Familjen får ett mejl (notistypen `eget_upplagg`,
-  avsnitt 5), ser det överst bland planerna och köper det en gång: när köpet är betalt är upplägget köpt och syns inte
+  avsnitt 5), ser det överst i Betalning & planer och först på Översikt (2026-10-29) och köper det en gång: när köpet är betalt är upplägget köpt och syns inte
   längre, och vill familjen ha ett till skickar vi ett nytt. Köpet är en plan (`klippkort` med erbjudandet `plan_eget`,
   sorten `plan` och `upplagg_id`), och allt som gäller en plan gäller det: 30 dagar från betalningen, timbanken,
   ordningen, påminnelsen, första timmen gratis om det är familjens första plan, familjerabatten, rabattkoden
@@ -866,7 +866,11 @@ toppraden. `.btn-sm` är liten bara som `.vy-admin main .btn-sm`; Att göra är 
 **Att göra sak för sak** (2026-10-26, Leo: "nex visar 3 saker att göra, jag ser bara två"): ringen räknar
 saker och listan poster, så ringens tal och Att göra leder till `#attgora`, en rad per sak (Översikt står
 vald, bara superadmin). Varje post i `byggAttGöra` och `byggProblem` bär sina `saker` ur samma urval som
-antalet, och en ny post får dem i samma ändring. En knapp som
+antalet, och en ny post får dem i samma ändring. **Talen går att trycka på** (2026-10-29, Leo: "jag vill kunna
+klicka på allt för att få upp mer info om det"): ett tal, en stapel eller ett trattsteg med `data-urval` öppnar en ruta
+med raderna det är räknat ur (`NXAdmin.urval[nyckel]`, öppnad av `nextrum-admin-konsol.js` med Att görs `sakRad`), och
+raden öppnar sin panel. Raderna räknas ur samma urval som talet, i samma fil (Statistikens följer analysvyerna); ett nytt
+tal i Översikt eller Statistik får sitt urval i samma ändring. Listorna i de andra sektionerna öppnar redan panelen. En knapp som
 databasen bara släpper fram för en superadmin eller en behörighet ritas efter `ärSuperadmin()` eller `får(kod)`
 (2026-10-15), och `skriv()` säger Ingenting sparades när en uppdatering inte träffade något. Siffran vid
 Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-10-05), och att visa
@@ -890,7 +894,7 @@ Kontaktad som val, Boka digitalt möte, Skicka utbildningen och Markera utbildad
 **Papperskorgen** (2026-10-26, `papperskorgen`, Leo: "radera uppgifter från det stället ... så finns personen kvar i
 vårt system och i familj"): en ikon sist på varje rad under Intresseanmälningar och i varje flik under Ansökningar,
 bara för superadmin (`papperskorg()` i kärnan, `o.bort` i `namnlista()`), som tar bort den raden och inget annat
-(`ta_bort_ur_stallet()`): en anmälan avidentifieras, en ansökan tas bort med CV:t först. Rutan (`visaPapperskorg`)
+(`ta_bort_ur_stallet()`): en anmälan raderas (sedan 2026-10-29), en ansökan tas bort med CV:t först. Rutan (`visaPapperskorg`)
 säger ur `stalle_lage()` var personen står kvar; är raden det sista stället heter den "Ta bort X helt?" med Avbryt och
 Gå vidare, och databasen kräver det svaret (`p_helt`). Den frågar också när personen står kvar, för ett CV går inte
 att få tillbaka. Radera i panelen är vägen när personen ska bort med allt från samma adress.
@@ -959,7 +963,7 @@ Detaljer: `minne/grunden.md`.
   `execute_sql` och registrera filens text sedan i
   `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL
   (det gjordes två gånger 2026-10-20, båda med Leos uttryckliga ja: PR #307:s åtta sista migrationer, avsnitt 11,
-  och rensningen av testkontot, `minne/databasen.md`),
+  och rensningen av testkontot, `minne/databasen.md`; och en tredje 2026-10-29, `anmalningar_raderas_helt`, avsnitt 11),
   och prova den aldrig med objekt som blir kvar i driften (`zz_prov_*` från 2026-10-02 står kvar och väntar
   på ett ja, avsnitt 11).
 - `arkiv/` ändras aldrig; en rättelse är en ny migration. `schema-v22.sql` kördes aldrig, kör
@@ -1006,8 +1010,11 @@ Detaljer: `minne/grunden.md`.
   (`varvningsbonus_ny`), och unikheten gäller bara levande rader (en per ansökan och konto som inte är annullerad, en
   intjänad eller utbetald per person). Personen räknas som en HMAC av adressen (`intern.varvning_epost_nyckel`: gemener,
   utan +tagg, och Gmail utan punkter) med `notis_konfig.barn_nyckel`: byts nyckeln räknas en tidigare värvad som ny.
-- **Gallringen**: lagringstiderna hålls av databasen (`DATASKYDD.md` är registret). Anmälningar
-  avidentifieras, konton raderas aldrig av sig själva, ett jobb som fastnat blir en uppgift, och
+- **Gallringen**: lagringstiderna hålls av databasen (`DATASKYDD.md` är registret). **Anmälningar
+  raderas helt** (2026-10-29, `anmalningar_raderas_helt`, Leo: "de avidentifierade anmälningarna och ansökningarna
+  ska bort helt och hållet ur systemet och ej sparas någonstans"): nattjobbet efter sex månader, papperskorgen och
+  Radera tar raden, ingenting står kvar för statistiken, och `intagna_anmalningar` raderas med familjen, också när den
+  avidentifieras. Ansökningar avidentifierades aldrig: de tas bort med CV:t. Konton raderas aldrig av sig själva, ett jobb som fastnat blir en uppgift, och
   `landningssida` bär bara våra utm-taggar. Ett nytt rekryteringssteg med tidsstämpel ska in i
   `intern.ansokan_gallras_fran()`.
 - **Adminrollerna**: sanningen är `admin_roller`, och `profiles.is_admin` speglar superadmin.
@@ -1068,6 +1075,12 @@ Detaljer: `minne/grunden.md`.
   **Ingen signatur** i mejlen till oss (`utanSignatur: true`, `admin.ts`) och i det som inte går genom
   `renderaRam()`: Leos intervjumejl och admins egna brev (adminvyn visar texten innan den går, och HTML kan inte
   säga något annat än den), underlaget, nyhetsbrevet och aviseringen om en anmälan; de har `skal()` utan `signatur`.
+  **Det vi skriver själva** (2026-10-29, Leo: "samma signatur på vanliga mail som vi skickar själva"): `ansokan-mejl` (Skriv
+  till hen och Skicka utbildningen, från info@) lägger signaturen under texten, i HTML och i text, utan eget
+  "Vänliga hälsningar" (`signaturHtml(false)`; den som skriver har sin egen), och rutan säger det. Det som öppnas i Gmail
+  (Öppna i Gmail, `gmailLänk()`) får Gmails egen signatur: länkens `body` är bara text, och Gmail lägger sin signatur på
+  av sig själv, så koden lägger ingen dit (den skulle dubblas). Den läggs in i Gmails inställningar, för varje konto
+  som skickar, från `signatur.html` (HTML med kopieringsknapp; ligger inte i repot).
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot och vårdnadshavarens mejl styrs av en INSERT, med samma broms;
@@ -1295,6 +1308,16 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Anmälningarna raderas helt** (2026-10-29, `anmalningar_raderas_helt` 20261029100000) är i drift sedan kvällen
+  2026-10-29 (Leo: "merge och kör", sedan "3"): PR #397 mergades (47b69af), och Vercel lade ut vyerna och policyn.
+  Avsnitt 0, 2 och 3 (vakterna, papperskorgen och `radera_person`) gick som två `execute_sql`; nattjobbet fastnade två
+  gånger på verktygets bekräftelse, som inte syntes i Leos app. Avsnitt 1 och 4 och registreringen kördes därför i ett
+  do-block som hämtade filen ur merge-commiten med `http`, prövade dess md5 (`9819cab1…`) och nattjobbets gamla md5, och
+  körde dem med `execute`: dynamisk SQL förbi spärren, den tredje gången, med Leos uttryckliga ja (avsnitt 5). Efteråt:
+  inga avidentifierade anmälningar (tre raderades), inga intagna utan familj, alla tre funktionerna bär ändringen, och
+  registreringen har filens md5. `rls-test.sql` är inte körd (den lokala databasen gick inte att bygga, Docker Hub 429).
+  Kopior utanför databasen rörs inte: mejlen om nya anmälningar i info@ (`lead-notis`), Resends logg och Supabases
+  backuper, som går ut av sig själva.
 - **Signaturen i mejlen** (2026-10-28, `rendera.ts`, PR #381) är i drift sedan kvällen 2026-10-28 (Leo: "ja, merga och
   driftsätt"): PR #381 mergades (1f7a4b4) och fem funktioner lades ut från merge-commiten, genom MCP från hjälpagenter:
   `notis-ko` v41, `ansokan-notis` v11, `bjud-in` v13, `lead-notis` v33 (kvittot till familjen) och `admin-paminnelse`

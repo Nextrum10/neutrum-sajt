@@ -30,7 +30,7 @@
 // ============================================================
 
 import { epostOk, esc } from './http.ts';
-import { FARG, KONTAKT, SANS, skal } from './notiser/rendera.ts';
+import { FARG, KONTAKT, SANS, SIGNATUR_TEXT, signaturHtml, skal } from './notiser/rendera.ts';
 
 export const ANSOKAN_MEJL_FRAN = `Nextrum <${KONTAKT}>`;
 export const AMNE_MAX = 150;
@@ -74,7 +74,9 @@ function lankar(escapad: string): string {
 
 export type Renderat = { amne: string; text: string; html: string };
 
-/** Texten som den är, och samma text i mejlens skal: ett stycke per tom rad. */
+/** Texten som den är, och samma text i mejlens skal: ett stycke per tom rad, med signaturen under
+ *  (2026-10-29, Leo: "samma signatur på vanliga mail som vi skickar själva"). Den som skriver har sin
+ *  egen hälsning, så signaturen har ingen. */
 export function renderaBrev(amne: string, text: string): Renderat {
   const stycken = text.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean)
     .map((s) => `<p style="margin:0 0 16px;font:400 16px/1.65 ${SANS};color:${FARG.brod}">`
@@ -83,8 +85,10 @@ export function renderaBrev(amne: string, text: string): Renderat {
   const forsta = text.split('\n').find((r) => r.trim()) ?? '';
   return {
     amne,
-    text,
-    html: skal({ amne, forhandstext: forsta.slice(0, 120), innehall: stycken }),
+    text: `${text.trimEnd()}\n\n-- \n${SIGNATUR_TEXT.join('\n')}\n`,
+    html: skal({
+      amne, forhandstext: forsta.slice(0, 120), innehall: stycken, signatur: signaturHtml(false),
+    }),
   };
 }
 

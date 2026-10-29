@@ -1533,6 +1533,35 @@ på en rad med en tvåa, och en fråga i inkorgen på en rad till: ringen sa
   panel öppnas på sidan, och en admin med behörigheter når den inte.
 
 
+### Talen går att trycka på (2026-10-29)
+Leo, om tratten i Statistik: "jag vill kunna klicka på allt för att få upp mer
+info om det, gör så för resten av admin". Ett tal, en stapel eller ett trattsteg
+med `data-urval` (och `data-urval-arg`, som en stapels månad) öppnar en ruta med
+raderna talet är räknat ur, en per person, pass eller betalning, och raden öppnar
+sin panel som Att göra gör (`sakRad` i `nextrum-admin-konsol.js`); rutan går
+undan när panelen öppnas.
+- Funktionerna står i `NXAdmin.urval` (tom i kärnan, fylld i
+  `nextrum-admin-oversikt.js`): `st_*` för Statistik, `tr_*` för tratten och
+  `ov_*` för Översiktens fyra tal. De räknar ur SAMMA urval som talet:
+  Statistikens tal kommer ur analysvyerna, så raderna följer vyernas villkor
+  (`passunderlag.har_rapport` utan adminkonton, `status = 'cancelled'` och
+  `avbokad_av`). Passunderlaget hämtas först om Ekonomi inte öppnats.
+- **Betalt och Översiktens intäkt räknar på samma lista** (2026-10-29, Leo: "ja"
+  på att rätta skillnaden): `inbetalningar()` i `nextrum-admin-oversikt.js`, med
+  passen, köpta timmar och tillägg för övertid, netto efter återbetalningar och
+  utan testbetalningar, på månaden pengarna kom in. Förut tog Statistik bara
+  passen ur `analys_ekonomi.kortbetalt_ore`, så en köpt plan stod på Översikt
+  men inte i Statistik. Vyn är orörd; ingen annan läser den kolumnen.
+- Ett nytt tal i Översikt eller Statistik får sitt urval i samma ändring.
+  Listorna i de andra sektionerna (familjer, elever, pass, ansökningar,
+  betalningarna) öppnade redan sin panel per rad, och deras tal är flikarnas
+  antal: där finns inget dolt att visa.
+- Det syns bara på muspekaren och en ton vid hovring, aldrig på att något flyttar
+  sig, och går med tangentbordet (Enter och mellanslag).
+- `verktyg/prova-adminvyn.js` trycker på varje tal i Översikt och Statistik, i
+  båda storlekarna: rutan öppnas utan fel, trattstegen har lika många rader som
+  sitt tal, och en rad öppnar panelen.
+
 ### Koder i adminvyn (2026-10-13)
 
 Leo: "i admin vyn ska du skapa en ny spalt, där ska koder synas, allas
@@ -2232,7 +2261,7 @@ vill kunna optimera min admin och flytta folk vart jag vill eller ta bort de hel
   och ett CV som är borta går inte att få tillbaka. Fokus på Avbryt.
 - **Gå vidare och Ta bort** frågar databasen en gång till och vägrar om svaret på "sista stället" ändrats sedan
   rutan öppnades; sedan CV:t genom Storage (svaret läses, och en fil som inte gick ger ingen borttagning), sist
-  `ta_bort_ur_stallet()` med `p_helt`. Listan ritas om ur det vyn redan har (anmälan som avidentifierad, ansökan ur
+  `ta_bort_ur_stallet()` med `p_helt`. Listan ritas om ur det vyn redan har (raden går ur `S.leads` eller
   `S.ansokningar`), utan att hämta allt, så att nästa rad går att ta direkt; panelen stängs om den visade raden.
 - **Radera i panelen står kvar** och är något annat: den tar bort personen ur våra system, med allt från samma adress
   (vägen när någon ber oss radera allt). Familjer och Studiehjälpare har ingen papperskorg; där är Radera vägen.
@@ -2370,10 +2399,13 @@ att det som inte är med betalas för sig. Högst 20 pass (`ALLA_MAX`, som datab
 ruta listar passen med pris och säger att syskontillägget inte ingår. Pass för pass fungerar som
 förut, i listan och på passet.
 
-**Ett eget upplägg** står överst bland planerna (`#erb-upplagg`, `ritaUpplagg`), ett kort per
-upplägg som väntar: "Ett upplägg till er", namnet, timmarna och priset, timpriset (med "med er
-rabatt" när familjen har en), att det gäller i 30 dagar från köpet som en plan och sista dagen att
-köpa det, och Köp, som går till samma kassa som en plan. Utan studiehjälpare (`S.väntar`) eller
+**Ett eget upplägg** står överst i Betalning & planer, under summan att betala (`#erb-upplagg`), och
+först på Översikt (`#ov-upplagg`), sedan 2026-10-29 (Leo: "gör det egna upplägget lite synligare
+... det blandas med massa annat"; förut bland planerna, under timbanken). `ritaUpplagg` ritar samma
+kort på båda ställena, ett per upplägg som väntar: en ikon, "Ett upplägg bara till er", namnet
+stort, "N timmar för X kr", timpriset (med "med er rabatt" när familjen har en), att det gäller i
+30 dagar från köpet som en plan, sista dagen att köpa det som ett märke, och Köp upplägget, som går
+till samma kassa som en plan. Utan studiehjälpare (`S.väntar`) eller
 med erbjudandena av är Köp släckt. Ett upplägg som väntar står också bland notiserna. Leo samma
 eftermiddag: "rabattkod gäller också för upplägg. Samma sak som vanliga planer bara annat antal
 timmar". **Kodrutan** (Kod till en plan) prövar koden också på uppläggen som väntar

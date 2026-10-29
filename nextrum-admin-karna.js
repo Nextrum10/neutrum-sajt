@@ -1128,9 +1128,11 @@ const NXAdmin = (function () {
       + '<h3 id="kt-t">' + esc(o.titel || 'Skriv till ' + (o.namn || '')) + '</h3>'
       + (direkt
         ? '<p>Mejlet skickas från info@nextrum.se, och svaret kommer dit. En kopia hamnar i '
-          + 'inkorgen. Ändra fritt innan du skickar.</p>'
+          + 'inkorgen. Nextrums signatur läggs på under texten av sig själv, så skriv ingen egen. '
+          + 'Ändra fritt innan du skickar.</p>'
         : '<p>Utkastet öppnas i Gmail i en ny flik, med din adress som avsändare, så att '
-          + 'svaret kommer till dig. Ändra fritt innan du skickar.</p>')
+          + 'svaret kommer till dig. Signaturen kommer från Gmail (Inställningar, Signatur). '
+          + 'Ändra fritt innan du skickar.</p>')
       + '<div class="fgroup"><label for="kt-till">Till</label>'
       + '<input class="inp" id="kt-till" value="' + esc(o.till || '') + '"' + (direkt ? ' readonly' : '') + '></div>'
       + '<div class="fgroup" style="margin-top:12px"><label for="kt-amne">Ämne</label>'
@@ -1197,6 +1199,10 @@ const NXAdmin = (function () {
     kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, papperskorg, pill, rad, sthlmDag,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
     lägesväljare, räknas, får,
-    ärAdminkonto, ärNyNu, ärRaderad, ärSuperadmin, rita
+    ärAdminkonto, ärNyNu, ärRaderad, ärSuperadmin, rita,
+    /* Vad ett tal står för (2026-10-29): nyckel → funktion som svarar
+       { titel, text, saker }. Fylls av områdena, öppnas av
+       nextrum-admin-konsol.js när någon trycker på ett data-urval. */
+    urval: {}
   };
 })();

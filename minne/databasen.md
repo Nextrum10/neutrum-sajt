@@ -594,13 +594,21 @@ Integritetspolicyn lovar lagringstider, och det är databasen som
 håller dem, inte en människa som kommer ihåg. `DATASKYDD.md` har hela
 registret; det här är det som rör koden.
 
-- **Intresseanmälningar avidentifieras, de tas inte bort.**
-  `intern.leads_avidentifiera()` (pg_cron `leads-avidentifiering`,
-  varje natt) tömmer namn, e-post, barnets namn, fritexten och
-  noteringen sex månader efter senaste kontakten
-  (`intern.leads_avidentifieras_fran()`, enda stället regeln står).
-  `email = 'gallrad'` är markeringen. Raden står kvar så att
-  analysvyerna räknar lika många anmälningar bakåt i tiden.
+- **Intresseanmälningar raderas helt** (2026-10-29, `anmalningar_raderas_helt`;
+  Leo: "de avidentifierade anmälningarna och ansökningarna ska bort helt och
+  hållet ur systemet och ej sparas någonstans"). `intern.leads_avidentifiera()`
+  (pg_cron `leads-avidentifiering`, varje natt; namnen står kvar för att
+  schemat ringer dem) raderar anmälan med dess uppgifter sex månader efter
+  senaste kontakten (`intern.leads_avidentifieras_fran()`, enda stället regeln
+  står), och en rad i `intagna_anmalningar` utan familj eller med en raderad
+  eller avidentifierad familj. Papperskorgen (`intern.anmalan_i_papperskorgen`)
+  och `radera_person` raderar också, och raderar familjens rader i
+  `intagna_anmalningar`. Följden: analysvyerna räknar bara anmälningar som
+  finns, inte lika många bakåt i tiden. Från 2026-09-27 till 2026-10-29
+  avidentifierades de i stället (`email = 'gallrad'`, raden stod kvar), och de
+  tre som stod kvar raderades av migrationen. Ansökningar avidentifierades
+  aldrig. Filtret på `'gallrad'` i vyerna och funktionerna står kvar och gör
+  ingenting.
 - **Konton raderas aldrig automatiskt.** `intern.konton_oanvanda()`
   (`konton-oanvanda`, den 1:a varje månad) gör ett konto som inte
   använts på två år till en uppgift. Ett konto hänger ihop med
@@ -1966,10 +1974,10 @@ och inget annat.
   studiehjälparkonto. `stalle_lage()` är det, för en superadmin.
 - **`ta_bort_ur_stallet(p_stalle, p_id, p_helt default false)`**: `is_admin()`, samma rådgivande lås som
   `radera_person()` (`radera:<id>`) och radlås, sedan underlaget en gång till. Är raden det sista stället och `p_helt`
-  inte satt: 23514 och ingenting. Står ett CV kvar: 23514 och ingenting (filen först). En anmälan avidentifieras med
-  samma fält som Radera och nattjobbet (`intern.anmalan_i_papperskorgen`; `kund_id` och koden står kvar, så tipstimmen
-  och statistiken räknar som förut, och ny eller kontaktad blir avböjd), uppgifterna om raden tas bort, och
-  auditloggen får `anmalan.avidentifierad` med `papperskorgen` och `sista`. En ansökan tas bort
+  inte satt: 23514 och ingenting. Står ett CV kvar: 23514 och ingenting (filen först). En anmälan raderas
+  (`intern.anmalan_i_papperskorgen`, sedan 2026-10-29; till dess avidentifierades den och raden stod kvar), uppgifterna
+  om raden tas bort, och auditloggen får `anmalan.raderad` (till 2026-10-29 `anmalan.avidentifierad`) med
+  `papperskorgen` och `sista`. En ansökan tas bort
   (`intern.ansokan_i_papperskorgen`): stegen och mejlen går med genom nycklarna, en väntande värvningsbonus annulleras
   (`intern.varvningsbonus_vakt`, nyckeln blir null), och `applications_audit_borttagen` loggar.
 - **En destruktiv sats per funktion** (`anmalan_i_papperskorgen` en `update`, `ansokan_i_papperskorgen` och

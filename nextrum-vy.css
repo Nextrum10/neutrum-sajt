@@ -2426,20 +2426,36 @@ a.pass-lank:hover{color:var(--acc)}
 .bet-planer .erb-erbjudande-rubrik{font-size:1.08rem;margin-bottom:4px}
 .bet-planer .erb-erbjudande p{font-size:.88rem}
 
-/* Ett eget upplägg till familjen (egna_upplagg, 2026-10-27): ett band per
-   upplägg, i köpknappens orange, ovanför korten. */
-.erb-upplagg{display:grid;gap:12px;margin:0 0 16px}
+/* Ett eget upplägg till familjen (egna_upplagg, 2026-10-27): ett kort per
+   upplägg, i köpknappens orange. Överst i Betalning & planer och på
+   Översikt sedan 2026-10-29 (Leo: "gör det egna upplägget lite synligare"):
+   en ikon, namnet stort, timmarna och priset, och sista dagen som ett märke. */
+.erb-upplagg{display:grid;gap:12px;margin:0 0 20px}
 .erb-upplagg[hidden]{display:none}
 .erb-upplagg-kort{
-  display:flex;gap:12px 16px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 16px;
-  border-radius:18px;background:color-mix(in srgb,var(--orange) 10%,var(--yta));
-  border:1px solid color-mix(in srgb,var(--orange) 40%,var(--ln));
+  display:flex;gap:14px 18px;align-items:center;flex-wrap:wrap;padding:18px 20px;
+  border-radius:20px;background:color-mix(in srgb,var(--orange) 12%,var(--yta));
+  border:2px solid color-mix(in srgb,var(--orange) 55%,var(--ln));
 }
-.erb-upplagg-kort > div{min-width:0;flex:1 1 240px}
-.erb-upplagg-kort h5{margin:0 0 2px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2)}
-.erb-upplagg-kort b{display:block;font-size:1.08rem;color:var(--bl);overflow-wrap:anywhere}
-.erb-upplagg-kort p{margin:4px 0 0;font-size:.88rem;line-height:1.5;color:var(--bl-2)}
+.erb-upplagg-ik{
+  flex:none;display:grid;place-items:center;width:52px;height:52px;border-radius:16px;
+  background:var(--orange);color:var(--pap);
+}
+.erb-upplagg-ik svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.erb-upplagg-text{min-width:0;flex:1 1 220px;display:grid;gap:2px;justify-items:start}
+.erb-upplagg-et{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2)}
+.erb-upplagg-namn{font-size:1.3rem;line-height:1.2;color:var(--bl);overflow-wrap:anywhere}
+.erb-upplagg-pris{font-size:1rem;color:var(--bl)}
+.erb-upplagg-pris strong{font-size:1.15rem}
+.erb-upplagg-pris s{color:var(--bl-2);font-weight:400}
+.erb-upplagg-text p{margin:2px 0 0;font-size:.88rem;line-height:1.5;color:var(--bl-2)}
+.erb-upplagg-senast{
+  margin-top:6px;padding:3px 10px;border-radius:999px;font-size:.8rem;font-weight:600;color:var(--bl);
+  background:color-mix(in srgb,var(--orange) 22%,var(--yta));
+}
+.erb-upplagg-kort .btn{flex:none;min-height:48px;padding-inline:22px}
 @media (max-width:560px){
+  .erb-upplagg-kort{padding:16px}
   .erb-upplagg-kort .btn{width:100%}
 }
 

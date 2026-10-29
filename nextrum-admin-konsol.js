@@ -495,6 +495,74 @@
     if (!R.hämtad) { R.hämtad = true; ritaManadsrapport(); }
   }
 
+  /* ------------------------------------------------------------
+     VAD ETT TAL STÅR FÖR (2026-10-29)
+
+     Leo: "jag vill kunna klicka på allt för att få upp mer info om det".
+     Ett tal med data-urval öppnar en ruta med raderna det är räknat ur,
+     en rad per person, pass eller betalning, och raden öppnar sin panel
+     som Att göra gör (sakRad, samma rad). Funktionen i NXAdmin.urval
+     räknar raderna ur SAMMA urval som talet, i samma fil som talet, så
+     att rutan och talet inte kan glida isär. data-urval-arg är ett
+     argument till den, som en stapels månad.
+
+     Rutan stängs när en rad öppnas: panelen ligger annars bakom den.
+     ------------------------------------------------------------ */
+  const URVAL_MAX = 300;
+
+  async function öppnaUrval(nyckel, arg) {
+    const bygg = NXAdmin.urval[nyckel];
+    if (typeof bygg !== 'function') return;
+    const ruta = document.createElement('div');
+    ruta.className = 'nx-fraga adm-urval';
+    ruta.innerHTML = '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="urv-t">'
+      + '<h3 id="urv-t">Hämtar</h3><div class="adm-urval-inne"><div class="loading">Hämtar</div></div>'
+      + '<div class="nx-fraga-knappar"><button type="button" class="btn btn-ghost" data-urval-stang>Stäng</button></div></div>';
+    const förut = document.activeElement;
+    NXAdmin.visaRuta(ruta);
+    const stäng = () => {
+      ruta.remove(); document.body.style.overflow = '';
+      if (förut && förut.focus && document.contains(förut)) förut.focus();
+    };
+    ruta.addEventListener('click', ev => {
+      if (ev.target === ruta || ev.target.closest('[data-urval-stang]')) { stäng(); return; }
+      // Panelen och sektionerna öppnas av sina egna lyssnare; rutan går bara undan.
+      if (ev.target.closest('[data-dp], a[href]')) stäng();
+    });
+    ruta.addEventListener('keydown', ev => { if (ev.key === 'Escape') stäng(); });
+    $('[data-urval-stang]', ruta).focus();
+
+    let u;
+    try { u = await bygg(arg); } catch (fel) { u = { titel: 'Gick inte att visa', fel: (fel && fel.message) || String(fel) }; }
+    if (!ruta.isConnected) return;
+    u = u || {};
+    const saker = u.saker || [];
+    $('#urv-t', ruta).textContent = u.titel || '';
+    $('.adm-urval-inne', ruta).innerHTML =
+      (u.text ? '<p>' + esc(u.text) + '</p>' : '')
+      + (u.fel ? '<p class="fel">' + esc(u.fel) + '</p>'
+        : saker.length
+          ? '<div class="vy-kort"><div class="vy-lista">'
+            + saker.slice(0, URVAL_MAX).map(s => sakRad(Object.assign({ till: u.till || '#oversikt' }, s), false)).join('')
+            + '</div></div>'
+            + (saker.length > URVAL_MAX ? '<p class="graf-not">Och ' + (saker.length - URVAL_MAX)
+              + ' till. ' + esc(u.mer || '') + '</p>' : '')
+          : '<p class="graf-not">' + esc(u.tomt || 'Inget att visa.') + '</p>');
+  }
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-urval]');
+    if (!k || k.closest('.adm-urval')) return;
+    öppnaUrval(k.dataset.urval, k.dataset.urvalArg);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const k = e.target.closest && e.target.closest('[data-urval]');
+    if (!k || k.tagName === 'BUTTON') return;
+    e.preventDefault();
+    öppnaUrval(k.dataset.urval, k.dataset.urvalArg);
+  });
+
   koppla();
   kopplaRapporten();
   NXAdmin.rita.ritaKonsol = ritaKonsolOchRapport;

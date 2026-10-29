@@ -30,10 +30,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=b9a03a57">
-<link rel="stylesheet" href="nextrum-vy.css?v=f988642a">
+<link rel="stylesheet" href="nextrum-vy.css?v=989895b0">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=d115dae0">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=fb8716f5">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=a81fe083">
 </head>
 <body class="vy">
@@ -253,6 +253,11 @@
              överst lär en att sluta titta där. Fylls av ritaÖvGöra();
              knapparna på en föreslagen tid är samma data-passvar som
              i passlistan, så samma hanterare tar dem. -->
+        <!-- Ett eget upplägg som väntar på att köpas (2026-10-29): samma kort
+             som överst i Betalning & planer, så att familjen ser det direkt.
+             Dolt utan upplägg; ritaUpplagg() ritar det. -->
+        <div class="erb-upplagg" id="ov-upplagg" hidden></div>
+
         <div class="vy-del" id="ov-gora-grupp" hidden>
           <div class="vy-grupp"><h3>Att göra</h3><span class="vy-antal ar-gor" id="ov-gora-antal"></span></div>
           <div class="vy-kort vy-lista" id="ov-gora"></div>
@@ -593,6 +598,11 @@
         </div>
         <p class="ok-msg" id="bet-msg"></p>
         <div class="bet-sam" id="bet-sam"></div>
+        <!-- Egna upplägg (2026-10-27): det admin skickat till familjen, ett kort
+             per upplägg med Köp. Överst i sektionen sedan 2026-10-29 (Leo: "det
+             blandas med massa annat"), förut bland planerna. Dolt utan upplägg;
+             ritaUpplagg() ritar det, och samma kort står på Översikt. -->
+        <div class="erb-upplagg" id="erb-upplagg" hidden></div>
         <div class="bet-satt" aria-label="Betalsätt">
           <span class="bet-satt-et">Pass och planer betalar ni med</span>
           <span class="bet-satt-chip">Kort</span><span class="bet-satt-chip">Apple Pay</span><span class="bet-satt-chip">Google Pay</span><span class="bet-satt-chip bet-satt-klarna">Klarna</span>
@@ -641,10 +651,6 @@
                kväll: "har man en rabattkod får man ändå gratis timmen",
                "alltså den första"). Rutan står när forsta_timmen_lage() säger
                att timmen inte är tagen, och går när den första planen fått den. -->
-          <!-- Egna upplägg (2026-10-27): det admin skickat till familjen, ett band
-               per upplägg med Köp. Dolt utan upplägg; ritaUpplagg() ritar det. -->
-          <div class="erb-upplagg" id="erb-upplagg" hidden></div>
-
           <div class="erb-erbjudande" id="erb-forsta-box" hidden>
             <span class="erb-erbjudande-ik" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 10h15v10h-15zM3.5 7h17v3h-17zM12 7v13M12 7c-1.6 0-4.5-.6-4.5-2.4C7.5 3.4 8.6 3 9.4 3 11.2 3 12 7 12 7zm0 0c1.6 0 4.5-.6 4.5-2.4 0-1.2-1.1-1.6-1.9-1.6C12.8 3 12 7 12 7z"/></svg></span>
             <div>
@@ -1124,6 +1130,6 @@
 <script src="nextrum-introduktion.js?v=8a40bb60"></script>
 <script src="nextrum-hemskarm.js?v=e239d6b2"></script>
 <script src="nextrum-modulvakt.js?v=544e71de"></script>
-<script src="nextrum-studie-vy.js?v=84e34c0b"></script>
+<script src="nextrum-studie-vy.js?v=4050f93a"></script>
 </body>
 </html>

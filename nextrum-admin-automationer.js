@@ -90,7 +90,7 @@
     'tillagg-paminnelse': 'Påminnelsen om obetalt syskontillägg, en gång om dagen',
     'manadskorning': 'Månadskörningen: lönespecifikationerna',
     'manadskorning-svar': 'Månadskörningens svar: fel blir en uppgift',
-    'leads-avidentifiering': 'Intresseanmälningar avidentifieras',
+    'leads-avidentifiering': 'Intresseanmälningar raderas',
     'ansokan-gallring': 'Ansökningar och CV:n gallras',
     'kontakt-och-fel-gallring': 'Kontaktmeddelanden och klientfel gallras',
     'ai-och-uppgifter-gallring': 'AI-texter och klara uppgifter gallras',

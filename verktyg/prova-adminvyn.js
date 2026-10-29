@@ -455,6 +455,77 @@ async function genomAdminvyn(webb, roll, o) {
     prova(namn + ': värvningsbonus: inga fel från databasen', nyaDb.length === 0, nyaDb.join(' | '));
   }
 
+  /* Talen man kan trycka på (2026-10-29, Leo: "jag vill kunna klicka på
+     allt för att få upp mer info om det"): varje data-urval i Översikt och
+     Statistik öppnar rutan med raderna, utan fel, och tratten har lika
+     många rader som sitt tal. */
+  for (const sek of ['oversikt', 'statistik'].filter(x => sektioner.includes(x))) {
+    const före = { k: konsol.length, d: dbfel.length };
+    await page.evaluate(s => { location.hash = '#' + s; }, sek);
+    await lugnt(page, 700);
+    const antal = await page.locator('section[data-sek="' + sek + '"] [data-urval]').count();
+    prova(namn + ': ' + sek + ': talen går att trycka på', antal > 0, String(antal));
+    const fel = [];
+    for (let i = 0; i < antal; i++) {
+      const el = page.locator('section[data-sek="' + sek + '"] [data-urval]').nth(i);
+      const vad = await el.evaluate(e => e.dataset.urval + (e.dataset.urvalArg ? ':' + e.dataset.urvalArg : ''));
+      const tal = await el.evaluate(e => { const b = e.querySelector('.tratt-tal b'); return b ? b.textContent.trim() : null; });
+      await el.click();
+      await page.waitForFunction(() => {
+        const r = document.querySelector('.adm-urval');
+        return r && !r.querySelector('.adm-urval-inne .loading');
+      }, null, { timeout: 8000 }).catch(() => {});
+      const svar = await page.evaluate(() => {
+        const r = document.querySelector('.adm-urval');
+        if (!r) return null;
+        return { titel: r.querySelector('h3').textContent, fel: !!r.querySelector('.adm-urval-inne .fel'),
+          rader: r.querySelectorAll('.adm-urval-inne .vy-rad').length };
+      });
+      if (!svar || svar.fel || svar.titel === 'Gick inte att visa' || svar.titel === 'Hämtar') fel.push(vad + ' ' + JSON.stringify(svar));
+      else if (tal !== null && String(svar.rader) !== tal) fel.push(vad + ': ' + svar.rader + ' rader mot talet ' + tal);
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !document.querySelector('.adm-urval'), null, { timeout: 3000 }).catch(() => {});
+    }
+    prova(namn + ': ' + sek + ': varje tal öppnar sina rader', fel.length === 0, fel.join(' | '));
+    if (sek === 'statistik') {
+      /* Betalt räknar som Översiktens intäkt (2026-10-29): passen och
+         köpta timmar, utan testbetalningar. Fixturens plan (3 032 kr) är
+         en testbetalning och står utanför; räknas den som skarp står den
+         med, bredvid passet (399 kr). */
+      const betaltTal = () => page.locator('section[data-sek="statistik"] .adm-kpi[data-urval="st_betalt"] b').innerText().catch(() => '');
+      const utanTest = await betaltTal();
+      await page.evaluate(() => { NXAdmin.S.klippkortTest = new Set(); NXAdmin.rita.ritaStatistik(); });
+      const medKöpet = await betaltTal();
+      await page.locator('section[data-sek="statistik"] .adm-kpi[data-urval="st_betalt"]').click();
+      await page.waitForSelector('.adm-urval .vy-rad', { timeout: 8000 }).catch(() => {});
+      const betaltRader = await page.locator('.adm-urval .adm-urval-inne').innerText().catch(() => '');
+      prova(namn + ': statistik: Betalt räknar köpta timmar men aldrig testbetalningar',
+        /^399\s?kr$/.test(utanTest.trim()) && /3\s?431/.test(medKöpet) && /Köpta timmar/.test(betaltRader),
+        utanTest + ' | ' + medKöpet + ' | ' + betaltRader.slice(0, 160));
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !document.querySelector('.adm-urval'), null, { timeout: 3000 }).catch(() => {});
+      await page.evaluate(() => NXAdmin.hämtaAllt().then(() => NXAdmin.rita.ritaStatistik())).catch(() => {});
+      // En rad öppnar sin panel, och rutan går undan.
+      await page.locator('section[data-sek="statistik"] .tratt-steg[data-urval]').first().click();
+      await page.waitForSelector('.adm-urval .vy-rad[data-dp]', { timeout: 8000 }).catch(() => {});
+      await bild(page, namn.replace(/ /g, '-') + '-statistik-urval');
+      const rad = page.locator('.adm-urval .vy-rad[data-dp]').first();
+      if (await rad.count()) {
+        await rad.click();
+        await lugnt(page, 500);
+        const läge = await page.evaluate(() => ({ ruta: !!document.querySelector('.adm-urval'),
+          panel: !!document.querySelector('.dp.ar-oppen') }));
+        prova(namn + ': statistik: en rad i rutan öppnar panelen', !läge.ruta && läge.panel, JSON.stringify(läge));
+        await page.keyboard.press('Escape');
+        await lugnt(page, 400);
+      }
+    }
+    const nyaKonsol = konsol.slice(före.k);
+    const nyaDb = dbfel.slice(före.d);
+    prova(namn + ': ' + sek + ': talen: inga fel i konsolen', nyaKonsol.length === 0, nyaKonsol.join(' | '));
+    prova(namn + ': ' + sek + ': talen: inga fel från databasen', nyaDb.length === 0, nyaDb.join(' | '));
+  }
+
   prova(namn + ': inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   if (funktioner.length) console.log('(' + namn + ' anropade edge-funktioner, som svarade 404: '
     + [...new Set(funktioner)].join(', ') + ')');
