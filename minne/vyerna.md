@@ -91,7 +91,18 @@ muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
 (tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
 sedan trådarna i Raden som glider).
-- **Kortet för den som vill jobba bort** (samma kväll, sist). Leo: "Gör kolumnerna mindre som innan
+- **Det Leo ringade in** (samma kväll, sist). Leo skickade bilder med ringar och skrev: "Allt jag
+  ritade runt ska bort på hemsidan, de på heron ska bara bort på mobilvyn". Borta från startsidan,
+  på båda språken: bildtexten under studievyn ("Illustration av studievyn — innehållet är ett
+  exempel"), bildtexten under NexLäx ("Frågan och talen är exempel"), NexLäx ämnesbrickor med
+  meningarna om vad vi bygger mest på och från vilka årskurser (`.nlx-fot`; de står kvar på För
+  elever och föräldrar), och ämnesbandet med koden som lutade det. Raden under heroknapparna
+  (priset, första timmen, 24 timmar, bindningstiden) är dold under 760 px. Två av bilderna var
+  gamla, med pilarna (borta sedan förut) och bandet med trådarna under raden, som Leo förra
+  gången ville ha kvar med en mjuk övergång; det står kvar. Illustrationerna säger fortfarande att
+  innehållet är ett exempel i sin `aria-label`, men inte längre synligt: talen i studievyn (12
+  genomförda pass, 15 timmar) är påhittade, och det är Leos val att inte märka dem.
+- **Kortet för den som vill jobba bort** (samma kväll). Leo: "Gör kolumnerna mindre som innan
   och ta bort för dig som vill jobba kolumnen". Korten hade blivit högre för att det mörka kortet
   hade mest innehåll (rubrik, mening, tre lappar, knapp och Logga in) och raden sträcker alla kort
   till det högsta; utan det är de lika höga som före. För dig som vill jobba står inte på startsidan

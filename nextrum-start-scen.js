@@ -19,9 +19,6 @@
                 scrollar själv åt vänster". Ett korts rubrik stiger upp ur
                 en springa när kortet kommer in (SplitText), och texten
                 tonar fram ur sudd (BlurText).
-     bandfart   ScrollVelocity: ämnesbandet lutar åt det håll man
-                scrollar, mer ju fortare, och rätar upp sig när man
-                stannar.
      scrollord  ScrollReveal: manifestets ord går från suddiga till
                 skarpa i takt med scrollen, och rubriken rätar upp sig.
      tipp       Studievyns fönster tippar upp ur papperet medan man
@@ -30,7 +27,7 @@
 
    Undantaget från "skriptet sätter klasser, CSS rör sig", som på
    landningssidorna (nextrum-landning.js): GSAP skriver transform,
-   opacitet och filter per bildruta på rubriken, fönstret och bandet.
+   opacitet och filter per bildruta på rubriken och fönstret.
    Fokus och inträde i raden sätts med klasser, och övergångarna är CSS.
    Inget här räknar om sidans layout.
 
@@ -455,26 +452,6 @@
     });
   }
 
-  /* ---------- ämnesbandet lutar med farten ----------
-     Bandet går av sig självt med CSS (nextrum-motion.js). Här lutar orden
-     åt det håll man scrollar, mer ju fortare, och rätar upp sig
-     när scrollen stannar. Bara skewX på raderna: spåret har CSS:ens
-     transform, och sektionen klipper (overflow:clip), så en lutande rad
-     breddar aldrig sidan. Hela sektionen lutad gjorde det, sju pixlar. */
-  function bandfart() {
-    if (!medGsap) return;
-    $$('.nx-amnesband').forEach(band => {
-      const rader = $$('.nx-amnesband-rad', band);
-      if (!rader.length) return;
-      const luta = gsap.quickTo(rader, 'skewX', { duration: 0.45, ease: 'power3.out' });
-      ST.create({
-        trigger: band, start: 'top bottom', end: 'bottom top',
-        onUpdate: s => luta(Math.max(-9, Math.min(9, s.getVelocity() / -260)))
-      });
-      ST.addEventListener('scrollEnd', () => luta(0));
-    });
-  }
-
   /* ---------- manifestets ord ----------
      nextrum-start.js har redan delat rubriken i ord (.nx-ord) för
      ordfyllnaden. Här tar scrollen över: .nx-scrub stänger av
@@ -542,7 +519,6 @@
   if (medGsap) gsap.registerPlugin(ST);
   prova('bakgrunder', bakgrunder);
   prova('hjscen', hjscen);
-  prova('bandfart', bandfart);
   prova('scrollord', scrollord);
   prova('tipp', tipp);
   prova('mätOm', mätOm);

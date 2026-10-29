@@ -242,8 +242,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`nx.nexlax.bana.<barn>`, på `lagring.html`).
   Ett klart steg leder vidare med EN knapp, Fortsätt, till nästa del eller nästa steg, och kortet vid en prick har en knapp
   (Leo 2026-10-27: "som duolingo nu gör du de för komplicerat").
-  Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
-  (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt.
+  Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna på För elever och
+  föräldrar (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt;
+  på startsidan står brickorna, meningarna och bildtexterna under NexLäx och studievyn inte sedan 2026-10-29 (Leo: "Allt
+  jag ritade runt ska bort på hemsidan"), och illustrationernas `aria-label` säger fortfarande att innehållet är ett exempel.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare och en kampanjkod per
   affisch. **En familjs kod och en kampanjkod gäller intresseanmälan (`leads.kod`), en studiehjälpares
   jobbansökan (`applications.kod`)** (2026-10-13, Leo: "ansökning ska inte kunna använda koder från
@@ -712,7 +714,7 @@ Detaljer: `minne/grunden.md`.
   körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
   för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
   `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan, och `nextrum-start-scen.js` startsidans
-  scener (2026-10-29): trådarna och punktnätet, Hur hjälper vis rad, ämnesbandets lutning,
+  scener (2026-10-29): trådarna och punktnätet, Hur hjälper vis rad,
   manifestets ord och studievyns tippning. `nextrum-landning.js` och `-css` är
   landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`;
   flikarna (`data-lp-flikar`, Vad passen går ut på och Var passen hålls) och ljuset över korten fungerar också
@@ -729,7 +731,8 @@ Detaljer: `minne/grunden.md`.
 De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
 delar som de är; deras text följer inte med formen, och `.faq-item` är orörd (generatorerna läser den).
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
-under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
+under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06), som bara står på en större skärm
+sedan 2026-10-29 (Leo: "de på heron ska bara bort på mobilvyn"; `.nx-hero-fakta`, under 760 px dold). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdömena (`#rost`) och Nästa steg; För dig som
@@ -809,8 +812,8 @@ animerad `box-shadow`, och en custom property sätts där den läses, för den �
 GSAP och ScrollTrigger (vendorade i `bibliotek/`, aldrig från en CDN) dra skenan i Så går det till, platserna som
 en linje och korten, bara på de genererade `laxhjalp-*` och guiderna; stegen tänds ändå med en klass, och utan GSAP
 eller med reducerad rörelse står allt färdigt i CSS. **Och startsidan** (2026-10-29): `nextrum-start-scen.js` låter GSAP
-dra manifestets ord (opacitet och sudd), studievyns `.sd-rum` (bara tier `full`) och ämnesbandets lutning med farten
-(`skewX` på raderna, aldrig sektionen: den breddade sidan sju pixlar). Utan GSAP ritar den trådarna i WebGL under Hur
+dra manifestets ord (opacitet och sudd) och studievyns `.sd-rum` (bara tier `full`); ämnesbandet, som lutade med farten,
+gick från startsidan 2026-10-29. Utan GSAP ritar den trådarna i WebGL under Hur
 hjälper vis rad, i skärmens pixlar (högst 1,5 per CSS-pixel), i sin egen takt och tonade mot bandets kanter: när
 rullningen flyttade deras tid, de klipptes i kanterna och ritades i CSS-pixlar glitchade de (Leo: "den glitchar"). Och
 ett punktnät bakom Nästa steg, knappt synligt så att ytan läses som sidans papper (Leo: "samma färg som resten av sidan i

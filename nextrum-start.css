@@ -3727,6 +3727,13 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .nx-final-ljus .nx-hero-trust li{color:var(--bl-2)}
 .nx-final-ljus .nx-hero-trust li::before{background:var(--bl-3)}
 
+/* Raden under heroknapparna (priset, första timmen, 24 timmar och
+   bindningstiden) står bara på en större skärm (2026-10-29, Leo: "de på
+   heron ska bara bort på mobilvyn"); på en telefon räcker knapparna. */
+@media (max-width:760px){
+  .nx-start .nx-hero-fakta{display:none}
+}
+
 /* ---------- texten som rör sig, på startsidan ----------
    (.nx-start på main, bara startsidan.) Rubrikernas ord (nextrum-motion.js
    delar dem, .nx-ov) stiger nu upp och rätar upp sig i stället för att
