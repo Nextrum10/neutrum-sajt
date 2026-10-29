@@ -86,14 +86,37 @@ sektion var samma mall: etikett, rubrik till vänster, ingress till höger
 under ett streck och en rad vita kort, och "Allt på ett ställe" stod två
 gånger. React Bits är React, så inget kom in därifrån: tre av dess idéer är
 skrivna om för hand i `nextrum-start-scen.js`, med GSAP som redan låg i
-`bibliotek/` för landningssidorna. Det som inte togs, med flit: bakgrunderna
-i WebGL (Aurora, Silk och de andra; tunga på en telefon och fel mot
-papperet), effekterna på muspekaren (finns inte på en telefon), glitch- och
-dekrypteringstext (fel ton) och CountUp (sidan visar inga antal).
-- **Högen** (ScrollStack, andra varvet samma kväll). Leo om bentot nedan: "Vad fan har du
+`bibliotek/` för landningssidorna. Det som inte togs, med flit: effekterna på
+muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
+och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
+(tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen).
+- **Scenen** (tredje varvet samma kväll, den som gäller). Leo om högen: "Jag sa
+  ta inspiration av animationer osv på react bits, snygga rörliga bakgrunder, hur
+  texter går osv du gjorde ingenting av det. De blir liksom 8 kolumner direkt du
+  går strukturera om det". Två varv hade bara bytt rutornas form, och ingenting
+  rörde sig så att det syntes. Nu är Hur hjälper vi en mörk scen i helskärm direkt
+  efter heron (`.nx-hjs`, `data-hjscen`): ett norrsken i WebGL bakom (Aurora,
+  samma fragmentshader som React Bits, i WebGL 1 utan bibliotek, med lera, orange
+  och rosa ur `--aurora-1`–`3`), och sex lägen som byts mitt på skärmen medan
+  scenen står still (`position:sticky`, sex gånger 78 vh scroll): rubriken med
+  ingressen, sedan de fem budskapen med en stor konturerad siffra, rubrikens ord
+  som stiger ur en springa (SplitText, `overflow:clip` per ord) och texten som
+  tonar fram ur sudd (BlurText). En linje längst ned fylls med scrollen. Samma
+  norrsken står i Nästa steg i stället för de tre CSS-fläckarna. Etiketterna har
+  ett ljus som glider genom texten (ShinyText, en gradient i texten med
+  `background-clip:text`), rubrikernas ord stiger och rätar upp sig i stället för
+  att bara tona fram, och ämnesbandet lutar med farten (ScrollVelocity, `skewX` på
+  raderna). Kostnaden hålls nere: duken ritas i halv upplösning (en tredjedel på
+  tier `lite`), slingan går bara medan duken syns och fliken är framme, och med
+  reducerad rörelse ritas en bild. Utan WebGL står ytans radiella gradient, och
+  utan GSAP står de sex lägena under varandra. Det andra stycket hos
+  studiehjälparna ("De vet hur det är ...") gick: scenen har en mening per läge.
+  **Fällan**: hela bandet lutat med `skewX` breddade sidan med sju pixlar, för
+  sektionens hörn sticker ut; raderna lutar inuti en sektion som klipper.
+- **Högen** (ScrollStack, andra varvet samma kväll, borttagen med Scenen). Leo om bentot nedan: "Vad fan har du
   gjort jag sa till dig minimera alla kolumner så skapade massor med nya av kolumner jätte
   dåligt". Hans "Just nu är mycket bara i kolumner och tråkiga" betydde färre kolumner, och ett
-  rutnät med sju rutor var fler. Nu står Hur hjälper vi i en kolumn: fem kort i full bredd
+  rutnät med sju rutor var fler. Då stod Hur hjälper vi i en kolumn: fem kort i full bredd
   (läxhjälpen på fotot, studiehjälparna, matchningen, NexLäx, Allt på ett ställe) som fastnar
   under sidhuvudet med `position:sticky`, en kant av det förra synlig, och kortet under krymper
   en aning med GSAP på dator. Inget kort har spalter inuti. Utan rörelse en vanlig lista. Samma

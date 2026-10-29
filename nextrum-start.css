@@ -3625,99 +3625,160 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 }
 
 /* ============================================================
-   19. EN NY FORM (2026-10-29) — högen, manifestet, studievyns
-       tippning och stjärnkanten
+   19. EN NY FORM (2026-10-29) — scenen, norrskenet, texten som rör
+       sig, manifestet, studievyns tippning och stjärnkanten
 
    Leo: "Just nu är mycket bara i kolumner och tråkiga", med React Bits
-   som förebild. Rörelsen som följer scrollen skriver
-   nextrum-start-scen.js; här står formen och slutlägena, och utan
-   skriptet är det de som syns.
+   som förebild, och efter två varv med rutor (ett bentorutnät och en hög
+   kort): "Jag sa ta inspiration av animationer osv på react bits, snygga
+   rörliga bakgrunder, hur texter går osv ... De blir liksom 8 kolumner
+   direkt". Rörelsen som följer scrollen skriver nextrum-start-scen.js;
+   här står formen och slutlägena, och utan skriptet är det de som syns.
 
-   HÖGEN (ScrollStack, andra varvet samma dag). Första varvet var ett
-   bentorutnät med sju rutor i fyra kolumner, och Leo: "jag sa till dig
-   minimera alla kolumner så skapade massor med nya av kolumner". Nu står
-   Hur hjälper vi i EN kolumn: fem kort i full bredd, ett i taget, som
-   fastnar under sidhuvudet (position:sticky) och läggs på varandra med
-   en kant av det förra synlig ovanför. Inget kort har spalter inuti:
-   etikett, rubrik och text står under varandra. Det första kortet är
-   fotot hemma hos familjen, med texten på en mörk toning nedtill.
-   Kortet under krymper en aning när nästa läggs över (GSAP, bara på
-   dator, scale på .hog-kort, som inget annat rör). Med reducerad rörelse
-   står korten som en vanlig lista.
-
-   Sticky kräver att ingen förälder har overflow:hidden; .nx-hj har det
-   inte, och .nx-wrap-bred inte heller.
+   SCENEN. Hur hjälper vi är en mörk yta i full bredd direkt efter heron,
+   med ett norrsken i WebGL bakom (canvas[data-aurora], färgerna i
+   --aurora-*). Utan skriptet står rubriken och de fem budskapen under
+   varandra som text på ytan, inga rutor. Med skriptet (.hjs-pa) blir
+   scenen en skärm hög per läge och ytan fastnar (position:sticky): alla
+   lägen står i samma rutnätscell mitt på skärmen, och det som har .pa
+   syns. Rubrikens ord står i var sin springa (.hjs-ord, overflow:clip)
+   och glider upp ur den i tur; texten under tonar fram ur sudd.
+   Sticky kräver att ingen förälder har overflow:hidden: .nx-hjs har
+   inte det, bara ytan inuti, som inte rullar.
    ============================================================ */
-.nx-hog{
-  --hog-topp:clamp(84px,9vh,104px);
-  list-style:none;margin:0;padding:0;
-  display:grid;gap:clamp(18px,3vh,32px);
+.nx-hjs{
+  --aurora-1:#B24A1E;--aurora-2:#F07A1E;--aurora-3:#9E4468;--aurora-styrka:1.15;
+  --amne-ma:var(--amne-ma-l);--amne-en:var(--amne-en-l);--amne-no:var(--amne-no-l);
+  --amne-ms:var(--amne-ms-l);--acc:var(--lera-l);
+  position:relative;padding:0;
+  background:var(--bli-bg);color:var(--nt-fg);
 }
-.hog-kort{
-  --pad:clamp(26px,3.4vw,56px);
-  --radie:clamp(24px,2.6vw,36px);
-  position:sticky;top:calc(var(--hog-topp) + var(--i,0) * 14px);
-  isolation:isolate;overflow:hidden;
-  min-height:clamp(300px,46vh,440px);
-  display:flex;flex-direction:column;justify-content:flex-end;
-  border-radius:var(--radie);
+.hjs{position:relative}
+.hjs-fast{
+  position:relative;isolation:isolate;overflow:hidden;
   background:
-    radial-gradient(70% 90% at 100% 0%,color-mix(in srgb,var(--f) 12%,transparent),transparent 70%),
-    var(--kort);
-  border:1px solid var(--kort-kant);
-  box-shadow:0 -1px 0 rgba(255,255,255,.6) inset,0 30px 60px -36px rgba(46,42,32,.42);
-  transform-origin:50% 0;
+    radial-gradient(80% 60% at 20% 0%,color-mix(in srgb,var(--aurora-1) 34%,transparent),transparent 70%),
+    radial-gradient(60% 50% at 85% 10%,color-mix(in srgb,var(--aurora-3) 26%,transparent),transparent 70%),
+    var(--bli-bg);
 }
-.hog-inne{
-  position:relative;z-index:1;
-  display:flex;flex-direction:column;align-items:flex-start;
-  padding:var(--pad);max-width:64rem;
+.hjs-bg,.nx-aurora{
+  position:absolute;inset:0;z-index:0;width:100%;height:100%;display:block;
+  pointer-events:none;opacity:0;transition:opacity 1.2s var(--e-mjuk);
 }
-.hog-nr{
-  font-size:clamp(3rem,7vw,6.2rem);font-weight:800;
-  letter-spacing:-.06em;line-height:.8;
-  font-variant-numeric:tabular-nums;color:var(--f);
-}
-.hog-kort .hj-et{margin-top:clamp(18px,2.2vw,28px)}
-.hog-kort h3{
-  margin-top:10px;max-width:22ch;
-  font-size:clamp(1.7rem,3.6vw,3.2rem);font-weight:800;
-  letter-spacing:-.045em;line-height:1.02;color:var(--bl);text-wrap:balance;
-}
-.hog-kort p{
-  margin-top:clamp(12px,1.4vw,18px);max-width:58ch;
-  font-size:clamp(1rem,1.3vw,1.18rem);line-height:1.58;color:var(--bl-2);text-wrap:pretty;
-}
-.hog-kort p + p{margin-top:10px}
-.hog-kort .nx-lank{margin-top:clamp(18px,2vw,26px)}
-.hog-kort .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
-.hog-kort .hj-nex-bild{margin-top:clamp(16px,1.8vw,24px)}
-
-/* Fotokortet: bilden täcker kortet, och texten står i ljust på en
-   mörk toning nedtill, i båda lägena. */
-.hog-foto{background:#3A2E24;border-color:transparent}
-.hog-foto picture,.hog-bild{position:absolute;inset:0;width:100%;height:100%;z-index:0}
-.hog-bild{object-fit:cover;transition:scale 1.6s var(--e-ut)}
-.hog-foto::after{
+.hjs-bg.aurora-pa,.nx-aurora.aurora-pa{opacity:1}
+/* Ett svagt korn och en mörkare botten över norrskenet, så att texten
+   alltid står på något lugnt. */
+.hjs-fast::after{
   content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-  background:linear-gradient(180deg,rgba(26,20,14,0) 25%,rgba(26,20,14,.55) 58%,rgba(26,20,14,.86));
+  background:linear-gradient(180deg,transparent 30%,color-mix(in srgb,var(--bli-bg) 70%,transparent) 100%);
 }
-.hog-foto .hog-nr{color:#F1E7D6}
-.hog-foto .hj-et{color:#E9C9A8}
-.hog-foto h3{color:#FBF6EE}
-.hog-foto p{color:rgba(251,246,238,.86)}
+.hjs-inne{position:relative;z-index:1;padding-block:clamp(96px,14vh,170px)}
+.hjs-del{max-width:60rem}
+.hjs-del + .hjs-del{margin-top:clamp(56px,9vh,110px)}
+.nx-hjs .nx-et{color:var(--lera-l)}
+.nx-hjs .hj-rubrik{
+  margin-top:20px;color:var(--nt-fg);
+  font-size:clamp(3rem,8.4vw,7.4rem);line-height:.92;letter-spacing:-.05em;max-width:12ch;
+}
+.nx-hjs .hj-rubrik em{color:var(--lera-l)}
+.nx-hjs .nx-lede{margin-top:clamp(20px,2.6vw,32px);max-width:52ch;color:color-mix(in srgb,var(--nt-fg) 78%,transparent);font-size:clamp(1.05rem,1.5vw,1.3rem)}
+.hjs-nr{
+  display:block;
+  font-size:clamp(4.4rem,11vw,9.6rem);font-weight:800;letter-spacing:-.06em;line-height:.8;
+  font-variant-numeric:tabular-nums;
+  color:transparent;-webkit-text-stroke:2px var(--f);
+}
+.hjs-del .hj-et{margin-top:clamp(18px,2.4vw,30px);color:var(--f)}
+.hjs-del h3{
+  margin-top:12px;max-width:18ch;
+  font-size:clamp(2.2rem,5.6vw,5rem);font-weight:800;
+  letter-spacing:-.05em;line-height:.98;color:var(--nt-fg);text-wrap:balance;
+}
+.hjs-del p{
+  margin-top:clamp(14px,1.8vw,22px);max-width:50ch;
+  font-size:clamp(1.02rem,1.45vw,1.25rem);line-height:1.55;
+  color:color-mix(in srgb,var(--nt-fg) 80%,transparent);text-wrap:pretty;
+}
+.hjs-del .nx-lank{margin-top:clamp(18px,2vw,26px);color:var(--nt-fg)}
+.hjs-del .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
+.hjs-rad{display:none}
 
-@media (max-width:760px){
-  .nx-hog{--hog-topp:72px;gap:16px}
-  .hog-kort{--pad:22px 20px 24px;--radie:22px;top:calc(var(--hog-topp) + var(--i,0) * 10px);min-height:340px}
-  .hog-kort h3{font-size:clamp(1.55rem,7vw,2rem)}
-  .hog-kort p{font-size:.98rem;line-height:1.52}
+/* Scenen på. En skärm per läge, och ytan fastnar. */
+.hjs.hjs-pa{height:calc(var(--hjs-n,6) * 78vh + 100vh)}
+.hjs.hjs-pa .hjs-fast{position:sticky;top:0;height:100vh;height:100svh}
+.hjs.hjs-pa .hjs-inne{
+  height:100%;display:grid;align-content:center;
+  padding-block:clamp(80px,12vh,120px) clamp(56px,9vh,96px);
 }
-/* Med reducerad rörelse, och när skriptet inte satt nx-sr: en vanlig
-   lista, inget som fastnar. */
+.hjs.hjs-pa .hjs-del{
+  grid-area:1 / 1;margin:0;
+  opacity:0;translate:0 34px;pointer-events:none;
+  transition:opacity .6s var(--e-mjuk),translate .9s var(--e-ut);
+}
+.hjs.hjs-pa .hjs-del.forbi{translate:0 -34px}
+.hjs.hjs-pa .hjs-del.pa{opacity:1;translate:0 0;pointer-events:auto;transition-delay:.12s}
+/* Orden i springan. */
+.hjs-ord{display:inline-block;overflow:clip;vertical-align:top;padding-bottom:.1em;margin-bottom:-.1em}
+.hjs-ord > span{display:inline-block;transition:translate .9s var(--e-ut),rotate .9s var(--e-ut)}
+.hjs.hjs-pa .hjs-del:not(.pa) .hjs-ord > span{translate:0 110%;rotate:7deg;transition-duration:.3s}
+.hjs.hjs-pa .hjs-del.pa .hjs-ord > span{transition-delay:calc(.18s + var(--k,0) * 55ms)}
+.hjs.hjs-pa .hjs-del p,.hjs.hjs-pa .hjs-del .hj-et,.hjs.hjs-pa .hjs-del .nx-lank{
+  transition:opacity .7s var(--e-mjuk),filter .7s var(--e-mjuk);
+}
+.hjs.hjs-pa .hjs-del:not(.pa) p,
+.hjs.hjs-pa .hjs-del:not(.pa) .nx-lank{opacity:0;filter:blur(8px)}
+.hjs.hjs-pa .hjs-del.pa p,.hjs.hjs-pa .hjs-del.pa .nx-lank{transition-delay:.55s}
+.hjs-nr{transition:scale .9s var(--fjader),opacity .6s var(--e-mjuk)}
+.hjs.hjs-pa .hjs-del:not(.pa) .hjs-nr{scale:.7;opacity:0}
+.hjs.hjs-pa .hjs-del.pa .hjs-nr{transition-delay:.1s}
+/* Framstegslinjen längst ner. */
+.hjs.hjs-pa .hjs-rad{
+  display:block;position:absolute;left:var(--m);bottom:clamp(28px,6vh,56px);
+  width:min(320px,calc(100% - 2 * var(--m)));height:2px;border-radius:2px;
+  background:color-mix(in srgb,var(--nt-fg) 18%,transparent);overflow:hidden;
+}
+.hjs-rad-fyll{
+  position:absolute;inset:0;transform-origin:0 50%;transform:scaleX(0);
+  background:linear-gradient(90deg,var(--aurora-2),var(--lera-l));
+}
+@media (max-width:760px){
+  .hjs.hjs-pa{height:calc(var(--hjs-n,6) * 70vh + 100vh)}
+  .nx-hjs .hj-rubrik{font-size:clamp(2.8rem,13vw,4rem)}
+  .hjs-del h3{font-size:clamp(2rem,9.6vw,2.8rem)}
+  .hjs-nr{font-size:clamp(4rem,22vw,6rem);-webkit-text-stroke-width:1.5px}
+}
+/* Garantins remsa under scenen, på papperet. */
+.hjs-gar{padding-block:clamp(40px,6vw,72px) clamp(36px,4.6vw,68px)}
+.hjs-gar .hj-gar{margin-top:0}
+
+/* Nästa steg: norrskenet i WebGL i stället för de tre fläckarna. */
+.nx-final-cinema{--aurora-1:#7A3417;--aurora-2:#F07A1E;--aurora-3:#D9814F;--aurora-styrka:.9}
+.nx-har-norrsken > canvas.nx-aurora{position:absolute;z-index:0}
+.nx-final-cinema > canvas.nx-aurora{position:absolute;z-index:0}
+
+/* ---------- texten som rör sig, på startsidan ----------
+   (.nx-start på main, bara startsidan.) Rubrikernas ord (nextrum-motion.js
+   delar dem, .nx-ov) stiger nu upp och rätar upp sig i stället för att
+   bara tona fram (SplitText), och etiketterna har ett ljus som glider
+   över texten (ShinyText): en gradient i texten, bara bakgrundens läge
+   rör sig. */
+html[data-motion="full"] .nx-start .nx-ov-h:not(.nx-in) .nx-ov,
+html[data-motion="lite"] .nx-start .nx-ov-h:not(.nx-in) .nx-ov{
+  transform:translate3d(0,.8em,0) rotate(8deg);
+}
+.nx-start .nx-ov{transform-origin:0 100%}
+html[data-motion="full"] .nx-start .nx-et,
+html[data-motion="lite"] .nx-start .nx-et{
+  background:linear-gradient(110deg,currentColor 0 40%,color-mix(in srgb,currentColor 25%,#fff) 50%,currentColor 60% 100%);
+  background-size:250% 100%;background-position:100% 0;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:nx-glans-text 4.2s linear infinite;
+}
+@keyframes nx-glans-text{to{background-position:-150% 0}}
+
 @media (prefers-reduced-motion:reduce){
-  .hog-kort{position:relative;top:auto;min-height:0}
-  .hog-bild{transition:none}
+  .hjs-ord > span,.hjs-nr{transition:none}
+  .nx-start .nx-et{animation:none}
 }
 
 /* ---------- manifestet: ett eget ögonblick ----------
