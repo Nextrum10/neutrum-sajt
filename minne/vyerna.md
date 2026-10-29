@@ -1413,6 +1413,30 @@ på en rad med en tvåa, och en fråga i inkorgen på en rad till: ringen sa
   panel öppnas på sidan, och en admin med behörigheter når den inte.
 
 
+### Talen går att trycka på (2026-10-29)
+Leo, om tratten i Statistik: "jag vill kunna klicka på allt för att få upp mer
+info om det, gör så för resten av admin". Ett tal, en stapel eller ett trattsteg
+med `data-urval` (och `data-urval-arg`, som en stapels månad) öppnar en ruta med
+raderna talet är räknat ur, en per person, pass eller betalning, och raden öppnar
+sin panel som Att göra gör (`sakRad` i `nextrum-admin-konsol.js`); rutan går
+undan när panelen öppnas.
+- Funktionerna står i `NXAdmin.urval` (tom i kärnan, fylld i
+  `nextrum-admin-oversikt.js`): `st_*` för Statistik, `tr_*` för tratten och
+  `ov_*` för Översiktens fyra tal. De räknar ur SAMMA urval som talet:
+  Statistikens tal kommer ur analysvyerna, så raderna följer vyernas villkor
+  (`passunderlag.har_rapport` utan adminkonton, `betald_at` och `stripe_skarp`,
+  `status = 'cancelled'` och `avbokad_av`), inte Översiktens. Passunderlaget
+  hämtas först om Ekonomi inte öppnats.
+- Ett nytt tal i Översikt eller Statistik får sitt urval i samma ändring.
+  Listorna i de andra sektionerna (familjer, elever, pass, ansökningar,
+  betalningarna) öppnade redan sin panel per rad, och deras tal är flikarnas
+  antal: där finns inget dolt att visa.
+- Det syns bara på muspekaren och en ton vid hovring, aldrig på att något flyttar
+  sig, och går med tangentbordet (Enter och mellanslag).
+- `verktyg/prova-adminvyn.js` trycker på varje tal i Översikt och Statistik, i
+  båda storlekarna: rutan öppnas utan fel, trattstegen har lika många rader som
+  sitt tal, och en rad öppnar panelen.
+
 ### Koder i adminvyn (2026-10-13)
 
 Leo: "i admin vyn ska du skapa en ny spalt, där ska koder synas, allas

@@ -2316,6 +2316,26 @@ body.vy-admin .dbox * + h5{margin-top:24px}
    i siffror bredvid.
    ============================================================ */
 .tratt{display:flex;flex-direction:column;gap:3px}
+
+/* ============================================================
+   TAL MAN KAN TRYCKA PÅ (2026-10-29)
+   Leo: "jag vill kunna klicka på allt för att få upp mer info om
+   det". Ett element med data-urval öppnar rutan med raderna talet är
+   räknat ur (nextrum-admin-konsol.js). Det syns på muspekaren och på
+   en ton, aldrig på att något flyttar sig.
+   ============================================================ */
+.vy-admin [data-urval]{cursor:pointer;transition:background-color .2s var(--e)}
+.vy-admin .adm-kpi[data-urval]:hover{background:var(--tint)}
+.vy-admin .tratt-steg[data-urval]{padding-inline:8px;margin-inline:-8px;border-radius:12px}
+.vy-admin .tratt-steg[data-urval]:hover{background:var(--tint)}
+.vy-admin .graf-stapel[data-urval]{border-radius:10px}
+.vy-admin .graf-stapel[data-urval]:hover{background:var(--tint)}
+.vy-admin .adm-urval-lank{display:block;border-radius:8px}
+.vy-admin .adm-urval-lank:hover b{text-decoration:underline}
+.vy-admin [data-urval]:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.adm-urval .nx-fraga-box{max-width:620px}
+.adm-urval-inne{max-height:min(62vh,640px);overflow-y:auto;overscroll-behavior:contain;margin:6px 0 18px}
+.adm-urval-inne > p{color:var(--bl-2);font-size:.88rem;line-height:1.55;margin:0 0 12px}
 .tratt-steg{
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
