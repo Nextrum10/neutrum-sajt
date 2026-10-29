@@ -1443,8 +1443,10 @@ inte hjälpa motsatta könet syns då inte den studiehjälparen i matchning." `k
   studiehjälparen själv, superadmin och den som har en behörighet att läsa studiehjälparna eller matcha.
   Barnets kön kan den matchade studiehjälparen läsa, som resten av `students`; det säger policyn.
 - **Matchningen**: `matchningsforslag_rader` tar inte med den som krockar, utom elevens nuvarande, och
-  adminvyn döljer samma studiehjälpare (`krockarMedValet`) och säger vilka i en rad ovanför korten.
-  Drift-agenten ser samma lista. Den nuvarande står kvar, med skälet "Vill bara hjälpa elever av samma kön".
+  adminvyn visar dem ändå (2026-10-29, Leo: "jag kan själv filtrera, se vilka som kan och vilka som inte kan ta
+  emot denna elev"): `krockarMedValet` ger `kanInte`, kortet står sist, dämpat, med märket Kan inte och utan Matcha-knapp
+  (databasen nekar ändå), och ett filter (Alla, Kan ta emot, Kan inte; `S.matchFilter`) står över korten när någon
+  krockar. Drift-agenten ser den filtrerade listan. Den nuvarande står kvar, med skälet "Vill bara hjälpa elever av samma kön".
 - **Vakten** (`students_vakt_kon`, `intern.elevens_kon`): ingen NY matchning mot valet, vem som än
   försöker (adminvyn, en admin med behörigheten matchning, ett godkänt AI-förslag). Namnet börjar med v
   så att den går sist av BEFORE-triggrarna: `skydda_studentfalt` har då skrivit tillbaka det en förälder

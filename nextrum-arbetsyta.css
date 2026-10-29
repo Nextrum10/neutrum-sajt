@@ -2179,10 +2179,9 @@ body.vy-admin .dbox * + h5{margin-top:24px}
   border:1px solid var(--ln-2);border-radius:100px;
   padding:3px 10px;background:var(--pap);
 }
-/* Studiehjälparna som inte visas för eleven, för att de bara vill hjälpa
-   elever av samma kön (kon_i_matchningen, 2026-10-26). En rad ovanför
-   korten, så att ingen letar efter dem. */
-.mt-dolda{margin:0 0 14px;font-size:.84rem;line-height:1.55;color:var(--bl-2)}
+/* Filtret över förslagen (kon_i_matchningen): alla, de som kan ta emot eleven
+   eller de som inte kan. */
+.mt-filter{margin:0 0 14px}
 /* Skapa elev ur anmälan: familjen står som fakta, inte som ett val.
    Saknas kontot står inbjudan på samma ställe, i streckad ram. */
 .le-familj{
@@ -2234,6 +2233,9 @@ body.vy-admin .dbox * + h5{margin-top:24px}
 }
 .mt-kort:hover{border-color:var(--ln-2);box-shadow:0 5px 16px rgba(46,42,32,.06)}
 .mt-kort.ar-nuvarande{border-color:var(--mossa);background:var(--pap-2)}
+/* Kan inte ta emot eleven: kvar i listan, dämpad och utan knapp. */
+.mt-kort.ar-kan-inte{background:var(--pap-2)}
+.mt-kort.ar-kan-inte .mt-kort-topp{opacity:.7}
 
 .mt-kort-topp{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
 .mt-kort-namn{min-width:0;flex:1}
