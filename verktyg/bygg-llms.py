@@ -85,6 +85,20 @@ def planpris():
     return int(m.group(1))
 
 
+def kolla_schemapriser(timpris, plan):
+    # Prissidornas Offer-märkning (pass för pass och planen) skrivs för hand.
+    # AI-sökmotorerna läser den lika gärna som texten, så den får inte säga
+    # ett annat pris än configen och prissidans mening.
+    for fil in ('priser.html', 'en/priser.html'):
+        s = las(os.path.join(ROT, fil))
+        priser = set()
+        for block in re.findall(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', s, re.S):
+            priser |= {int(p) for p in re.findall(r'"price":\s*"(\d+)"', block)}
+        if priser != {timpris, plan}:
+            sys.exit('bygg-llms: Offer-märkningen i %s säger %s, sajten %d och %d'
+                     % (fil, sorted(priser), timpris, plan))
+
+
 def grupp(sokvag):
     if sokvag.startswith('/en/'):
         return 'en'
@@ -128,6 +142,7 @@ def main():
     timpris = konfig('PRIS_PER_TIMME')
     syskon = konfig('PRIS_SYSKON_TILLAGG_KR_PER_TIMME')
     plan = planpris()
+    kolla_schemapriser(timpris, plan)
 
     rader = [
         '# Nextrum',
