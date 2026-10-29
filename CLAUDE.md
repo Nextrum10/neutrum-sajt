@@ -1355,7 +1355,8 @@ Detaljer: `minne/grunden.md`.
 - **Nyhetsbrevet** (2026-10-28, `nyhetsbrev` 20261028120000, Leo: "gör detta arbete simpelt") är inte i drift.
   Formuläret står bara i footern på varje öppen sida (startsidans Nästa steg hade ett till, borttaget 2026-10-29, Leo: "Ta bort denna"; `nextrum-nyhetsbrev.js`, laddat av
   `nextrum-samtycke.js`, så aldrig i vyerna eller på en sida med en nyckel i adressen); ingen popup, inget i
-  webbläsaren och ingen rabatt. Dubbel opt-in genom edge-funktionen `nyhetsbrev` (`verify_jwt` av, taket fem i timmen
+  webbläsaren och ingen rabatt. Det står i en egen ruta med loggans orange i rubriken och knappen (2026-10-29, Leo:
+  "Denna sektion måste synas bättre"; `.nb` i cinema). Dubbel opt-in genom edge-funktionen `nyhetsbrev` (`verify_jwt` av, taket fem i timmen
   per IP-hash och 300 totalt, samma svar om adressen finns), och `/nyhetsbrev` bekräftar (`?b=`) och avslutar (`?a=`)
   med en knapp. En avanmälan raderar raden, och en obekräftad raderas efter sju dagar. Tabellen är sanningen; Resends
   Audience (`RESEND_AUDIENCE_ID`) är en kopia att skicka från. Inget skickar nyhetsbrevet än: varje utskick ska ha
