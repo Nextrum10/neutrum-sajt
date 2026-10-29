@@ -49,8 +49,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   familjen och Redigera), och studiehjälparens kön och val (`bara_samma_kon`) i `matchningsval`, aldrig i
   `tutor_profiles`, som familjen läser: valet ser bara hen och vi. Två koder för alla, `kvinna` och `man` (`NX.KON_ELEV`
   säger flicka och pojke), och tomt är inget svar. Den som bara vill hjälpa sitt eget kön visas inte för en elev av ett
-  annat eller utan angivet kön (`matchningsforslag_rader`, och adminvyns `krockarMedValet` med samma regel), utom
-  elevens nuvarande, och databasen nekar en ny sådan matchning för alla (`students_vakt_kon`, som går sist av
+  annat eller utan angivet kön (`matchningsforslag_rader`), utom elevens nuvarande; adminvyn visar dem ändå som Kan inte
+  ta emot, utan Matcha-knapp och med ett filter (`krockarMedValet`, samma regel), och databasen nekar en ny sådan matchning för alla (`students_vakt_kon`, som går sist av
   BEFORE-triggrarna); en matchning som redan står rivs aldrig utan blir en uppgift (`kon_krock:<elev>:<studiehjälpare>`).
   **Förälderns kön sparas inte** (Leo skrev "alla profiler"; matchningen behöver det inte). Det är en särbehandling på
   grund av kön i en tjänst till allmänheten, och juristen har inte läst den (avsnitt 11).
