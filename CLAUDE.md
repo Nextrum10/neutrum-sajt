@@ -732,8 +732,10 @@ Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
-Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdömena (`#rost`), För dig
-som vill jobba (`#bli`) och Nästa steg; Trygg hjälp gick upp i Hur hjälper vi 2026-10-29 (Leo: "Just nu är mycket bara
+Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdömena (`#rost`) och Nästa steg; För dig som
+vill jobba (`#bli`) gick 2026-10-29 och är det sista kortet i Hur hjälper vis rad (`.hjs-jobb`, Bli studiehjälpare-sidans
+svarta med leran och tre av sektionens punkter som lappar; Leo: "För dig som vill jobba på main sidan ta bort den, och lägg
+till någon kolumn i slutet där de står för dig som vill jobba, var kreativ"), och Trygg hjälp gick upp i Hur hjälper vi 2026-10-29 (Leo: "Just nu är mycket bara
 i kolumner och tråkiga", med React Bits som förebild, och "Du får göra allt"). **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): ämnena, stadierna och guiderna i var sin grupp med ämnesfärgens prick, och under Område navets regioner (Hela Stockholm, Innerstaden, Söderort, Västerort, Norr och väster om stan, Söder och öster om stan), Online och In English, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp. **Orterna står i navets ortskatalog**, inte en och en i footern (2026-10-26, när stadsdelsområdena och kommunerna fick egna sidor: trettio länkar på varje sida, och trettiofyra efter sidrensningen 2026-10-27, hade varken varit snyggt eller sett ut som något annat än en doorway-lista); en ny ämnes-, stadie- eller guidesida läggs in i footern på alla sidor, en ny ort bara i generatorn, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): på startsidan
 sedan 2026-10-29 **en rad man sveper i själv** (`.nx-hjs`, `data-hjscen`, avsnitt 19; Leo: "snygga rörliga bakgrunder",
@@ -743,7 +745,8 @@ rubriken med ingressen, likadan som de andra sektionernas, och under den fem kor
 `scroll-snap`, på dator också pilar under raden som rullar den med `scrollBy`): läxhjälpen, studiehjälparna, matchningen (ur Trygg hjälps band), NexLäx och
 Allt på ett ställe, var och en med ordningens färg i `--f`. **Ingen scroll drar raden**, och sidan rullar som vanligt
 förbi. Trådar i WebGL (`data-tradar`, efter React Bits Threads) står nedtonade i ett band under korten, **aldrig bakom
-texten** (Leo: "texten syns dålig ... mer som ett mönster att veta vart man ska scrolla"). Varje kort har en svag ton och en mjuk skugga
+texten**, där ytans vita tonar över i sidans papper före garantin (Leo: "nu är det ett streck där som skiljer två färger
+de är ej snyggt, skugga till och ha den där animationen där") (Leo: "texten syns dålig ... mer som ett mönster att veta vart man ska scrolla"). Varje kort har en svag ton och en mjuk skugga
 i sin färg (Leo: "lite skuggade av färgen de har") och bentots ikon överst (`.hj-ikon`; Leo: "ha dessa fem element istället för siffror", efter en kväll med 01–05; i en timme samma kväll stod bentots små kort i ett rutnät i stället, och
 Leo ville ha raden tillbaka: "Nej de du gjorde ska skicka", med en bild av den), och kortet i fokus (`.pa`)
 får kanten och trådarna dess färg, och ett korts rubrik stiger upp när det kommer in (SplitText). Utan skriptet är
@@ -777,9 +780,10 @@ läser `var(--f, sin gamla färg)`, aldrig texten) och **ämnet** (studiehjälpa
 (blå, lila, rosa) står bara i NexLäx rubrik (`.nlx-rubrik em`); andra rubrikers `<em>` (också "ert barn?", Just nus
 slogan och Nästa steg) och citattecknen är orange eller vita som förut (Leo 2026-10-08: "när de inte gäller nexläx").
 Garantin har leran; på bark byts färgerna mot `-l`; erbjudandena och Just nu har sina egna, och i vyerna står
-de bara i NexLäx. **`#bli` står på mörka
-lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna (`--bli-kant`); Bli
-studiehjälpare-sidans sidhuvud och band (`.bli-svart`) står i samma svarta med samma lera (2026-10-08). **Nästa steg i
+de bara i NexLäx. **Bli
+studiehjälpare-sidans sidhuvud och band** (`.bli-svart`) står på mörka lägets svarta (`--bli-bg`, #1A1813) i båda lägena,
+med lera (`--bli-kant`, 2026-10-08), som startsidans `#bli` gjorde till 2026-10-29; `:is(#bli,.bli-svart)` står kvar i
+avsnitt 10, för :is väger som sitt id och sidans regler räknar med det. **Nästa steg i
 mörkt läge** står på sidans papper (`--pap`) på alla sidor, aldrig på barken (cinema, DE MÖRKA YTORNA), och i ljust läge
 som förut, utom på startsidan: där följer det sidans läge i båda (`.nx-final-ljus`, ingen `.nx-mork`, 2026-10-29, Leo:
 "Så den ska matcha sidan på mörk och ljus vy"), med punktnätet bakom (efter Leos video: "kör nåt sånt här där i

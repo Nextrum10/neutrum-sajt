@@ -91,7 +91,20 @@ muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
 (tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
 sedan trådarna i Raden som glider).
-- **Korten i sin färg och bandet som glitchade** (samma kväll, sist). Leo: "kolumnerna som du
+- **För dig som vill jobba som ett kort, och övergången utan streck** (samma kväll, sist). Leo:
+  "För dig som vill jobba på main sidan ta bort den, och lägg till någon kolumn i slutet där de
+  står för dig som vill jobba, var kreativ gör de snyggt", och om raden och garantin: "nu är det
+  ett streck där som skiljer två färger de är ej snyggt, skugga till och ha den där animationen
+  där". `#bli` är borta från startsidan (inget länkade dit, varken `#bli` eller `#unga`), och
+  radens sjätte kort (`.hjs-jobb`) är Bli studiehjälpare-sidans svarta med leran i två hörn och i
+  kanten, i båda lägena: etiketten, rubriken "Vill du hjälpa någon annan att lyckas?", sektionens
+  första mening, tre av dess punkter som lappar, knappen och Logga in. Ytans vita tonar över i
+  sidans papper i trådarnas band (`--hjs-fot-h`), så att garantin följer utan streck. **Fällan**:
+  luften sist i raden (`.hjs-lista::after`) räknades med `--hjs-kant`, vars 100 % blir radens egen
+  bredd där inne, så raden var nästan 500 px för bred och slutade i tomhet; den räknas nu mot
+  100vw. Fokus räknas mot sista kortets snäpppunkt, inte radens yttersta kant, för en telefon
+  stannar där. De rena `#bli`-reglerna gick; `:is(#bli,.bli-svart)` står kvar för specificitetens skull.
+- **Korten i sin färg och bandet som glitchade** (samma kväll). Leo: "kolumnerna som du
   gjorde gör så de blir lite skyggade av färgen de har. Och elementet under de kolumners som rör
   sig måste blir bättre för den glitchar". Korten har en svag ton av sin färg (4 % över hela
   kortet och 14 % i hörnet vid ikonen) och en mjuk skugga i samma färg som står still; raden fick

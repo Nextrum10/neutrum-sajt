@@ -3237,19 +3237,11 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
      #A99E88 → 6,7:1), ljus lera #D9814F → 6,1:1; knappen är krämvit
      med barkens text, som förut.
 
-   Nästa steg, som följer direkt efter #bli, började till 2026-10-29 i
-   samma svarta (#bli + .nx-mork). Nu följer det sidans läge i båda lägena
-   (avsnitt 19, .nx-final-ljus), och #bli slutar mot papperet. */
-#bli{
-  background:
-    radial-gradient(80% 60% at 100% 0%,var(--bli-glod),transparent 58%),
-    radial-gradient(70% 55% at 0% 100%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 60%),
-    var(--bli-bg);
-}
-#bli::before{
-  content:"";position:absolute;inset:0 0 auto;height:1px;pointer-events:none;
-  background:linear-gradient(90deg,transparent,var(--bli-kant) 22%,var(--bli-kant) 78%,transparent);
-}
+   #bli gick från startsidan 2026-10-29 (Leo: "För dig som vill jobba på
+   main sidan ta bort den"): den är radens sista kort i Hur hjälper vi
+   (avsnitt 19, .hjs-jobb). Det som står kvar här är Bli studiehjälpare-
+   sidans. :is(#bli,.bli-svart) står kvar som det var, för :is väger som
+   sitt id, och sidans regler räknar med det. */
 .nx-page-hero.on-band.bli-svart{
   background:
     radial-gradient(80% 60% at 100% 0%,var(--bli-glod),transparent 58%),
@@ -3274,13 +3266,6 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    fyra steg är ytor utan kant. Bli studiehjälpare-sidan (.bli-svart) fick
    samma sak samma kväll (Leo: "ta bort de så de ser ut som denna på main
    sidan"): fotot utan ram, bladen och stegen utan kant. */
-#bli .nx-punkter li,
-#bli .nx-punkter li:last-child{border:0;padding:11px 0}
-#bli .nx-punkter .pk{
-  border:0;
-  background:color-mix(in srgb,var(--lera-l) 16%,transparent);
-}
-#bli .nx-punkter .pk svg{stroke:var(--lera-l)}
 :is(#bli,.bli-svart) .nx-apply-flow > .nx-apply-step,
 .bli-svart .nx-perk{
   background:
@@ -3626,10 +3611,16 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    som kommit in har .inne (.hjs-rorlig, inte med reducerad rörelse).
    ============================================================ */
 .nx-hjs{position:relative;padding:0}
+/* Ytans vita tonar över i sidans papper i bandet med trådarna, så att
+   raden och garantin under inte skiljs av ett streck mellan två färger
+   (Leo: "nu är det ett streck där som skiljer två färger de är ej
+   snyggt, skugga till och ha den där animationen där"). */
 .hjs{
   --hjs-gap:clamp(14px,1.6vw,24px);
-  position:relative;background:var(--yta);
-  padding-block:clamp(64px,8vw,112px) clamp(18px,2.4vw,32px);
+  --hjs-fot-h:clamp(110px,12vw,170px);
+  position:relative;
+  background:linear-gradient(180deg,var(--yta) 0,var(--yta) calc(100% - var(--hjs-fot-h)),var(--pap) 100%);
+  padding-block:clamp(64px,8vw,112px) 0;
 }
 /* Rubriken är likadan som de andra sektionernas (.nx-head split, Leo:
    "jag gillade hur rubrikerna var likadana", och om ett försök i mitten:
@@ -3639,7 +3630,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    trådarnas band. På en telefon sveper man. */
 .hjs-fot{
   position:relative;display:grid;place-items:center;
-  min-height:clamp(64px,8vw,110px);margin-top:-14px;
+  min-height:var(--hjs-fot-h);margin-top:-14px;
 }
 .hjs-pilar{position:relative;z-index:1;display:none;gap:10px}
 .hjs-igang .hjs-pilar{display:flex}
@@ -3667,7 +3658,10 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .hjs-spar::-webkit-scrollbar{display:none}
 .hjs-spar:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;border-radius:18px}
 .hjs-lista{display:flex;gap:var(--hjs-gap);width:max-content;list-style:none;margin:0;padding:0}
-.hjs-lista::after{content:"";flex:none;width:max(1px,calc(var(--hjs-kant) - var(--hjs-gap)))}
+/* Luften sist räknas mot skärmens bredd (100vw), inte med --hjs-kant:
+   dess 100 % blir radens egen bredd här inne, och då blev raden nästan
+   500 px för bred och slutade i tomhet. */
+.hjs-lista::after{content:"";flex:none;width:max(1px,calc(max(var(--m),calc((100vw - var(--w-bred)) / 2 + var(--m))) - var(--hjs-gap)))}
 /* Varje kort har en svag ton av sin färg, starkast i hörnet vid ikonen,
    och en mjuk skugga i samma färg (Leo: "gör så de blir lite skuggade av
    färgen de har"). Skuggan står still; bara kanten byter färg vid fokus. */
@@ -3682,6 +3676,40 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   box-shadow:0 16px 32px -20px color-mix(in srgb,var(--f) 55%,transparent);
   transition:border-color .5s var(--e-mjuk);
 }
+/* För dig som vill jobba, radens sista kort: Bli studiehjälpare-sidans
+   svarta (--bli-bg) med leran i två hörn och i kanten, i båda lägena, så
+   att det står ut mot de ljusa korten före och säger att raden slutar med
+   något annat. Lapparna är tre av sektionens punkter, och knappen är
+   sidans. */
+.hjs-kort.hjs-jobb{
+  background:
+    radial-gradient(90% 70% at 100% 0%,var(--bli-glod),transparent 60%),
+    radial-gradient(80% 60% at 0% 100%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 62%),
+    var(--bli-bg);
+  border-color:var(--bli-kant);
+  box-shadow:0 18px 36px -20px rgba(26,24,19,.55);
+  color:var(--nt-fg);
+}
+.hjs-igang .hjs-kort.hjs-jobb.pa{border-color:var(--lera-l)}
+.hjs-jobb .hj-ikon{background:color-mix(in srgb,var(--lera-l) 18%,transparent)}
+.hjs-jobb .hj-ikon svg{stroke:var(--lera-l)}
+.hjs-jobb .hj-et{color:var(--lera-l)}
+.hjs-kort.hjs-jobb h3{color:var(--nt-fg)}
+.hjs-kort.hjs-jobb p{color:var(--nt-mut)}
+.hjs-jobb-lappar{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:16px 0 22px;padding:0}
+.hjs-jobb-lappar li{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 11px 6px 9px;border-radius:100px;
+  font-size:.8rem;font-weight:600;letter-spacing:-.005em;color:var(--nt-fg);
+  background:color-mix(in srgb,var(--lera-l) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--lera-l) 30%,transparent);
+}
+.hjs-jobb-lappar li::before{
+  content:"";width:6px;height:6px;border-radius:50%;flex:none;background:var(--lera-l);
+}
+.hjs-kort .hjs-jobb-knapp{margin-top:auto;align-self:flex-start}
+.hjs-kort.hjs-jobb .hjs-jobb-in{margin-top:12px;font-size:.84rem;color:var(--nt-mut)}
+.hjs-jobb-in a{color:var(--nt-fg);text-decoration:underline;text-underline-offset:3px}
 /* Ikonen överst i kortet, i kortets färg (.hj-ikon, avsnitt 17), i
    stället för en siffra (Leo, med en bild av bentots rutor: "ha dessa fem
    element istället för siffror"); fokus syns på kanten. */
@@ -3716,7 +3744,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   .hjs-kort{width:min(20rem,80vw)}
 }
 /* Garantins remsa under scenen, på papperet. */
-.hjs-gar{padding-block:clamp(40px,6vw,72px) clamp(36px,4.6vw,68px)}
+.hjs-gar{padding-block:clamp(8px,1.6vw,24px) clamp(36px,4.6vw,68px)}
 .hjs-gar .hj-gar{margin-top:0}
 
 /* Nästa steg på startsidan följer sidans läge (Leo: "Så den ska matcha
@@ -3857,36 +3885,6 @@ html[data-motion] .nx-stjarnkant::after{animation:nx-stjarna-upp 5.5s linear inf
 @keyframes nx-stjarna-upp{from{translate:0 0;opacity:1}to{translate:100% 0;opacity:0}}
 html[data-motion="still"] .nx-stjarnkant::before,
 html[data-motion="still"] .nx-stjarnkant::after{animation:none;opacity:0}
-
-/* ---------- ansökans steg i en kolumn ----------
-   Samma dag och av samma skäl: Bli studiehjälpares fyra steg är en
-   lodrät lista med siffran framför, inte fyra rutor i rad. Sektionernas
-   rubriker är som förut (.nx-head split), likadana (Leo: "jag gillade
-   hur rubrikerna var likadana", "De ska inte vara centrade").
-   Menysidorna behåller sina. */
-.nx-apply-flow.nx-apply-lista{
-  display:grid;grid-template-columns:minmax(0,1fr);gap:0;max-width:760px;
-  border-top:1px solid rgba(239,230,214,.14);
-}
-/* #bli väger som bladens regel ovan (avsnitt 10), som annars ger varje
-   rad en egen yta igen. */
-#bli .nx-apply-lista > .nx-apply-step{
-  display:grid;grid-template-columns:3.2rem minmax(0,1fr);column-gap:clamp(14px,2vw,26px);
-  align-items:center;
-  padding:clamp(18px,2.2vw,24px) 0;border:0;border-radius:0;background:none;
-  border-bottom:1px solid rgba(239,230,214,.14);
-}
-#bli .nx-apply-lista > .nx-apply-step em{grid-row:1 / span 2;margin:0;font-size:clamp(2.2rem,3.2vw,2.8rem)}
-#bli .nx-apply-lista > .nx-apply-step b{grid-column:2}
-#bli .nx-apply-lista > .nx-apply-step p{grid-column:2;margin-top:4px;font-size:.92rem}
-@media (hover:hover) and (pointer:fine){
-  #bli .nx-apply-lista > .nx-apply-step:hover{background:none}
-}
-@media (max-width:760px){
-  #bli .nx-apply-lista > .nx-apply-step{padding:16px 0;grid-template-columns:2.4rem minmax(0,1fr)}
-  #bli .nx-apply-lista > .nx-apply-step:last-child:nth-child(odd){grid-column:auto}
-  #bli .nx-apply-lista > .nx-apply-step em{font-size:2rem}
-}
 
 @media (prefers-reduced-motion:reduce){
   .nx-stjarnkant::before,.nx-stjarnkant::after{animation:none;opacity:0}

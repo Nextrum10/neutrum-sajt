@@ -390,10 +390,13 @@
       let nu = -1, synlig = !rörlig, ram = 0;
       const läge = () => {
         ram = 0;
-        const max = spår.scrollWidth - spår.clientWidth;
-        const x0 = spår.scrollLeft, b = spår.clientWidth;
-        const p = max > 1 ? Math.min(1, x0 / max) : 0;
+        /* Slutet är där sista kortet snäpper fast, inte radens yttersta
+           kant: med scroll-snap stannar en telefon där, och då ska det
+           sista kortet vara i fokus. */
         const först = kort[0], sist = kort[kort.length - 1];
+        const x0 = spår.scrollLeft, b = spår.clientWidth;
+        const max = Math.max(1, Math.min(spår.scrollWidth - b, sist.offsetLeft - (parseFloat(getComputedStyle(spår).paddingLeft) || 0)));
+        const p = Math.min(1, x0 / max);
         const a = först.offsetLeft + först.offsetWidth / 2;
         const ö = sist.offsetLeft + sist.offsetWidth / 2 - max;
         const punkt = a + (ö - a) * p;

@@ -52,7 +52,7 @@
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="../nextrum-cinema.css?v=b9a03a57">
-<link rel="stylesheet" href="../nextrum-start.css?v=d8805593">
+<link rel="stylesheet" href="../nextrum-start.css?v=10a3e3dc">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -208,6 +208,9 @@
      inbakad, #betygsgaranti), Just nu, Vår idé, studievyn, NexLäx, Från
      intresseanmälan till första passet, studiehjälparna, Trygg hjälp,
      bildväggen, omdömena (brevet), För dig som vill jobba och Nästa steg.
+     För dig som vill jobba är sedan 2026-10-29 ingen egen sektion utan
+     det sista kortet i Hur hjälper vis rad (Leo: "För dig som vill jobba
+     på main sidan ta bort den, och lägg till någon kolumn i slutet").
      Numren i rubrikerna nedan är gamla och följer inte ordningen.
 
      EN NY FORM (2026-10-29). Leo: "Just nu är mycket bara i kolumner och
@@ -386,6 +389,24 @@
           <a class="nx-lank" href="#studievy">See the student view
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
           </a>
+        </li>
+        <!-- För dig som vill jobba, som radens sista kort (2026-10-29, Leo: "För
+             dig som vill jobba på main sidan ta bort den, och lägg till någon
+             kolumn i slutet där de står för dig som vill jobba, var kreativ"):
+             Bli studiehjälpare-sidans svarta med leran, mot de ljusa korten
+             före, och sektionens meningar, kortade. -->
+        <li class="hjs-kort hjs-jobb" style="--f:var(--lera-l)">
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 7V5.6c0-.9.7-1.6 1.6-1.6h3.8c.9 0 1.6.7 1.6 1.6V7"/><rect x="3.5" y="7" width="17" height="12.5" rx="2.4"/><path d="M3.5 12.2h17"/><path d="M10.5 12.2v1.6h3v-1.6"/></svg></span>
+          <span class="hj-et">If you want to work with us</span>
+          <h3>Want to help someone else succeed?</h3>
+          <p>Anyone who has started upper secondary school and is allowed to work can become a tutor with us, students included.</p>
+          <ul class="hjs-jobb-lappar" aria-label="What you get">
+            <li>Flexible</li><li>Paid for your time</li><li>Experience that counts</li>
+          </ul>
+          <a class="btn btn-primary hjs-jobb-knapp" href="/en/bli-studiehjalpare">Become a tutor
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+          <p class="hjs-jobb-in">Already a tutor? <a href="/larare" data-vagval>Log in</a></p>
         </li>
       </ol>
     </div>
@@ -1321,69 +1342,6 @@
 </section>
 
 <!-- ==========================================================
-     10 — BLI STUDIEHJÄLPARE
-     Sedan 2026-10-08 på mörka lägets svarta, i båda lägena, med lera
-     runt kolumnerna (nextrum-start.css avsnitt 10, #bli).
-     ========================================================== -->
-<section class="nx-mork nx-sek" id="bli" style="scroll-margin-top:74px">
-  <span id="unga" aria-hidden="true"></span>
-
-  <div class="nx-split omvand">
-    <div class="nx-split-bild" data-stig>
-      <figure class="nx-fig" style="--tint:#8E8C84">
-        <picture><source type="image/webp" srcset="../bilder/05-av-unga-for-unga-640.webp 640w, ../bilder/05-av-unga-for-unga-960.webp 960w, ../bilder/05-av-unga-for-unga-1280.webp 1280w, ../bilder/05-av-unga-for-unga-1600.webp 1600w" sizes="(max-width:900px) 92vw, 44vw"><img class="nx-img" src="../bilder/05-av-unga-for-unga-1280.jpg"
-             srcset="../bilder/05-av-unga-for-unga-640.jpg 640w, ../bilder/05-av-unga-for-unga-960.jpg 960w, ../bilder/05-av-unga-for-unga-1280.jpg 1280w, ../bilder/05-av-unga-for-unga-1600.jpg 1600w"
-             sizes="(max-width:900px) 92vw, 44vw" width="2048" height="1152" loading="lazy" decoding="async"
-             style="object-position:52% 40%"
-             alt="Five young tutors standing and talking with each other in front of a bookshelf in a library."></picture>
-      </figure>
-    </div>
-
-    <div class="nx-split-text">
-      <span class="nx-et" data-stig>If you want to work with us</span>
-      <h2 class="nx-d2" data-avslöj style="margin-top:20px">Want to help someone<br>else succeed?</h2>
-      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:22px">Anyone who has started upper secondary school and is allowed to work can become a tutor with us, students included. You help
-        younger students with school, earn your own money
-        and build experience that genuinely belongs on a CV.</p>
-
-      <ul class="nx-punkter" data-stig data-fördröj="2">
-        <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
-          <span><b>Flexible</b><span>You decide when and how much you want to work.</span></span></li>
-        <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
-          <span><b>Paid for your time</b><span>Booking and payment are handled by Nextrum.</span></span></li>
-        <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
-          <span><b>Experience that counts</b><span>Communication, leadership and teaching — for real.</span></span></li>
-        <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
-          <span><b>You make a difference</b><span>Someone younger will remember that you were the one who made it click.</span></span></li>
-      </ul>
-
-      <div class="nx-cta-rad" data-stig data-fördröj="3">
-        <span class="nx-magnet">
-          <a class="btn btn-primary btn-lg" href="/en/bli-studiehjalpare">
-            Become a tutor
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-          </a>
-        </span>
-      </div>
-
-      <p class="nx-fineprint" data-stig data-fördröj="4" style="margin-top:24px">
-        Already a tutor? <a href="/larare" data-vagval style="color:var(--nt-fg);text-decoration:underline;text-underline-offset:3px">Log in</a>
-      </p>
-    </div>
-  </div>
-
-  <div class="nx-wrap-bred" style="margin-top:clamp(56px,7vw,96px)">
-    <span class="nx-et" data-stig style="margin-bottom:22px;display:inline-flex">How applying works</span>
-    <div class="nx-apply-flow nx-apply-lista" data-stig data-fördröj="1">
-      <div class="nx-apply-step"><em>1</em><b>Apply</b><p>Fill in the application with subjects, year groups and times that suit you.</p></div>
-      <div class="nx-apply-step"><em>2</em><b>Interview</b><p>A short conversation where we get to know you and how you explain things.</p></div>
-      <div class="nx-apply-step"><em>3</em><b>Get approved</b><p>We run our checks and you get your tutor profile.</p></div>
-      <div class="nx-apply-step"><em>4</em><b>Start working</b><p>Accept requests and hold your first session.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- ==========================================================
      13 — FAQ (urval, hela listan ligger på faq.html)
      ========================================================== -->
 
@@ -1616,7 +1574,7 @@
      de inte står allt som nextrum-start.js lämnade det. -->
 <script src="../bibliotek/gsap-3.13.0.min.js" defer></script>
 <script src="../bibliotek/gsap-scrolltrigger-3.13.0.min.js" defer></script>
-<script src="../nextrum-start-scen.js?v=73686925" defer></script>
+<script src="../nextrum-start-scen.js?v=b61dd62c" defer></script>
 <script src="../nextrum-socialt.js?v=7ba4ec99"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
