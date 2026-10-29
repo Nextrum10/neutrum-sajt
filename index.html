@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=b9a03a57">
-<link rel="stylesheet" href="nextrum-start.css?v=2a9f1cb7">
+<link rel="stylesheet" href="nextrum-start.css?v=d3b0e0be">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -232,18 +232,20 @@
      EN NY FORM (2026-10-29). Leo: "Just nu är mycket bara i kolumner och
      tråkiga", med React Bits som förebild, och "Du får göra allt".
      Nästan varje sektion var samma mall: etikett, rubrik, ingress och en
-     rad vita kort. Nu: Hur hjälper vi har sitt huvud som förut och under
-     det bentots små kort (expertisen, erfarenheten, matchningen,
-     tryggheten och NexLäx). Samma dag prövades ett bentorutnät med sju
-     rutor, en hög med fem kort, en mörk scen med norrsken, en rad som
-     scrollen drog och en rad man svepte i, och till sist ville Leo ha de
-     små korten tillbaka ("ha de små kolumnerna som fanns förut").
-     Läxhjälpens ruta, fotot med platserna, står bredvid manifestets rubrik,
-     och manifestet har sina två blad igen (Allt på ett ställe är ett av
-     dem); etiketterna har ett ljus som glider (ShinyText), ämnesbandet
-     lutar med farten (ScrollVelocity), sektionernas rubriker är som förut,
-     likadana, och ansökans fyra steg är en lodrät lista; manifestets ord
-     blir skarpa medan man scrollar (ScrollReveal); studievyn tippar upp ur
+     rad vita kort. Nu: Hur hjälper vi har rubriken ovanför och de fem
+     budskapen i EN rad man sveper i själv, med trådar i WebGL (Threads) i
+     ett nedtonat band under, och orden som stiger upp (SplitText). Samma dag
+     prövades ett bentorutnät med sju rutor, en hög med fem kort, en mörk scen
+     med norrsken och en rad som scrollen drog, och Leo underkände dem ("minimera
+     alla kolumner", "De blir liksom 8 kolumner direkt", "Jag gillar inte att
+     bakrunden är svart och orange", "Vi är ett läxhjälps företag ... inte et
+     tech bolag"). Raden bär också Trygg hjälps matchning, och manifestet
+     har sina två blad igen (Allt på ett ställe står alltså två gånger, som
+     före 2026-10-29); etiketterna har ett
+     ljus som glider (ShinyText), ämnesbandet lutar med farten
+     (ScrollVelocity), sektionernas rubriker är som förut, likadana, och ansökans fyra
+     steg är en lodrät lista; manifestet är ett eget ögonblick där orden blir
+     skarpa medan man scrollar (ScrollReveal); studievyn tippar upp ur
      papperet, och Nästa steg följer sidans läge med ett punktnät som
      lyser upp kring pekaren (Dot Grid, nextrum-start-scen.js).
      Trygg hjälp har ingen egen sektion längre. Ordningen i övrigt är Leos
@@ -344,67 +346,85 @@
      säger "ert barn?" sedan 2026-10-09 (Leo), och garantins steg 02 "Håll
      takten" i stället för "Kör hela läsåret".
      ========================================================== -->
-<section class="nx-sek nx-hj" id="sa-hjalper-vi" aria-labelledby="hj-t">
-  <div class="nx-wrap-bred">
-    <div class="nx-head split" data-stig>
-      <div>
-        <span class="nx-et acc">Vad är Nextrum</span>
-        <h2 class="nx-d2 hj-rubrik" id="hj-t">Hur hjälper vi<br><em>ert barn?</em></h2>
-      </div>
-      <div class="nx-head-aside">
-        <p class="nx-lede">Nextrum erbjuder prisvärd läxhjälp där elever matchas med en studiehjälpare som passar deras behov. Vi hjälper elever att förstå mer, känna sig tryggare i skolan och utvecklas över tid.</p>
+<section class="nx-hj nx-hjs" id="sa-hjalper-vi" aria-labelledby="hj-t">
+  <!-- RADEN (2026-10-29). Leo först: "snygga rörliga bakgrunder, hur
+       texter går osv ... De blir liksom 8 kolumner direkt"; sedan att de
+       fem ska gå "sidleds snyggt med en vit rörlig bakrund"; och sist, om
+       raden som scrollen drog: "Jag gillar ej heller att man behöver scrolla
+       ner för att nästa steg ska börja. Vi är ett läxhjälps företag ... inte
+       et tech bolag. Så vi kör istället att man scrollar själv åt vänster.
+       Och rubriken tar för stor del av sidan." Så: rubriken ovanför, likadan
+       som de andra sektionernas (Leo: "jag gillade hur rubrikerna var
+       likadana", och "De ska inte vara centrade"), och de fem korten i en rad man sveper i
+       själv (på dator också med pilarna under), och sidan rullar som vanligt
+       förbi. Trådarna
+       (React Bits Threads, nextrum-start-scen.js) står nedtonade i ett band
+       under korten, aldrig bakom texten (Leo: "texten syns dålig ... mer som
+       ett mönster att veta vart man ska scrolla"), och tar färgen från kortet
+       i fokus. Varje mening stod redan på sidan. Formen: nextrum-start.css
+       avsnitt 19. Samma markup i en/index.html. -->
+  <div class="hjs" data-hjscen>
+    <div class="nx-wrap-bred">
+      <div class="nx-head split" data-stig>
+        <div>
+          <span class="nx-et acc">Vad är Nextrum</span>
+          <h2 class="nx-d2 hj-rubrik" id="hj-t">Hur hjälper vi<br><em>ert barn?</em></h2>
+        </div>
+        <div class="nx-head-aside">
+          <p class="nx-lede">Nextrum erbjuder prisvärd läxhjälp där elever matchas med en studiehjälpare som passar deras behov. Vi hjälper elever att förstå mer, känna sig tryggare i skolan och utvecklas över tid.</p>
+        </div>
       </div>
     </div>
+    <div class="hjs-spar" id="hjs-spar" role="region" aria-label="Så hjälper vi, i fem kort" tabindex="0">
+      <ol class="hjs-lista">
+        <li class="hjs-kort" style="--f:var(--amne-ma)">
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8.5" r="3"/><circle cx="16.6" cy="9.6" r="2.4"/><path d="M2.8 19.2c0-2.9 2.3-5.1 5.2-5.1s5.2 2.2 5.2 5.1"/><path d="M14 14.7a4.6 4.6 0 0 1 2.6-.8c2.5 0 4.6 1.9 4.6 4.5"/></svg></span>
+          <span class="hj-et">Läxhjälpen</span>
+          <h3>Rätt studiehjälp, på rätt plats</h3>
+          <p>Eleven får en egen studiehjälpare, en studieplan och pass hemma hos er, på biblioteket eller online. Efter varje pass kommer en rapport.</p>
+        </li>
+        <li class="hjs-kort" style="--f:var(--amne-en)">
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4.5 2.5 9 12 13.5 21.5 9z"/><path d="M6.5 11v4.3c1.4 1.4 3.3 2.2 5.5 2.2s4.1-.8 5.5-2.2V11"/><path d="M21.5 9v5"/></svg></span>
+          <span class="hj-et">Studiehjälparna</span>
+          <h3>Utvalda och intervjuade, från samma skolbänk</h3>
+          <p>Våra studiehjälpare har nyligen läst samma kurser själva. Vi intervjuar och utbildar dem, och matchar efter ämne, nivå, behov och personlighet.</p>
+        </li>
+        <li class="hjs-kort" style="--f:var(--amne-no)">
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
+          <span class="hj-et">Matchningen</span>
+          <h3>En match vi står för</h3>
+          <p>Ni bläddrar inte i en katalog. Vi väljer, för fel match är värre än ingen match.</p>
+        </li>
+        <li class="hjs-kort" style="--f:var(--acc)">
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg></span>
+          <span class="hj-et">NexLäx</span>
+          <h3>Övning mellan passen</h3>
+          <p>Nextrums egna digitala uppgifter: korta nivåer där varje svar rättas direkt, med XP och märken. Studiehjälparen ser vad som sitter.</p>
+          <a class="nx-lank" href="#nexlax">Så fungerar NexLäx
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </li>
+        <li class="hjs-kort" style="--f:var(--amne-ms)">
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
+          <span class="hj-et">Studievyn</span>
+          <h3>Allt på ett ställe</h3>
+          <p>Allt finns i en och samma plattform: studieplan, bokning, rapporter, NexLäx och betalning. Pass online eller på plats, utan anmälningsavgift.</p>
+          <a class="nx-lank" href="#studievy">Se studievyn
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </li>
+      </ol>
+    </div>
+    <div class="hjs-fot">
+      <div class="hjs-band" aria-hidden="true"><canvas class="hjs-bg" data-tradar></canvas></div>
+      <div class="hjs-pilar">
+        <button type="button" class="hjs-pil" data-hjs-pil="-1" aria-controls="hjs-spar" aria-label="Föregående kort"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4L3 8l4 4"/></svg></button>
+        <button type="button" class="hjs-pil" data-hjs-pil="1" aria-controls="hjs-spar" aria-label="Nästa kort"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
+      </div>
+    </div>
+  </div>
 
-    <!-- DE SMÅ KORTEN (2026-10-29). Efter en kväll med en rad man
-         svepte i, med 01–05 i korten, ville Leo ha bentots små kort
-         tillbaka: "Asså istället för 0102030405 ha de små kolumnerna som
-         fanns förut". Fyra små (expertisen, erfarenheten, matchningen,
-         tryggheten) och NexLäx hög bredvid dem; läxhjälpens ruta med
-         fotot står i manifestet ("Info från den tredje bilden lägger du på
-         rätt person kan göra stor skillnad"), och Allt på ett ställe är
-         ett av manifestets blad. Inget nytt påstående: varje mening stod
-         redan på sidan. Ordningens färger (avsnitt 18) gäller korten i
-         tur, och NexLäx har SO:s ockra som sjätte, som bandet hade.
-         Formen: nextrum-start.css avsnitt 19. Samma markup i
-         en/index.html. -->
-    <ul class="nx-bento">
-      <li class="bn-ruta" data-stig style="--f:var(--amne-en)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4.5 2.5 9 12 13.5 21.5 9z"/><path d="M6.5 11v4.3c1.4 1.4 3.3 2.2 5.5 2.2s4.1-.8 5.5-2.2V11"/><path d="M21.5 9v5"/></svg></span>
-        <span class="hj-et">Expertisen</span>
-        <h3>Utvalda och intervjuade</h3>
-        <p>Våra studiehjälpare har nyligen läst samma kurser själva. Vi intervjuar och utbildar dem, och matchar efter ämne, nivå, behov och personlighet.</p>
-      </li>
-      <li class="bn-ruta" data-stig data-fördröj="1" style="--f:var(--amne-no)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6.6c-1.8-1.3-4.3-2-7.5-2v13c3.2 0 5.7.7 7.5 2 1.8-1.3 4.3-2 7.5-2v-13c-3.2 0-5.7.7-7.5 2z"/><path d="M12 6.6v13"/></svg></span>
-        <span class="hj-et">Erfarenheten</span>
-        <h3>Från samma skolbänk</h3>
-        <p>De vet hur det känns att plugga inför prov, fastna på en uppgift och förstå något för första gången, för de gjorde det själva nyligen.</p>
-      </li>
-      <li class="bn-ruta" data-stig data-fördröj="2" style="--f:var(--acc)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
-        <span class="hj-et">Matchningen</span>
-        <h3>En match vi står för</h3>
-        <p>Ni bläddrar inte i en katalog. Vi väljer, för fel match är värre än ingen match.</p>
-      </li>
-      <li class="bn-ruta" data-stig data-fördröj="3" style="--f:var(--amne-ms)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span>
-        <span class="hj-et">Tryggheten</span>
-        <h3>Trygghet i varje steg</h3>
-        <p>Intervjuade och utbildade studiehjälpare, betalning via Nextrum och uppföljning efter passen.</p>
-      </li>
-      <li class="bn-ruta bn-hog hj-nex" data-stig data-fördröj="1" style="--f:var(--amne-so)">
-        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg></span>
-        <span class="hj-et">NexLäx</span>
-        <h3>Övning mellan passen</h3>
-        <p>Nextrums egna digitala uppgifter: korta nivåer där varje svar rättas direkt, med XP och märken. Studiehjälparen ser vad som sitter.</p>
-        <svg class="hj-nex-bild" viewBox="0 0 240 72" aria-hidden="true"><path d="M16 54C56 54 58 22 98 22s46 32 84 32 42-28 42-28"/><circle cx="16" cy="54" r="10" style="--c:var(--amne-ma)"/><circle cx="98" cy="22" r="10" style="--c:var(--amne-no)"/><circle cx="182" cy="54" r="10" style="--c:var(--amne-en)"/><circle cx="224" cy="26" r="10" style="--c:var(--amne-ms)"/></svg>
-        <a class="nx-lank" href="#nexlax">Så fungerar NexLäx
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </a>
-      </li>
-    </ul>
-
+  <div class="nx-wrap-bred hjs-gar">
     <div class="hj-gar" id="betygsgaranti" data-stig>
       <p class="hj-gar-mening"><span class="hj-gar-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span><span>Vi erbjuder <em>betygsgarantin</em> för att vi är säkra på våra metoder.</span></p>
       <ol class="hj-gar-steg" data-gar-flode="tur">
@@ -528,13 +548,12 @@
              fanns"): bladen Rätt match och Allt på ett ställe är tillbaka,
              som de stod före samma dag. -->
         <h2 data-ordfyll data-scrollord style="margin-top:clamp(24px,3vw,38px)">Rätt person kan göra<br><em>stor skillnad.</em></h2>
-        <p class="nx-lede mf-lede" data-stig data-fördröj="1">Eleven får en egen studiehjälpare, en studieplan och pass hemma hos er, på biblioteket eller online. Efter varje pass kommer en rapport.</p>
       </div>
       <!-- Fotot hemma hos familjen med platserna och rapporten som lappar
            ovanpå (2026-10-29, Leo: "Info från den tredje bilden lägger du på
            rätt person kan göra stor skillnad", med en bild av läxhjälpens ruta
-           i bentot). Lapparna är dekor (aria-hidden): meningen under
-           rubriken säger samma sak. -->
+           i bentot). Lapparna är dekor (aria-hidden): läxhjälpens kort i raden
+           ovanför säger samma sak. -->
       <figure class="mf-foto" data-stig style="--tint:#634E3D">
         <picture><source type="image/webp" srcset="bilder/21-hemma-hos-familjen-640.webp 640w, bilder/21-hemma-hos-familjen-960.webp 960w, bilder/21-hemma-hos-familjen-1280.webp 1280w" sizes="(max-width:980px) 92vw, 46vw"><img class="nx-img" src="bilder/21-hemma-hos-familjen-960.jpg"
              srcset="bilder/21-hemma-hos-familjen-640.jpg 640w, bilder/21-hemma-hos-familjen-960.jpg 960w, bilder/21-hemma-hos-familjen-1280.jpg 1280w"
@@ -1648,7 +1667,7 @@
      de inte står allt som nextrum-start.js lämnade det. -->
 <script src="bibliotek/gsap-3.13.0.min.js" defer></script>
 <script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js" defer></script>
-<script src="nextrum-start-scen.js?v=b8d0e856" defer></script>
+<script src="nextrum-start-scen.js?v=ee3e89c9" defer></script>
 <script src="nextrum-socialt.js?v=7ba4ec99"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
