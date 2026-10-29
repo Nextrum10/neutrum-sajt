@@ -742,7 +742,7 @@ sedan 2026-10-29 **en rad man sveper i själv** (`.nx-hjs`, `data-hjscen`, avsni
 "de kolumnerna typ 5 stycken går sidleds snyggt", och sist: "Vi är ett läxhjälps företag ... inte et tech bolag. Så vi
 kör istället att man scrollar själv åt vänster. Och rubriken tar för stor del av sidan"): på ytans vita (`--yta`) står
 rubriken med ingressen, likadan som de andra sektionernas, och under den fem kort i en rullbar rad (`overflow-x`,
-`scroll-snap`, på dator också pilar under raden som rullar den med `scrollBy`): läxhjälpen, studiehjälparna, matchningen (ur Trygg hjälps band), NexLäx och
+`scroll-snap`; med en mus drar man raden, för pilarna under den togs bort samma kväll: Leo "Ta bort dessa pilar"): läxhjälpen, studiehjälparna, matchningen (ur Trygg hjälps band), NexLäx och
 Allt på ett ställe, var och en med ordningens färg i `--f`. **Ingen scroll drar raden**, och sidan rullar som vanligt
 förbi. Trådar i WebGL (`data-tradar`, efter React Bits Threads) står nedtonade i ett band under korten, **aldrig bakom
 texten**, där ytans vita tonar över i sidans papper före garantin (Leo: "nu är det ett streck där som skiljer två färger

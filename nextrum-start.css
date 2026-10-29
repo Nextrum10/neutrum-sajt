@@ -3601,13 +3601,13 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    slutlägena, och utan skriptet är det de som syns.
 
    SCENEN. Hur hjälper vi står på ytans vita (--yta): rubriken ovanför,
-   likadan som de andra sektionernas, och de fem korten i en rad man sveper
-   i själv (overflow-x och scroll-snap; på dator också med pilarna under), så att sidan
+   likadan som de andra sektionernas, och korten i en rad man sveper i
+   själv (overflow-x och scroll-snap; med en mus drar man), så att sidan
    rullar som vanligt förbi. Leo om raden som scrollen drog: "Vi är ett
    läxhjälps företag ... inte et tech bolag. Så vi kör istället att man
    scrollar själv åt vänster". Trådarna (canvas[data-tradar]) står
    nedtonade i ett band under korten, aldrig bakom texten. Med skriptet
-   (.hjs-igang) syns pilarna och kortet närmast början har .pa; ett kort
+   (.hjs-igang) går raden att dra med musen och kortet närmast början har .pa; ett kort
    som kommit in har .inne (.hjs-rorlig, inte med reducerad rörelse).
    ============================================================ */
 .nx-hjs{position:relative;padding:0}
@@ -3619,31 +3619,30 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   --hjs-gap:clamp(14px,1.6vw,24px);
   --hjs-fot-h:clamp(110px,12vw,170px);
   position:relative;
-  background:linear-gradient(180deg,var(--yta) 0,var(--yta) calc(100% - var(--hjs-fot-h)),var(--pap) 100%);
+  /* Mjukt i början och slutet, så att ingen kant syns där tonen börjar. */
+  background:linear-gradient(180deg,
+    var(--yta) 0,var(--yta) calc(100% - var(--hjs-fot-h) - 40px),
+    color-mix(in srgb,var(--yta) 85%,var(--pap)) calc(100% - var(--hjs-fot-h) * .7 - 28px),
+    color-mix(in srgb,var(--yta) 50%,var(--pap)) calc(100% - var(--hjs-fot-h) * .45 - 18px),
+    color-mix(in srgb,var(--yta) 15%,var(--pap)) calc(100% - var(--hjs-fot-h) * .2 - 6px),
+    var(--pap) 100%);
   padding-block:clamp(64px,8vw,112px) 0;
 }
 /* Rubriken är likadan som de andra sektionernas (.nx-head split, Leo:
    "jag gillade hur rubrikerna var likadana", och om ett försök i mitten:
    "De ska inte vara centrade"), och raden börjar direkt under. */
 .hjs .nx-head{margin-bottom:0}
-/* Pilarna: bara med skriptet och en mus, i mitten under raden, ovanpå
-   trådarnas band. På en telefon sveper man. */
+/* Bandet med trådarna under raden, där ytans vita tonar i papperet. */
 .hjs-fot{
-  position:relative;display:grid;place-items:center;
-  min-height:var(--hjs-fot-h);margin-top:-14px;
+  position:relative;pointer-events:none;
+  min-height:var(--hjs-fot-h);margin-top:-34px;
 }
-.hjs-pilar{position:relative;z-index:1;display:none;gap:10px}
-.hjs-igang .hjs-pilar{display:flex}
-@media (hover:none),(pointer:coarse){.hjs-igang .hjs-pilar{display:none}}
-.hjs-pil{
-  display:grid;place-items:center;width:48px;height:48px;border-radius:50%;
-  border:1px solid color-mix(in srgb,var(--bl) 22%,transparent);
-  background:var(--yta);color:var(--bl);cursor:pointer;
-  transition:scale .25s var(--e-ut),opacity .25s var(--e-mjuk),border-color .25s var(--e-mjuk);
+/* Med en mus dras raden (nextrum-start-scen.js, hjscen), för pilarna gick
+   (Leo: "Ta bort dessa pilar"). */
+@media (hover:hover) and (pointer:fine){
+  .hjs-igang .hjs-spar{cursor:grab}
+  .hjs-igang .hjs-spar.hjs-drar{cursor:grabbing;scroll-snap-type:none;user-select:none}
 }
-.hjs-pil svg{width:18px;height:18px}
-.hjs-pil:hover:not(:disabled){border-color:var(--bl);scale:1.05}
-.hjs-pil:disabled{opacity:.32;cursor:default}
 /* Raden rullas, aldrig sidan (overflow-y:hidden, som ämnesbandet), och
    första kortet står i linje med rubriken (.nx-wrap-bred). Ett tomt
    element sist ger raden samma luft i slutet, för en rullbar
@@ -3653,7 +3652,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   position:relative;margin-top:clamp(26px,3.2vw,42px);
   overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
   scroll-snap-type:x mandatory;scroll-padding-inline:var(--hjs-kant);
-  padding:6px var(--hjs-kant) 30px;scrollbar-width:none;
+  padding:6px var(--hjs-kant) 48px;scrollbar-width:none;
 }
 .hjs-spar::-webkit-scrollbar{display:none}
 .hjs-spar:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;border-radius:18px}

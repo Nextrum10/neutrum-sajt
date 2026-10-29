@@ -13,8 +13,8 @@
                 eller fingret (efter Leos video), aldrig av sig självt.
                 Ritas bara medan de syns och fliken är framme, och står
                 still med reducerad rörelse.
-     hjscen     Hur hjälper vi som en rad man sveper i själv, med pilar på
-                dator: Leo om raden som scrollen drog, "Vi är ett läxhjälps
+     hjscen     Hur hjälper vi som en rad man sveper i själv, eller drar i
+                med musen: Leo om raden som scrollen drog, "Vi är ett läxhjälps
                 företag ... inte et tech bolag. Så vi kör istället att man
                 scrollar själv åt vänster". Ett korts rubrik stiger upp ur
                 en springa när kortet kommer in (SplitText), och texten
@@ -341,9 +341,8 @@
   }
 
   /* ---------- Hur hjälper vi som en rad man sveper i ----------
-     Raden är en vanlig rullbar rad (CSS); här kommer pilarna, fokus och
-     inträdet. Pilarna rullar raden ett kort åt gången med scrollBy, aldrig
-     sidan, och står släckta vid ändarna. Kortet närmast en punkt som går
+     Raden är en vanlig rullbar rad (CSS); här kommer draget med musen,
+     fokus och inträdet. Draget rullar raden, aldrig sidan. Kortet närmast en punkt som går
      från första kortets mitt till sista kortets mitt medan raden rullas
      har .pa (så att det första är i fokus från början och det sista vid
      slutet), och trådarna tar dess färg. Ett kort som kommit in i raden
@@ -383,7 +382,6 @@
       let färgen = [];
       const läsFärgen = () => { färgen = kort.map(k => färg(getComputedStyle(k).getPropertyValue('--f'))); };
       läsFärgen();
-      const förra = $('[data-hjs-pil="-1"]', scen), nästa = $('[data-hjs-pil="1"]', scen);
       scen.classList.add('hjs-igang');
       if (rörlig) scen.classList.add('hjs-rorlig');
 
@@ -413,18 +411,34 @@
           TRÅD.mål = färgen[bäst];
           if (TRÅD.rita) TRÅD.rita();
         }
-        if (förra) förra.disabled = x0 <= 2;
-        if (nästa) nästa.disabled = x0 >= max - 2;
       };
       const snart = () => { if (!ram) ram = requestAnimationFrame(läge); };
       spår.addEventListener('scroll', snart, { passive: true });
       window.addEventListener('resize', snart, { passive: true });
-      [förra, nästa].forEach(knapp => {
-        if (!knapp) return;
-        knapp.addEventListener('click', () => {
-          const steg = kort[1].offsetLeft - kort[0].offsetLeft;
-          spår.scrollBy({ left: Number(knapp.dataset.hjsPil) * steg, behavior: rörlig ? 'smooth' : 'auto' });
-        });
+      /* Pilarna gick (Leo: "Ta bort dessa pilar"), så med en mus dras
+         raden i stället: snäppningen står av medan man drar och tar vid
+         när man släpper, och ett drag öppnar aldrig länken man släppte på. */
+      spår.addEventListener('pointerdown', e => {
+        if (e.pointerType !== 'mouse' || e.button !== 0) return;
+        const x0 = e.clientX, s0 = spår.scrollLeft;
+        let drog = false;
+        const flytta = ev => {
+          const dx = ev.clientX - x0;
+          if (!drog && Math.abs(dx) < 5) return;
+          if (!drog) { drog = true; spår.classList.add('hjs-drar'); }
+          spår.scrollLeft = s0 - dx;
+        };
+        const släpp = () => {
+          removeEventListener('pointermove', flytta);
+          removeEventListener('pointerup', släpp);
+          if (!drog) return;
+          spår.classList.remove('hjs-drar');
+          const stopp = ev => { ev.preventDefault(); ev.stopPropagation(); };
+          spår.addEventListener('click', stopp, true);
+          setTimeout(() => spår.removeEventListener('click', stopp, true), 0);
+        };
+        addEventListener('pointermove', flytta);
+        addEventListener('pointerup', släpp);
       });
       if (!synlig && 'IntersectionObserver' in window) {
         const io = new IntersectionObserver(es => {

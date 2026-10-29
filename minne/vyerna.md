@@ -91,7 +91,13 @@ muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
 (tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
 sedan trådarna i Raden som glider).
-- **För dig som vill jobba som ett kort, och övergången utan streck** (samma kväll, sist). Leo:
+- **Pilarna bort** (samma kväll, sist). Leo, med en ring kring pilarna och en kring strecket under
+  raden: "Ta bort dessa pilar. Här menade jag att den skulle vara så att de ej ser ut sådär att de
+  är tydligt att de är två olika sektioner. Lite fadat under och den där animationen över".
+  Bilderna var tagna före övergången i punkten nedan (hans klocka 22.00 är 21.00 UTC, och den gick
+  ut 21.09), som redan gör just det. Pilarna gick; med en mus dras raden i stället (`pointerdown`
+  på raden, snäppningen av medan man drar, och ett drag öppnar aldrig länken man släppte på).
+- **För dig som vill jobba som ett kort, och övergången utan streck** (samma kväll). Leo:
   "För dig som vill jobba på main sidan ta bort den, och lägg till någon kolumn i slutet där de
   står för dig som vill jobba, var kreativ gör de snyggt", och om raden och garantin: "nu är det
   ett streck där som skiljer två färger de är ej snyggt, skugga till och ha den där animationen
@@ -108,7 +114,8 @@ sedan trådarna i Raden som glider).
   gjorde gör så de blir lite skyggade av färgen de har. Och elementet under de kolumners som rör
   sig måste blir bättre för den glitchar". Korten har en svag ton av sin färg (4 % över hela
   kortet och 14 % i hörnet vid ikonen) och en mjuk skugga i samma färg som står still; raden fick
-  30 px luft nedtill, för `overflow-y:hidden` klipper annars skuggan. Bandet glitchade av tre skäl:
+  48 px luft nedtill, för `overflow-y:hidden` klipper annars skuggan (med 30 px syntes den klippta
+  kanten som ett streck under korten, och bandet ligger 34 px upp över luften). Bandet glitchade av tre skäl:
   radens rullning lade till trådarnas tid (svep raden, och trådarna vred sig fort), de slog i
   bandets kanter och klipptes, och de ritades i CSS-pixlar, så att de tunna trådarna flimrade på en
   retinaskärm. Nu går de i sin egen takt utan pekare och rullning, tonas mot över- och underkanten
