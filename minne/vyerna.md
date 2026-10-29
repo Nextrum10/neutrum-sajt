@@ -243,7 +243,10 @@ sedan trådarna i Raden som glider).
   tonar fram ur sudd (BlurText). En linje längst ned fylls med scrollen. Samma
   norrsken står i Nästa steg i stället för de tre CSS-fläckarna. Etiketterna har
   ett ljus som glider genom texten (ShinyText, en gradient i texten med
-  `background-clip:text`), rubrikernas ord stiger och rätar upp sig i stället för
+  `background-clip:text`; gradienten byggs av `currentColor`, så NexLäx etikett,
+  som är genomskinlig för sin egen gradient, får ljuset lagt över den gradienten
+  i stället: utan det syntes bara ljuset, "exL", 2026-10-29, Leo: "Nexläx där
+  syns inte"), rubrikernas ord stiger och rätar upp sig i stället för
   att bara tona fram, och ämnesbandet lutar med farten (ScrollVelocity, `skewX` på
   raderna). Kostnaden hålls nere: duken ritas i halv upplösning (en tredjedel på
   tier `lite`), slingan går bara medan duken syns och fliken är framme, och med

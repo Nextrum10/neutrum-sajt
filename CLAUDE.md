@@ -822,7 +822,7 @@ ett punktnät bakom Nästa steg, knappt synligt så att ytan läses som sidans p
 den nyansen"; React Bits Dot Grid, en 2d-duk), som lyser upp och viker undan bara kring musen eller fingret, aldrig av sig
 självt (Leo: "man själv när man rör då ska punkterna röra sig inte automatisk"). Båda ritar bara medan de syns, och en
 enda bild med reducerad rörelse. Etiketterna
-har ett ljus som glider (ShinyText, CSS). Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
+har ett ljus som glider (ShinyText, CSS, i `currentColor`; NexLäx etikett är genomskinlig för sin gradient och får ljuset över gradienten, annars syns den inte). Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.
 3. `scrollIntoView` i en rad som flyttas med transform rullar sidan; bandet är `overflow:clip`,

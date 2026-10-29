@@ -3768,6 +3768,16 @@ html[data-motion="lite"] .nx-start .nx-et{
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
   animation:nx-glans-text 4.2s linear infinite;
 }
+/* NexLäx etikett har ingen färg att glänsa i (color:transparent, för
+   gradienten), så ljuset läggs över dess egen gradient. Gradienten är
+   lika stor som texten, och då flyttar bakgrundens läge den inte. */
+html[data-motion="full"] .nx-start .nlx-huvud .nx-et,
+html[data-motion="lite"] .nx-start .nlx-huvud .nx-et{
+  background:
+    linear-gradient(110deg,transparent 0 40%,rgba(255,255,255,.6) 50%,transparent 60% 100%) 100% 0/250% 100%,
+    linear-gradient(96deg,var(--amne-ma) 10%,var(--amne-en) 90%) 0 0/100% 100%;
+  -webkit-background-clip:text;background-clip:text;
+}
 @keyframes nx-glans-text{to{background-position:-150% 0}}
 
 @media (prefers-reduced-motion:reduce){
