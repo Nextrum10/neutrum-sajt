@@ -97,10 +97,15 @@ Deno.test('ett nej från Resend blir 502 med skälet', async () => {
   assertStringIncludes(String(svar.kropp.error), 'Resend svarade 422');
 });
 
-Deno.test('texten går som den är, och HTML:en har ett stycke per tom rad', () => {
+Deno.test('texten går som den är med signaturen under, och HTML:en har ett stycke per tom rad', () => {
   const text = 'Hej Bo,\n\nTack för din ansökan.\nRad två.\n\nHälsningar,\nNextrum';
   const r = renderaBrev('Din ansökan', text);
-  assertEquals(r.text, text);
+  assertEquals(r.text.startsWith(`${text}\n\n-- \n`), true);
+  assertStringIncludes(r.text, 'Av unga, för unga.');
+  assertStringIncludes(r.text, 'Org.nr 559609-3269');
+  // Avsändaren har sin egen hälsning, så signaturen har ingen.
+  assertEquals(r.html.includes('Vänliga hälsningar'), false);
+  assertStringIncludes(r.html, 'Av unga, för unga.');
   assertEquals(r.amne, 'Din ansökan');
   assertEquals((r.html.match(/<p style="margin:0 0 16px/g) ?? []).length, 3);
   assertStringIncludes(r.html, 'Tack för din ansökan.<br>Rad två.');

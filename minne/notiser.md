@@ -737,3 +737,9 @@ Ingen signatur: mejlen till oss (`utanSignatur`, `admin.ts`), intervjumejlet och
 innan den går, och HTML kan inte säga något annat än den), underlaget, nyhetsbrevet och aviseringen om en anmälan.
 "Exakt en bild" i `rendera_test.ts`, `kvitto_test.ts` och `ansokan_test.ts` är nu två.
 
+### Det vi skriver själva (2026-10-29)
+`renderaBrev()` i `_delad/ansokan_mejl.ts` (mejlet från adminvyn till den som sökt jobb) lägger `signaturHtml(false)` och
+`SIGNATUR_TEXT` under adminens text: ingen eget "Vänliga hälsningar,", för den som skriver har sin egen. Rutan i adminvyn
+(`kontaktaRuta`) säger att signaturen läggs på av sig själv. Öppna i Gmail går genom Gmails egen signatur och får ingen i
+länken. Intervjumejlet har med flit ingen: texten är Leos och visas innan den går.
+

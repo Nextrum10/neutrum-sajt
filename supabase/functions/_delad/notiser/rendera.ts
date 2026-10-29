@@ -335,11 +335,15 @@ export const SIGNATUR_TEXT = [
   `Nextrum AB · Org.nr ${ORGNR} · Läxhjälp i Stockholm`,
 ];
 
-export function signaturHtml(): string {
+/** `halsning: false` för ett brev där avsändaren skrivit sin egen hälsning (ansokan-mejl): signaturen
+ *  står då under den utan ett eget "Vänliga hälsningar,". */
+export function signaturHtml(halsning = true): string {
   const lank = (adress: string, text: string, fet: boolean) =>
     `<a href="${adress}" style="color:${FARG.text};text-decoration:none${fet ? ';font-weight:bold' : ''}">${text}</a>`;
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse">`
-    + `<tr><td style="padding:0 0 12px;font:400 15px/20px ${SANS};color:${FARG.text}">Vänliga hälsningar,</td></tr>`
+    + (halsning
+      ? `<tr><td style="padding:0 0 12px;font:400 15px/20px ${SANS};color:${FARG.text}">Vänliga hälsningar,</td></tr>`
+      : '')
     + `<tr><td><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse"><tr>`
     + `<td valign="top" style="padding:0 18px 0 0;border-right:3px solid ${SIG_ORANGE}">`
     + `<a href="${SAJT}" style="text-decoration:none"><img src="${LOGGA_URL}" width="84" height="84" alt="Nextrum" `
