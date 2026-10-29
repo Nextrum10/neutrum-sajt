@@ -1197,6 +1197,10 @@ const NXAdmin = (function () {
     kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, papperskorg, pill, rad, sthlmDag,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
     lägesväljare, räknas, får,
-    ärAdminkonto, ärNyNu, ärRaderad, ärSuperadmin, rita
+    ärAdminkonto, ärNyNu, ärRaderad, ärSuperadmin, rita,
+    /* Vad ett tal står för (2026-10-29): nyckel → funktion som svarar
+       { titel, text, saker }. Fylls av områdena, öppnas av
+       nextrum-admin-konsol.js när någon trycker på ett data-urval. */
+    urval: {}
   };
 })();
