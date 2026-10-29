@@ -18,7 +18,7 @@
 
   const { AVBOKNINGSSKAL, BOK_LAGE, S, elevNamn, hämtaMatchunderlag,
           kortDatum, läge, matchar, namnFör, pill, skriv, tabell, tomtText,
-          lägesväljare, väljare, ärSuperadmin } = NXAdmin;
+          lägesväljare, väljare, ärRaderad, ärSuperadmin } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaElever = (...a) => NXAdmin.rita.ritaElever(...a);
@@ -970,11 +970,22 @@
     const rader = (S.uppdrag || []).filter(u => !filter || u.status === filter);
     $('#uppdrag-antal').textContent = rader.length ? rader.length + ' st' : '';
 
+    /* Familjen och barnen öppnar sina paneler (2026-10-29, Leo: "i uppdrag
+       ska vi kunna klicka på familjen och se info"), som i resten av vyn.
+       En raderad familj har ingen panel att öppna och står som text. */
+    const familj = id => {
+      const p = id && S.personer ? S.personer[id] : null;
+      return p && p.role === 'parent' && !ärRaderad(p)
+        ? '<button type="button" class="eko-lank" data-dp="familj:' + esc(id) + '"><b>' + esc(namnFör(id)) + '</b></button>'
+        : '<b>' + esc(namnFör(id)) + '</b>';
+    };
     host.innerHTML = tabell([
-      { namn: 'Kund', rita: u => '<b>' + esc(namnFör(u.kund_id)) + '</b>' },
+      { namn: 'Kund', rita: u => familj(u.kund_id) },
       { namn: 'Gäller', rita: u => {
-        const barn = (S.elevlista || []).filter(e => e.uppdrag_id === u.id).map(e => e.name);
-        return barn.length ? esc(barn.join(', ')) : '<span class="adm-und">Inget barn</span>';
+        const barn = (S.elevlista || []).filter(e => e.uppdrag_id === u.id);
+        return barn.length
+          ? barn.map(e => '<button type="button" class="eko-lank" data-dp="elev:' + esc(e.id) + '">' + esc(e.name) + '</button>').join(', ')
+          : '<span class="adm-und">Inget barn</span>';
       } },
       { namn: 'Tjänst', rita: u => esc(tjanstNamn(u.tjanst))
         + (u.typ === 'engang' ? '<span class="adm-und">Engång</span>' : '') },

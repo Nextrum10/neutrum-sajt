@@ -711,7 +711,8 @@ Detaljer: `minne/grunden.md`.
   sektionens början (`.nt-hal`) och låter en ruta med två meningar ploppa upp bredvid; inga skärmdumpar, och den
   körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
   för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
-  `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan. `nextrum-landning.js` och `-css` är
+  `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan, och `nextrum-start-scen.js` startsidans
+  scener med GSAP (bentots ljus, manifestets ord och studievyns tippning, 2026-10-29). `nextrum-landning.js` och `-css` är
   landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`;
   flikarna (`data-lp-flikar`, Vad passen går ut på och Var passen hålls) och ljuset över korten fungerar också
   utan GSAP och med reducerad rörelse, och utan skriptet står flikarnas innehåll som lista och stycken.
@@ -730,11 +731,15 @@ Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
-Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
-som vill jobba (`#bli`) och Nästa steg. **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): ämnena, stadierna och guiderna i var sin grupp med ämnesfärgens prick, och under Område navets regioner (Hela Stockholm, Innerstaden, Söderort, Västerort, Norr och väster om stan, Söder och öster om stan), Online och In English, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp. **Orterna står i navets ortskatalog**, inte en och en i footern (2026-10-26, när stadsdelsområdena och kommunerna fick egna sidor: trettio länkar på varje sida, och trettiofyra efter sidrensningen 2026-10-27, hade varken varit snyggt eller sett ut som något annat än en doorway-lista); en ny ämnes-, stadie- eller guidesida läggs in i footern på alla sidor, en ny ort bara i generatorn, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
-"Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): fyra blad i
-en rad, två och två på telefon, läxhjälpen, expertisen, erfarenheten och NexLäx, var och en med en NexLäx-ämnesfärg
-i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
+Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdömena (`#rost`), För dig
+som vill jobba (`#bli`) och Nästa steg; Trygg hjälp gick upp i Hur hjälper vi 2026-10-29 (Leo: "Just nu är mycket bara
+i kolumner och tråkiga", med React Bits som förebild, och "Du får göra allt"). **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): ämnena, stadierna och guiderna i var sin grupp med ämnesfärgens prick, och under Område navets regioner (Hela Stockholm, Innerstaden, Söderort, Västerort, Norr och väster om stan, Söder och öster om stan), Online och In English, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp. **Orterna står i navets ortskatalog**, inte en och en i footern (2026-10-26, när stadsdelsområdena och kommunerna fick egna sidor: trettio länkar på varje sida, och trettiofyra efter sidrensningen 2026-10-27, hade varken varit snyggt eller sett ut som något annat än en doorway-lista); en ny ämnes-, stadie- eller guidesida läggs in i footern på alla sidor, en ny ort bara i generatorn, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
+"Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): på startsidan
+sedan 2026-10-29 ett bentorutnät (`.nx-bento`, avsnitt 19, efter React Bits MagicBento) med sju rutor, läxhjälpen stor med
+fotot hemma hos familjen, expertisen, erfarenheten, matchningen och tryggheten (ur Trygg hjälps band), NexLäx och Allt på
+ett ställe (ur manifestet) breda, var och en med ordningens färg i `--f`, och ett ljus som följer musen (`data-ljus`, bara
+med mus); på Vår idé fyra blad i en rad som förut. Inget nytt påstående i rutorna: varje mening stod redan på sidan.
+Erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
 platt remsa under bladen (`.hj-gar`, `id="betygsgaranti"`, 2026-10-08, Leo: "Gör betygsgarantin mindre"), med bara
 meningen "Vi erbjuder betygsgarantin för att vi är säkra på våra metoder." över, de fyra stegen 01–04 (siffra och
 rubrik) i en rad med streck emellan, varje steg under sitt blad (`.hj-gar-steg`, `data-gar-flode="tur"`, tänds i tur
@@ -766,8 +771,10 @@ barken (cinema, DE MÖRKA YTORNA; efter `#bli` fortsätter dess sken över grän
 Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
 kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
-(`data-bild`), och alt-texten står på steget (`data-alt`). Manifestets blad står bredvid varandra ner till
-340 px, och "Allt på ett ställe" blir aldrig längre än "Rätt match" (2026-10-08). Studiehjälparna står i en rad
+(`data-bild`), och alt-texten står på steget (`data-alt`). Manifestet har inga blad sedan 2026-10-29: rubriken,
+Rätt matchs mening och knapparna, och orden blir skarpa i takt med scrollen (`data-scrollord`); manifestets och Nästa
+stegs knapp har en kant där ett ljus glider (`.nx-stjarnkant`, StarBorder). Studievyns rubrik står i mitten, och fönstret
+tippar upp med scrollen på dator (`data-tipp`). Studiehjälparna står i en rad
 man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).
 Listorna 1–4 (`.nx-holdpunkter`, `.nx-apply-flow`) står två och två på telefon och har ingen fokuseffekt
 (2026-10-08: `hållpunkter()` är borta, inget kort tonar ned grannarna), och `.sid-kort` är en lista under 861 px.
@@ -778,7 +785,10 @@ animerad `box-shadow`, och en custom property sätts där den läses, för den �
 (2026-10-28, Leo: "göra den lite roligare ... främst alla landings sidor", med GSAP): `nextrum-landning.js` låter
 GSAP och ScrollTrigger (vendorade i `bibliotek/`, aldrig från en CDN) dra skenan i Så går det till, platserna som
 en linje och korten, bara på de genererade `laxhjalp-*` och guiderna; stegen tänds ändå med en klass, och utan GSAP
-eller med reducerad rörelse står allt färdigt i CSS. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
+eller med reducerad rörelse står allt färdigt i CSS. **Och startsidan** (2026-10-29): `nextrum-start-scen.js` låter GSAP
+dra manifestets ord (opacitet och sudd) och studievyns `.sd-rum` (bara tier `full`), och ljuset skriver `--gx`, `--gy` och
+`--gn` på den ruta det lyser på, registrerade utan arv (`@property`), så att en musrörelse aldrig räknar om det som står i
+rutan. Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.
 3. `scrollIntoView` i en rad som flyttas med transform rullar sidan; bandet är `overflow:clip`,
@@ -1286,7 +1296,7 @@ Detaljer: `minne/grunden.md`.
   trigger ändrades). Versionen var först 20261028120000, samma som nyhetsbrevets, och flyttades vid sammanslagningen
   med main. Juristen har inte läst policyns nya halvmening om fripassen.
 - **Nyhetsbrevet** (2026-10-28, `nyhetsbrev` 20261028120000, Leo: "gör detta arbete simpelt") är inte i drift.
-  Formuläret står i footern på varje öppen sida och i startsidans Nästa steg (`nextrum-nyhetsbrev.js`, laddat av
+  Formuläret står bara i footern på varje öppen sida (startsidans Nästa steg hade ett till, borttaget 2026-10-29, Leo: "Ta bort denna"; `nextrum-nyhetsbrev.js`, laddat av
   `nextrum-samtycke.js`, så aldrig i vyerna eller på en sida med en nyckel i adressen); ingen popup, inget i
   webbläsaren och ingen rabatt. Dubbel opt-in genom edge-funktionen `nyhetsbrev` (`verify_jwt` av, taket fem i timmen
   per IP-hash och 300 totalt, samma svar om adressen finns), och `/nyhetsbrev` bekräftar (`?b=`) och avslutar (`?a=`)

@@ -2,8 +2,9 @@
    NEXTRUM — nyhetsbrevet (2026-10-28)
 
    Två jobb, en fil:
-   1. Formuläret. Det ritas i footern på varje öppen sida och i varje
-      [data-nyhetsbrev] (startsidans Nästa steg). nextrum-samtycke.js
+   1. Formuläret. Det ritas i footern på varje öppen sida, och bara där
+      (startsidans Nästa steg hade ett till, borttaget 2026-10-29, Leo:
+      "Ta bort denna"). nextrum-samtycke.js
       laddar filen, för den står bara på de öppna sidorna: aldrig i
       vyerna, aldrig på /avanmal eller /nyhetsbrev, som har en nyckel i
       adressen. Footern ändras alltså inte i varje sida för hand.
@@ -53,10 +54,10 @@
   }
 
   let nummer = 0;
-  function formulär(kalla, stor) {
+  function formulär(kalla) {
     const id = 'nb-' + (++nummer);
     const f = document.createElement('form');
-    f.className = 'nb' + (stor ? ' nb-stor' : '');
+    f.className = 'nb';
     f.noValidate = true;
     f.setAttribute('aria-labelledby', id + '-r');
     f.innerHTML =
@@ -156,11 +157,8 @@
 
   function start() {
     if (document.getElementById('nb-ja')) { sidan(); return; }
-    document.querySelectorAll('[data-nyhetsbrev]').forEach(function (plats) {
-      plats.appendChild(formulär(plats.getAttribute('data-nyhetsbrev') || 'sida', true));
-    });
     const fot = document.querySelector('.ftr .ftr-brand');
-    if (fot) fot.appendChild(formulär('footer', false));
+    if (fot) fot.appendChild(formulär('footer'));
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

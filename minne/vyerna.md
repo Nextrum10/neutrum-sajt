@@ -78,6 +78,50 @@ kortet, bara med mus) går också utan GSAP och med reducerad rörelse;
 lästråden överst bara med rörelsen på. Utan skriptet står flikarnas
 innehåll som förut, lista och stycken.
 
+**Startsidan får en ny form** (2026-10-29). Leo: "Just nu är mycket bara i
+kolumner och tråkiga", med reactbits.dev som förebild ("coolare övergångar,
+sektionen som fångar ögat och en ny struktur"), och sedan "Du får göra allt,
+men du ska [ge] en preview länk innan jag eventuellt merga". Nästan varje
+sektion var samma mall: etikett, rubrik till vänster, ingress till höger
+under ett streck och en rad vita kort, och "Allt på ett ställe" stod två
+gånger. React Bits är React, så inget kom in därifrån: tre av dess idéer är
+skrivna om för hand i `nextrum-start-scen.js`, med GSAP som redan låg i
+`bibliotek/` för landningssidorna. Det som inte togs, med flit: bakgrunderna
+i WebGL (Aurora, Silk och de andra; tunga på en telefon och fel mot
+papperet), effekterna på muspekaren (finns inte på en telefon), glitch- och
+dekrypteringstext (fel ton) och CountUp (sidan visar inga antal).
+- **Bentot** (MagicBento) i Hur hjälper vi: sju rutor i fyra kolumner,
+  läxhjälpen stor (två gånger två) med fotot hemma hos familjen
+  (`21-hemma-hos-familjen`, som inget annat på startsidan använder) och
+  platserna som lappar ovanpå, fyra små (expertisen, erfarenheten,
+  matchningen, tryggheten) och två breda (NexLäx, Allt på ett ställe med
+  plattformens delar som märken). Matchningen och tryggheten kom ur Trygg
+  hjälps band, Allt på ett ställe ur manifestet, och Trygg hjälp-sektionen
+  gick: bandets andra kort sa samma sak som rutorna. Garantins remsa står kvar
+  under, oförändrad. Två och två under 1100 px, en spalt under 340 px.
+- **Ljuset**: med mus lyser rutans kant i dess färg där musen är (en
+  radiell gradient i border-box, som `.nx-bubbla`), ett svagt sken lyser
+  inuti, och ett stort sken följer musen över rutnätet (`.bn-sken`, med
+  translate). `--gx`, `--gy` och `--gn` är registrerade utan arv
+  (`@property`): studievyns gamla lutning hackade för att variabeln ärvdes
+  ner i hela fönstret.
+- **Manifestet** (ScrollReveal): inga blad, bara rubriken, Rätt matchs
+  mening och knapparna, med mer luft. Med GSAP går orden från suddiga till
+  skarpa i takt med scrollen och rubriken rätar upp sig från tre grader;
+  suddet bara på dator. Utan GSAP tonar orden fram som förut (ordfyllnaden).
+- **Studievyn** har rubriken i mitten, och på dator tippar fönstret upp ur
+  papperet med scrollen (rotateX 26 grader till noll) i stället för att resa
+  sig en gång. Rundturens pekare räknar med offsetLeft, så den hamnar rätt
+  också medan fönstret lutar.
+- **Stjärnkanten** (StarBorder) på manifestets och Nästa stegs knapp: två
+  ljusfläckar som glider längs kanten med translate. Står still med reducerad
+  rörelse.
+- ScrollTrigger mäts om när sidans höjd ändras (Just nu visas först när
+  erbjudandet hämtats, och studiehjälparna fylls i efteråt).
+För elever och föräldrar och Vår idé har kvar sina kopior av studievyn och
+Hur hjälper vi som förut.
+
+
 Fyra saker som kostade en omgång:
 
 1. **`once`-scenerna i `NXMotion` avslöjade aldrig något.** Scenen
@@ -328,7 +372,7 @@ Första läget räknas innan `.i-gang` sätts. Fällor:
 - `.nx-flode`, `[data-flode]` och `.pr-flode` hör till prissidans
   betalflöde, inte garantin.
 
-**Manifestets blad bredvid varandra.** Leo: "På mobil vyn ska de
+**Manifestets blad bredvid varandra** (borta sedan 2026-10-29, se Startsidan får en ny form). Leo: "På mobil vyn ska de
 kolumnerna under rätt person kan göra stor skillnad bredvid varandra." Två
 spalter ner till 340 px (under det en). Varje blad har en h3, Rätt match
 och Allt på ett ställe (The right match, All in one place). Bladet är ett
@@ -395,7 +439,7 @@ sidan där färgerna passar in."
 **Ordningen**: hero, Hur hjälper vi ditt barn (`#sa-hjalper-vi`), Just nu
 (`#just-nu`), Vår idé (`#om`), studievyn, NexLäx (`#nexlax`), Från
 intresseanmälan till första passet (`#hur`), studiehjälparna, Trygg hjälp
-(`#plattformen`), bildväggen, omdömena (`#rost`, brevet), För dig som vill
+(`#plattformen`, borta sedan 2026-10-29: bentot bär den), bildväggen, omdömena (`#rost`, brevet), För dig som vill
 jobba (`#bli`) och Nästa steg. Sist före footern stod 2026-10-10 till 2026-10-13 Läxhjälp för just ert barn (`#laxhjalp-oversikt`): fyra grupper med länkar till alla läxhjälps- och guidesidor i `<details>`, för internlänkningens skull. 2026-10-12 blev grupperna stängda på alla bredder och fick glida upp med ett tryck (Leo: "ha de inbäddade i ämne, årskurs, område och guider så man behöver trycka på de för att få upp dem", "gör de lite mer smooth"), och ytan blev svart i ljust läge, footerns `--ftr-bg`. Dagen efter frågade Leo vart landningssidorna försvunnit: fyra hopfällda rubriker på samma svarta som footern direkt under såg ut som en del av footern. Först blev de öppna på datorn och stängda på telefonen, och samma kväll togs sektionen bort (Leo: "skit i att lägga tillbaka de, lägg in de längst ner vid de andra landingssidorna och gör de snyggt"). Länkarna står nu i footerns block Läxhjälp (`.ftr-lax`, cinemas FOTEN), på varje publik sida och båda språken, i stället för footerns gamla spalt Läxhjälp med sju länkar: rubriken och en rad till vänster, i första spalten (27 % över 1100 px, som märket i raden ovanför, så att grupperna börjar där Nextrum-spalten börjar), och de fyra grupperna med ämnesfärgens prick i ordningen från avsnitt 18, `-l`-syskonen eftersom footern är mörk i båda lägena. Guiderna har den bredare spalten (1,6 mot 1) så att de står på en rad på datorn, och "årskurs 6" och "årskurs 9" hålls ihop med `&nbsp;`. Under 820 px står grupperna två och två. Sedan 2026-10-26 är gruppen Område navets regioner (Hela Stockholm, Innerstaden, Söderort, Västerort, Norr och väster om stan, Söder och öster om stan), Online och In English, inte en länk per ort: orterna blev trettio, och de står i navets ortskatalog (`minne/genererat-och-ci.md`). Footerns länkar väger något mindre hos Google än en sektion i innehållet, men nu länkas varje landningssida från alla publika sidor i stället för från två. En ny sida i kartan läggs in i blocket på alla sidor (`var-ide.html` är `bygg-omradessidor.py`s källa till skalet). Sektionerna flyttades som hela block mellan
 kommentarsbanderollerna, likadant på /en/; numren i banderollerna är gamla.
 Hero är orörd utom priset (399 kr, `data-stat` ur `nextrum-config.js`).
@@ -611,7 +655,8 @@ finns redan."
 
 **Garantin som en remsa** (avsnitt 17, startsidan och Vår idé, båda
 språken). Hur hjälper vi ert barn (rubriken "ert barn?" sedan 2026-10-09,
-Leo; förut "ditt barn?", och på engelska "your child?" som förut) har fyra blad i en rad (läxhjälpen,
+Leo; förut "ditt barn?", och på engelska "your child?" som förut) har på Vår idé fyra blad i en rad, och
+på startsidan sedan 2026-10-29 bentot (se Startsidan får en ny form) (läxhjälpen,
 expertisen, erfarenheten, NexLäx; två och två på platta och telefon, en
 spalt under 340 px), och under dem står garantin som en låg remsa med kant
 av lera (`div.hj-gar#betygsgaranti`, utanför `ul.hj-grid`): meningen "Vi
