@@ -1286,7 +1286,7 @@ Detaljer: `minne/grunden.md`.
   trigger ändrades). Versionen var först 20261028120000, samma som nyhetsbrevets, och flyttades vid sammanslagningen
   med main. Juristen har inte läst policyns nya halvmening om fripassen.
 - **Nyhetsbrevet** (2026-10-28, `nyhetsbrev` 20261028120000, Leo: "gör detta arbete simpelt") är inte i drift.
-  Formuläret står i footern på varje öppen sida och i startsidans Nästa steg (`nextrum-nyhetsbrev.js`, laddat av
+  Formuläret står bara i footern på varje öppen sida (startsidans Nästa steg hade ett till, borttaget 2026-10-29, Leo: "Ta bort denna"; `nextrum-nyhetsbrev.js`, laddat av
   `nextrum-samtycke.js`, så aldrig i vyerna eller på en sida med en nyckel i adressen); ingen popup, inget i
   webbläsaren och ingen rabatt. Dubbel opt-in genom edge-funktionen `nyhetsbrev` (`verify_jwt` av, taket fem i timmen
   per IP-hash och 300 totalt, samma svar om adressen finns), och `/nyhetsbrev` bekräftar (`?b=`) och avslutar (`?a=`)
