@@ -1424,9 +1424,14 @@ undan när panelen öppnas.
   `nextrum-admin-oversikt.js`): `st_*` för Statistik, `tr_*` för tratten och
   `ov_*` för Översiktens fyra tal. De räknar ur SAMMA urval som talet:
   Statistikens tal kommer ur analysvyerna, så raderna följer vyernas villkor
-  (`passunderlag.har_rapport` utan adminkonton, `betald_at` och `stripe_skarp`,
-  `status = 'cancelled'` och `avbokad_av`), inte Översiktens. Passunderlaget
-  hämtas först om Ekonomi inte öppnats.
+  (`passunderlag.har_rapport` utan adminkonton, `status = 'cancelled'` och
+  `avbokad_av`). Passunderlaget hämtas först om Ekonomi inte öppnats.
+- **Betalt och Översiktens intäkt räknar på samma lista** (2026-10-29, Leo: "ja"
+  på att rätta skillnaden): `inbetalningar()` i `nextrum-admin-oversikt.js`, med
+  passen, köpta timmar och tillägg för övertid, netto efter återbetalningar och
+  utan testbetalningar, på månaden pengarna kom in. Förut tog Statistik bara
+  passen ur `analys_ekonomi.kortbetalt_ore`, så en köpt plan stod på Översikt
+  men inte i Statistik. Vyn är orörd; ingen annan läser den kolumnen.
 - Ett nytt tal i Översikt eller Statistik får sitt urval i samma ändring.
   Listorna i de andra sektionerna (familjer, elever, pass, ansökningar,
   betalningarna) öppnade redan sin panel per rad, och deras tal är flikarnas

@@ -488,6 +488,23 @@ async function genomAdminvyn(webb, roll, o) {
     }
     prova(namn + ': ' + sek + ': varje tal öppnar sina rader', fel.length === 0, fel.join(' | '));
     if (sek === 'statistik') {
+      /* Betalt räknar som Översiktens intäkt (2026-10-29): passen och
+         köpta timmar, utan testbetalningar. Fixturens plan (3 032 kr) är
+         en testbetalning och står utanför; räknas den som skarp står den
+         med, bredvid passet (399 kr). */
+      const betaltTal = () => page.locator('section[data-sek="statistik"] .adm-kpi[data-urval="st_betalt"] b').innerText().catch(() => '');
+      const utanTest = await betaltTal();
+      await page.evaluate(() => { NXAdmin.S.klippkortTest = new Set(); NXAdmin.rita.ritaStatistik(); });
+      const medKöpet = await betaltTal();
+      await page.locator('section[data-sek="statistik"] .adm-kpi[data-urval="st_betalt"]').click();
+      await page.waitForSelector('.adm-urval .vy-rad', { timeout: 8000 }).catch(() => {});
+      const betaltRader = await page.locator('.adm-urval .adm-urval-inne').innerText().catch(() => '');
+      prova(namn + ': statistik: Betalt räknar köpta timmar men aldrig testbetalningar',
+        /^399\s?kr$/.test(utanTest.trim()) && /3\s?431/.test(medKöpet) && /Köpta timmar/.test(betaltRader),
+        utanTest + ' | ' + medKöpet + ' | ' + betaltRader.slice(0, 160));
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !document.querySelector('.adm-urval'), null, { timeout: 3000 }).catch(() => {});
+      await page.evaluate(() => NXAdmin.hämtaAllt().then(() => NXAdmin.rita.ritaStatistik())).catch(() => {});
       // En rad öppnar sin panel, och rutan går undan.
       await page.locator('section[data-sek="statistik"] .tratt-steg[data-urval]').first().click();
       await page.waitForSelector('.adm-urval .vy-rad[data-dp]', { timeout: 8000 }).catch(() => {});
