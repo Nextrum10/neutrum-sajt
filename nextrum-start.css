@@ -665,12 +665,10 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
 .nlx-spalt{display:flex;flex-direction:column;min-width:0}
 .nlx-spalt-text{grid-area:vanster}
 .nlx-spalt-bild{grid-area:hoger}
-.nlx-spalt-bild .nlx-bild{align-self:center}
 .nlx-huvud{grid-area:huvud}
 .nlx-scen{grid-area:scen}
 .nlx-delar{grid-area:delar}
 .nlx-handling{grid-area:handling}
-.nlx-bild{grid-area:bild;justify-self:center;margin-top:clamp(18px,2vw,26px)}
 .nlx-fot{grid-area:fot}
 
 /* ---------- rubriken ----------
@@ -847,17 +845,14 @@ html.nx-sr .nlx-delar.nlx-in .nlx-del{opacity:1;translate:0 0}
   font-size:.84rem;font-weight:600;letter-spacing:-.01em;line-height:1.2;color:var(--bl);
 }
 .nlx-amnen li::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--f);flex:none}
-.nlx-not{font-size:.92rem;line-height:1.55;color:var(--bl-2);max-width:60ch;text-wrap:pretty}
 /* Matematik, svenska och engelska är det vi bygger mest på just nu
-   (Leo 2026-10-12): deras brickor står i ämnets ton, och raden under
-   dem säger det i ord, så att färgen aldrig bär beskedet ensam. De
-   andra ämnena finns redan och står som förut. */
+   (Leo 2026-10-12): deras brickor står i ämnets ton. Raden under dem
+   som sa det i ord togs bort 2026-10-29 (Leo), så tonen är nu bara en
+   markering; den bär inget besked som någon måste förstå. */
 .nlx-amnen li.fokus{
   background:color-mix(in srgb,var(--f) 10%,var(--kort));
   border-color:color-mix(in srgb,var(--f) 45%,var(--ln));
 }
-.nlx-bygger{font-size:.92rem;line-height:1.55;color:var(--bl-2);max-width:60ch;text-wrap:pretty}
-.nlx-bygger b{font-weight:650;color:var(--bl)}
 
 /* ---------- scenen: telefonen, omloppet och lapparna ----------
    --tw är telefonens bredd, och allt runt den räknas ur den. Den sätts
@@ -1496,7 +1491,7 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
   .nlx-spalt{display:contents}
   .nlx-grid{
     grid-template-columns:minmax(0,1fr);
-    grid-template-areas:"huvud" "scen" "delar" "bild" "handling" "fot";
+    grid-template-areas:"huvud" "scen" "delar" "handling" "fot";
   }
   /* Telefonen följer också höjden, så att den, noderna och den visade
      delens text ryms på en telefonskärm samtidigt (granskningen
@@ -1504,7 +1499,6 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
      på 390×844). 315 px är sidhuvudet, noderna, texten och luften. */
   .nlx-scen{--tw:clamp(220px,calc((100svh - 315px) * 9 / 19),min(76vw,312px));margin-top:clamp(36px,7vw,56px)}
   .nlx-delar{margin-top:clamp(26px,5vw,40px)}
-  .nlx-bild{justify-self:start}
   .nlx-dekor{
     background:
       radial-gradient(90% 46% at 50% 46%,transparent 0 30%,var(--pap) 74%),
@@ -1561,7 +1555,6 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
   .nlx-fot{padding:14px;border-radius:18px;gap:12px}
   .nlx-amnen{gap:6px}
   .nlx-amnen li{padding:5px 10px 5px 8px;font-size:.8rem;gap:6px}
-  .nlx-not,.nlx-bygger{font-size:.88rem}
 }
 
 /* ---------- reducerad rörelse ----------

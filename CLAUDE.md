@@ -242,10 +242,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`nx.nexlax.bana.<barn>`, på `lagring.html`).
   Ett klart steg leder vidare med EN knapp, Fortsätt, till nästa del eller nästa steg, och kortet vid en prick har en knapp
   (Leo 2026-10-27: "som duolingo nu gör du de för komplicerat").
-  Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna på För elever och
-  föräldrar (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt;
-  på startsidan står brickorna, meningarna och bildtexterna under NexLäx och studievyn inte sedan 2026-10-29 (Leo: "Allt
-  jag ritade runt ska bort på hemsidan"), och illustrationernas `aria-label` säger fortfarande att innehållet är ett exempel.
+  Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står sist i Välj ämne (`.nl-valj-not`), och de tre
+  brickorna på För elever och föräldrar har klassen `fokus`; på startsidan står brickorna, meningarna och bildtexterna
+  under NexLäx och studievyn inte sedan 2026-10-29 (Leo: "Allt jag ritade runt ska bort på hemsidan"), och på För elever
+  och föräldrar står brickorna men inte NexLäx bildtext, meningen om vad vi bygger eller raden om stadierna (samma kväll,
+  Leo: "ta bort detta som jag markera"). Illustrationernas `aria-label` säger fortfarande att innehållet är ett exempel.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare och en kampanjkod per
   affisch. **En familjs kod och en kampanjkod gäller intresseanmälan (`leads.kod`), en studiehjälpares
   jobbansökan (`applications.kod`)** (2026-10-13, Leo: "ansökning ska inte kunna använda koder från
