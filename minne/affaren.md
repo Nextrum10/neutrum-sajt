@@ -1080,7 +1080,7 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
   bort koden när `raderad_at` sätts (en egen trigger, inte en lapp i
   `radera_person`, som flera sessioner skriver om), och vid en hel
   radering följer den med genom nycklarna. Anmälningarna tappar då
-  koden. En anmälan som avidentifieras behåller den.
+  koden. En anmälan raderas med sin kod (sedan 2026-10-29; förut avidentifierades den och behöll koden).
 - **Adminvyn**: "Tipsad av …" i anmälans panel (`dpKod`), listan med
   anmälda, kunder och första pass (`tipskoder_lage()`, bara admin), och
   strömbrytaren under Betalningar → Inställningar. `TIPS` visas inte

@@ -56,10 +56,9 @@
   function ritaLeads() {
     const sök = $('#leads-sok').value.trim();
     const st = $('#leads-status').value;
-    /* En avidentifierad anmälan är ingen person längre, bara en rad som
-       statistiken räknar. Den står inte i listan, men antalet sägs. */
+    /* Anmälningar raderas sedan 2026-10-29 i stället för att avidentifieras;
+       filtret står kvar tills migrationen anmalningar_raderas_helt är körd. */
     const alla = S.leads.filter(l => !ärRaderad(l));
-    const gallrade = S.leads.length - alla.length;
     const rader = alla
       .filter(l => !st || l.status === st)
       .filter(l => matchar(l, ['parent_name', 'email', 'child_name', 'subject', 'grade',
@@ -76,11 +75,7 @@
       /* Papperskorgen (2026-10-26): bara den här anmälan, i varje läge. */
       bort: l => papperskorg('anmalan', l.id, l.parent_name || l.email),
       tomt: tomtText(sök || st, 'Ingen intresseanmälan matchar filtret', 'Inga intresseanmälningar än')
-    }) + (gallrade
-      ? '<p class="xsmall" style="color:var(--bl-3);margin:12px 0 0">'
-        + gallrade + (gallrade === 1 ? ' anmälan är avidentifierad' : ' anmälningar är avidentifierade')
-        + ' och räknas bara i statistiken.</p>'
-      : '');
+    });
     ritaPanelen();
   }
 

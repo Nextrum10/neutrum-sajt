@@ -872,7 +872,7 @@ Kontaktad som val, Boka digitalt möte, Skicka utbildningen och Markera utbildad
 **Papperskorgen** (2026-10-26, `papperskorgen`, Leo: "radera uppgifter från det stället ... så finns personen kvar i
 vårt system och i familj"): en ikon sist på varje rad under Intresseanmälningar och i varje flik under Ansökningar,
 bara för superadmin (`papperskorg()` i kärnan, `o.bort` i `namnlista()`), som tar bort den raden och inget annat
-(`ta_bort_ur_stallet()`): en anmälan avidentifieras, en ansökan tas bort med CV:t först. Rutan (`visaPapperskorg`)
+(`ta_bort_ur_stallet()`): en anmälan raderas (sedan 2026-10-29), en ansökan tas bort med CV:t först. Rutan (`visaPapperskorg`)
 säger ur `stalle_lage()` var personen står kvar; är raden det sista stället heter den "Ta bort X helt?" med Avbryt och
 Gå vidare, och databasen kräver det svaret (`p_helt`). Den frågar också när personen står kvar, för ett CV går inte
 att få tillbaka. Radera i panelen är vägen när personen ska bort med allt från samma adress.
@@ -988,8 +988,11 @@ Detaljer: `minne/grunden.md`.
   (`varvningsbonus_ny`), och unikheten gäller bara levande rader (en per ansökan och konto som inte är annullerad, en
   intjänad eller utbetald per person). Personen räknas som en HMAC av adressen (`intern.varvning_epost_nyckel`: gemener,
   utan +tagg, och Gmail utan punkter) med `notis_konfig.barn_nyckel`: byts nyckeln räknas en tidigare värvad som ny.
-- **Gallringen**: lagringstiderna hålls av databasen (`DATASKYDD.md` är registret). Anmälningar
-  avidentifieras, konton raderas aldrig av sig själva, ett jobb som fastnat blir en uppgift, och
+- **Gallringen**: lagringstiderna hålls av databasen (`DATASKYDD.md` är registret). **Anmälningar
+  raderas helt** (2026-10-29, `anmalningar_raderas_helt`, Leo: "de avidentifierade anmälningarna och ansökningarna
+  ska bort helt och hållet ur systemet och ej sparas någonstans"): nattjobbet efter sex månader, papperskorgen och
+  Radera tar raden, ingenting står kvar för statistiken, och `intagna_anmalningar` raderas med familjen, också när den
+  avidentifieras. Ansökningar avidentifierades aldrig: de tas bort med CV:t. Konton raderas aldrig av sig själva, ett jobb som fastnat blir en uppgift, och
   `landningssida` bär bara våra utm-taggar. Ett nytt rekryteringssteg med tidsstämpel ska in i
   `intern.ansokan_gallras_fran()`.
 - **Adminrollerna**: sanningen är `admin_roller`, och `profiles.is_admin` speglar superadmin.
@@ -1277,6 +1280,14 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Anmälningarna raderas helt** (2026-10-29, `anmalningar_raderas_helt` 20261029100000) är inte i drift. Efter merge:
+  Vercel lägger ut vyerna och policyn, sedan migrationen avsnitt för avsnitt med `execute_sql` (den har `delete` i
+  funktioner och utanför, så verktygets bekräftelse kan fråga), md5-vakter mot driften 2026-10-29, och registrering med
+  filens text. Ersättningarna i `radera_person` och `ta_bort_ur_stallet` träffar en gång var i driften (läst 2026-10-29),
+  och nattjobbets nya kropp är provad mot stubbtabeller i en lokal Postgres 16; den lokala databasen gick inte att bygga
+  (Docker Hub svarade 429), så `rls-test.sql` är inte körd. I driften fanns tre avidentifierade anmälningar, som
+  migrationen raderar, och inga avidentifierade ansökningar. Kopior utanför databasen rörs inte: mejlen om nya
+  anmälningar i info@ (`lead-notis`), Resends logg och Supabases backuper, som går ut av sig själva.
 - **Signaturen i mejlen** (2026-10-28, `rendera.ts`, PR #381) är i drift sedan kvällen 2026-10-28 (Leo: "ja, merga och
   driftsätt"): PR #381 mergades (1f7a4b4) och fem funktioner lades ut från merge-commiten, genom MCP från hjälpagenter:
   `notis-ko` v41, `ansokan-notis` v11, `bjud-in` v13, `lead-notis` v33 (kvittot till familjen) och `admin-paminnelse`
