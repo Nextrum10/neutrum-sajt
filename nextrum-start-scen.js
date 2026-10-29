@@ -7,16 +7,19 @@
    finns inget ramverk och inget byggsteg, så det som togs därifrån är
    skrivet om för hand, i sidans egen stil:
 
-     aurora     Aurora: ett norrsken i WebGL bakom Hur hjälper vi och
-                Nästa steg, i sidans lera, orange och rosa. Ritas i låg
-                upplösning (det är suddigt ändå), bara medan det syns och
-                fliken är framme, och står still med reducerad rörelse.
-     hjscen     Hur hjälper vi som en scen: den står still medan man
-                scrollar, och sex lägen byts mitt på skärmen, rubriken
-                först och sedan de fem budskapen. Rubrikens ord flyger upp
-                ur en springa (SplitText), texten tonar fram ur sudd
-                (BlurText). Inga rutor: Leo om bentot och högen, "De blir
-                liksom 8 kolumner direkt".
+     trådar     Threads: trådar i WebGL som böljar bakom Hur hjälper vi,
+                på ytans vita, i färgen från budskapet i fokus. Ritas i
+                låg upplösning, bara medan de syns och fliken är framme,
+                och står still med reducerad rörelse.
+     norrsken   Aurora: ett norrsken i WebGL i Nästa steg, i sidans lera
+                och orange, på samma villkor.
+     hjscen     Hur hjälper vi som en rad som glider: ytan står still
+                medan man scrollar, och rubriken och de fem budskapen går
+                åt vänster i EN rad. Ett korts rubrik stiger upp ur en
+                springa när kortet kommer in (SplitText), texten tonar
+                fram ur sudd (BlurText). Leo om den mörka scenen före:
+                "Jag gillar inte att bakrunden är svart och orange", och
+                korten ska gå "sidleds snyggt med en vit rörlig bakrund".
      bandfart   ScrollVelocity: ämnesbandet lutar åt det håll man
                 scrollar, mer ju fortare, och rätar upp sig när man
                 stannar.
@@ -28,14 +31,15 @@
 
    Undantaget från "skriptet sätter klasser, CSS rör sig", som på
    landningssidorna (nextrum-landning.js): GSAP skriver transform,
-   opacitet och filter per bildruta på rubriken, fönstret och bandet, och
-   framstegslinjen i scenen får sin skala. Lägena i scenen byts med en
-   klass, och övergångarna är CSS. Inget här räknar om sidans layout.
+   opacitet och filter per bildruta på rubriken, fönstret, bandet och
+   scenens rad, och framstegslinjen får sin skala. Fokus och inträde i
+   scenen sätts med klasser, och övergångarna är CSS. Inget här räknar
+   om sidans layout utom scenens höjd, en gång per omräkning.
 
    Utan det här skriptet, utan GSAP eller med reducerad rörelse står
-   allt som nextrum-start.js lämnar det: scenens text under varandra på
-   den mörka ytan, orden som tonar fram när rubriken syns och fönstret
-   som reser sig. Inget startläge här gömmer något.
+   allt som nextrum-start.js lämnar det: scenens kort i en rad att svepa
+   i, orden som tonar fram när rubriken syns och fönstret som reser sig.
+   Inget startläge här gömmer något.
    Ingen text skrivs härifrån (CLAUDE.md, avsnitt 4).
    ============================================================ */
 
@@ -54,18 +58,106 @@
     try { fn(); } catch (e) { if (window.console) console.warn('nextrum-start-scen: ' + namn, e); }
   }
 
-  /* ---------- norrskenet (Aurora) ----------
-     Samma fragmentshader som React Bits Aurora, i WebGL 1 utan bibliotek:
-     ett simplexbrus som höjer och sänker en färgramp med tre stopp, så
-     att ljuset böljar. Färgerna läses ur CSS (--aurora-1, -2, -3 på
-     elementet runt), så de följer sidans tokens och mörka läget.
-
-     Det som håller det billigt: duken ritas i en bråkdel av sin storlek
-     (SKALA) och skalas upp av webbläsaren, slingan går bara medan duken
-     syns och fliken är framme, och med reducerad rörelse ritas en enda
-     bild. Finns ingen WebGL står ytans egen gradient kvar (CSS). */
+  /* ---------- duken (WebGL) ----------
+     Norrskenet och trådarna delar allt utom sin fragmentshader: en
+     triangel över hela duken, ett program, och slingan. Det som håller
+     det billigt: duken ritas i en bråkdel av sin storlek (skala) och
+     skalas upp av webbläsaren, slingan går bara medan duken syns och
+     fliken är framme, och med reducerad rörelse ritas en enda bild.
+     Finns ingen WebGL står ytans egen bakgrund kvar (CSS). Färgerna läses
+     ur CSS på elementet runt duken, så de följer sidans tokens och
+     mörka läget. */
   const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}';
-  const FS = [
+
+  function färg(v) {
+    const c = document.createElement('canvas').getContext('2d');
+    c.fillStyle = '#000';
+    c.fillStyle = (v || '').trim() || '#000';
+    const hex = c.fillStyle;
+    if (hex[0] !== '#') return [0, 0, 0];
+    return [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+  }
+
+  function duk(el, FS, val) {
+    if (el.dataset.gl === 'klar') return null;
+    el.dataset.gl = 'klar';
+    const gl = el.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, powerPreference: 'low-power' });
+    if (!gl) return null;
+    const skugga = (typ, källa) => {
+      const sk = gl.createShader(typ);
+      gl.shaderSource(sk, källa); gl.compileShader(sk);
+      return gl.getShaderParameter(sk, gl.COMPILE_STATUS) ? sk : null;
+    };
+    const v = skugga(gl.VERTEX_SHADER, VS), f = skugga(gl.FRAGMENT_SHADER, FS);
+    if (!v || !f) return null;
+    const pr = gl.createProgram();
+    gl.attachShader(pr, v); gl.attachShader(pr, f); gl.linkProgram(pr);
+    if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return null;
+    gl.useProgram(pr);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(pr, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const u = n => gl.getUniformLocation(pr, n);
+    const uT = u('t'), uR = u('r');
+
+    const färger = () => val.färger(gl, u, getComputedStyle(el.parentElement));
+    färger();
+
+    const skala = val.skala[tier() === 'full' ? 0 : 1];
+    function storlek() {
+      const w = Math.max(2, Math.round(el.clientWidth * skala));
+      const h = Math.max(2, Math.round(el.clientHeight * skala));
+      if (el.width !== w || el.height !== h) { el.width = w; el.height = h; }
+      gl.viewport(0, 0, w, h);
+      gl.uniform2f(uR, w, h);
+      if (val.storlek) val.storlek(gl, u, skala);
+    }
+
+    const stilla = reducerad();
+    let syns = false, ram0 = 0, start = performance.now(), tidLagd = 0;
+    function rita(nu) {
+      ram0 = 0;
+      storlek();
+      const t = stilla ? val.stillaTid : (tidLagd + (nu - start)) / 1000 * val.fart;
+      gl.uniform1f(uT, t);
+      if (val.varje) val.varje(gl, u, t);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      if (!stilla && syns && !document.hidden) ram0 = requestAnimationFrame(rita);
+    }
+    function gå() {
+      if (ram0 || !syns || document.hidden) return;
+      start = performance.now();
+      ram0 = requestAnimationFrame(rita);
+    }
+    function stopp() {
+      if (!ram0) return;
+      cancelAnimationFrame(ram0); ram0 = 0;
+      tidLagd += performance.now() - start;
+    }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(es => {
+        syns = es.some(e => e.isIntersecting);
+        if (syns) gå(); else stopp();
+      }, { rootMargin: '10% 0px' }).observe(el);
+    } else { syns = true; gå(); }
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stopp(); else gå(); });
+    if ('ResizeObserver' in window) new ResizeObserver(() => { if (stilla || !ram0) requestAnimationFrame(rita); }).observe(el);
+    matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { färger(); if (stilla) rita(performance.now()); });
+    el.addEventListener('webglcontextlost', e => { e.preventDefault(); stopp(); syns = false; });
+    el.classList.add('gl-pa');
+    if (stilla) requestAnimationFrame(rita);
+    return { färger, rita: () => { if (stilla || !ram0) requestAnimationFrame(rita); } };
+  }
+
+  /* ---------- norrskenet (Aurora), i Nästa steg ----------
+     Samma fragmentshader som React Bits Aurora, i WebGL 1: ett
+     simplexbrus som höjer och sänker en färgramp med tre stopp, så att
+     ljuset böljar. Färgerna ur --aurora-1, -2 och -3. */
+  const AURORA = [
     'precision mediump float;',
     'uniform float t;uniform vec2 r;uniform vec3 c0;uniform vec3 c1;uniform vec3 c2;uniform float amp;',
     'vec3 permute(vec3 x){return mod(((x*34.0)+1.0)*x,289.0);}',
@@ -87,116 +179,117 @@
     ' gl_FragColor=vec4(i*ramp*a,a);}'
   ].join('\n');
 
-  function färg(v) {
-    const c = document.createElement('canvas').getContext('2d');
-    c.fillStyle = '#000';
-    c.fillStyle = v.trim() || '#000';
-    const hex = c.fillStyle;
-    if (hex[0] !== '#') return [0, 0, 0];
-    return [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
-  }
-
-  function aurora(duk) {
-    if (duk.dataset.aurora === 'klar') return;
-    duk.dataset.aurora = 'klar';
-    const gl = duk.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, powerPreference: 'low-power' });
-    if (!gl) return;
-    const skugga = (typ, källa) => {
-      const s = gl.createShader(typ);
-      gl.shaderSource(s, källa); gl.compileShader(s);
-      return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
-    };
-    const v = skugga(gl.VERTEX_SHADER, VS), f = skugga(gl.FRAGMENT_SHADER, FS);
-    if (!v || !f) return;
-    const pr = gl.createProgram();
-    gl.attachShader(pr, v); gl.attachShader(pr, f); gl.linkProgram(pr);
-    if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return;
-    gl.useProgram(pr);
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-    const loc = gl.getAttribLocation(pr, 'p');
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    const u = n => gl.getUniformLocation(pr, n);
-    const uT = u('t'), uR = u('r');
-
-    const ram = duk.parentElement;
-    function färger() {
-      const cs = getComputedStyle(ram);
-      gl.uniform3fv(u('c0'), färg(cs.getPropertyValue('--aurora-1')));
-      gl.uniform3fv(u('c1'), färg(cs.getPropertyValue('--aurora-2')));
-      gl.uniform3fv(u('c2'), färg(cs.getPropertyValue('--aurora-3')));
-      gl.uniform1f(u('amp'), parseFloat(cs.getPropertyValue('--aurora-styrka')) || 1);
-    }
-    färger();
-
-    const SKALA = tier() === 'full' ? 0.5 : 0.34;
-    function storlek() {
-      const w = Math.max(2, Math.round(duk.clientWidth * SKALA));
-      const h = Math.max(2, Math.round(duk.clientHeight * SKALA));
-      if (duk.width !== w || duk.height !== h) { duk.width = w; duk.height = h; }
-      gl.viewport(0, 0, w, h);
-      gl.uniform2f(uR, w, h);
-    }
-
-    const stilla = reducerad();
-    let syns = false, ram0 = 0, start = performance.now(), tidLagd = 0;
-    function rita(nu) {
-      ram0 = 0;
-      storlek();
-      gl.uniform1f(uT, stilla ? 12.0 : (tidLagd + (nu - start)) / 1000 * 0.9);
-      gl.clearColor(0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      if (!stilla && syns && !document.hidden) ram0 = requestAnimationFrame(rita);
-    }
-    function gå() {
-      if (ram0 || !syns || document.hidden) return;
-      start = performance.now();
-      ram0 = requestAnimationFrame(rita);
-    }
-    function stopp() {
-      if (!ram0) return;
-      cancelAnimationFrame(ram0); ram0 = 0;
-      tidLagd += performance.now() - start;
-    }
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(es => {
-        syns = es.some(e => e.isIntersecting);
-        if (syns) gå(); else stopp();
-      }, { rootMargin: '10% 0px' }).observe(duk);
-    } else { syns = true; gå(); }
-    document.addEventListener('visibilitychange', () => { if (document.hidden) stopp(); else gå(); });
-    if ('ResizeObserver' in window) new ResizeObserver(() => { if (stilla || !ram0) requestAnimationFrame(rita); }).observe(duk);
-    matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { färger(); if (stilla) rita(performance.now()); });
-    duk.addEventListener('webglcontextlost', e => { e.preventDefault(); stopp(); syns = false; });
-    duk.classList.add('aurora-pa');
-    if (stilla) requestAnimationFrame(rita);
-  }
-
   function norrsken() {
-    $$('canvas[data-aurora]').forEach(aurora);
     /* Nästa steg hade tre CSS-fläckar (norrsken i nextrum-motion.js).
-       Här byts de mot samma norrsken i WebGL, och fläckarna går. */
+       Här byts de mot norrskenet i WebGL, och fläckarna går. */
     $$('.nx-final-cinema').forEach(sek => {
       if (sek.querySelector('canvas.nx-aurora')) return;
-      const duk = document.createElement('canvas');
-      duk.className = 'nx-aurora';
-      duk.setAttribute('aria-hidden', 'true');
-      sek.insertBefore(duk, sek.firstChild);
-      aurora(duk);
-      if (duk.classList.contains('aurora-pa')) $$('.nx-norrsken', sek).forEach(n => n.remove());
+      const el = document.createElement('canvas');
+      el.className = 'nx-aurora';
+      el.setAttribute('aria-hidden', 'true');
+      sek.insertBefore(el, sek.firstChild);
+      const ok = duk(el, AURORA, {
+        skala: [0.5, 0.34], fart: 0.9, stillaTid: 12.0,
+        färger: (gl, u, cs) => {
+          gl.uniform3fv(u('c0'), färg(cs.getPropertyValue('--aurora-1')));
+          gl.uniform3fv(u('c1'), färg(cs.getPropertyValue('--aurora-2')));
+          gl.uniform3fv(u('c2'), färg(cs.getPropertyValue('--aurora-3')));
+          gl.uniform1f(u('amp'), parseFloat(cs.getPropertyValue('--aurora-styrka')) || 1);
+        }
+      });
+      if (ok) $$('.nx-norrsken', sek).forEach(n => n.remove());
+      else el.remove();
     });
   }
 
-  /* ---------- Hur hjälper vi som en scen ----------
-     .hjs-pa gör scenen hög och ytan klistrad (CSS), och scrollen väljer
-     läget: lika lång väg per läge. Det som syns har .pa, det som passerats
-     .forbi; övergångarna är CSS. Rubrikernas ord delas en gång, i spans
-     som texten står kvar i (skärmläsare och markering som förut). En länk
-     som får fokus visar sitt läge, så att tangentbordet aldrig hamnar i
-     något osynligt. */
+  /* ---------- trådarna (Threads), bakom Hur hjälper vi ----------
+     React Bits Threads i WebGL 1: trettio trådar som börjar samlade till
+     vänster och böljar isär åt höger, varje med två perlinbrus. Två
+     ändringar mot förlagan: trådens bredd räknas i duken pixlar mot
+     höjden, inte mot den längsta sidan (annars blir trådarna tjocka på en
+     telefon på högkant), och kanterna skrivs med smoothstep åt rätt håll
+     (förlagan vänder argumenten, vilket GLSL inte lovar något om).
+     Färgen är budskapets i fokus (scenen sätter TRÅD.mål), och den glider
+     dit; pekaren och scrollen rör trådarna lite, som pekaren gör i
+     förlagan. */
+  const TRÅDAR = [
+    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+    'precision highp float;',
+    '#else',
+    'precision mediump float;',
+    '#endif',
+    'uniform float t;uniform vec2 r;uniform vec3 c;uniform vec2 mus;uniform float lw;uniform float amp;uniform float avst;',
+    'const int N=30;',
+    'float perlin(vec2 P){',
+    ' vec2 Pi=floor(P);vec4 Pf=P.xyxy-vec4(Pi,Pi+1.0);vec4 Pt=vec4(Pi.xy,Pi.xy+1.0);',
+    ' Pt=Pt-floor(Pt*(1.0/71.0))*71.0;Pt+=vec2(26.0,161.0).xyxy;Pt*=Pt;Pt=Pt.xzxz*Pt.yyww;',
+    ' vec4 hx=fract(Pt*(1.0/951.135664))-0.49999;vec4 hy=fract(Pt*(1.0/642.949883))-0.49999;',
+    ' vec4 g=inversesqrt(hx*hx+hy*hy)*(hx*Pf.xzxz+hy*Pf.yyww)*1.4142135623730950;',
+    ' vec2 b=Pf.xy*Pf.xy*Pf.xy*(Pf.xy*(Pf.xy*6.0-15.0)+10.0);vec4 b2=vec4(b,vec2(1.0-b));',
+    ' return dot(g,b2.zxzx*b2.wwyy);}',
+    'float trad(vec2 st,float w,float p){',
+    ' float sp=0.1+p*0.4;',
+    ' float fa=smoothstep(sp,0.7,st.x)*0.5*amp*(1.0+(mus.y-0.5)*0.2);',
+    ' float ts=t/10.0+(mus.x-0.5);',
+    ' float bl=smoothstep(sp,sp+0.05,st.x)*p;',
+    ' float xn=mix(perlin(vec2(ts,st.x+p)*2.5),perlin(vec2(ts,st.x+ts)*3.5)/1.5,st.x*0.3);',
+    ' float y=0.5+(p-0.5)*avst+xn/2.0*fa;',
+    ' float e=w/2.0+lw*1.43*bl/r.y;',
+    ' float a=smoothstep(y-e,y,st.y)-smoothstep(y,y+e,st.y);',
+    ' return clamp(a*(1.0-smoothstep(0.0,1.0,pow(p,0.3))),0.0,1.0);}',
+    'void main(){',
+    ' vec2 uv=gl_FragCoord.xy/r;float s=1.0;',
+    ' for(int i=0;i<N;i++){float p=float(i)/float(N);s*=1.0-trad(uv,lw*(1.0-p)/r.y,p);}',
+    ' float v=1.0-s;gl_FragColor=vec4(c*v,v);}'
+  ].join('\n');
+
+  const TRÅD = { mål: null, nu: null, mus: [0.5, 0.5], musMål: [0.5, 0.5], prog: 0 };
+
+  function trådar() {
+    $$('canvas[data-tradar]').forEach(el => {
+      const bas = () => färg(getComputedStyle(el.parentElement).getPropertyValue('--amne-ma'));
+      TRÅD.mål = TRÅD.mål || bas();
+      TRÅD.nu = TRÅD.nu || TRÅD.mål.slice();
+      const d = duk(el, TRÅDAR, {
+        skala: [0.5, 0.62], fart: 1, stillaTid: 18.0,
+        färger: (gl, u) => {
+          gl.uniform1f(u('amp'), 1.3);
+          gl.uniform1f(u('avst'), 0.3);
+          gl.uniform3fv(u('c'), TRÅD.nu);
+          gl.uniform2fv(u('mus'), TRÅD.mus);
+        },
+        /* Den tjockaste tråden är ungefär fem CSS-pixlar, i dukens pixlar. */
+        storlek: (gl, u, skala) => gl.uniform1f(u('lw'), 5.2 * skala),
+        varje: (gl, u) => {
+          for (let i = 0; i < 3; i++) TRÅD.nu[i] += (TRÅD.mål[i] - TRÅD.nu[i]) * 0.05;
+          for (let i = 0; i < 2; i++) TRÅD.mus[i] += (TRÅD.musMål[i] - TRÅD.mus[i]) * 0.04;
+          gl.uniform3fv(u('c'), TRÅD.nu);
+          gl.uniform2f(u('mus'), TRÅD.mus[0] + (TRÅD.prog - 0.5) * 0.5, TRÅD.mus[1]);
+        }
+      });
+      if (!d) return;
+      TRÅD.rita = d.rita;
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reducerad()) {
+        const yta = el.parentElement;
+        yta.addEventListener('pointermove', e => {
+          const b = yta.getBoundingClientRect();
+          TRÅD.musMål = [(e.clientX - b.left) / b.width, 1 - (e.clientY - b.top) / b.height];
+        });
+        yta.addEventListener('pointerleave', () => { TRÅD.musMål = [0.5, 0.5]; });
+      }
+    });
+  }
+
+  /* ---------- Hur hjälper vi som en rad som glider ----------
+     .hjs-pa gör scenen lika hög som raden har väg att gå plus en skärm,
+     och ytan klistrad (CSS); scrollen flyttar raden åt vänster, ett till
+     ett. Vägen mäts före varje omräkning (refreshInit), så att höjden och
+     ScrollTrigger alltid är överens. Kortet närmast en punkt som går från
+     en tredjedel till fyra femtedelar av bredden har .pa (så att det första
+     är i fokus från början och det sista vid slutet), och trådarna tar dess
+     färg. Ett kort som kommit in har .inne, och dess rubrik stiger upp;
+     ord delas en gång, i spans som texten står kvar i. En länk som får
+     fokus rullar sidan dit kortet syns. */
   function delaRubrik(h) {
     let k = 0;
     const gå = n => Array.from(n.childNodes).forEach(c => {
@@ -223,33 +316,62 @@
   function hjscen() {
     if (!medGsap) return;
     $$('[data-hjscen]').forEach(scen => {
-      const lägen = $$('[data-hjs]', scen);
-      const n = lägen.length;
-      if (n < 2) return;
-      lägen.forEach(l => { const h = $('h3', l); if (h) delaRubrik(h); });
-      scen.style.setProperty('--hjs-n', String(n));
+      const spår = $('.hjs-spar', scen), rad = $('.hjs-rad', scen);
+      const kort = $$('.hjs-kort', scen);
+      if (!spår || !rad || kort.length < 2) return;
+      kort.forEach(k => { const h = $('h3', k); if (h) delaRubrik(h); });
+      const färgen = kort.map(k => färg(getComputedStyle(k).getPropertyValue('--f')));
+      const fyll = $('.hjs-matare-fyll', scen);
       scen.classList.add('hjs-pa');
-      const fyll = $('.hjs-rad-fyll', scen);
-      let nu = -1;
-      const sätt = i => {
-        if (i === nu) return;
-        nu = i;
-        lägen.forEach((l, k) => {
-          l.classList.toggle('pa', k === i);
-          l.classList.toggle('forbi', k < i);
-        });
+
+      const väg = () => {
+        const m = parseFloat(getComputedStyle(spår).paddingLeft) || 0;
+        return Math.max(0, rad.offsetWidth - (spår.clientWidth - 2 * m));
       };
-      sätt(0);
-      ST.create({
-        trigger: scen, start: 'top top', end: 'bottom bottom',
-        onUpdate: s => {
-          sätt(Math.min(n - 1, Math.floor(s.progress * n)));
-          if (fyll) fyll.style.transform = 'scaleX(' + s.progress.toFixed(3) + ')';
+      const mät = () => scen.style.setProperty('--hjs-x', väg() + 'px');
+      mät();
+      ST.addEventListener('refreshInit', mät);
+
+      let nu = -1;
+      const läge = p => {
+        const x = -p * väg(), b = spår.clientWidth;
+        const punkt = b * (0.33 + p * 0.47);
+        let bäst = 0, avst = Infinity;
+        kort.forEach((k, i) => {
+          const vä = k.offsetLeft + x;
+          if (vä < b * 1.02) k.classList.add('inne');
+          const d = Math.abs(vä + k.offsetWidth / 2 - punkt);
+          if (d < avst) { avst = d; bäst = i; }
+        });
+        if (bäst !== nu) {
+          nu = bäst;
+          kort.forEach((k, i) => k.classList.toggle('pa', i === bäst));
+          TRÅD.mål = färgen[bäst];
+          if (TRÅD.rita) TRÅD.rita();
+        }
+        TRÅD.prog = p;
+        if (fyll) fyll.style.transform = 'scaleX(' + p.toFixed(3) + ')';
+      };
+
+      gsap.to(rad, {
+        x: () => -väg(), ease: 'none',
+        scrollTrigger: {
+          trigger: scen, start: 'top top', end: 'bottom bottom',
+          scrub: 0.4, invalidateOnRefresh: true,
+          onUpdate: s => läge(s.progress),
+          onRefresh: s => läge(s.progress)
         }
       });
+      läge(0);
+
       scen.addEventListener('focusin', e => {
-        const l = e.target.closest('[data-hjs]');
-        if (l) sätt(lägen.indexOf(l));
+        const k = e.target.closest('.hjs-kort');
+        if (!k) return;
+        const v = väg();
+        if (!v) return;
+        const p = Math.min(1, Math.max(0, (k.offsetLeft - spår.clientWidth * 0.3) / v));
+        const topp = scen.getBoundingClientRect().top + scrollY;
+        scrollTo(0, topp + p * (scen.offsetHeight - innerHeight));
       });
     });
   }
@@ -340,6 +462,7 @@
 
   if (medGsap) gsap.registerPlugin(ST);
   prova('norrsken', norrsken);
+  prova('trådar', trådar);
   prova('hjscen', hjscen);
   prova('bandfart', bandfart);
   prova('scrollord', scrollord);

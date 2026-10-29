@@ -89,12 +89,34 @@ skrivna om för hand i `nextrum-start-scen.js`, med GSAP som redan låg i
 `bibliotek/` för landningssidorna. Det som inte togs, med flit: effekterna på
 muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
-(tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen).
-- **Scenen** (tredje varvet samma kväll, den som gäller). Leo om högen: "Jag sa
+(tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
+sedan trådarna i Raden som glider).
+- **Raden som glider** (fjärde varvet samma kväll, den som gäller). Leo om scenen
+  nedan: "Jag gillar inte att bakrunden är svart och orange på den sektionen, och en
+  grej till när de kolumnerna typ 5 stycken går sidleds snyggt med en vit rörlig
+  bakrund som du hittar på react bits, annars helt ok". Ytan är nu `--yta` (det vita
+  i paletten, mörk i mörkt läge) med trådar i WebGL (React Bits Threads, `data-tradar`:
+  trettio trådar med två perlinbrus var, i WebGL 1), och rubriken och de fem
+  budskapen står i EN rad av kort som glider åt vänster ett till ett med scrollen
+  medan ytan står still. Kortet närmast en punkt som vandrar från en tredjedel till
+  fyra femtedelar av bredden är i fokus (`.pa`: siffran ifylld, kanten i dess färg,
+  de andra en aning mindre med `scale`), och trådarna glider till dess färg, så att
+  ämnesfärgerna bokstavligen blir den röda tråden. Ett korts rubrik stiger upp när
+  kortet kommer in (`.inne`). Pekaren och scrollen rör trådarna lite, som pekaren
+  gör i förlagan. Två ändringar mot förlagans shader: trådens bredd räknas mot
+  dukens höjd (förlagan räknar mot den längsta sidan, och då blir trådarna tjocka på
+  en telefon på högkant), och kanterna skrivs med smoothstep åt rätt håll. Utan GSAP
+  eller med reducerad rörelse är raden en rad att svepa i (`scroll-snap`). Norrskenet
+  i Nästa steg står kvar: den sektionen var mörk med orange sken redan före, och Leo
+  talade om scenen. **Fällorna**: (1) ytan är ett rutnät, och en `auto`-kolumn växte
+  med raden (min-content), så vägen mättes till noll: `minmax(0,1fr)`; (2) trådarna
+  blev trappsteg på en telefon i en tredjedels upplösning, så skalan är 0,62 där
+  (0,5 på dator, där duken är större).
+- **Scenen** (tredje varvet samma kväll, borttagen med Raden). Leo om högen: "Jag sa
   ta inspiration av animationer osv på react bits, snygga rörliga bakgrunder, hur
   texter går osv du gjorde ingenting av det. De blir liksom 8 kolumner direkt du
   går strukturera om det". Två varv hade bara bytt rutornas form, och ingenting
-  rörde sig så att det syntes. Nu är Hur hjälper vi en mörk scen i helskärm direkt
+  rörde sig så att det syntes. Då blev Hur hjälper vi en mörk scen i helskärm direkt
   efter heron (`.nx-hjs`, `data-hjscen`): ett norrsken i WebGL bakom (Aurora,
   samma fragmentshader som React Bits, i WebGL 1 utan bibliotek, med lera, orange
   och rosa ur `--aurora-1`–`3`), och sex lägen som byts mitt på skärmen medan
