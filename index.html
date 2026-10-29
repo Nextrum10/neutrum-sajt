@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=b9a03a57">
-<link rel="stylesheet" href="nextrum-start.css?v=bd526f29">
+<link rel="stylesheet" href="nextrum-start.css?v=1d179aa2">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -227,7 +227,17 @@
      inbakad, #betygsgaranti), Just nu, Vår idé, studievyn, NexLäx, Från
      intresseanmälan till första passet, studiehjälparna, Trygg hjälp,
      bildväggen, omdömena (brevet), För dig som vill jobba och Nästa steg.
-     Numren i rubrikerna nedan är gamla och följer inte ordningen. -->
+     Numren i rubrikerna nedan är gamla och följer inte ordningen.
+
+     EN NY FORM (2026-10-29). Leo: "Just nu är mycket bara i kolumner och
+     tråkiga", med React Bits som förebild, och "Du får göra allt".
+     Nästan varje sektion var samma mall: etikett, rubrik, ingress och en
+     rad vita kort. Nu: Hur hjälper vi är ett bentorutnät (MagicBento) som
+     också bär Trygg hjälp och Vår idés två blad, så att "Allt på ett
+     ställe" inte står två gånger; manifestet är ett eget ögonblick där
+     orden blir skarpa medan man scrollar (ScrollReveal); studievyn tippar
+     upp ur papperet (nextrum-start-scen.js). Trygg hjälp har ingen egen
+     sektion längre. Ordningen i övrigt är Leos från 2026-10-08. -->
 <!-- ==========================================================
      1 — HERO
      En tyst, loopande video i full bredd med budskapet ovanpå.
@@ -336,32 +346,83 @@
       </div>
     </div>
 
-    <ul class="hj-grid">
-      <li class="hj-del" data-stig style="--f:var(--amne-ma)">
+    <!-- BENTOT (2026-10-29). Sju rutor i olika storlekar i stället för
+         fyra lika blad, med Trygg hjälps och Vår idés poäng inbakade:
+         matchningen och tryggheten ur bandet, Allt på ett ställe ur
+         manifestet. Inget nytt påstående: varje mening stod redan på
+         sidan. Ordningens färger (avsnitt 18) gäller rutorna i tur, och
+         NexLäx-rutan har SO:s ockra som sjätte, som bandet hade.
+         data-ljus: ljuset som följer musen över rutorna och garantins
+         remsa (nextrum-start-scen.js, bara med mus). Formen:
+         nextrum-start.css avsnitt 19. Samma markup i en/index.html. -->
+    <div class="nx-bento-ram" data-ljus>
+    <ul class="nx-bento">
+      <li class="bn-ruta bn-stor" data-stig style="--f:var(--amne-ma)">
         <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8.5" r="3"/><circle cx="16.6" cy="9.6" r="2.4"/><path d="M2.8 19.2c0-2.9 2.3-5.1 5.2-5.1s5.2 2.2 5.2 5.1"/><path d="M14 14.7a4.6 4.6 0 0 1 2.6-.8c2.5 0 4.6 1.9 4.6 4.5"/></svg></span>
         <span class="hj-et">Läxhjälpen</span>
         <h3>Rätt studiehjälp, på rätt plats</h3>
         <p>Eleven får en egen studiehjälpare, en studieplan och pass hemma hos er, på biblioteket eller online. Efter varje pass kommer en rapport.</p>
+        <figure class="bn-foto" style="--tint:#634E3D">
+          <picture><source type="image/webp" srcset="bilder/21-hemma-hos-familjen-640.webp 640w, bilder/21-hemma-hos-familjen-960.webp 960w, bilder/21-hemma-hos-familjen-1280.webp 1280w" sizes="(max-width:1100px) 92vw, 46vw"><img class="nx-img" src="bilder/21-hemma-hos-familjen-960.jpg"
+               srcset="bilder/21-hemma-hos-familjen-640.jpg 640w, bilder/21-hemma-hos-familjen-960.jpg 960w, bilder/21-hemma-hos-familjen-1280.jpg 1280w"
+               sizes="(max-width:1100px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               style="object-position:40% 44%"
+               alt="En studiehjälpare och en elev sitter vid ett matbord hemma, med skolböcker, en fruktskål och ett höstfönster bakom sig."></picture>
+        <div class="bn-platser" aria-hidden="true">
+          <span class="bn-plats" style="--i:0"><svg viewBox="0 0 24 24"><path d="M4 11.2 12 4.5l8 6.7"/><path d="M6.2 9.6V19.5h11.6V9.6"/><path d="M10 19.5v-5h4v5"/></svg>Hemma hos er</span>
+          <span class="bn-plats" style="--i:1"><svg viewBox="0 0 24 24"><path d="M12 6.6c-1.8-1.3-4.3-2-7.5-2v13c3.2 0 5.7.7 7.5 2 1.8-1.3 4.3-2 7.5-2v-13c-3.2 0-5.7.7-7.5 2z"/><path d="M12 6.6v13"/></svg>På biblioteket</span>
+          <span class="bn-plats" style="--i:2"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="11" rx="1.8"/><path d="M2 19.5h20"/></svg>Online</span>
+          <span class="bn-rapport" style="--i:3"><span class="bn-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>Rapporten efter passet är klar</span>
+        </div>
+        </figure>
       </li>
-      <li class="hj-del" data-stig data-fördröj="1" style="--f:var(--amne-en)">
+      <li class="bn-ruta" data-stig data-fördröj="1" style="--f:var(--amne-en)">
         <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4.5 2.5 9 12 13.5 21.5 9z"/><path d="M6.5 11v4.3c1.4 1.4 3.3 2.2 5.5 2.2s4.1-.8 5.5-2.2V11"/><path d="M21.5 9v5"/></svg></span>
         <span class="hj-et">Expertisen</span>
         <h3>Utvalda och intervjuade</h3>
         <p>Våra studiehjälpare har nyligen läst samma kurser själva. Vi intervjuar och utbildar dem, och matchar efter ämne, nivå, behov och personlighet.</p>
       </li>
-      <li class="hj-del" data-stig data-fördröj="2" style="--f:var(--amne-no)">
+      <li class="bn-ruta" data-stig data-fördröj="2" style="--f:var(--amne-no)">
         <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6.6c-1.8-1.3-4.3-2-7.5-2v13c3.2 0 5.7.7 7.5 2 1.8-1.3 4.3-2 7.5-2v-13c-3.2 0-5.7.7-7.5 2z"/><path d="M12 6.6v13"/></svg></span>
         <span class="hj-et">Erfarenheten</span>
         <h3>Från samma skolbänk</h3>
         <p>De vet hur det känns att plugga inför prov, fastna på en uppgift och förstå något för första gången, för de gjorde det själva nyligen.</p>
       </li>
-      <li class="hj-del hj-nex" data-stig data-fördröj="3" style="--f:var(--amne-ms)">
+      <li class="bn-ruta" data-stig data-fördröj="3" style="--f:var(--acc)">
+        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
+        <span class="hj-et">Matchningen</span>
+        <h3>En match vi står för</h3>
+        <p>Ni bläddrar inte i en katalog. Vi väljer, för fel match är värre än ingen match.</p>
+      </li>
+      <li class="bn-ruta" data-stig data-fördröj="4" style="--f:var(--amne-ms)">
+        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span>
+        <span class="hj-et">Tryggheten</span>
+        <h3>Trygghet i varje steg</h3>
+        <p>Intervjuade och utbildade studiehjälpare, betalning via Nextrum och uppföljning efter passen.</p>
+      </li>
+      <li class="bn-ruta bn-bred hj-nex" data-stig style="--f:var(--amne-so)">
         <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg></span>
         <span class="hj-et">NexLäx</span>
         <h3>Övning mellan passen</h3>
         <p>Nextrums egna digitala uppgifter: korta nivåer där varje svar rättas direkt, med XP och märken. Studiehjälparen ser vad som sitter.</p>
         <svg class="hj-nex-bild" viewBox="0 0 240 72" aria-hidden="true"><path d="M16 54C56 54 58 22 98 22s46 32 84 32 42-28 42-28"/><circle cx="16" cy="54" r="10" style="--c:var(--amne-ma)"/><circle cx="98" cy="22" r="10" style="--c:var(--amne-no)"/><circle cx="182" cy="54" r="10" style="--c:var(--amne-en)"/><circle cx="224" cy="26" r="10" style="--c:var(--amne-ms)"/></svg>
         <a class="nx-lank" href="#nexlax">Så fungerar NexLäx
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </li>
+      <li class="bn-ruta bn-bred" data-stig data-fördröj="1" style="--f:var(--amne-ma)">
+        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
+        <span class="hj-et">Studievyn</span>
+        <h3>Allt på ett ställe</h3>
+        <p>Allt finns i en och samma plattform: studieplan, bokning, rapporter, NexLäx och betalning. Pass online eller på plats, utan anmälningsavgift.</p>
+        <ul class="bn-delar" aria-hidden="true">
+          <li style="--i:0">Studieplan</li>
+          <li style="--i:1">Bokning</li>
+          <li style="--i:2">Rapporter</li>
+          <li style="--i:3">NexLäx</li>
+          <li style="--i:4">Betalning</li>
+        </ul>
+        <a class="nx-lank" href="#studievy">Se studievyn
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a>
       </li>
@@ -378,6 +439,7 @@
       <p class="hj-gar-villkor">Villkor gäller. <a class="nx-lank" href="/anvandarvillkor#betygsgaranti">Läs villkoren för garantin
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a></p>
+    </div>
     </div>
   </div>
 </section>
@@ -476,41 +538,24 @@
      2 — VÅR IDÉ
      Manifestet, och läxhjälpen sedd som ett första jobb.
      ========================================================== -->
-<section class="nx-manifest" id="om">
+<section class="nx-manifest nx-manifest-scen" id="om">
   <div class="nx-manifest-inner">
     <span class="nx-et" data-stig>Vår idé</span>
-    <!-- data-ordfyll: orden fylls i ett i taget medan man scrollar
-         (nextrum-start.js). Rubriken är fortfarande vanlig text. -->
-    <h2 data-ordfyll style="margin-top:clamp(24px,3vw,38px)">Rätt person kan göra<br><em>stor skillnad.</em></h2>
+    <!-- data-ordfyll: orden fylls i ett i taget när rubriken syns
+         (nextrum-start.js). Med GSAP tar data-scrollord över: orden går
+         från suddiga till skarpa i takt med scrollen, och rubriken rätar
+         upp sig (nextrum-start-scen.js, efter React Bits ScrollReveal).
+         Rubriken är fortfarande vanlig text.
 
-    <!-- Två blad bredvid varandra, också på telefon (Leo 2026-10-07:
-         "kolumnerna under rätt person kan göra stor skillnad bredvid
-         varandra"). Rubriken överst i varje blad ger ögat ett fäste när
-         spalten är smal; samma rubriker står i engelskan, tagg för tagg.
-         Samma blad som hållpunkterna under stegen.
+         Bladen Rätt match och Allt på ett ställe gick 2026-10-29: Allt på
+         ett ställe står i bentot, och Rätt matchs mening står här under
+         rubriken, så att manifestet är en enda tanke och inga kort. -->
+    <h2 data-ordfyll data-scrollord style="margin-top:clamp(24px,3vw,38px)">Rätt person kan göra<br><em>stor skillnad.</em></h2>
+    <p class="mf-under" data-stig data-fördröj="1">Vi matchar varje elev med en av våra studiehjälpare, utifrån behoven och
+      ämnena, för bättre förståelse, mer motivation och större självförtroende i skolan.</p>
 
-         "Allt på ett ställe" trycker på plattformen sedan 2026-10-08
-         (Leo: "pusha på att allt i en och samma plattform. Men överstig
-         ej så att texten blir längre än den bredvid"): 141 tecken mot
-         Rätt matchs 155, och 144 mot 167 på engelska. Bindningstiden
-         står inte här längre. -->
-    <div class="nx-manifest-fot">
-      <div class="nx-bubbla" data-stig data-fördröj="1">
-        <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
-        <h3>Rätt match</h3>
-        <p>Vi matchar varje elev med en av våra studiehjälpare, utifrån behoven och
-          ämnena, för bättre förståelse, mer motivation och större självförtroende i skolan.</p>
-      </div>
-      <div class="nx-bubbla" data-stig data-fördröj="2">
-        <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
-        <h3>Allt på ett ställe</h3>
-        <p>Allt finns i en och samma plattform: studieplan, bokning, rapporter, NexLäx och
-          betalning. Pass online eller på plats, utan anmälningsavgift.</p>
-      </div>
-    </div>
-
-    <div class="nx-cta-rad" data-stig data-fördröj="3">
-      <span class="nx-magnet">
+    <div class="nx-cta-rad" data-stig data-fördröj="2">
+      <span class="nx-magnet nx-stjarnkant">
         <a class="btn btn-primary btn-lg" href="/intresseanmalan">
           Intresseanmälan för läxhjälp
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
@@ -545,19 +590,18 @@
      likadant — jamfor-sprak.py rapporterar bara FÖRSTA skillnaden i
      struktur, och den är språkväljaren längst upp.
      ========================================================== -->
-<section class="nx-wrap-bred nx-sek" aria-labelledby="studievy-t">
-  <div class="nx-head split" data-stig>
-    <div>
-      <span class="nx-et acc">Studievyn</span>
-      <h2 class="nx-d2" id="studievy-t" style="margin-top:20px">Du ser vad som händer.</h2>
-    </div>
-    <div class="nx-head-aside">
-      <p class="nx-lede">Genom Nextrums studievy kan elev och förälder följa utvecklingen, se
-        studieplanen, boka pass och läsa återkopplingen — på ett och samma ställe.</p>
-    </div>
+<!-- Sedan 2026-10-29 står rubriken i mitten och fönstret tippar upp ur
+     papperet medan man scrollar (data-tipp, nextrum-start-scen.js), i
+     stället för att resa sig en gång. Utan GSAP reser det sig som förut. -->
+<section class="nx-wrap-bred nx-sek nx-sd-scen" id="studievy" aria-labelledby="studievy-t">
+  <div class="nx-mitt-head" data-stig>
+    <span class="nx-et acc">Studievyn</span>
+    <h2 class="nx-d2" id="studievy-t" style="margin-top:20px">Du ser vad som händer.</h2>
+    <p class="nx-lede" style="margin-top:22px">Genom Nextrums studievy kan elev och förälder följa utvecklingen, se
+      studieplanen, boka pass och läsa återkopplingen — på ett och samma ställe.</p>
   </div>
 
-  <div class="nx-sd" data-studievy role="img" aria-label="Illustration av Nextrums studievy: en familj godkänner en tid, föreslår ett pass, svarar studiehjälparen, betalar och klarar en nivå i NexLäx. Innehållet är ett exempel.">
+  <div class="nx-sd" data-studievy data-tipp role="img" aria-label="Illustration av Nextrums studievy: en familj godkänner en tid, föreslår ett pass, svarar studiehjälparen, betalar och klarar en nivå i NexLäx. Innehållet är ett exempel.">
     <div class="sd-rum">
       <div class="sd-fonster" inert>
         <div class="sd-bar" aria-hidden="true"><i></i><i></i><i></i><span>nextrum.se/foralder</span></div>
@@ -1091,12 +1135,10 @@
   </div>
 </section>
 
-<!-- Ingen nx-yta här med flit. Den och #plattformen under är båda
+<!-- Ingen nx-yta här med flit. Den och Trygg hjälp under var båda
      ytsektioner, och tillsammans blev de 1845 px obruten yta i en
      sida som annars byter var 500-1000:e pixel — två kapitel som
-     lästes som ett. #plattformen behåller ytan eftersom navlänken
-     "För elever & föräldrar" landar där (#foraldrar), och då ska
-     det synas att man kommit fram. -->
+     lästes som ett. Trygg hjälp gick 2026-10-29 (bentot bär den). -->
 <section class="nx-sek" id="studiehjalpare">
   <div class="nx-wrap-bred">
   <div class="nx-head split" data-stig>
@@ -1128,103 +1170,12 @@
 </section>
 
 <!-- ==========================================================
-     5 — PLATTFORMEN / FÖR ELEVER OCH FÖRÄLDRAR
+     5 — TRYGG HJÄLP gick 2026-10-29. Bandets sex kort sa samma sak som
+     Hur hjälper vi och manifestet en gång till ("Allt på ett ställe"
+     stod på två ställen), och matchningen och tryggheten står nu som
+     rutor i bentot. Ankaret #foraldrar fanns för en navlänk som inte
+     längre pekar hit.
      ========================================================== -->
-<section class="nx-yta nx-sek" id="plattformen">
-  <span id="foraldrar" aria-hidden="true" style="display:block;position:relative;top:-80px"></span>
-
-  <div class="nx-wrap-bred">
-    <!-- Centrerad rubrik, inget foto. Punkterna ligger i kolumner med
-         var sin figur i stället för en lodrät bockad lista bredvid en bild. -->
-    <div class="nx-mitt-head" data-stig>
-      <span class="nx-et acc">Trygg hjälp, personligt stöd</span>
-      <h2 class="nx-d2" data-avslöj style="margin-top:20px">Trygg hjälp.<br>Personligt stöd.</h2>
-      <p class="nx-lede" style="margin-top:22px">När unga hjälper unga måste det vara tryggt för
-        alla. Därför bygger vi in trygghet i varje steg, inte som en efterhandskontroll.</p>
-    </div>
-  </div>
-
-    <!-- ETT RULLANDE BAND sedan 2026-09-25. Bandet ligger UTANFÖR
-         .nx-wrap-bred med flit: det ska gå kant i kant, och 100vw
-         räknar in rullningslisten på Windows och ger sidan en
-         vågrät scroll. Sektionen är redan full bredd.
-
-         Utan skript är det samma dragbara rad som förut.
-         nextrum-start.js kopierar korten och låter raden glida åt
-         höger; se kommentaren vid band() där.
-
-         Sex punkter som en dragbar rad, inte ett rutnät med tolv
-         rutor. Rutnätet plus de fyra trygghetskorten under blev tio
-         påståenden på en skärm, och tio påståenden läses som noll.
-
-         Korten var knappar som fällde ut en längre förklaring. Leo
-         2026-09-27 tog bort utfällningen: bandet klipper sin höjd
-         (overflow:clip), så texten syntes bara till hälften. Korten
-         är nu bara kort, och den längre texten finns inte kvar.
-
-         Utan skript scrollar raden med scroll-snap, så den går att
-         dra på både mus och pekskärm. -->
-  <div class="nx-band" data-band>
-    <ul class="nx-drag" data-drag>
-      <li>
-        <div class="dr-kort">
-          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg></span>
-          <b>Personlig läxhjälp</b>
-          <p>En studiehjälpare, en elev, en plan. Ingen grupp och ingen mall.</p>
-        </div>
-      </li>
-      <li>
-        <div class="dr-kort">
-          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
-          <b>Matchning vi står för</b>
-          <p>Ni bläddrar inte i en katalog. Vi väljer, för fel match är värre än ingen match.</p>
-        </div>
-      </li>
-      <li>
-        <div class="dr-kort">
-          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="10" rx="2"/><path d="M16 9h3.2l1.8 2.4V15H16z"/><path d="M6.5 19h2M15 19h2"/></svg></span>
-          <b>Flexibelt</b>
-          <p>Online eller på plats, och ni byter mellan formaten från pass till pass.</p>
-        </div>
-      </li>
-      <li>
-        <div class="dr-kort">
-          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H10.5L6 20v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span>
-          <b>Allt på ett ställe</b>
-          <p>Bokning, meddelanden och betalning i plattformen — inget spretande mellan appar.</p>
-        </div>
-      </li>
-      <li>
-        <div class="dr-kort">
-          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19v-4.5M12 19V9M17 19v-7"/><path d="M6 10.5l5-4 3 2.2 4.5-4"/></svg></span>
-          <b>Utveckling ni kan följa</b>
-          <p>Studieplanen, passen och rapporten efter varje gång — samlat i studievyn.</p>
-        </div>
-      </li>
-      <li>
-        <div class="dr-kort">
-          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M12 9.5v3.2M12 15.4v.1"/></svg></span>
-          <b>Trygghet i varje steg</b>
-          <p>Intervjuade och utbildade studiehjälpare, betalning via Nextrum och uppföljning efter passen.</p>
-        </div>
-      </li>
-    </ul>
-  </div>
-
-  <div class="nx-wrap-bred">
-    <div class="nx-cta-rad nx-cta-mitt" data-stig>
-      <span class="nx-magnet">
-        <a class="btn btn-primary btn-lg" href="/intresseanmalan">
-          Skicka intresseanmälan
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </a>
-      </span>
-      <a class="nx-lank" href="/priser">Se priserna
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
-    </div>
-  </div>
-</section>
 
 <!-- ==========================================================
      7 — BILDVÄGGEN
@@ -1460,7 +1411,7 @@
         För dig som vill hjälpa andra.</p>
 
       <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
-        <span class="nx-magnet">
+        <span class="nx-magnet nx-stjarnkant">
           <a class="btn btn-primary btn-lg" href="/intresseanmalan">
             Skicka intresseanmälan
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
@@ -1660,6 +1611,13 @@
 <!-- Startsidans rörelse. Startar av sig självt, så att inget
      anrop här nere kan kasta om filen saknas. -->
 <script src="nextrum-start.js?v=e1d5a4da"></script>
+<!-- Scenerna som följer scrollen (2026-10-29): GSAP, vendorad som på
+     landningssidorna och aldrig från en CDN. defer, så att de tre körs
+     i ordning efter att sidan lästs och aldrig håller upp den. Laddar
+     de inte står allt som nextrum-start.js lämnade det. -->
+<script src="bibliotek/gsap-3.13.0.min.js" defer></script>
+<script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js" defer></script>
+<script src="nextrum-start-scen.js?v=94d2d95f" defer></script>
 <script src="nextrum-socialt.js?v=7ba4ec99"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
