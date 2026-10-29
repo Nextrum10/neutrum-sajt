@@ -91,7 +91,17 @@ muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
 (tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
 sedan trådarna i Raden som glider).
-- **Raden man sveper i** (femte varvet samma kväll, den som gäller). Leo skickade en video
+- **Rubrikerna likadana, i mitten** (samma kväll, efter Raden man sveper i). Leo: "Och jag
+  gillade hur rubrikerna var likadana ändra tillbaka de du ändrade och centrera / 01 02 03 04
+  05 ska redan vara färgade". Före samma dag hade Hur hjälper vi, studievyn, studiehjälparna och
+  omdömena samma huvud (`.nx-head split`), och under kvällen fick de fyra olika: en egen liten
+  rubrik med pilar bredvid, studievyns i mitten och två med ingressen under (`.nx-head-en`). Nu
+  har alla fyra studievyns huvud (`.nx-mitt-head`: etiketten, rubriken i `.nx-d2` och ingressen
+  under, i mitten), och Hur hjälper vi har sin rubrik från före samma dag igen ("Hur hjälper
+  vi<br><em>ert barn?</em>"). Pilarna står i mitten under raden, ovanpå trådarnas band, och
+  korten har siffran ifylld i sin färg från början; fokus syns bara på kanten. Manifestets
+  rubrik rördes inte: den är större än de andra med flit, och Leo bad om den mindre.
+- **Raden man sveper i** (femte varvet samma kväll). Leo skickade en video
   och skrev: "texten syns dålig då rörelse grejen tar för mycket plats med den färgen den
   har, jag gillar iden men vi måste antingen tona ner på färgen eller ej ha den över text
   utan mer som ett mönster att veta vart man ska scrolla. Jag gillar ej heller att man
@@ -172,7 +182,8 @@ sedan trådarna i Raden som glider).
   (läxhjälpen på fotot, studiehjälparna, matchningen, NexLäx, Allt på ett ställe) som fastnar
   under sidhuvudet med `position:sticky`, en kant av det förra synlig, och kortet under krymper
   en aning med GSAP på dator. Inget kort har spalter inuti. Utan rörelse en vanlig lista. Samma
-  ändring: rubrikerna på startsidan har ingressen under sig (`.nx-head-en`) och ansökans fyra
+  ändring: rubrikerna på startsidan har ingressen under sig (`.nx-head-en`, i mitten med `.nx-mitt-head` sedan
+  Rubrikerna likadana ovan) och ansökans fyra
   steg i `#bli` är en lodrät lista (`.nx-apply-lista`). Tryggheten gick som egen punkt, för
   "intervjuade och utbildade" står redan hos studiehjälparna och betalningen i Allt på ett
   ställe. Ljuset som följde musen gick med bentot.

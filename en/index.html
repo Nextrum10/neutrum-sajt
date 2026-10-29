@@ -52,7 +52,7 @@
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="../nextrum-cinema.css?v=b9a03a57">
-<link rel="stylesheet" href="../nextrum-start.css?v=5703ae7e">
+<link rel="stylesheet" href="../nextrum-start.css?v=7969df7d">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -224,7 +224,7 @@
      har sina två blad igen (Allt på ett ställe står alltså två gånger, som
      före 2026-10-29); etiketterna har ett
      ljus som glider (ShinyText), ämnesbandet lutar med farten
-     (ScrollVelocity), rubrikerna har ingressen under sig och ansökans fyra
+     (ScrollVelocity), sektionernas rubriker står i mitten, likadana, och ansökans fyra
      steg är en lodrät lista; manifestet är ett eget ögonblick där orden blir
      skarpa medan man scrollar (ScrollReveal); studievyn tippar upp ur
      papperet, och Nästa steg följer sidans läge med ett punktnät som
@@ -327,24 +327,22 @@
        raden som scrollen drog: "Jag gillar ej heller att man behöver scrolla
        ner för att nästa steg ska börja. Vi är ett läxhjälps företag ... inte
        et tech bolag. Så vi kör istället att man scrollar själv åt vänster.
-       Och rubriken tar för stor del av sidan." Så: rubriken ovanför, i en
-       vanlig storlek, och de fem korten i en rad man sveper i själv (på
-       dator också med pilarna), och sidan rullar som vanligt förbi. Trådarna
+       Och rubriken tar för stor del av sidan." Så: rubriken ovanför, i mitten
+       och likadan som de andra sektionernas (Leo: "jag gillade hur rubrikerna
+       var likadana ... och centrera"), och de fem korten i en rad man sveper i
+       själv (på dator också med pilarna under), och sidan rullar som vanligt
+       förbi. Trådarna
        (React Bits Threads, nextrum-start-scen.js) står nedtonade i ett band
        under korten, aldrig bakom texten (Leo: "texten syns dålig ... mer som
        ett mönster att veta vart man ska scrolla"), och tar färgen från kortet
        i fokus. Varje mening stod redan på sidan. Formen: nextrum-start.css
        avsnitt 19. Samma markup i en/index.html. -->
   <div class="hjs" data-hjscen>
-    <div class="nx-wrap-bred hjs-huvud">
-      <div class="hjs-huvud-text">
+    <div class="nx-wrap-bred">
+      <div class="nx-mitt-head" data-stig>
         <span class="nx-et acc">What is Nextrum</span>
-        <h2 class="nx-d2 hj-rubrik" id="hj-t">How do we help <em>your child?</em></h2>
-        <p class="nx-lede">Nextrum offers affordable tutoring where students are matched with a tutor who fits their needs. We help students understand more, feel more confident at school and grow over time.</p>
-      </div>
-      <div class="hjs-pilar">
-        <button type="button" class="hjs-pil" data-hjs-pil="-1" aria-controls="hjs-spar" aria-label="Previous card"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4L3 8l4 4"/></svg></button>
-        <button type="button" class="hjs-pil" data-hjs-pil="1" aria-controls="hjs-spar" aria-label="Next card"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
+        <h2 class="nx-d2 hj-rubrik" id="hj-t">How do we help<br><em>your child?</em></h2>
+        <p class="nx-lede" style="margin-top:22px">Nextrum offers affordable tutoring where students are matched with a tutor who fits their needs. We help students understand more, feel more confident at school and grow over time.</p>
       </div>
     </div>
     <div class="hjs-spar" id="hjs-spar" role="region" aria-label="How we help, in five cards" tabindex="0">
@@ -387,7 +385,13 @@
         </li>
       </ol>
     </div>
-    <div class="hjs-band" aria-hidden="true"><canvas class="hjs-bg" data-tradar></canvas></div>
+    <div class="hjs-fot">
+      <div class="hjs-band" aria-hidden="true"><canvas class="hjs-bg" data-tradar></canvas></div>
+      <div class="hjs-pilar">
+        <button type="button" class="hjs-pil" data-hjs-pil="-1" aria-controls="hjs-spar" aria-label="Previous card"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4L3 8l4 4"/></svg></button>
+        <button type="button" class="hjs-pil" data-hjs-pil="1" aria-controls="hjs-spar" aria-label="Next card"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
+      </div>
+    </div>
   </div>
 
   <div class="nx-wrap-bred hjs-gar">
@@ -1118,16 +1122,12 @@
      lästes som ett. Trygg hjälp gick 2026-10-29 (bentot bär den). -->
 <section class="nx-sek" id="studiehjalpare">
   <div class="nx-wrap-bred">
-  <div class="nx-head nx-head-en" data-stig>
-    <div>
-      <span class="nx-et acc">Some of the people who help</span>
-      <h2 class="nx-d2" style="margin-top:20px">Meet some of our tutors.</h2>
-    </div>
-    <div class="nx-head-aside">
-      <p class="nx-lede">Our tutors are young, committed and recently took the same courses themselves. They know
+  <div class="nx-mitt-head" data-stig>
+    <span class="nx-et acc">Some of the people who help</span>
+    <h2 class="nx-d2" style="margin-top:20px">Meet some of our tutors.</h2>
+    <p class="nx-lede" style="margin-top:22px">Our tutors are young, committed and recently took the same courses themselves. They know
         what it feels like to revise for a test, get stuck on a problem and try to understand
         something for the first time.</p>
-    </div>
   </div>
 
   <div class="showcase" id="showcase" data-needs-db>
@@ -1239,16 +1239,12 @@
      omdöme. Ändras sektionen: samma taggar på båda språken.
      ========================================================== -->
 <section class="nx-wrap-bred nx-sek" id="rost">
-  <div class="nx-head nx-head-en" data-stig>
-    <div>
-      <span class="nx-et acc">From us</span>
-      <h2 class="nx-d2" style="margin-top:20px">Before the first reviews.</h2>
-    </div>
-    <div class="nx-head-aside">
-      <p class="nx-lede">We are right at the beginning and have no reviews to show yet. The first
+  <div class="nx-mitt-head" data-stig>
+    <span class="nx-et acc">From us</span>
+    <h2 class="nx-d2" style="margin-top:20px">Before the first reviews.</h2>
+    <p class="nx-lede" style="margin-top:22px">We are right at the beginning and have no reviews to show yet. The first
         ones will come from real families and appear here once they exist, with their permission.
         Until then, you will hear it from us, by name.</p>
-    </div>
   </div>
 
   <div class="nx-roster" id="reviews">

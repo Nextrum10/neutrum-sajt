@@ -3615,9 +3615,9 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    scrollen skriver nextrum-start-scen.js; här står formen och
    slutlägena, och utan skriptet är det de som syns.
 
-   SCENEN. Hur hjälper vi står på ytans vita (--yta): rubriken ovanför i
-   en vanlig storlek, och de fem korten i en rad man sveper i själv
-   (overflow-x och scroll-snap; på dator också med pilarna), så att sidan
+   SCENEN. Hur hjälper vi står på ytans vita (--yta): rubriken ovanför, i
+   mitten som de andra sektionernas, och de fem korten i en rad man sveper
+   i själv (overflow-x och scroll-snap; på dator också med pilarna under), så att sidan
    rullar som vanligt förbi. Leo om raden som scrollen drog: "Vi är ett
    läxhjälps företag ... inte et tech bolag. Så vi kör istället att man
    scrollar själv åt vänster". Trådarna (canvas[data-tradar]) står
@@ -3631,11 +3631,17 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   position:relative;background:var(--yta);
   padding-block:clamp(64px,8vw,112px) clamp(18px,2.4vw,32px);
 }
-.hjs-huvud{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
-.nx-hjs .hj-rubrik{margin-top:16px;font-size:clamp(1.9rem,3.4vw,3rem);line-height:1.02;letter-spacing:-.04em}
-.nx-hjs .nx-lede{margin-top:clamp(12px,1.4vw,18px);max-width:52ch}
-/* Pilarna: bara med skriptet och en mus. På en telefon sveper man. */
-.hjs-pilar{display:none;flex:none;gap:10px}
+/* Rubriken står i mitten som de andra sektionernas (.nx-mitt-head, Leo:
+   "jag gillade hur rubrikerna var likadana ... och centrera"), och raden
+   börjar direkt under. */
+.hjs .nx-mitt-head{margin-bottom:0}
+/* Pilarna: bara med skriptet och en mus, i mitten under raden, ovanpå
+   trådarnas band. På en telefon sveper man. */
+.hjs-fot{
+  position:relative;display:grid;place-items:center;
+  min-height:clamp(64px,8vw,110px);margin-top:clamp(4px,1vw,12px);
+}
+.hjs-pilar{position:relative;z-index:1;display:none;gap:10px}
 .hjs-igang .hjs-pilar{display:flex}
 @media (hover:none),(pointer:coarse){.hjs-igang .hjs-pilar{display:none}}
 .hjs-pil{
@@ -3670,12 +3676,12 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   border:1px solid color-mix(in srgb,var(--f) 24%,transparent);
   transition:border-color .5s var(--e-mjuk);
 }
+/* Siffrorna är ifyllda från början (Leo: "01 02 03 04 05 ska redan vara
+   färgade"); fokus syns på kanten. */
 .hjs-nr{
   display:block;
   font-size:clamp(2.8rem,4.4vw,4.2rem);font-weight:800;letter-spacing:-.06em;line-height:.8;
-  font-variant-numeric:tabular-nums;
-  color:transparent;-webkit-text-stroke:1.5px var(--f);
-  transition:color .5s var(--e-mjuk);
+  font-variant-numeric:tabular-nums;color:var(--f);
 }
 .hjs-kort .hj-et{margin-top:clamp(16px,2vw,24px);color:var(--f)}
 .hjs-kort h3{
@@ -3690,10 +3696,9 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .hjs-kort .nx-lank{margin-top:auto;padding-top:18px;color:var(--bl)}
 .hjs-kort .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
 .hjs-igang .hjs-kort.pa{border-color:color-mix(in srgb,var(--f) 62%,transparent)}
-.hjs-igang .hjs-kort.pa .hjs-nr{color:var(--f)}
 /* Bandet med trådarna, under korten: ett mönster som visar att raden
    fortsätter åt höger, nedtonat så att det aldrig tävlar med texten. */
-.hjs-band{position:relative;height:clamp(64px,8vw,110px);margin-top:clamp(4px,1vw,12px);pointer-events:none}
+.hjs-band{position:absolute;inset:0;pointer-events:none}
 .hjs-bg{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity 1.2s var(--e-mjuk)}
 .hjs-bg.gl-pa{opacity:.6}
 /* Orden i springan: ett korts rubrik stiger upp när kortet kommer in. */
@@ -3707,7 +3712,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .hjs-rorlig .hjs-kort.inne p,.hjs-rorlig .hjs-kort.inne .nx-lank{transition-delay:.4s}
 @media (max-width:760px){
   .hjs-kort{width:min(20rem,80vw)}
-  .hjs-nr{font-size:clamp(2.6rem,13vw,3.4rem);-webkit-text-stroke-width:1.3px}
+  .hjs-nr{font-size:clamp(2.6rem,13vw,3.4rem)}
 }
 /* Garantins remsa under scenen, på papperet. */
 .hjs-gar{padding-block:clamp(40px,6vw,72px) clamp(36px,4.6vw,68px)}
@@ -3750,7 +3755,7 @@ html[data-motion="lite"] .nx-start .nx-et{
 @keyframes nx-glans-text{to{background-position:-150% 0}}
 
 @media (prefers-reduced-motion:reduce){
-  .hjs-ord > span,.hjs-nr,.hjs-kort{transition:none}
+  .hjs-ord > span,.hjs-kort{transition:none}
   .nx-start .nx-et{animation:none}
 }
 
@@ -3796,13 +3801,12 @@ html[data-motion] .nx-stjarnkant::after{animation:nx-stjarna-upp 5.5s linear inf
 html[data-motion="still"] .nx-stjarnkant::before,
 html[data-motion="still"] .nx-stjarnkant::after{animation:none;opacity:0}
 
-/* ---------- rubrikerna och ansökans steg i en kolumn ----------
-   Samma dag och av samma skäl: på startsidan står ingressen under
-   rubriken (.nx-head-en, i stället för split med texten till höger), och
-   Bli studiehjälpares fyra steg är en lodrät lista med siffran framför,
-   inte fyra rutor i rad. Menysidorna behåller sina. */
-.nx-head-en .nx-head-aside{margin-top:-4px}
-.nx-head-en .nx-head-aside .nx-lede{max-width:60ch}
+/* ---------- rubrikerna i mitten och ansökans steg i en kolumn ----------
+   Samma dag och av samma skäl: på startsidan står sektionernas rubriker
+   i mitten med ingressen under, alla likadana (.nx-mitt-head, som
+   studievyns; Leo: "jag gillade hur rubrikerna var likadana ... och
+   centrera"), och Bli studiehjälpares fyra steg är en lodrät lista med
+   siffran framför, inte fyra rutor i rad. Menysidorna behåller sina. */
 .nx-apply-flow.nx-apply-lista{
   display:grid;grid-template-columns:minmax(0,1fr);gap:0;max-width:760px;
   border-top:1px solid rgba(239,230,214,.14);
