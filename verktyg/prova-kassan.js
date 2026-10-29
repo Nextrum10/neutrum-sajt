@@ -932,7 +932,7 @@ async function provaUpplagg(webb) {
     await page.waitForSelector('#erb-upplagg [data-kop-upplagg]', { timeout: 6000 }).catch(() => {});
     const kort = await innehåll(page, '#erb-upplagg');
     prova('upplägget: familjen ser det ovanför planerna, med timmarna, planernas pris och att det gäller som en plan',
-      /Höstlovet: 6 timmar, 2\s?274\s*kr/.test(kort) && /379\s*kr i timmen/.test(kort) && /30 dagar från köpet, som en plan/.test(kort),
+      /Höstlovet/.test(kort) && /6 timmar för 2\s?274\s*kr/.test(kort) && /Köp upplägget/.test(kort) && /379\s*kr i timmen/.test(kort) && /30 dagar från köpet, som en plan/.test(kort),
       kort);
     await page.click('#erb-upplagg [data-kop-upplagg="upp-1"]');
     await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
