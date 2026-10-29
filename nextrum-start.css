@@ -3615,8 +3615,8 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    scrollen skriver nextrum-start-scen.js; här står formen och
    slutlägena, och utan skriptet är det de som syns.
 
-   SCENEN. Hur hjälper vi står på ytans vita (--yta): rubriken ovanför, i
-   mitten som de andra sektionernas, och de fem korten i en rad man sveper
+   SCENEN. Hur hjälper vi står på ytans vita (--yta): rubriken ovanför,
+   likadan som de andra sektionernas, och de fem korten i en rad man sveper
    i själv (overflow-x och scroll-snap; på dator också med pilarna under), så att sidan
    rullar som vanligt förbi. Leo om raden som scrollen drog: "Vi är ett
    läxhjälps företag ... inte et tech bolag. Så vi kör istället att man
@@ -3631,10 +3631,10 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   position:relative;background:var(--yta);
   padding-block:clamp(64px,8vw,112px) clamp(18px,2.4vw,32px);
 }
-/* Rubriken står i mitten som de andra sektionernas (.nx-mitt-head, Leo:
-   "jag gillade hur rubrikerna var likadana ... och centrera"), och raden
-   börjar direkt under. */
-.hjs .nx-mitt-head{margin-bottom:0}
+/* Rubriken är likadan som de andra sektionernas (.nx-head split, Leo:
+   "jag gillade hur rubrikerna var likadana", och om ett försök i mitten:
+   "De ska inte vara centrade"), och raden börjar direkt under. */
+.hjs .nx-head{margin-bottom:0}
 /* Pilarna: bara med skriptet och en mus, i mitten under raden, ovanpå
    trådarnas band. På en telefon sveper man. */
 .hjs-fot{
@@ -3772,7 +3772,6 @@ html.nx-sr [data-ordfyll].nx-scrub .nx-ord{transition:none;will-change:opacity,f
 /* ---------- studievyn tippar upp ----------
    .sd-scrub (skriptet, bara tier full med GSAP): fönstrets egen entré
    (avsnitt 8) står av, och GSAP:s värden står inline. */
-.nx-sd-scen .nx-mitt-head{margin-bottom:0}
 html.nx-sr .nx-sd.sd-scrub .sd-rum{transition:none;will-change:transform}
 
 /* ---------- stjärnkanten (StarBorder) ----------
@@ -3801,12 +3800,12 @@ html[data-motion] .nx-stjarnkant::after{animation:nx-stjarna-upp 5.5s linear inf
 html[data-motion="still"] .nx-stjarnkant::before,
 html[data-motion="still"] .nx-stjarnkant::after{animation:none;opacity:0}
 
-/* ---------- rubrikerna i mitten och ansökans steg i en kolumn ----------
-   Samma dag och av samma skäl: på startsidan står sektionernas rubriker
-   i mitten med ingressen under, alla likadana (.nx-mitt-head, som
-   studievyns; Leo: "jag gillade hur rubrikerna var likadana ... och
-   centrera"), och Bli studiehjälpares fyra steg är en lodrät lista med
-   siffran framför, inte fyra rutor i rad. Menysidorna behåller sina. */
+/* ---------- ansökans steg i en kolumn ----------
+   Samma dag och av samma skäl: Bli studiehjälpares fyra steg är en
+   lodrät lista med siffran framför, inte fyra rutor i rad. Sektionernas
+   rubriker är som förut (.nx-head split), likadana (Leo: "jag gillade
+   hur rubrikerna var likadana", "De ska inte vara centrade").
+   Menysidorna behåller sina. */
 .nx-apply-flow.nx-apply-lista{
   display:grid;grid-template-columns:minmax(0,1fr);gap:0;max-width:760px;
   border-top:1px solid rgba(239,230,214,.14);

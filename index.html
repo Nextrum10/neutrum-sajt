@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=b9a03a57">
-<link rel="stylesheet" href="nextrum-start.css?v=7969df7d">
+<link rel="stylesheet" href="nextrum-start.css?v=e08e36cf">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -243,7 +243,7 @@
      har sina två blad igen (Allt på ett ställe står alltså två gånger, som
      före 2026-10-29); etiketterna har ett
      ljus som glider (ShinyText), ämnesbandet lutar med farten
-     (ScrollVelocity), sektionernas rubriker står i mitten, likadana, och ansökans fyra
+     (ScrollVelocity), sektionernas rubriker är som förut, likadana, och ansökans fyra
      steg är en lodrät lista; manifestet är ett eget ögonblick där orden blir
      skarpa medan man scrollar (ScrollReveal); studievyn tippar upp ur
      papperet, och Nästa steg följer sidans läge med ett punktnät som
@@ -353,9 +353,9 @@
        raden som scrollen drog: "Jag gillar ej heller att man behöver scrolla
        ner för att nästa steg ska börja. Vi är ett läxhjälps företag ... inte
        et tech bolag. Så vi kör istället att man scrollar själv åt vänster.
-       Och rubriken tar för stor del av sidan." Så: rubriken ovanför, i mitten
-       och likadan som de andra sektionernas (Leo: "jag gillade hur rubrikerna
-       var likadana ... och centrera"), och de fem korten i en rad man sveper i
+       Och rubriken tar för stor del av sidan." Så: rubriken ovanför, likadan
+       som de andra sektionernas (Leo: "jag gillade hur rubrikerna var
+       likadana", och "De ska inte vara centrade"), och de fem korten i en rad man sveper i
        själv (på dator också med pilarna under), och sidan rullar som vanligt
        förbi. Trådarna
        (React Bits Threads, nextrum-start-scen.js) står nedtonade i ett band
@@ -365,10 +365,14 @@
        avsnitt 19. Samma markup i en/index.html. -->
   <div class="hjs" data-hjscen>
     <div class="nx-wrap-bred">
-      <div class="nx-mitt-head" data-stig>
-        <span class="nx-et acc">Vad är Nextrum</span>
-        <h2 class="nx-d2 hj-rubrik" id="hj-t">Hur hjälper vi<br><em>ert barn?</em></h2>
-        <p class="nx-lede" style="margin-top:22px">Nextrum erbjuder prisvärd läxhjälp där elever matchas med en studiehjälpare som passar deras behov. Vi hjälper elever att förstå mer, känna sig tryggare i skolan och utvecklas över tid.</p>
+      <div class="nx-head split" data-stig>
+        <div>
+          <span class="nx-et acc">Vad är Nextrum</span>
+          <h2 class="nx-d2 hj-rubrik" id="hj-t">Hur hjälper vi<br><em>ert barn?</em></h2>
+        </div>
+        <div class="nx-head-aside">
+          <p class="nx-lede">Nextrum erbjuder prisvärd läxhjälp där elever matchas med en studiehjälpare som passar deras behov. Vi hjälper elever att förstå mer, känna sig tryggare i skolan och utvecklas över tid.</p>
+        </div>
       </div>
     </div>
     <div class="hjs-spar" id="hjs-spar" role="region" aria-label="Så hjälper vi, i fem kort" tabindex="0">
@@ -605,15 +609,19 @@
      likadant — jamfor-sprak.py rapporterar bara FÖRSTA skillnaden i
      struktur, och den är språkväljaren längst upp.
      ========================================================== -->
-<!-- Sedan 2026-10-29 står rubriken i mitten och fönstret tippar upp ur
+<!-- Sedan 2026-10-29 tippar fönstret upp ur
      papperet medan man scrollar (data-tipp, nextrum-start-scen.js), i
      stället för att resa sig en gång. Utan GSAP reser det sig som förut. -->
 <section class="nx-wrap-bred nx-sek nx-sd-scen" id="studievy" aria-labelledby="studievy-t">
-  <div class="nx-mitt-head" data-stig>
-    <span class="nx-et acc">Studievyn</span>
-    <h2 class="nx-d2" id="studievy-t" style="margin-top:20px">Du ser vad som händer.</h2>
-    <p class="nx-lede" style="margin-top:22px">Genom Nextrums studievy kan elev och förälder följa utvecklingen, se
-      studieplanen, boka pass och läsa återkopplingen — på ett och samma ställe.</p>
+  <div class="nx-head split" data-stig>
+    <div>
+      <span class="nx-et acc">Studievyn</span>
+      <h2 class="nx-d2" id="studievy-t" style="margin-top:20px">Du ser vad som händer.</h2>
+    </div>
+    <div class="nx-head-aside">
+      <p class="nx-lede">Genom Nextrums studievy kan elev och förälder följa utvecklingen, se
+        studieplanen, boka pass och läsa återkopplingen — på ett och samma ställe.</p>
+    </div>
   </div>
 
   <div class="nx-sd" data-studievy data-tipp role="img" aria-label="Illustration av Nextrums studievy: en familj godkänner en tid, föreslår ett pass, svarar studiehjälparen, betalar och klarar en nivå i NexLäx. Innehållet är ett exempel.">
@@ -1156,12 +1164,16 @@
      lästes som ett. Trygg hjälp gick 2026-10-29 (bentot bär den). -->
 <section class="nx-sek" id="studiehjalpare">
   <div class="nx-wrap-bred">
-  <div class="nx-mitt-head" data-stig>
-    <span class="nx-et acc">Några av dem som hjälper</span>
-    <h2 class="nx-d2" style="margin-top:20px">Möt några av våra studiehjälpare.</h2>
-    <p class="nx-lede" style="margin-top:22px">Våra studiehjälpare är unga, engagerade och har nyligen läst samma
+  <div class="nx-head split" data-stig>
+    <div>
+      <span class="nx-et acc">Några av dem som hjälper</span>
+      <h2 class="nx-d2" style="margin-top:20px">Möt några av våra studiehjälpare.</h2>
+    </div>
+    <div class="nx-head-aside">
+      <p class="nx-lede">Våra studiehjälpare är unga, engagerade och har nyligen läst samma
         kurser själva. De vet hur det känns att plugga inför prov, fastna på en uppgift och
         försöka förstå något för första gången.</p>
+    </div>
   </div>
 
   <div class="showcase" id="showcase" data-needs-db>
@@ -1288,12 +1300,16 @@
      kräver samma lag. Samma ändring i en/index.html, tagg för tagg.
      ========================================================== -->
 <section class="nx-wrap-bred nx-sek" id="rost">
-  <div class="nx-mitt-head" data-stig>
-    <span class="nx-et acc">Från oss</span>
-    <h2 class="nx-d2" style="margin-top:20px">Innan de första omdömena.</h2>
-    <p class="nx-lede" style="margin-top:22px">Vi är precis i början och har inga omdömen att visa än. De första kommer
+  <div class="nx-head split" data-stig>
+    <div>
+      <span class="nx-et acc">Från oss</span>
+      <h2 class="nx-d2" style="margin-top:20px">Innan de första omdömena.</h2>
+    </div>
+    <div class="nx-head-aside">
+      <p class="nx-lede">Vi är precis i början och har inga omdömen att visa än. De första kommer
         från riktiga familjer och hamnar här när de finns, med deras tillåtelse. Tills dess får ni
         höra det från oss, med namn.</p>
+    </div>
   </div>
 
   <div class="nx-roster" id="reviews">

@@ -739,7 +739,7 @@ i kolumner och tråkiga", med React Bits som förebild, och "Du får göra allt"
 sedan 2026-10-29 **en rad man sveper i själv** (`.nx-hjs`, `data-hjscen`, avsnitt 19; Leo: "snygga rörliga bakgrunder",
 "de kolumnerna typ 5 stycken går sidleds snyggt", och sist: "Vi är ett läxhjälps företag ... inte et tech bolag. Så vi
 kör istället att man scrollar själv åt vänster. Och rubriken tar för stor del av sidan"): på ytans vita (`--yta`) står
-rubriken i mitten med ingressen, som de andra sektionernas, och under den fem kort i en rullbar rad (`overflow-x`,
+rubriken med ingressen, likadan som de andra sektionernas, och under den fem kort i en rullbar rad (`overflow-x`,
 `scroll-snap`, på dator också pilar under raden som rullar den med `scrollBy`): läxhjälpen, studiehjälparna, matchningen (ur Trygg hjälps band), NexLäx och
 Allt på ett ställe, var och en med ordningens färg i `--f`. **Ingen scroll drar raden**, och sidan rullar som vanligt
 förbi. Trådar i WebGL (`data-tradar`, efter React Bits Threads) står nedtonade i ett band under korten, **aldrig bakom
@@ -747,9 +747,9 @@ texten** (Leo: "texten syns dålig ... mer som ett mönster att veta vart man sk
 från början (Leo: "01 02 03 04 05 ska redan vara färgade"), och kortet i fokus (`.pa`) får kanten och trådarna dess färg, och ett korts rubrik stiger upp när det kommer in (SplitText). Utan skriptet är
 raden en rad att svepa i, utan pilar. Ingen mörk yta och inget orange bakom raden. På Vår idé fyra blad i en rad som
 förut. **Inga rader av rutor i övrigt** (samma dag prövades ett bentorutnät med sju rutor och en hög med fem kort;
-Leo underkände båda: "minimera alla kolumner"): **sektionernas rubriker är likadana och står i mitten** (`.nx-mitt-head`, som studievyns:
-Hur hjälper vi, studievyn, studiehjälparna och omdömena; Leo: "jag gillade hur rubrikerna var likadana ändra tillbaka de
-du ändrade och centrera"; några timmar samma dag stod ingressen under en vänsterställd rubrik, `.nx-head-en`), och
+Leo underkände båda: "minimera alla kolumner"): **sektionernas rubriker är likadana, som före 2026-10-29** (`.nx-head split`, rubriken till vänster och ingressen
+till höger: Hur hjälper vi, studievyn, studiehjälparna och omdömena; Leo: "jag gillade hur rubrikerna var likadana ändra
+tillbaka de du ändrade", och om ett försök i mitten samma kväll: "De ska inte vara centrade"), och
 ansökans steg i `#bli` är en lodrät lista (`.nx-apply-lista`). Inget nytt påstående i scenen: varje mening stod redan på
 sidan.
 Erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
