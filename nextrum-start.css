@@ -3676,13 +3676,9 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   border:1px solid color-mix(in srgb,var(--f) 24%,transparent);
   transition:border-color .5s var(--e-mjuk);
 }
-/* Siffrorna är ifyllda från början (Leo: "01 02 03 04 05 ska redan vara
-   färgade"); fokus syns på kanten. */
-.hjs-nr{
-  display:block;
-  font-size:clamp(2.8rem,4.4vw,4.2rem);font-weight:800;letter-spacing:-.06em;line-height:.8;
-  font-variant-numeric:tabular-nums;color:var(--f);
-}
+/* Ikonen överst i kortet, i kortets färg (.hj-ikon, avsnitt 17), i
+   stället för en siffra (Leo, med en bild av bentots rutor: "ha dessa fem
+   element istället för siffror"); fokus syns på kanten. */
 .hjs-kort .hj-et{margin-top:clamp(16px,2vw,24px);color:var(--f)}
 .hjs-kort h3{
   margin-top:10px;
@@ -3712,7 +3708,6 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .hjs-rorlig .hjs-kort.inne p,.hjs-rorlig .hjs-kort.inne .nx-lank{transition-delay:.4s}
 @media (max-width:760px){
   .hjs-kort{width:min(20rem,80vw)}
-  .hjs-nr{font-size:clamp(2.6rem,13vw,3.4rem)}
 }
 /* Garantins remsa under scenen, på papperet. */
 .hjs-gar{padding-block:clamp(40px,6vw,72px) clamp(36px,4.6vw,68px)}
@@ -3767,6 +3762,63 @@ html[data-motion="lite"] .nx-start .nx-et{
 /* Rubriken mindre (Leo: "gör den rubriken mindre"), och bladen under som förut. */
 .nx-manifest-scen h2{font-size:clamp(2.2rem,5vw,4.4rem);line-height:.98;max-width:18ch}
 .nx-manifest-scen .nx-cta-rad{margin-top:clamp(30px,3.6vw,48px)}
+/* Manifestets topp: rubriken till vänster och fotot hemma hos familjen
+   till höger, med platserna och rapporten som lappar ovanpå, som i
+   bentots läxhjälpsruta (Leo: "Info från den tredje bilden lägger du på
+   rätt person kan göra stor skillnad"). Under 980 px under varandra.
+   Lapparna poppar fram i tur när fotot stigit in (.nx-in). */
+.mf-topp{display:grid;gap:clamp(28px,4vw,56px);align-items:center}
+@media (min-width:980px){
+  .mf-topp{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)}
+  .nx-manifest-scen .mf-topp h2{font-size:clamp(2.2rem,4.1vw,3.9rem)}
+}
+.mf-foto{
+  --f:var(--amne-ma);--mf-pad:clamp(14px,1.8vw,22px);
+  position:relative;margin:0;min-height:clamp(250px,27vw,380px);
+  border-radius:28px;overflow:hidden;background:var(--tint);
+}
+.mf-foto picture,.mf-foto img{position:absolute;inset:0;width:100%;height:100%}
+.mf-foto img{object-fit:cover;transition:scale 1.6s var(--e-ut)}
+.mf-foto::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 45%,rgba(28,22,16,.42));
+}
+html.nx-sr .mf-foto:not(.nx-in) img{scale:1.14}
+.mf-platser{
+  position:absolute;z-index:1;left:var(--mf-pad);right:var(--mf-pad);bottom:var(--mf-pad);
+  display:flex;flex-wrap:wrap;gap:8px;
+}
+.mf-plats,.mf-rapport{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 14px 9px 11px;border-radius:100px;
+  font-size:.9rem;font-weight:600;letter-spacing:-.01em;color:var(--bl);
+  background:var(--kort);
+  border:1px solid color-mix(in srgb,var(--f) 22%,transparent);
+  box-shadow:0 10px 24px -14px rgba(28,22,16,.5);
+}
+.mf-plats svg{
+  width:17px;height:17px;flex:none;
+  fill:none;stroke:var(--f);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+.mf-rapport{flex-basis:100%;max-width:max-content;border-color:color-mix(in srgb,var(--mossa) 34%,transparent)}
+.mf-bock{display:grid;place-items:center;flex:none;width:20px;height:20px;border-radius:50%;background:var(--mossa)}
+.mf-bock svg{width:13px;height:13px;fill:none;stroke:var(--kort);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+html.nx-sr .mf-plats,html.nx-sr .mf-rapport{
+  transition:opacity .5s var(--e-mjuk),translate .7s var(--fjader),scale .7s var(--fjader);
+  transition-delay:calc(.32s + var(--i,0) * 110ms);
+}
+html.nx-sr .mf-foto:not(.nx-in) .mf-plats,
+html.nx-sr .mf-foto:not(.nx-in) .mf-rapport{opacity:0;translate:0 14px;scale:.9}
+@media (max-width:560px){
+  .mf-foto{min-height:230px;border-radius:22px}
+  .mf-platser{gap:5px}
+  .mf-plats,.mf-rapport{font-size:.76rem;gap:6px;padding:6px 10px 6px 8px}
+  .mf-plats svg{width:14px;height:14px}
+  .mf-bock{width:17px;height:17px}
+}
+@media (prefers-reduced-motion:reduce){
+  .mf-foto img,.mf-plats,.mf-rapport{transition:none}
+}
 html.nx-sr [data-ordfyll].nx-scrub .nx-ord{transition:none;will-change:opacity,filter}
 
 /* ---------- studievyn tippar upp ----------

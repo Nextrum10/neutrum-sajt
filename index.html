@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=b9a03a57">
-<link rel="stylesheet" href="nextrum-start.css?v=e08e36cf">
+<link rel="stylesheet" href="nextrum-start.css?v=d3b0e0be">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -378,25 +378,25 @@
     <div class="hjs-spar" id="hjs-spar" role="region" aria-label="Så hjälper vi, i fem kort" tabindex="0">
       <ol class="hjs-lista">
         <li class="hjs-kort" style="--f:var(--amne-ma)">
-          <span class="hjs-nr" aria-hidden="true">01</span>
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8.5" r="3"/><circle cx="16.6" cy="9.6" r="2.4"/><path d="M2.8 19.2c0-2.9 2.3-5.1 5.2-5.1s5.2 2.2 5.2 5.1"/><path d="M14 14.7a4.6 4.6 0 0 1 2.6-.8c2.5 0 4.6 1.9 4.6 4.5"/></svg></span>
           <span class="hj-et">Läxhjälpen</span>
           <h3>Rätt studiehjälp, på rätt plats</h3>
           <p>Eleven får en egen studiehjälpare, en studieplan och pass hemma hos er, på biblioteket eller online. Efter varje pass kommer en rapport.</p>
         </li>
         <li class="hjs-kort" style="--f:var(--amne-en)">
-          <span class="hjs-nr" aria-hidden="true">02</span>
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4.5 2.5 9 12 13.5 21.5 9z"/><path d="M6.5 11v4.3c1.4 1.4 3.3 2.2 5.5 2.2s4.1-.8 5.5-2.2V11"/><path d="M21.5 9v5"/></svg></span>
           <span class="hj-et">Studiehjälparna</span>
           <h3>Utvalda och intervjuade, från samma skolbänk</h3>
           <p>Våra studiehjälpare har nyligen läst samma kurser själva. Vi intervjuar och utbildar dem, och matchar efter ämne, nivå, behov och personlighet.</p>
         </li>
         <li class="hjs-kort" style="--f:var(--amne-no)">
-          <span class="hjs-nr" aria-hidden="true">03</span>
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
           <span class="hj-et">Matchningen</span>
           <h3>En match vi står för</h3>
           <p>Ni bläddrar inte i en katalog. Vi väljer, för fel match är värre än ingen match.</p>
         </li>
         <li class="hjs-kort" style="--f:var(--acc)">
-          <span class="hjs-nr" aria-hidden="true">04</span>
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg></span>
           <span class="hj-et">NexLäx</span>
           <h3>Övning mellan passen</h3>
           <p>Nextrums egna digitala uppgifter: korta nivåer där varje svar rättas direkt, med XP och märken. Studiehjälparen ser vad som sitter.</p>
@@ -405,7 +405,7 @@
           </a>
         </li>
         <li class="hjs-kort" style="--f:var(--amne-ms)">
-          <span class="hjs-nr" aria-hidden="true">05</span>
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
           <span class="hj-et">Studievyn</span>
           <h3>Allt på ett ställe</h3>
           <p>Allt finns i en och samma plattform: studieplan, bokning, rapporter, NexLäx och betalning. Pass online eller på plats, utan anmälningsavgift.</p>
@@ -536,16 +536,38 @@
      ========================================================== -->
 <section class="nx-manifest nx-manifest-scen" id="om">
   <div class="nx-manifest-inner">
-    <span class="nx-et" data-stig>Vår idé</span>
-    <!-- data-ordfyll: orden fylls i ett i taget när rubriken syns
-         (nextrum-start.js). Med GSAP tar data-scrollord över: orden går
-         från suddiga till skarpa i takt med scrollen, och rubriken rätar
-         upp sig (nextrum-start-scen.js, efter React Bits ScrollReveal).
-         Rubriken är fortfarande vanlig text, och mindre sedan 2026-10-29
-         (Leo: "gör den rubriken mindre och ta tillbaka kolumnen där som
-         fanns"): bladen Rätt match och Allt på ett ställe är tillbaka,
-         som de stod före samma dag. -->
-    <h2 data-ordfyll data-scrollord style="margin-top:clamp(24px,3vw,38px)">Rätt person kan göra<br><em>stor skillnad.</em></h2>
+    <div class="mf-topp">
+      <div class="mf-rubrik">
+        <span class="nx-et" data-stig>Vår idé</span>
+        <!-- data-ordfyll: orden fylls i ett i taget när rubriken syns
+             (nextrum-start.js). Med GSAP tar data-scrollord över: orden går
+             från suddiga till skarpa i takt med scrollen, och rubriken rätar
+             upp sig (nextrum-start-scen.js, efter React Bits ScrollReveal).
+             Rubriken är fortfarande vanlig text, och mindre sedan 2026-10-29
+             (Leo: "gör den rubriken mindre och ta tillbaka kolumnen där som
+             fanns"): bladen Rätt match och Allt på ett ställe är tillbaka,
+             som de stod före samma dag. -->
+        <h2 data-ordfyll data-scrollord style="margin-top:clamp(24px,3vw,38px)">Rätt person kan göra<br><em>stor skillnad.</em></h2>
+      </div>
+      <!-- Fotot hemma hos familjen med platserna och rapporten som lappar
+           ovanpå (2026-10-29, Leo: "Info från den tredje bilden lägger du på
+           rätt person kan göra stor skillnad", med en bild av läxhjälpens ruta
+           i bentot). Lapparna är dekor (aria-hidden): läxhjälpens kort i raden
+           ovanför säger samma sak. -->
+      <figure class="mf-foto" data-stig style="--tint:#634E3D">
+        <picture><source type="image/webp" srcset="bilder/21-hemma-hos-familjen-640.webp 640w, bilder/21-hemma-hos-familjen-960.webp 960w, bilder/21-hemma-hos-familjen-1280.webp 1280w" sizes="(max-width:980px) 92vw, 46vw"><img class="nx-img" src="bilder/21-hemma-hos-familjen-960.jpg"
+             srcset="bilder/21-hemma-hos-familjen-640.jpg 640w, bilder/21-hemma-hos-familjen-960.jpg 960w, bilder/21-hemma-hos-familjen-1280.jpg 1280w"
+             sizes="(max-width:980px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+             style="object-position:40% 44%"
+             alt="En studiehjälpare och en elev sitter vid ett matbord hemma, med skolböcker, en fruktskål och ett höstfönster bakom sig."></picture>
+        <div class="mf-platser" aria-hidden="true">
+          <span class="mf-plats" style="--i:0"><svg viewBox="0 0 24 24"><path d="M4 11.2 12 4.5l8 6.7"/><path d="M6.2 9.6V19.5h11.6V9.6"/><path d="M10 19.5v-5h4v5"/></svg>Hemma hos er</span>
+          <span class="mf-plats" style="--i:1"><svg viewBox="0 0 24 24"><path d="M12 6.6c-1.8-1.3-4.3-2-7.5-2v13c3.2 0 5.7.7 7.5 2 1.8-1.3 4.3-2 7.5-2v-13c-3.2 0-5.7.7-7.5 2z"/><path d="M12 6.6v13"/></svg>På biblioteket</span>
+          <span class="mf-plats" style="--i:2"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="11" rx="1.8"/><path d="M2 19.5h20"/></svg>Online</span>
+          <span class="mf-rapport" style="--i:3"><span class="mf-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>Rapporten efter passet är klar</span>
+        </div>
+      </figure>
+    </div>
 
     <!-- Två blad bredvid varandra, också på telefon (Leo 2026-10-07:
          "kolumnerna under rätt person kan göra stor skillnad bredvid

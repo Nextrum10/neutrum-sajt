@@ -743,8 +743,9 @@ rubriken med ingressen, likadan som de andra sektionernas, och under den fem kor
 `scroll-snap`, på dator också pilar under raden som rullar den med `scrollBy`): läxhjälpen, studiehjälparna, matchningen (ur Trygg hjälps band), NexLäx och
 Allt på ett ställe, var och en med ordningens färg i `--f`. **Ingen scroll drar raden**, och sidan rullar som vanligt
 förbi. Trådar i WebGL (`data-tradar`, efter React Bits Threads) står nedtonade i ett band under korten, **aldrig bakom
-texten** (Leo: "texten syns dålig ... mer som ett mönster att veta vart man ska scrolla"). Siffrorna är ifyllda i kortets färg
-från början (Leo: "01 02 03 04 05 ska redan vara färgade"), och kortet i fokus (`.pa`) får kanten och trådarna dess färg, och ett korts rubrik stiger upp när det kommer in (SplitText). Utan skriptet är
+texten** (Leo: "texten syns dålig ... mer som ett mönster att veta vart man ska scrolla"). Varje kort har bentots ikon i sin färg
+överst (`.hj-ikon`; Leo: "ha dessa fem element istället för siffror", efter en kväll med 01–05), och kortet i fokus (`.pa`)
+får kanten och trådarna dess färg, och ett korts rubrik stiger upp när det kommer in (SplitText). Utan skriptet är
 raden en rad att svepa i, utan pilar. Ingen mörk yta och inget orange bakom raden. På Vår idé fyra blad i en rad som
 förut. **Inga rader av rutor i övrigt** (samma dag prövades ett bentorutnät med sju rutor och en hög med fem kort;
 Leo underkände båda: "minimera alla kolumner"): **sektionernas rubriker är likadana, som före 2026-10-29** (`.nx-head split`, rubriken till vänster och ingressen
@@ -788,7 +789,8 @@ Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
 (`data-bild`), och alt-texten står på steget (`data-alt`). Manifestet har sina två blad (Rätt match, Allt på ett
 ställe) och en mindre rubrik (2026-10-29, Leo: "gör den rubriken mindre och ta tillbaka kolumnen där som fanns"; bladen
-var borta några timmar samma dag), och orden blir skarpa i takt med scrollen (`data-scrollord`); manifestets och Nästa
+var borta några timmar samma dag), och bredvid rubriken fotot hemma hos familjen med platserna och rapporten som lappar
+(`.mf-foto`, ur bentots läxhjälpsruta; Leo: "Info från den tredje bilden lägger du på rätt person kan göra stor skillnad"), och orden blir skarpa i takt med scrollen (`data-scrollord`); manifestets och Nästa
 stegs knapp har en kant där ett ljus glider (`.nx-stjarnkant`, StarBorder). Fönstret i studievyn
 tippar upp med scrollen på dator (`data-tipp`). Studiehjälparna står i en rad
 man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).

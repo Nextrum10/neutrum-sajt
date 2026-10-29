@@ -91,7 +91,17 @@ muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
 (tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
 sedan trådarna i Raden som glider).
-- **Rubrikerna likadana, som förut** (samma kväll, efter Raden man sveper i; den som gäller).
+- **Ikonerna och fotot i manifestet** (samma kväll, sist). Leo skickade bilder av bentot som
+  stod i drift och skrev: "Skit i sofforna och kör såhär: ha dessa fel element istället för
+  siffror. Och Info från den tredje bilden lägger du på rätt person kan göra stor skillnad."
+  "sofforna" och "fel" lästes som siffrorna och fem: korten har bentots ikoner (`.hj-ikon`)
+  i stället för 01–05, läxhjälpen folket, studiehjälparna studentmössan (bentots Expertisen),
+  matchningen länken, NexLäx stigen och studievyn dokumentet. Den tredje bilden var bentots
+  läxhjälpsruta med fotot hemma hos familjen och lapparna Hemma hos er, På biblioteket,
+  Online och Rapporten efter passet är klar; fotot och lapparna står nu till höger om
+  manifestets rubrik (`.mf-topp`, `.mf-foto`), under varandra under 980 px, och lapparna
+  poppar fram i tur när fotot stigit in. Läxhjälpens text står kvar i raden.
+- **Rubrikerna likadana, som förut** (samma kväll, efter Raden man sveper i).
   Leo: "Och jag gillade hur rubrikerna var likadana ändra tillbaka de du ändrade och centrera
   / 01 02 03 04 05 ska redan vara färgade". Före samma dag hade Hur hjälper vi, studievyn,
   studiehjälparna och omdömena samma huvud (`.nx-head split`: etiketten och rubriken till
@@ -100,8 +110,8 @@ sedan trådarna i Raden som glider).
   läste "centrera" som rubrikerna och ställde alla fyra i mitten (`.nx-mitt-head`); Leo:
   "De ska inte vara centrade". Nu har alla fyra sitt huvud från före samma dag igen, tecken
   för tecken, och Hur hjälper vi sin rubrik ("Hur hjälper vi<br><em>ert barn?</em>").
-  Pilarna står i mitten under raden, ovanpå trådarnas band, och korten har siffran ifylld i
-  sin färg från början; fokus syns bara på kanten. Manifestets rubrik rördes inte: den är
+  Pilarna står i mitten under raden, ovanpå trådarnas band, och korten hade en stund siffran
+  ifylld i sin färg från början (Ikonerna ovan ersatte den); fokus syns bara på kanten. Manifestets rubrik rördes inte: den är
   större än de andra med flit, och Leo bad om den mindre.
 - **Raden man sveper i** (femte varvet samma kväll). Leo skickade en video
   och skrev: "texten syns dålig då rörelse grejen tar för mycket plats med den färgen den
