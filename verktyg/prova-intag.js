@@ -320,8 +320,9 @@ async function provaPoolenUtanKonto(webb) {
   await vänta(300);
   await page.click('#panel-ans-utbildning [data-dp="ansokan:ans-ny"]');
   await vänta(400);
-  prova('intag: ansökan säger att Utbildning hållen skapar kontot', (await text(page, '.dp .ans-nu'))
-    .includes('Utbildning hållen skapar kontot'), await text(page, '.dp .ans-nu'));
+  prova('intag: knappen i Utbildning säger att den skapar kontot och skickar inbjudan',
+    (await text(page, '.dp [data-ans-hallen="ans-ny"]')) === 'Skapa konto och skicka inbjudan',
+    await text(page, '.dp .ans-nu'));
   await page.click('.dp [data-ans-hallen="ans-ny"]');
   await page.waitForSelector('#uh-ok', { timeout: 4000 }).catch(() => {});
   prova('intag: rutan säger att kontot skapas med adressen i ansökan och att hen väljer lösenordet',
