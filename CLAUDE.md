@@ -786,11 +786,13 @@ Garantin har leran; på bark byts färgerna mot `-l`; erbjudandena och Just nu h
 de bara i NexLäx. **Bli
 studiehjälpare-sidans sidhuvud och band** (`.bli-svart`) står på mörka lägets svarta (`--bli-bg`, #1A1813) i båda lägena,
 med lera (`--bli-kant`, 2026-10-08), som startsidans `#bli` gjorde till 2026-10-29; `:is(#bli,.bli-svart)` står kvar i
-avsnitt 10, för :is väger som sitt id och sidans regler räknar med det. **Nästa steg i
-mörkt läge** står på sidans papper (`--pap`) på alla sidor, aldrig på barken (cinema, DE MÖRKA YTORNA), och i ljust läge
-som förut, utom på startsidan: där följer det sidans läge i båda (`.nx-final-ljus`, ingen `.nx-mork`, 2026-10-29, Leo:
-"Så den ska matcha sidan på mörk och ljus vy"), med punktnätet bakom (efter Leos video: "kör nåt sånt här där i
-bakrunden"), och börjar inte längre i `#bli`:s svarta.
+avsnitt 10, för :is väger som sitt id och sidans regler räknar med det. **Nästa steg** följer
+sidans läge i båda lägena på varje sida (`.nx-final-ljus`, ingen `.nx-mork`; startsidan 2026-10-29, Leo: "Så den ska matcha
+sidan på mörk och ljus vy", och alla andra sidor 2026-10-30, Leo: "redo att ta nästa steg ska vara samma på alla landings
+sidor som den nya som är på main sidan"), med punktnätet bakom (efter Leos video: "kör nåt sånt här där i bakrunden";
+`nextrum-punktnat.js`, laddad av varje sida med Nästa steg) och stjärnkanten på Skicka intresseanmälan; formen står i
+cinema (NÄSTA STEG SOM SIDAN), och en ny sida tar samma markup (generatorns `NASTA_STEG`). Raderna under knapparna är
+sidans egna: bara startsidan har Betygsgaranti, för bara där finns remsan länken går till.
 **Footern** står i `--ftr-bg` (#1F1915) i båda lägena (2026-10-08), aldrig i barken.
 Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda

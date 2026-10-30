@@ -3924,7 +3924,7 @@ def bibliotek_text(o):
             'Skriv platsen när ni föreslår tiden.')
 
 
-NASTA_STEG = """<section class="nx-mork nx-final-cinema">
+NASTA_STEG = """<section class="nx-final-cinema nx-final-ljus">
   <div class="nx-wrap-bred">
     <div class="nx-final-inner">
       <span class="nx-et" data-stig>Nästa steg</span>
@@ -3933,7 +3933,7 @@ NASTA_STEG = """<section class="nx-mork nx-final-cinema">
         För dig som vill hjälpa andra.</p>
 
       <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
-        <span class="nx-magnet">
+        <span class="nx-magnet nx-stjarnkant">
           <a class="btn btn-primary btn-lg" href="/intresseanmalan">
             Skicka intresseanmälan
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>

@@ -763,16 +763,26 @@ html.nx-sr .sid-urval.nx-in .ur-led i{animation:ur-prick .7s var(--e-ut) calc(va
 @keyframes ur-prick{0%{opacity:0;translate:0 0}20%{opacity:1}80%{opacity:1}100%{opacity:0;translate:clamp(14px,1.6vw,22px) 0}}
 
 /* ============================================================
-   5d. BOKNINGEN PÅ SÅ FUNGERAR NEXTRUM (2026-10-27)
+   5d. BOKNINGEN PÅ SÅ FUNGERAR NEXTRUM (2026-10-27, rörelsen 2026-10-30)
    Leo: "Så fungerar nextrum på bokningen jätte tråkig sektion gör något
-   snyggare och mer intressant för kunden." Reglerna i tre rader och
-   bredvid dem ett pass som bokas. bokscen() i nextrum-start.js byter
-   data-steg på .bk-scen medan den syns, högst tre varv, och stannar på
-   2 (betalt), som också är markupens läge: utan skript eller rörelse
-   står passet betalt. Datumrutan har studievyns färger (--dag-* i
-   cinema): gul förslag, röd att betala, grön betalt. Ingenting byter
-   storlek: lägena, tiderna och knappen ligger staplade på samma plats
-   och tonas, så att raden aldrig hoppar.
+   snyggare och mer intressant för kunden", och 2026-10-30, med en bild
+   av scenen: "Denna sektion måste ha mycket bättre motion graphic".
+   Reglerna i tre rader och bredvid dem ett pass som bokas, i fyra
+   scener: ni trycker på en dag i veckan och passet faller ner med
+   Väntar på svar och prickar som skriver; studiehjälparen dyker upp med
+   en bock, datumrutan vänder sig röd och Betala nu glider fram och
+   trycks; knappen blir en bock som gnistrar och rutan vänder sig grön;
+   ni trycker på tiden, den rullar till en ny, rutan vänder sig gul och
+   studiehjälparen pingar. Under scenen fylls stegets streck i takt med
+   scenen, och stegen går att trycka på.
+   bokscen() i nextrum-start.js byter data-steg på .bk-scen och sätter
+   .bk-gar (rörelsen) och .bk-knappar (stegen som knappar); allt som rör
+   sig hänger på .bk-gar, så utan skript eller rörelse står passet betalt
+   (markupens data-steg 2) och stegen som en lista. Datumrutan har
+   studievyns färger (--dag-* i cinema): gul förslag, röd att betala,
+   grön betalt. Ingenting byter storlek: lägena, tiderna, knappen och
+   bocken ligger staplade på samma plats, så att raden aldrig hoppar.
+   Tiderna i animationerna följer TID i bokscen().
    ============================================================ */
 .bk-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(32px,5vw,80px);align-items:center}
 .bk-fakta{list-style:none;margin:clamp(24px,3vw,36px) 0 0;padding:0;display:grid;gap:clamp(18px,2.2vw,26px)}
@@ -796,33 +806,66 @@ html.nx-sr .sid-urval.nx-in .ur-led i{animation:ur-prick .7s var(--e-ut) calc(va
     var(--kort);
   border:1px solid var(--kort-kant,var(--ln));box-shadow:var(--kort-sk);
 }
-.bk-yta{padding:clamp(10px,2vw,26px) 0}
+.bk-yta{position:relative;isolation:isolate;display:grid;gap:14px;padding:clamp(8px,1.6vw,20px) 0 clamp(10px,2vw,22px)}
+
+/* Skenet bakom passet, i lägets färg: tre fläckar som tonar mot varandra. */
+.bk-glod{position:absolute;inset:-14% -10%;z-index:-1;pointer-events:none}
+.bk-glod i{
+  position:absolute;inset:0;opacity:0;transition:opacity .9s var(--e-mjuk);
+  background:radial-gradient(50% 44% at 50% 60%,var(--g),transparent 75%);
+}
+.bk-glod .g-gul{--g:color-mix(in srgb,var(--dag-gul-kant) 70%,transparent)}
+.bk-glod .g-rod{--g:color-mix(in srgb,var(--dag-rod-kant) 70%,transparent)}
+.bk-glod .g-gron{--g:color-mix(in srgb,var(--dag-gron-kant) 75%,transparent)}
+.bk-scen:is([data-steg="0"],[data-steg="3"]) .g-gul,
+.bk-scen[data-steg="1"] .g-rod,
+.bk-scen[data-steg="2"] .g-gron{opacity:1}
+
+/* Veckan: torsdagen är vald, och pricken under den har lägets färg. */
+.bk-vecka{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:0 2px}
+.bk-vecka > span{
+  position:relative;display:grid;justify-items:center;gap:1px;padding:7px 0 11px;border-radius:12px;
+  line-height:1.1;color:var(--bl-3);border:1px solid transparent;
+}
+.bk-vecka small{font-size:.68rem;font-weight:600}
+.bk-vecka b{font-size:.98rem;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bk-vecka .vald{background:var(--pap);border-color:var(--ln);color:var(--bl);box-shadow:0 10px 22px -18px rgba(46,42,32,.6)}
+.bk-vecka .vald::after{
+  content:"";position:absolute;left:50%;bottom:4px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;
+  background:var(--dag-gron-kant);transition:background-color .3s var(--e) .5s;
+}
+.bk-scen:is([data-steg="0"],[data-steg="3"]) .bk-vecka .vald::after{background:var(--dag-gul-kant)}
+.bk-scen[data-steg="1"] .bk-vecka .vald::after{background:var(--dag-rod-kant)}
+
 .bk-pass{
   position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;
-  gap:12px 14px;padding:14px;border-radius:20px;
+  gap:12px 14px;padding:14px;border-radius:20px;perspective:600px;
   background:var(--pap);border:1px solid var(--ln);
   box-shadow:0 18px 40px -28px rgba(46,42,32,.5);
 }
 .bk-dag{
   display:grid;place-items:center;width:58px;padding:7px 0 8px;border-radius:14px;line-height:1.05;
   background:var(--dag-gron);color:var(--dag-gron-text);border:1px solid var(--dag-gron-kant);
-  transition:background-color .45s var(--e),color .45s var(--e),border-color .45s var(--e);
+  transition:background-color .12s linear,color .12s linear,border-color .12s linear;
 }
 .bk-dag small{font-size:.74rem;font-weight:600}
 .bk-dag b{font-size:1.5rem;font-weight:800;letter-spacing:-.03em}
 .bk-scen:is([data-steg="0"],[data-steg="3"]) .bk-dag{background:var(--dag-gul);color:var(--dag-gul-text);border-color:var(--dag-gul-kant)}
 .bk-scen[data-steg="1"] .bk-dag{background:var(--dag-rod);color:var(--dag-rod-text);border-color:var(--dag-rod-kant)}
-.bk-info{min-width:0;display:grid;gap:2px}
+.bk-info{position:relative;min-width:0;display:grid;gap:2px}
 .bk-info b{font-weight:700;letter-spacing:-.015em;color:var(--bl)}
 .bk-tid,.bk-lage{display:grid}
-.bk-tid i,.bk-lage i{grid-area:1/1;font-style:normal;transition:opacity .35s var(--e)}
-.bk-tid i{font-size:.92rem;color:var(--bl-2);font-variant-numeric:tabular-nums}
-.bk-tid .t2,.bk-scen[data-steg="3"] .bk-tid .t1{opacity:0}
-.bk-scen[data-steg="3"] .bk-tid .t2{opacity:1}
+.bk-tid{overflow:clip}
+.bk-tid i,.bk-lage i{grid-area:1/1;font-style:normal}
+.bk-tid i{font-size:.92rem;color:var(--bl-2);font-variant-numeric:tabular-nums;transition:opacity .45s var(--e),translate .55s var(--e-ut)}
+.bk-tid .t2{opacity:0;translate:0 100%}
+.bk-scen[data-steg="3"] .bk-tid .t1{opacity:0;translate:0 -100%}
+.bk-scen[data-steg="3"] .bk-tid .t2{opacity:1;translate:none}
 .bk-lage{justify-items:end}
 .bk-lage i{
-  opacity:0;padding:5px 10px;border-radius:100px;white-space:nowrap;
+  opacity:0;translate:0 -6px;padding:5px 10px;border-radius:100px;white-space:nowrap;
   font-size:.78rem;font-weight:700;letter-spacing:-.005em;
+  transition:opacity .3s var(--e),translate .3s var(--e);
 }
 .bk-lage .l0,.bk-lage .l3{background:var(--dag-gul);color:var(--dag-gul-text)}
 .bk-lage .l1{background:var(--dag-rod);color:var(--dag-rod-text)}
@@ -830,27 +873,120 @@ html.nx-sr .sid-urval.nx-in .ur-led i{animation:ur-prick .7s var(--e-ut) calc(va
 .bk-scen[data-steg="0"] .bk-lage .l0,
 .bk-scen[data-steg="1"] .bk-lage .l1,
 .bk-scen[data-steg="2"] .bk-lage .l2,
-.bk-scen[data-steg="3"] .bk-lage .l3{opacity:1}
-.bk-rad{grid-column:1/-1;grid-row:2;display:grid;align-self:center;min-width:0}
-.bk-rad i{grid-area:1/1;font-style:normal;font-size:.86rem;line-height:1.35;color:var(--bl-3);opacity:0;transition:opacity .35s var(--e)}
+.bk-scen[data-steg="3"] .bk-lage .l3{opacity:1;translate:none}
+.bk-rad{grid-column:1/-1;grid-row:2;display:grid;align-self:center;min-width:0;padding-right:46px}
+.bk-rad > i{grid-area:1/1;font-style:normal;font-size:.86rem;line-height:1.35;color:var(--bl-3);opacity:0;transition:opacity .35s var(--e),translate .35s var(--e)}
 .bk-scen[data-steg="0"] .bk-rad .r0,
 .bk-scen[data-steg="2"] .bk-rad .r2,
 .bk-scen[data-steg="3"] .bk-rad .r3{opacity:1}
+.bk-prickar{display:inline-flex;gap:3px;margin-left:6px;vertical-align:middle}
+.bk-prickar i{width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.5}
 .bk-betala{
-  grid-column:1/-1;grid-row:2;justify-self:end;
+  position:relative;grid-column:1/-1;grid-row:2;justify-self:end;
   padding:9px 16px;border-radius:100px;font-size:.88rem;font-weight:700;
   background:var(--orange,var(--acc));color:var(--pap);
-  opacity:0;visibility:hidden;transition:opacity .35s var(--e),visibility 0s linear .35s;
+  opacity:0;visibility:hidden;scale:.9;transition:opacity .3s var(--e),scale .3s var(--e),visibility 0s linear .3s;
 }
-.bk-scen[data-steg="1"] .bk-betala{opacity:1;visibility:visible;transition-delay:0s}
-.bk-finger{
-  position:absolute;right:42px;bottom:16px;width:30px;height:30px;border-radius:50%;
-  background:color-mix(in srgb,var(--bl) 22%,transparent);border:2px solid color-mix(in srgb,var(--pap) 70%,transparent);
+.bk-scen[data-steg="1"] .bk-betala{opacity:1;visibility:visible;scale:1;transition-delay:0s}
+/* Bocken när passet är betalt, på knappens plats. */
+.bk-klar{
+  position:relative;grid-column:1/-1;grid-row:2;justify-self:end;margin-right:6px;
+  display:grid;place-items:center;width:34px;height:34px;border-radius:50%;
+  background:var(--dag-gron-kant);color:var(--pap);
+  opacity:0;scale:.6;transition:opacity .3s var(--e),scale .3s var(--e);
+}
+.bk-klar svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.bk-klar path{stroke-dasharray:1;stroke-dashoffset:0}
+.bk-scen[data-steg="2"] .bk-klar{opacity:1;scale:1}
+.bk-klar i{
+  position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;
+  background:var(--dag-gron-kant);opacity:0;
+}
+.bk-klar i:nth-of-type(1){--v:0deg}.bk-klar i:nth-of-type(2){--v:60deg}.bk-klar i:nth-of-type(3){--v:120deg}
+.bk-klar i:nth-of-type(4){--v:180deg}.bk-klar i:nth-of-type(5){--v:240deg}.bk-klar i:nth-of-type(6){--v:300deg}
+.bk-klar i:nth-of-type(even){background:var(--orange,var(--acc))}
+
+/* Studiehjälparen, i passets hörn: dyker upp när hen bekräftar och
+   pingar när ni flyttat passet. */
+.bk-hjalpare{
+  position:absolute;top:-16px;right:-12px;display:grid;place-items:center;
+  width:38px;height:38px;border-radius:50%;
+  background:var(--kort);border:1px solid var(--ln);color:var(--bl-2);
+  box-shadow:0 10px 20px -14px rgba(46,42,32,.55);
+  opacity:1;scale:1;transition:opacity .3s var(--e),scale .3s var(--e);
+}
+.bk-hjalpare > svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.bk-scen[data-steg="0"] .bk-hjalpare{opacity:0;scale:.4}
+.bk-bock{
+  position:absolute;right:-5px;bottom:-4px;display:grid;place-items:center;
+  width:17px;height:17px;border-radius:50%;background:var(--dag-gron-kant);color:var(--pap);
+  border:2px solid var(--kort);box-sizing:content-box;
+}
+.bk-bock svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+.bk-bock path{stroke-dasharray:1;stroke-dashoffset:0}
+.bk-ping{position:absolute;inset:-1px;border-radius:50%;border:2px solid var(--dag-gul-kant);opacity:0;pointer-events:none}
+
+/* Ett tryck: en prick som trycks ner och en ring som vidgas. */
+.bk-tryck{
+  position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;
+  background:color-mix(in srgb,var(--bl) 18%,transparent);border:2px solid color-mix(in srgb,var(--pap) 75%,transparent);
   opacity:0;pointer-events:none;
 }
-.bk-scen[data-steg="1"] .bk-finger{animation:bk-tryck 1s var(--e) 1.3s both}
-@keyframes bk-tryck{0%{opacity:0;scale:1.4}35%{opacity:1;scale:1}55%{scale:.82}100%{opacity:0;scale:1}}
+.bk-info > .bk-tryck{left:3.4em;top:auto;bottom:-6px}
 
+/* ---------- rörelsen (.bk-gar, bara när bokscen() går) ---------- */
+.bk-gar .bk-pass{will-change:translate,scale,opacity}
+/* 0: ni trycker på torsdagen, och passet faller ner. */
+.bk-gar[data-steg="0"] .bk-vecka .vald{animation:bk-valj .55s var(--e) .35s both}
+.bk-gar[data-steg="0"] .bk-vecka .bk-tryck{animation:bk-tryck .9s var(--e) .15s both}
+.bk-gar[data-steg="0"] .bk-pass{animation:bk-fall .8s cubic-bezier(.34,1.5,.64,1) .55s both}
+.bk-gar[data-steg="0"] .bk-lage .l0{transition-delay:1.1s}
+.bk-gar[data-steg="0"] .bk-rad .r0{transition-delay:1.3s}
+.bk-gar[data-steg="0"] .bk-prickar i{animation:bk-skriver 1.2s var(--e-mjuk) infinite both}
+.bk-gar[data-steg="0"] .bk-prickar i:nth-child(2){animation-delay:.15s}
+.bk-gar[data-steg="0"] .bk-prickar i:nth-child(3){animation-delay:.3s}
+/* 1: studiehjälparen bekräftar, rutan vänder sig röd och Betala nu trycks. */
+.bk-gar[data-steg="1"] .bk-hjalpare{animation:bk-poppa .6s cubic-bezier(.34,1.6,.64,1) .1s both}
+.bk-gar[data-steg="1"] .bk-bock path{animation:bk-rita .45s var(--e) .55s both}
+.bk-gar[data-steg="1"] .bk-dag{animation:bk-vand .6s var(--e-mjuk) .75s both;transition-delay:1.05s}
+.bk-gar[data-steg="1"] .bk-vecka .vald::after{transition-delay:1.05s}
+.bk-gar[data-steg="1"] .bk-lage .l1{transition-delay:1.15s}
+.bk-gar[data-steg="1"] .bk-betala{transition-delay:1.5s;transition-duration:.45s;transition-timing-function:cubic-bezier(.34,1.6,.64,1)}
+.bk-gar[data-steg="1"] .bk-betala > .bk-tryck{animation:bk-tryck .9s var(--e) 2.55s both}
+.bk-gar[data-steg="1"] .bk-betala{animation:bk-trycks .5s var(--e) 2.7s}
+/* 2: knappen blir en bock som gnistrar, och rutan vänder sig grön. */
+.bk-gar[data-steg="2"] .bk-klar{animation:bk-poppa .55s cubic-bezier(.34,1.6,.64,1) .1s both}
+.bk-gar[data-steg="2"] .bk-klar path{animation:bk-rita .4s var(--e) .4s both}
+.bk-gar[data-steg="2"] .bk-klar i{animation:bk-gnista .75s var(--e-ut) .5s both}
+.bk-gar[data-steg="2"] .bk-dag{animation:bk-vand .6s var(--e-mjuk) .45s both;transition-delay:.75s}
+.bk-gar[data-steg="2"] .bk-vecka .vald::after{transition-delay:.75s}
+.bk-gar[data-steg="2"] .bk-lage .l2{transition-delay:.85s}
+.bk-gar[data-steg="2"] .bk-rad .r2{transition-delay:1.1s}
+/* 3: ni trycker på tiden, den rullar till en ny, och studiehjälparen pingar. */
+.bk-gar[data-steg="3"] .bk-info > .bk-tryck{animation:bk-tryck .9s var(--e) .2s both}
+.bk-gar[data-steg="3"] .bk-tid i{transition-delay:.6s}
+.bk-gar[data-steg="3"] .bk-dag{animation:bk-vand .6s var(--e-mjuk) .55s both;transition-delay:.85s}
+.bk-gar[data-steg="3"] .bk-vecka .vald::after{transition-delay:.85s}
+.bk-gar[data-steg="3"] .bk-lage .l3{transition-delay:.95s}
+.bk-gar[data-steg="3"] .bk-ping{animation:bk-ping 1s var(--e-ut) 1.25s 2 both}
+.bk-gar[data-steg="3"] .bk-rad .r3{transition-delay:1.35s}
+
+@keyframes bk-tryck{0%{opacity:0;scale:1.5}30%{opacity:1;scale:1}50%{scale:.78}100%{opacity:0;scale:1.7}}
+@keyframes bk-valj{0%{scale:1}40%{scale:1.14}100%{scale:1}}
+@keyframes bk-fall{from{opacity:0;translate:0 -22px;scale:.94}to{opacity:1;translate:none;scale:1}}
+@keyframes bk-skriver{0%,60%,100%{translate:0 0;opacity:.45}30%{translate:0 -3px;opacity:1}}
+@keyframes bk-poppa{from{opacity:0;scale:.3}to{opacity:1;scale:1}}
+@keyframes bk-rita{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes bk-vand{0%{rotate:y 0deg}50%{rotate:y 90deg}100%{rotate:y 0deg}}
+@keyframes bk-trycks{0%,100%{scale:1}40%{scale:.92}}
+@keyframes bk-gnista{
+  from{opacity:1;transform:rotate(var(--v)) translateY(0) scale(1)}
+  to{opacity:0;transform:rotate(var(--v)) translateY(-26px) scale(.4)}
+}
+@keyframes bk-ping{from{opacity:.9;scale:1}to{opacity:0;scale:2.1}}
+
+/* Stegen under scenen. Med skriptet är de knappar, och stegets streck
+   fylls i takt med scenen (bk-fyll, samma tid som TID i bokscen()). */
 .bk-steg{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;counter-reset:bk}
 .bk-steg li{
   counter-increment:bk;position:relative;padding-top:12px;
@@ -860,7 +996,7 @@ html.nx-sr .sid-urval.nx-in .ur-led i{animation:ur-prick .7s var(--e-ut) calc(va
 .bk-steg li::before{content:counter(bk) ". "}
 .bk-steg li::after{
   content:"";position:absolute;left:0;right:0;top:0;height:4px;border-radius:2px;
-  background:color-mix(in srgb,var(--bl) 12%,transparent);transition:background-color .35s var(--e);
+  background:color-mix(in srgb,var(--bl) 12%,transparent) linear-gradient(var(--acc),var(--acc)) no-repeat 0 0 / 0% 100%;
 }
 .bk-scen[data-steg="0"] .bk-steg [data-bk="0"],
 .bk-scen[data-steg="1"] .bk-steg [data-bk="1"],
@@ -869,20 +1005,36 @@ html.nx-sr .sid-urval.nx-in .ur-led i{animation:ur-prick .7s var(--e-ut) calc(va
 .bk-scen[data-steg="0"] .bk-steg [data-bk="0"]::after,
 .bk-scen[data-steg="1"] .bk-steg :is([data-bk="0"],[data-bk="1"])::after,
 .bk-scen[data-steg="2"] .bk-steg :is([data-bk="0"],[data-bk="1"],[data-bk="2"])::after,
-.bk-scen[data-steg="3"] .bk-steg li::after{background:var(--acc)}
+.bk-scen[data-steg="3"] .bk-steg li::after{background-size:100% 100%}
+.bk-gar[data-steg="0"] .bk-steg [data-bk="0"]::after{animation:bk-fyll 3.6s linear both}
+.bk-gar[data-steg="1"] .bk-steg [data-bk="1"]::after{animation:bk-fyll 4.2s linear both}
+.bk-gar[data-steg="2"] .bk-steg [data-bk="2"]::after{animation:bk-fyll 3.4s linear both}
+.bk-gar[data-steg="3"] .bk-steg [data-bk="3"]::after{animation:bk-fyll 3.8s linear both}
+@keyframes bk-fyll{from{background-size:0% 100%}to{background-size:100% 100%}}
+.bk-knappar .bk-steg li{padding-top:0}
+.bk-knappar .bk-steg li::before{content:none}
+.bk-steg button{
+  all:unset;box-sizing:border-box;display:block;width:100%;min-height:44px;padding-top:12px;
+  cursor:pointer;color:inherit;font:inherit;line-height:inherit;border-radius:6px;
+}
+.bk-steg button::before{content:counter(bk) ". "}
+.bk-steg button:hover{color:var(--bl)}
+.bk-steg button:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
 .bk-not{font-size:.8rem;line-height:1.45;color:var(--bl-3)}
 @media (max-width:900px){
   .bk-grid{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:520px){
   .bk-steg{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:12px}
+  .bk-vecka{gap:3px;padding:0}
   .bk-pass{grid-template-columns:auto minmax(0,1fr)}
   .bk-lage{grid-column:1/-1;grid-row:2;justify-items:start}
-  .bk-rad,.bk-betala{grid-row:3}
+  .bk-rad,.bk-betala,.bk-klar{grid-row:3}
+  .bk-hjalpare{right:-8px}
 }
 @media (prefers-reduced-motion:reduce){
-  .bk-dag,.bk-tid i,.bk-lage i,.bk-betala,.bk-steg li,.bk-steg li::after{transition:none}
-  .bk-finger{display:none}
+  .bk-dag,.bk-tid i,.bk-lage i,.bk-rad > i,.bk-betala,.bk-klar,.bk-hjalpare,.bk-glod i,.bk-vecka .vald::after,.bk-steg li{transition:none}
+  .bk-tryck{display:none}
 }
 
 /* ============================================================
