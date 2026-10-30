@@ -95,9 +95,9 @@ sedan trådarna i Raden som glider).
   nextrum.se på en telefon: "Korta inte ner på videon den ska vara lika lång som förut, asså med
   längd menar jag mått på heron. Sen skugga lite så de ej blir ett tydligt streck där". På en
   telefon (under 640 px) har heron `min-height:auto`, så den blev 71 px kortare när raden under
-  knapparna fick `display:none`; nu är raden `visibility:hidden` och heron 715 px som förut. Och
-  heron tonar i nederkanten över i Hur hjälper vis yta (`--yta`) med en `::after` över filmen och
-  under texten. **Fällan** i provet: kör aldrig samma skärmbildsskript före och efter en ändring
+  knapparna fick `display:none`; nu är raden `visibility:hidden` och heron 715 px som förut. Heron
+  tonade en natt i nederkanten över i Hur hjälper vis yta (`--yta`, en `::after` över filmen); den
+  togs bort 2026-10-30 (Leo: "Ta bort de du suddade till så de var innan"), och heron slutar som förut. **Fällan** i provet: kör aldrig samma skärmbildsskript före och efter en ändring
   med samma filnamn, för det andra varvet skriver över det första.
 - **Det Leo ringade in** (samma kväll). Leo skickade bilder med ringar och skrev: "Allt jag
   ritade runt ska bort på hemsidan, de på heron ska bara bort på mobilvyn". Borta från startsidan,
