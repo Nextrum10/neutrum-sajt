@@ -2507,8 +2507,15 @@ html[data-motion="still"] .nx-stjarnkant::after{animation:none;opacity:0}
    Rubrik, ingress och ett foto i full bredd som binder ihop
    undersidan med startsidans bildspråk.
    ============================================================ */
+/* Sidhuvudet går kant i kant och håller texten och fotot i samma spalt med
+   sin padding (förut max-width och margin-inline:auto). Det klipper skenet
+   uppe till höger (overflow:clip, home.css), och med en smalare låda klipptes
+   skenet rakt av vid 1440 px: på en bredare skärm blev det en ljusare remsa
+   med rak kant till höger (2026-10-30, Leo: "På Landningssidorna på höger
+   sida är de en annan nyans på sidan"). Nu klipps det vid fönstrets kant. */
 .nx-page-hero{
-  max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m);
+  max-width:none;
+  padding-inline:max(var(--m), calc((100% - var(--w-bred)) / 2 + var(--m)));
   padding-top:clamp(120px,15vw,190px);
   padding-bottom:clamp(32px,4vw,56px);
 }
