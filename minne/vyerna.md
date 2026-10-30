@@ -2572,3 +2572,30 @@ studiehjälpare är bredvid varandra"): under 560 px står de i ett rutnät med 
 kolumner, utan pilar (de får inte plats), och en lång text bryts i knappen. Den andra knappen
 får två pixlar marginal, för stjärnkanten lägger två pixlar runt den första, och annars blir
 de olika höga. Bara startsidan (`.nx-final-ljus`); de andra sidornas Nästa steg är som förut.
+
+## React Bits i adminvyn (2026-10-30)
+
+Leo: "På admin vyn finns massor av olika saker som kan förbättras av components på react-bits kolla igenom react bits
+utförligt och implementera components". Hela React Bits (drygt 250 komponenter i Animations, Backgrounds, Components,
+Micro och TextAnimations) lästes ur repot `DavidHDev/react-bits`. Det mesta är bakgrunder i WebGL, muspekare och text
+som skakar eller glitchar: det drar blicken från det man ska göra i ett arbetsverktyg, och kostar på en telefon. Fem togs
+med, omskrivna utan React (adminvyn har ingen React och `script-src 'self'`):
+
+- **CountUp**: Översiktens och Statistikens tal (`.adm-kpi > b`) räknas upp. Texten i markupen är facit och står kvar när
+  räkningen är klar; bara den första siffergruppen räknas ("12 450 kr"), ett tal med decimaler eller utan siffror rörs
+  inte, och inget under 2.
+- **SpotlightCard**: ett tal eller trattsteg med `data-urval` får ett ljus där musen står (`--sx`, `--sy` på elementet,
+  gradienten i `::before`), bara med en mus.
+- **AnimatedList**: raderna i Att göra (`.ag-rad`) kommer in en i taget med scale och opacitet, högst tolv i kö.
+- **ShinyText**: Hämtar (`.loading`) får ett ljus som glider över texten.
+- **Stepper**: ansökans fyra steg som ett spår överst i `.ans-nu` (`stegrad()` i `nextrum-admin-rekrytering.js`). Leo sa
+  2026-10-21 "status plus tre knappar, inget annat", så raden ÄR statusen, inte något nytt bredvid den, och den går inte
+  att trycka på. Avböjd tonar raden och behåller sin rubrik. På en telefon har bara steget hen står i sitt namn.
+
+**Rörelsen kommer bara vid ett byte.** Vyn ritar om tal och listor när data kommer in; en uppräkning varje gång hade fått
+Översikt att blinka. Därför rör sig något bara första gången en sektion ritas (datan kommer oftast efter sidladdningen) och
+inom 700 ms efter ett tryck i menyn, i Att göra eller en ändrad adress. Reducerad rörelse: inget. Skriptet fångar det nya
+med en MutationObserver på `#view-app`, så områdesfilerna anropar inget.
+
+Provat i Chromium isolerat (ljust på dator, mörkt på telefon) och att `admin.html` laddar utan nya fel och att modulvakten
+ser `räknaUpp`. `prova-adminvyn.js` kördes inte: den lokala databasen gick inte att bygga (Docker Hub 429, ECR datagräns).

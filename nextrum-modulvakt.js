@@ -116,7 +116,8 @@
         ritaAutomationer:  'nextrum-admin-automationer.js',
         ritaAI:            'nextrum-admin-ai.js',
         visaRadering:      'nextrum-admin-radera.js',
-        ritaKonsol:        'nextrum-admin-konsol.js'
+        ritaKonsol:        'nextrum-admin-konsol.js',
+        räknaUpp:          'nextrum-admin-bitar.js'
       };
       for (var namn in omr) {
         if (Object.prototype.hasOwnProperty.call(omr, namn)) {

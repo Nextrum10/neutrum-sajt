@@ -411,3 +411,87 @@
 .vy-admin #nex-rapport-text li{margin:0 0 4px}
 .vy-admin .kon-rapport-nar{font-size:.78rem;color:var(--bl-3);margin-top:10px}
 
+
+/* ============================================================
+   REACT BITS I ADMINVYN (2026-10-30, nextrum-admin-bitar.js)
+
+   Leo: "massor av olika saker som kan förbättras av components på
+   react-bits". Skrivet om utan React, och bara det som hjälper i ett
+   arbetsverktyg. Med reducerad rörelse står allt still.
+   ============================================================ */
+
+/* SpotlightCard: ett tal man kan trycka på får ett ljus där musen står.
+   --sx och --sy sätts på talet av skriptet; utan dem står ljuset mitt i,
+   och det syns bara vid hovring. Ljuset ligger under texten (isolation). */
+.vy-admin :is(.adm-kpi,.tratt-steg)[data-urval]{position:relative;isolation:isolate;overflow:hidden}
+.vy-admin :is(.adm-kpi,.tratt-steg)[data-urval]::before{
+  content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+  border-radius:inherit;opacity:0;
+  background:radial-gradient(220px circle at var(--sx,50%) var(--sy,50%),
+    color-mix(in srgb,var(--acc) 16%,transparent),transparent 70%);
+  transition:opacity .25s var(--e);
+}
+.vy-admin :is(.adm-kpi,.tratt-steg)[data-urval]:hover::before{opacity:1}
+
+/* AnimatedList: raderna i Att göra kommer in en i taget. Bara scale och
+   opacitet (avsnitt 3, fällorna i vyerna), och raden i ordningen i --rad. */
+@keyframes nx-in-rad{from{opacity:0;scale:.96}to{opacity:1;scale:1}}
+.vy-admin .nx-in-rad{animation:nx-in-rad .32s var(--e) both;animation-delay:calc(var(--rad,0) * 45ms)}
+
+/* ShinyText: "Hämtar" får ett ljus som glider över texten, i textens egen
+   färg, som etiketterna på startsidan. Prickarna efter står kvar. */
+@keyframes nx-glans{from{background-position:150% 0}to{background-position:-50% 0}}
+.vy-admin .loading{
+  background:linear-gradient(100deg,var(--muted-2) 40%,var(--bl) 50%,var(--muted-2) 60%) 0 0 / 200% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:nx-glans 1.8s linear infinite;
+}
+.vy-admin .loading::after{color:var(--muted-2)}
+
+/* Stepper: ansökans fyra steg som ett spår, de klara med bock och det hen
+   står i upphöjt (stegrad() i nextrum-admin-rekrytering.js). Raden är
+   statusen i .ans-nu, inte en knapprad: stegen byts med knapparna.
+   Lägets färger som i resten av vyn: mossa klart, ockra väntar. */
+.ans-stegrad{
+  list-style:none;margin:0 0 6px;padding:4px;
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;
+  border-radius:12px;background:var(--tint);
+}
+.ans-stegrad li{
+  display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;
+  min-height:36px;padding:0 8px;border-radius:9px;
+  font-size:.8rem;color:var(--bl-2);
+}
+.ans-stegrad li span{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ans-stegrad i{
+  flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;
+  box-shadow:inset 0 0 0 1px var(--ln);
+  font-style:normal;font-size:.7rem;font-weight:650;font-variant-numeric:tabular-nums;
+}
+.ans-stegrad i svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.ans-stegrad li[data-lage="klar"] i{background:var(--mossa);box-shadow:none;color:var(--yta)}
+.ans-stegrad li[data-lage="nu"]{
+  background:var(--yta);color:var(--bl);font-weight:650;
+  box-shadow:0 0 0 1px var(--ln),var(--sk-1);
+}
+.ans-stegrad li[data-lage="nu"] i{box-shadow:inset 0 0 0 1.5px var(--ockra);color:var(--bl)}
+.ans-stegrad.ar-utanfor{opacity:.55}
+@keyframes nx-steg-upp{from{opacity:.4;scale:.94}to{opacity:1;scale:1}}
+.ans-stegrad li[data-lage="nu"]{animation:nx-steg-upp .35s var(--e) both}
+@media (max-width:560px){
+  /* På en telefon får bara steget hen står i sitt namn; de andra är siffror. */
+  .ans-stegrad{display:flex}
+  .ans-stegrad li{flex:none}
+  .ans-stegrad li[data-lage="nu"]{flex:1 1 auto}
+  .ans-stegrad li:not([data-lage="nu"]) span{display:none}
+  .ans-stegrad.ar-utanfor{justify-content:space-around}
+  /* .ans-nu står i en kolumn här, och textens flex-basis (220px) hade
+     blivit dess höjd, med stegraden utdragen därefter. */
+  .ans-nu-text{flex:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .vy-admin .nx-in-rad,.ans-stegrad li[data-lage="nu"]{animation:none}
+  .vy-admin .loading{animation:none;background:none;color:var(--muted-2)}
+  .vy-admin :is(.adm-kpi,.tratt-steg)[data-urval]::before{display:none}
+}

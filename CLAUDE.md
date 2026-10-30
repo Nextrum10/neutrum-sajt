@@ -942,6 +942,13 @@ världen (`prova-forhandsvisning.js` säger vad som saknas). **Adminkontona räk
 statistiken** (samma dag): Översiktens tal (`räknas()`, `ärAdminkonto()`) och analysvyerna
 (`intern.utanfor_statistiken`) räknar inga pass där familjen eller studiehjälparen har en adminroll;
 listorna, betalningarna och lönerna som förut.
+**React Bits i adminvyn** (2026-10-30, Leo: "massor av olika saker som kan förbättras av components på react-bits"):
+omskrivna utan React i `nextrum-admin-bitar.js` och sist i `nextrum-admin-konsol.css`, och bara det som hjälper i ett
+arbetsverktyg: CountUp på Översiktens tal (landar på markupens text, bara första siffergruppen, inga decimaler),
+SpotlightCard på talen med `data-urval`, AnimatedList på raderna i Att göra, ShinyText på Hämtar, och Stepper som
+stegets status i ansökan (`stegrad()`, inget att trycka på: stegen byts med knapparna). Rörelse bara första gången en
+sektion ritas och en dryg halv sekund efter ett byte i menyn eller adressen, aldrig när data ritas om, och ingen med
+reducerad rörelse. Ingen WebGL, inga muspekare och ingen text som skakar i adminvyn (`minne/vyerna.md`).
 Fällor: `h5` och `h6` har webbläsarens marginal; `--pap-2` och `--yta` är nästan samma i mörkt
 läge (`--tint`, `--bricka`); KÄNSLAN står sist och väger lika mycket; `nextrum-admin-konsol.css`
 vinner över arbetsytan. Headless Chromium döljer rullningslister; mät ett tryck med `el.click()`

@@ -509,9 +509,30 @@
     ritaAnsokningar();
   }
 
-  function stegRuta(rubrik, text, knappar) {
+  /* Stegen som en rad (2026-10-30, React Bits Stepper): de fyra stegen i
+     ett spår, de klara med en bock, det hen står i upphöjt. Raden ÄR
+     statusen i blocket, inte något nytt bredvid den ("status plus tre
+     knappar, inget annat"), och den går inte att trycka på: stegen byts
+     med knapparna, och databasen vaktar ordningen. Avböjd står utanför
+     stegen, så raden tonas och inget steg är upphöjt. */
+  const STEGEN = ['ny', 'intervju', 'utbildning', 'konto_skapat'];
+  const BOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+  function stegrad(st) {
+    const nu = STEGEN.indexOf(st);
+    return '<ol class="ans-stegrad' + (nu < 0 ? ' ar-utanfor' : '') + '" aria-label="Ansökans steg">'
+      + STEGEN.map((k, i) => {
+        const läget = nu < 0 ? '' : i < nu ? 'klar' : i === nu ? 'nu' : '';
+        return '<li' + (läget ? ' data-lage="' + läget + '"' : '') + (läget === 'nu' ? ' aria-current="step"' : '') + '>'
+          + '<i aria-hidden="true">' + (läget === 'klar' ? BOCK : String(i + 1)) + '</i>'
+          + '<span>' + esc(ANS_STEG[k][0]) + '</span></li>';
+      }).join('') + '</ol>';
+  }
+
+  function stegRuta(rubrik, text, knappar, st) {
     return '<div class="ans-nu">'
-      + '<div class="ans-nu-text"><b>' + esc(rubrik) + '</b>' + (text ? '<span>' + esc(text) + '</span>' : '') + '</div>'
+      + '<div class="ans-nu-text">' + stegrad(st)
+      + (st === 'avbojd' ? '<b>' + esc(rubrik) + '</b>' : '')
+      + (text ? '<span>' + esc(text) + '</span>' : '') + '</div>'
       + (knappar ? '<div class="ans-nu-knappar">' + knappar + '</div>' : '')
       + '</div>';
   }
@@ -522,7 +543,7 @@
     const id = esc(a.id);
     if (st === 'ny') {
       return stegRuta('Ny', 'Kom in ' + kortDatum(a.created_at) + '.',
-        vidareKnapp('intervju', a, 'Skicka till intervju', true));
+        vidareKnapp('intervju', a, 'Skicka till intervju', true), st);
     }
     if (st === 'intervju') {
       const igen = (S.intervjulankIgen || {})[a.id];
@@ -532,20 +553,20 @@
       return stegRuta('Intervju', 'Sedan ' + kortDatum(a.till_intervju_at) + ' · ' + länken + '.',
         '<button type="button" class="btn btn-ghost btn-sm" data-ans-igen="' + id + '">Skicka intervjulänk igen</button>'
         + '<button type="button" class="btn btn-ghost btn-sm" data-ans-angra="' + id + '">Ångra intervju</button>'
-        + vidareKnapp('utbildning', a, 'Gå vidare till utbildning', true));
+        + vidareKnapp('utbildning', a, 'Gå vidare till utbildning', true), st);
     }
     if (st === 'utbildning') {
       return stegRuta('Utbildning', 'Intervjuad ' + kortDatum(a.intervju_at || a.utbildningsmote_at)
-        + '. Utbildning hållen skapar kontot och skickar inbjudan.', hållenKnapp(a, true));
+        + '. Utbildning hållen skapar kontot och skickar inbjudan.', hållenKnapp(a, true), st);
     }
     if (st === 'konto_skapat') {
       const konto = a.konto_id ? S.personer[a.konto_id] : null;
       return stegRuta('Konto skapat', a.utbildad_at ? kortDatum(a.utbildad_at) + '.' : '',
         konto ? '<button type="button" class="btn btn-ghost btn-sm" data-dp="studiehjalpare:' + esc(konto.id) + '">'
-          + 'Öppna ' + esc(konto.full_name || konto.email || 'kontot') + '</button>' : '');
+          + 'Öppna ' + esc(konto.full_name || konto.email || 'kontot') + '</button>' : '', st);
     }
     return stegRuta('Avböjd', 'Står utanför stegen.',
-      '<button type="button" class="btn btn-ghost btn-sm" data-ans-ja="' + id + '">Ta tillbaka nejet</button>');
+      '<button type="button" class="btn btn-ghost btn-sm" data-ans-ja="' + id + '">Ta tillbaka nejet</button>', st);
   }
 
   /* Mejlen till hen, hopfällda: oftast är de bara ett kvitto på att allt
