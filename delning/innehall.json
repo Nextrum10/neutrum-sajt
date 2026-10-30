@@ -421,6 +421,12 @@
       "rad": "Guide för föräldrar · Nextrum",
       "foto": "02-personlig-anpassning"
     },
+    "nyheter.html": {
+      "bild": "delning/nyheter.jpg",
+      "rubrik": "Nyheter från Nextrum",
+      "rad": "Nextrum · läxhjälp i Stockholm",
+      "foto": "hero-nextrum"
+    },
     "om-oss.html": {
       "bild": "delning/om-oss.jpg",
       "rubrik": "Läxhjälp av någon som nyss gick kursen.",

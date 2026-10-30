@@ -1,0 +1,23 @@
+/* ============================================================
+   NEXTRUM — sidan /nyheter (2026-10-30)
+   Bara cinemas tokens, inga egna färger: sidan följer ljust och mörkt
+   läge av sig själv. Laddas efter cinema.
+   ============================================================ */
+.nyh-lista{max-width:760px}
+.nyh-tom{color:var(--bl-2);font-size:1.05rem;line-height:1.6}
+.nyh-tom a{color:var(--acc-text);text-decoration:underline}
+.nyh-kort{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+.nyh-a{display:block;padding:clamp(20px,3vw,28px);border:1px solid var(--ln);border-radius:20px;
+  background:var(--yta);color:inherit;text-decoration:none;transition:scale .2s ease}
+.nyh-a:hover{scale:1.01}
+.nyh-a time,.nyh-art time{display:block;font-size:.85rem;font-weight:600;color:var(--bl-3);letter-spacing:.01em}
+.nyh-a h2{margin:8px 0 0;font-size:clamp(1.3rem,2.2vw,1.6rem);line-height:1.2;letter-spacing:-.02em;text-wrap:balance}
+.nyh-a p{margin:10px 0 0;color:var(--bl-2);line-height:1.6}
+.nyh-las{display:inline-block;margin-top:14px;font-weight:700;color:var(--acc-text)}
+.nyh-art .nx-back{margin-bottom:22px}
+.nyh-rubrik{margin:8px 0 0;font-size:clamp(1.7rem,3.4vw,2.4rem);line-height:1.15;letter-spacing:-.025em;text-wrap:balance}
+.nyh-ingress{margin:16px 0 0;font-size:1.15rem;font-weight:600;line-height:1.55;color:var(--bl)}
+.nyh-text{margin-top:22px}
+.nyh-text p{margin:0 0 16px;font-size:1.05rem;line-height:1.7;color:var(--bl-2);overflow-wrap:anywhere}
+.nyh-text a{color:var(--acc-text);text-decoration:underline}
+@media (prefers-reduced-motion:reduce){.nyh-a{transition:none}}

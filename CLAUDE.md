@@ -1366,9 +1366,26 @@ Detaljer: `minne/grunden.md`.
   "Denna sektion måste synas bättre"; `.nb` i cinema). Dubbel opt-in genom edge-funktionen `nyhetsbrev` (`verify_jwt` av, taket fem i timmen
   per IP-hash och 300 totalt, samma svar om adressen finns), och `/nyhetsbrev` bekräftar (`?b=`) och avslutar (`?a=`)
   med en knapp. En avanmälan raderar raden, och en obekräftad raderas efter sju dagar. Tabellen är sanningen; Resends
-  Audience (`RESEND_AUDIENCE_ID`) är en kopia att skicka från. Inget skickar nyhetsbrevet än: varje utskick ska ha
-  länken `/nyhetsbrev?a=<token>`. Kvar: migrationen och funktionen efter merge, secreten, att prova flödet, och
-  juristen (rad 40 i `DATASKYDD.md`, policyns stycke).
+  Audience (`RESEND_AUDIENCE_ID`) är en kopia att skicka från. Varje utskick ska ha länken `/nyhetsbrev?a=<token>`
+  och List-Unsubscribe. Kvar: migrationen och funktionen efter merge, secreten, att prova flödet, och juristen (rad
+  40 i `DATASKYDD.md`, policyns stycke).
+- **Nyheterna** (2026-10-30, `nyheter` 20261030120000, Leo: "bygg en sida för nyhetsbrev, nyheter och när vi postar de
+  får medlemmar automatiskt mejl om de nyheterna") är inte i drift, och kräver nyhetsbrevets migration först. `/nyheter`
+  (bara svenska, i kartan; `nextrum-nyheter.js` läser tabellen `nyheter` med anon-nyckeln, sex kolumner och bara
+  publicerat och inte dolt) med en nyhet på `?n=<slug>`, och länken Läs nyheterna under nyhetsbrevets formulär i varje
+  footer. Adminvyn → Nyheter (bara superadmin, `nextrum-admin-nyheter.js`): utkast, Publicera och mejla eller utan
+  mejl, Ändra (sidan rättas, mejlet inte) och Dölj, aldrig ta bort; allt genom `nyhet_spara`, `nyhet_publicera` och
+  `nyhet_dolj`. Mejlet: `nyhet_publicera` väcker `nyheter-utskick` (`intern.nyheter_vack`, `notis_konfig.nyheter_url`,
+  hemligheten), och jobbet `nyheter-utskick` var tionde minut så länge något är kvar. Funktionen tar partier om hundra
+  (`nyheter_utskick_ta`, en rad per nyhet och adress i `nyheter_utskick`, nyheten låst), skickar dem med Resends batch
+  och partiets id som idempotensnyckel, och ett parti som inte svarats tas igen efter tio minuter med samma nyckel; ett
+  som Resend nekar tre gånger ges upp och blir en uppgift. Mottagare är den som bekräftat senast när nyheten
+  publicerades, en gång per adress. Texten är vanlig text (tom rad nytt stycke, https blir länk, allt escapat), och
+  regeln står i `nextrum-nyheter.js` och `_delad/nyheter.ts`, som ändras tillsammans. Mejlen har ingen signatur, som
+  nyhetsbrevet. Provat mot en Postgres 16 med stubbar för Supabase (Docker Hub 429), inte mot `rls-test.sql`. **Löftet
+  "två gånger i månaden"** står i formuläret, bekräftelsen, välkomstmejlet och policyn: varje nyhet som publiceras
+  med mejl är ett utskick, så fler än två nyheter med mejl i månaden bryter det. Kvar: migrationen och funktionen
+  efter nyhetsbrevets, och juristen (rad 40, policyns nya stycke).
 - **Förhandsvisningens kassa och NexLäx** (2026-10-27, `forhandsvisningens_nexlax` 20261028110000 och edge-funktionen
   `forhandsvisning-kassa`) är i drift sedan natten till 2026-10-28 (Leo: "Kör"): PR #371 och #374 mergades (6da87bf),
   migrationen kördes hel i ett do-block med filens md5 (`6a34cd0c…`) och registrerades med filens text, och

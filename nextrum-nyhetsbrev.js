@@ -27,6 +27,7 @@
     etikett:  ['Din e-post', 'Your email'],
     knapp:    ['Skriv upp mig', 'Sign me up'],
     policy:   ['Så hanterar vi din adress', 'How we handle your address'],
+    nyheter:  ['Läs nyheterna', 'Read the news (in Swedish)'],
     skickar:  ['Skickar …', 'Sending …'],
     klart:    ['Kolla din inkorg och tryck på länken i mejlet, så är du med.',
                'Check your inbox and tap the link in the email to confirm.'],
@@ -71,13 +72,17 @@
       /* Honungsfällan: dold för människor och skärmläsare, ifylld av botar. */
       '<input class="nb-falla" type="text" name="webbplats" tabindex="-1" autocomplete="off" aria-hidden="true">' +
       '<p class="nb-status" role="status" aria-live="polite"></p>' +
-      '<p class="nb-not"><a href="' + (EN ? '/en' : '') + '/integritetspolicy#nyhetsbrev"></a></p>';
+      '<p class="nb-not"><a href="' + (EN ? '/en' : '') + '/integritetspolicy#nyhetsbrev"></a>' +
+      /* Nyheterna (2026-10-30) står på /nyheter, bara på svenska. Länken står
+         här och inte i varje sidas footer, för formuläret är redan på varje sida. */
+      ' · <a class="nb-nyheter" href="/nyheter"' + (EN ? ' hreflang="sv"' : '') + '></a></p>';
     f.querySelector('.nb-rubrik').textContent = ord('rubrik');
     f.querySelector('.nb-text').textContent = ord('text');
     f.querySelector('label').textContent = ord('etikett');
     f.querySelector('.nb-inp').placeholder = ord('etikett');
     f.querySelector('.nb-knapp').textContent = ord('knapp');
     f.querySelector('.nb-not a').textContent = ord('policy');
+    f.querySelector('.nb-nyheter').textContent = ord('nyheter');
 
     const status = f.querySelector('.nb-status');
     const knapp = f.querySelector('.nb-knapp');

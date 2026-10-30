@@ -103,6 +103,7 @@
         ritaTillagg:       'nextrum-admin-tillagg.js',
         ritaBibliotek:     'nextrum-admin-bibliotek.js',
         ritaChattar:       'nextrum-admin-kommunikation.js',
+        ritaNyheter:       'nextrum-admin-nyheter.js',
         ritaBokningar:     'nextrum-admin-drift.js',
         ritaAvvikelser:    'nextrum-admin-ekonomi.js',
         ritaMånaden:       'nextrum-admin-manaden.js',
