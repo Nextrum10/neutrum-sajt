@@ -2075,7 +2075,7 @@
         ['Konto', konto
           ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(konto.id) + '">'
             + esc(konto.full_name || konto.email) + '</button>'
-          : null, 'inget än: det skapas med Utbildning hållen'],
+          : null, 'inget än: det skapas med Skapa konto och skicka inbjudan'],
         /* Koden (2026-10-13): en studiehjälpares, som får värvningsbonusen
            (varvningsbonus, 2026-10-21) när hen får sitt konto. Bara en kod
            som gällde står här; databasen tömde de andra. Värvaren står på
