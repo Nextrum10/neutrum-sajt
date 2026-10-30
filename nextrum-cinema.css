@@ -1000,23 +1000,26 @@ html[lang="en"] .nx-hero-rubrik{
   .nx-hero-video{object-position:52% 40%}
   /* Rubriken större och ingressen mindre på telefonen (2026-10-30, Leo:
      "av unga för unga lite större och texten under lite mindre"). Golvet
-     3rem tog bara 192 px av bredden; 18vw fyller ungefär tre fjärdedelar.
+     3rem tog bara 192 px av bredden; 15,5vw fyller ungefär två tredjedelar
+     (18vw var för stort, Leo samma dag: "lite mindre").
      Engelskans regel väger mer och står kvar. */
-  .nx-hero-rubrik{font-size:clamp(3.6rem,18vw,4.4rem)}
+  .nx-hero-rubrik{font-size:clamp(3.2rem,15.5vw,3.9rem)}
   .nx-hero-lede{font-size:.94rem}
   /* Bredvid varandra och lika stora, som i Nästa steg (2026-10-30, Leo
      skickade en bild: "På våran hero gör kolumnerna såhär på mobilvy").
      Pilen får inte plats, och en lång text bryts hellre i knappen än att
-     knappen blir för smal. */
+     knappen blir för smal. Samma dag mindre (Leo: "kolumnerna ännu
+     mindre"): smalare rad, lägre och mindre text, men aldrig under 44 px. */
   .nx-hero-knappar{
-    width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-    gap:10px;align-items:stretch;
+    width:100%;max-width:320px;margin-inline:auto;
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:8px;align-items:stretch;
   }
   .nx-hero-knappar > *{min-width:0}
   .nx-hero-knappar .nx-magnet{display:flex}
   .nx-hero-knappar .btn{
-    width:100%;min-height:56px;padding:12px 10px;justify-content:center;
-    font-size:.92rem;line-height:1.2;text-align:center;white-space:normal;text-wrap:balance;
+    width:100%;min-height:46px;padding:9px 8px;justify-content:center;
+    font-size:.84rem;line-height:1.2;text-align:center;white-space:normal;text-wrap:balance;
   }
   .nx-hero-knappar .btn svg{display:none}
 }
