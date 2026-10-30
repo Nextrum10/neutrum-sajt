@@ -41,7 +41,9 @@ lite större och texten under lite mindre"): `clamp(3.6rem,18vw,4.4rem)`
 mot golvet 3rem förut, och ingressen .94rem. Sedan, samma eftermiddag,
 "av unga för unga lite mindre och kolumnerna ännu mindre": rubriken
 `clamp(3.2rem,15.5vw,3.9rem)`, och knappraden högst 320 px bred med
-.84rem och min-height 46 px (tummens 44 px står kvar). Engelskans rubrik har sin
+.84rem och min-height 46 px (tummens 44 px står kvar). Sist samma dag
+("Flytta ner kolumnerna lite bara") står raden 46 px under ingressen i
+stället för klampens golv 30 px. Engelskans rubrik har sin
 egen, tyngre regel och rörs inte.
 
 **Hero-filmen spelar också på telefon** (2026-09-29, Leo: "heron rullar
