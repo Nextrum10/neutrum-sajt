@@ -732,9 +732,8 @@ Detaljer: `minne/grunden.md`.
 ### Startsidan efter hero
 De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
 delar som de är; deras text följer inte med formen, och `.faq-item` är orörd (generatorerna läser den).
-Hero är orörd med flit: film, etiketten Nextrum och rubriken (Leo, igen 2026-10-07). **Ingressen talar till föräldern först**
-(2026-10-30, granskningen, Leo: "Merga sen automatisk"): läxhjälpen i Stockholm, var passen hålls och vilka studiehjälparna
-är, och jobbet i andra meningen, för Bli studiehjälpare är den andra knappen; varje led stod redan på sidan. Det enda nya är raden
+Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07, och igen 2026-10-30, när en
+ingress till föräldern låg ute en natt: "Ta tillbaka den gamla"; `minne/vyerna.md`). Det enda nya är raden
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06), som bara syns på en större skärm
 sedan 2026-10-29 (Leo: "de på heron ska bara bort på mobilvyn"; `.nx-hero-fakta`): under 760 px är den osynlig men tar sin
 plats, för där är heron så hög som innehållet (Leo: "Korta inte ner på videon"). Heron slutar som förut, utan
