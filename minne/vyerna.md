@@ -91,7 +91,15 @@ muspekaren (finns inte på en telefon), glitch- och dekrypteringstext (fel ton)
 och CountUp (sidan visar inga antal). Bakgrunderna i WebGL lät jag först bli
 (tunga på en telefon), och det var fel avvägning: Leo ville ha just dem (Scenen, och
 sedan trådarna i Raden som glider).
-- **Det Leo ringade in** (samma kväll, sist). Leo skickade bilder med ringar och skrev: "Allt jag
+- **Heron lika hög och utan streck** (samma kväll, efter merge av PR #395). Leo, med en bild från
+  nextrum.se på en telefon: "Korta inte ner på videon den ska vara lika lång som förut, asså med
+  längd menar jag mått på heron. Sen skugga lite så de ej blir ett tydligt streck där". På en
+  telefon (under 640 px) har heron `min-height:auto`, så den blev 71 px kortare när raden under
+  knapparna fick `display:none`; nu är raden `visibility:hidden` och heron 715 px som förut. Och
+  heron tonar i nederkanten över i Hur hjälper vis yta (`--yta`) med en `::after` över filmen och
+  under texten. **Fällan** i provet: kör aldrig samma skärmbildsskript före och efter en ändring
+  med samma filnamn, för det andra varvet skriver över det första.
+- **Det Leo ringade in** (samma kväll). Leo skickade bilder med ringar och skrev: "Allt jag
   ritade runt ska bort på hemsidan, de på heron ska bara bort på mobilvyn". Borta från startsidan,
   på båda språken: bildtexten under studievyn ("Illustration av studievyn — innehållet är ett
   exempel"), bildtexten under NexLäx ("Frågan och talen är exempel"), NexLäx ämnesbrickor med
@@ -235,7 +243,10 @@ sedan trådarna i Raden som glider).
   tonar fram ur sudd (BlurText). En linje längst ned fylls med scrollen. Samma
   norrsken står i Nästa steg i stället för de tre CSS-fläckarna. Etiketterna har
   ett ljus som glider genom texten (ShinyText, en gradient i texten med
-  `background-clip:text`), rubrikernas ord stiger och rätar upp sig i stället för
+  `background-clip:text`; gradienten byggs av `currentColor`, så NexLäx etikett,
+  som är genomskinlig för sin egen gradient, får ljuset lagt över den gradienten
+  i stället: utan det syntes bara ljuset, "exL", 2026-10-29, Leo: "Nexläx där
+  syns inte"), rubrikernas ord stiger och rätar upp sig i stället för
   att bara tona fram, och ämnesbandet lutar med farten (ScrollVelocity, `skewX` på
   raderna). Kostnaden hålls nere: duken ritas i halv upplösning (en tredjedel på
   tier `lite`), slingan går bara medan duken syns och fliken är framme, och med
@@ -2491,3 +2502,9 @@ Möt några av våra studiehjälpare, i `index.html` och `en/index.html`; `amnes
 bred och bandet går långsamt av sig självt som en CSS-animation (en radbredd per varv, pausad utanför bild; scrollstyrt laggade på iPhone); sedan 2026-10-27 alla tolv NexLäx-ämnen i var sin färg, mindre text och inga linjer, Leo) (scrollraden överst togs bort samma kväll, Leo: "ta bort detta") **Klassen `nx-ord` är
 startsidans egen** (`delaOrd` i `nextrum-start.js`, rubriker med `data-ordfyll`); mina ordvisa rubriker heter `nx-ov` och
 hoppar över allt som redan delats. Ämnesbandets ämnen är `NX.AMNEN` utan grupperna plus `NEXLAX_AMNEN`, och ändras med dem.
+
+**Nästa stegs knappar på telefonen** (2026-10-29, Leo: "skicka intresse anmälan och bli
+studiehjälpare är bredvid varandra"): under 560 px står de i ett rutnät med två lika breda
+kolumner, utan pilar (de får inte plats), och en lång text bryts i knappen. Den andra knappen
+får två pixlar marginal, för stjärnkanten lägger två pixlar runt den första, och annars blir
+de olika höga. Bara startsidan (`.nx-final-ljus`); de andra sidornas Nästa steg är som förut.
