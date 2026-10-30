@@ -476,7 +476,7 @@ body{background:var(--pap);color:var(--bl)}
 .nx-et{
   display:inline-flex;align-items:center;gap:11px;
   font-family:var(--f-mono);
-  font-size:11px;font-weight:500;
+  font-size:12px;font-weight:500;
   letter-spacing:.16em;text-transform:uppercase;
   color:var(--bl-3);
 }
@@ -711,6 +711,9 @@ body .mobile-menu{display:block}
 }
 .nx-lank:hover::after{transform:scaleX(1)}
 .nx-lank svg{width:14px;height:14px}
+/* Tryckytan (2026-10-30): samma som Hur hjälper vi och Just nu redan
+   hade, nu på alla, för länken är 27 px hög och står ofta ensam. */
+.nx-lank::before{content:"";position:absolute;inset:-11px -8px}
 .on-nt .nx-lank,.nx-mork .nx-lank,.on-band .nx-lank{color:var(--nt-fg)}
 
 /* ============================================================
@@ -1575,6 +1578,9 @@ html[lang="en"] .nx-hero-rubrik{
 }
 .ftr ul li a:hover{color:var(--nt-fg)}
 .ftr ul li{margin-bottom:11px}
+/* Tryckytan (2026-10-30): länken är 19 px hög med 11 px emellan; ytan
+   tar halva glappet åt var håll, så raderna möts utan att överlappa. */
+.ftr ul li a::before{content:"";position:absolute;inset:-5px -4px}
 .ftr .logo{color:var(--nt-fg)}
 
 /* LÄXHJÄLPEN LÄNGST NER (2026-10-13, Leo: "lägg in de längst ner vid de
@@ -1816,7 +1822,7 @@ html[lang="en"] .nx-hero-rubrik{
   .nx-story-lager{--fig-r:16px}
   .nx-story-text{grid-column:1;grid-row:2;min-height:clamp(280px,40vh,360px)}
   .nx-story-kort{justify-content:flex-start}
-  .nx-story-kort .nx-et{margin-bottom:12px;font-size:10px;letter-spacing:.13em}
+  .nx-story-kort .nx-et{margin-bottom:12px;font-size:11px;letter-spacing:.13em}
   .nx-story-kort .nx-lede{margin-top:12px;font-size:.98rem;line-height:1.48}
   .nx-story-kort .nx-story-ctas{margin-top:18px;gap:9px}
   .nx-d0{font-size:clamp(2.3rem,10.6vw,3.4rem);line-height:.96}
@@ -2799,11 +2805,15 @@ html[data-motion="still"] .nx-stjarnkant::after{animation:none;opacity:0}
 .sprakval a,
 .sprakval b{
   font-family:var(--f-mono);
-  font-size:10px;font-weight:600;letter-spacing:.1em;
+  font-size:12px;font-weight:600;letter-spacing:.1em;
   text-transform:uppercase;
   padding:3px 1px;
   transition:color .18s var(--e);
+  position:relative;
 }
+/* Tryckytan (2026-10-30): ENG var 20 px i fyrkant. Ytan växer utan
+   att något flyttas, och SV är ingen länk, så ingen granne krockar. */
+.sprakval a::before{content:"";position:absolute;inset:-12px -10px}
 .sprakval b{color:var(--bl)}
 .sprakval a{color:var(--bl-3)}
 .sprakval a:hover{color:var(--bl)}
@@ -2826,7 +2836,7 @@ html[data-motion="still"] .nx-stjarnkant::after{animation:none;opacity:0}
    stå kvar men krymper — den ska aldrig knuffa ut något annat. */
 @media (max-width:560px){
   .sprakval{gap:7px}
-  .sprakval a,.sprakval b{font-size:9px;letter-spacing:.08em}
+  .sprakval a,.sprakval b{font-size:11px;letter-spacing:.08em}
 }
 
 /* ============================================================
