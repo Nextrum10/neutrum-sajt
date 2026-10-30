@@ -751,3 +751,30 @@ rubriken är större och i `--orange`, och knappen Skriv upp mig är orange med 
 `.ftr-brand .nb-rubrik`, annars vinner footerns `.ftr-brand p` (dämpad och 30ch bred). Fältet har en mindre
 bas (8rem), så att det och knappen står på samma rad i rutan på en telefon. Orange är här ingen
 betalknapp: regeln om orange gäller vyerna, och nyhetsbrevet laddas aldrig där.
+
+## Nyheterna till nyhetsbrevet (2026-10-30)
+
+Leo: "bygg en sida för nyhetsbrev, nyheter och när vi postar de får medlemmar automatiskt mejl om de nyheterna".
+Kärnan står i CLAUDE.md avsnitt 11 (Nyheterna). Varför det blev så här:
+
+- **Databasen bestämmer vem och när, funktionen bara skickar.** `nyhet_publicera` väcker `nyheter-utskick`, och jobbet
+  `nyheter-utskick` väcker den igen var tionde minut så länge en nyhet har mottagare kvar
+  (`intern.nyheter_vack_om_arbete`). Anropet har ingen kropp; funktionen frågar `nyheter_att_mejla()`.
+- **Partier om hundra**, för Resends batch tar hundra och kontot tar två anrop i sekunden. `nyheter_utskick_ta` låser
+  nyhetens rad, så två körningar samtidigt tar aldrig samma adress: den andra får `vanta`. Ett parti är skickat först
+  när Resend sagt ja (`nyheter_utskick_skickad`). Dör funktionen mellan anropet och svaret står partiet kvar som taget
+  och tas igen efter tio minuter med samma id, som är idempotensnyckeln: det som gick, går inte två gånger.
+- **Ett nej från Resend** för själva mejlen (4xx utom 401, 403, 408, 409, 429) släpper partiet direkt
+  (`nyheter_utskick_misslyckad`), för att vänta gör det inte bättre; tredje gången ges det upp, blir en uppgift
+  (`nyheter:gav-upp:<nyhet>`) och resten av utskicket fortsätter. Batchen nekar alla hundra för en dålig adress, och
+  adresserna har prövats av `epostOk` vid anmälan, så det ska inte hända. Kontot (401, 403) och det tillfälliga stoppar
+  körningen utan att räkna ett försök.
+- **Mottagarna** är de som bekräftat senast när nyheten publicerades: annars hade ett omförsök dagar senare mejlat en
+  gammal nyhet till den som just anmält sig.
+- **Raderna i `nyheter_utskick`** står så länge adressen står i nyhetsbrevet och raderas med den (on delete cascade).
+  Ingen gallring utöver det, för en `delete` i en funktion fastnar på verktygets bekräftelse (CLAUDE.md avsnitt 5).
+- **Ingen nyhet raderas**: Dölj tar den från sidan och stoppar ett utskick som inte är klart; Visa igen fortsätter det.
+- **Mejlet** är `skal()` utan signatur, med rubriken som ämne, ingressen som förhandstext, en knapp till
+  `/nyheter?n=<slug>` och avanmälan i foten och i List-Unsubscribe (till `nyhetsbrev`, som redan tar `?a=`). Adressen
+  (slug) sätts ur rubriken när nyheten skapas och ändras aldrig, för den står i mejlen.
+

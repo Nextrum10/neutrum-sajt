@@ -238,6 +238,9 @@
              hade en enda post. Inkorgen läses av samma person som resten
              av det som kommer in utifrån. -->
         <a href="#meddelanden" data-sek="meddelanden" title="Frågor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Frågor</span></a>
+        <!-- Nyheter (2026-10-30): det som står på /nyheter, och mejlet till
+             nyhetsbrevet när en nyhet publiceras. Bara superadmin. -->
+        <a href="#nyheter" data-sek="nyheter" title="Nyheter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11.5v15H6.5A1.5 1.5 0 0 1 5 18z"/><path d="M16.5 8.5H19v9.5a1.5 1.5 0 0 1-3 0"/><path d="M8 8h5.5M8 11.5h5.5M8 15h3.5"/></svg><span class="adm-etikett">Nyheter</span></a>
         <!-- Uppgifter står inte längre i menyn. Sektionen finns kvar
              med samma id, och nås från System → Automationer, där
              rutan "Uppgifter kontrollerna skapat" redan visar samma
@@ -662,6 +665,26 @@
               </p>
               <div id="chatt-lista"><div class="loading">Hämtar</div></div>
             </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             NYHETER (2026-10-30, nextrum-admin-nyheter.js)
+             Nyheterna på /nyheter. Publicera och mejla skickar nyheten till
+             varje bekräftad adress i nyhetsbrevet, genom databasen och
+             edge-funktionen nyheter-utskick.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="nyheter" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Nyheter</h2>
+              <p>Det som står på nextrum.se/nyheter. Publicera och mejla skickar nyheten till alla som bekräftat nyhetsbrevet.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <p class="small" id="nyh-antal" style="margin:0 0 14px;color:var(--bl-3)"></p>
+            <div id="nyh-admin"><div class="loading">Hämtar</div></div>
+            <p class="vy-finstilt">En nyhet är ett utkast tills den publiceras. Ingen nyhet tas bort: den döljs, och då stannar ett utskick som inte är klart. Mejlet går till den som bekräftat sin adress senast när nyheten publicerades, en gång per adress, med en länk för att avsluta nyhetsbrevet.</p>
           </div>
         </section>
 
@@ -2727,8 +2750,9 @@
 <script src="nextrum-admin-koder.js?v=b68d453f"></script>
 <script src="nextrum-admin-rabattkoder.js?v=68cc3d05"></script>
 <script src="nextrum-admin-tjanster.js?v=2c967f18"></script>
+<script src="nextrum-admin-nyheter.js?v=b3d93367"></script>
 <script src="nextrum-admin-system.js?v=f423ea1e"></script>
-<script src="nextrum-admin-behorighet.js?v=1d3259a1"></script>
+<script src="nextrum-admin-behorighet.js?v=cb79e743"></script>
 <script src="nextrum-admin-automationer.js?v=54a70d30"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
@@ -2737,7 +2761,7 @@
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=78ae6de7"></script>
-<script src="nextrum-modulvakt.js?v=544e71de"></script>
-<script src="nextrum-admin.js?v=c82f930a"></script>
+<script src="nextrum-modulvakt.js?v=2142c798"></script>
+<script src="nextrum-admin.js?v=42cb33f3"></script>
 </body>
 </html>

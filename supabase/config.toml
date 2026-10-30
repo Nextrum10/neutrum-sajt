@@ -142,6 +142,12 @@ verify_jwt = false
 [functions.nyhetsbrev]
 verify_jwt = false
 
+# Nyheterna till nyhetsbrevet (2026-10-30). Väcks av intern.nyheter_vack()
+# när en nyhet publiceras med mejl, och av pg_cron-jobbet nyheter-utskick,
+# genom notis_konfig.nyheter_url med hemligheten i x-nextrum-notis.
+[functions.nyheter-utskick]
+verify_jwt = false
+
 # Kopplingen till Google (Fas 18.1). Google skickar tillbaka
 # webbläsaren hit efter godkännandet, med en vanlig omdirigering, och
 # den bär ingen Supabase-token. Skyddet på den vägen är det signerade

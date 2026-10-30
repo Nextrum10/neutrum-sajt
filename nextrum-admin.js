@@ -65,6 +65,7 @@
   const ritaKontakt = (...a) => NXAdmin.rita.ritaKontakt(...a);
   const ritaKoder = (...a) => NXAdmin.rita.ritaKoder(...a);
   const ritaKodsidan = (...a) => NXAdmin.rita.ritaKodsidan(...a);
+  const ritaNyheter = (...a) => NXAdmin.rita.ritaNyheter(...a);
   const ritaLeads = (...a) => NXAdmin.rita.ritaLeads(...a);
   const ritaLektioner = (...a) => NXAdmin.rita.ritaLektioner(...a);
   const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
@@ -420,7 +421,7 @@
 
   const SEKTIONSNAMN = {
     oversikt: 'Översikt', attgora: 'Att göra', leads: 'Intresseanmälningar', ansokningar: 'Ansökningar',
-    meddelanden: 'Frågor', familjer: 'Familjer', elever: 'Elever',
+    meddelanden: 'Frågor', nyheter: 'Nyheter', familjer: 'Familjer', elever: 'Elever',
     studiehjalpare: 'Studiehjälpare', koder: 'Koder', matchning: 'Matchning', bokningar: 'Bokningar',
     lektioner: 'Lektioner', statistik: 'Statistik',
     ekonomi: 'Betalningar', manaden: 'Månadens ekonomi', loner: 'Löner',
@@ -1100,6 +1101,8 @@
       ritaTillagg();
       ritaKontakt();
       ritaChattar();
+      // Nyheterna (2026-10-30) hämtar sitt eget och väntas inte in.
+      ritaNyheter();
       ritaFamiljer();
       ritaElever();
       if (NXAdmin.rita.tillåten('matchning')) await hämtaMatchunderlag();
