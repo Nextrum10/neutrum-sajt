@@ -53,8 +53,8 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=0b8f4a41">
-<link rel="stylesheet" href="nextrum-start.css?v=1553b513">
+<link rel="stylesheet" href="nextrum-cinema.css?v=05be2961">
+<link rel="stylesheet" href="nextrum-start.css?v=069c241f">
 <link rel="stylesheet" href="nextrum-sidor.css?v=3fe53a51">
 
 <!-- Strukturerad data för tjänsten och timpriset. Ger Google en
@@ -85,8 +85,9 @@
     { "@type": "AdministrativeArea", "name": "Stockholms län" },
     { "@type": "Country", "name": "Sverige" }
   ],
-  "offers": {
+  "offers": [{
     "@type": "Offer",
+    "name": "Pass för pass, utan bindning",
     "url": "https://nextrum.se/priser",
     "priceCurrency": "SEK",
     "price": "399",
@@ -102,7 +103,25 @@
         "unitCode": "HUR"
       }
     }
-  }
+  }, {
+    "@type": "Offer",
+    "name": "Plan med 4, 8 eller 12 timmar i månaden, en månad i taget",
+    "url": "https://nextrum.se/priser",
+    "priceCurrency": "SEK",
+    "price": "379",
+    "availability": "https://schema.org/InStock",
+    "priceSpecification": {
+      "@type": "UnitPriceSpecification",
+      "priceCurrency": "SEK",
+      "price": "379",
+      "unitCode": "HUR",
+      "referenceQuantity": {
+        "@type": "QuantitativeValue",
+        "value": 1,
+        "unitCode": "HUR"
+      }
+    }
+  }]
 }
 </script>
 </head>

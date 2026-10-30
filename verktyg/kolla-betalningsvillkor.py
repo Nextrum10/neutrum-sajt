@@ -210,7 +210,8 @@ def main():
 
     serveras = sorted(glob.glob(os.path.join(ROT, '*.html'))
                       + glob.glob(os.path.join(ROT, 'en', '*.html'))
-                      + [os.path.join(ROT, 'nextrum-maskot-svar.js')])
+                      + [os.path.join(ROT, 'nextrum-maskot-svar.js'),
+                         os.path.join(ROT, 'llms.txt')])
     for sokvag in serveras:
         text = io.open(sokvag, encoding='utf-8').read()
         for monster in DET_GAMLA:

@@ -242,10 +242,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`nx.nexlax.bana.<barn>`, på `lagring.html`).
   Ett klart steg leder vidare med EN knapp, Fortsätt, till nästa del eller nästa steg, och kortet vid en prick har en knapp
   (Leo 2026-10-27: "som duolingo nu gör du de för komplicerat").
-  Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna på För elever och
-  föräldrar (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt;
-  på startsidan står brickorna, meningarna och bildtexterna under NexLäx och studievyn inte sedan 2026-10-29 (Leo: "Allt
-  jag ritade runt ska bort på hemsidan"), och illustrationernas `aria-label` säger fortfarande att innehållet är ett exempel.
+  Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står sist i Välj ämne (`.nl-valj-not`), och de tre
+  brickorna på För elever och föräldrar har klassen `fokus`; på startsidan står brickorna, meningarna och bildtexterna
+  under NexLäx och studievyn inte sedan 2026-10-29 (Leo: "Allt jag ritade runt ska bort på hemsidan"), och på För elever
+  och föräldrar står brickorna men inte NexLäx bildtext, meningen om vad vi bygger eller raden om stadierna (samma kväll,
+  Leo: "ta bort detta som jag markera"). Illustrationernas `aria-label` säger fortfarande att innehållet är ett exempel.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare och en kampanjkod per
   affisch. **En familjs kod och en kampanjkod gäller intresseanmälan (`leads.kod`), en studiehjälpares
   jobbansökan (`applications.kod`)** (2026-10-13, Leo: "ansökning ska inte kunna använda koder från
@@ -731,8 +732,10 @@ Detaljer: `minne/grunden.md`.
 De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
 delar som de är; deras text följer inte med formen, och `.faq-item` är orörd (generatorerna läser den).
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
-under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06), som bara står på en större skärm
-sedan 2026-10-29 (Leo: "de på heron ska bara bort på mobilvyn"; `.nx-hero-fakta`, under 760 px dold). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
+under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06), som bara syns på en större skärm
+sedan 2026-10-29 (Leo: "de på heron ska bara bort på mobilvyn"; `.nx-hero-fakta`): under 760 px är den osynlig men tar sin
+plats, för där är heron så hög som innehållet (Leo: "Korta inte ner på videon"). Heron tonar i nederkanten mjukt över i
+Hur hjälper vis yta (`.nx-start .nx-hero-film::after`, Leo: "skugga lite så de ej blir ett tydligt streck där"). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdömena (`#rost`) och Nästa steg; För dig som
@@ -792,7 +795,7 @@ sidan på mörk och ljus vy", och alla andra sidor 2026-10-30, Leo: "redo att ta
 sidor som den nya som är på main sidan"), med punktnätet bakom (efter Leos video: "kör nåt sånt här där i bakrunden";
 `nextrum-punktnat.js`, laddad av varje sida med Nästa steg) och stjärnkanten på Skicka intresseanmälan; formen står i
 cinema (NÄSTA STEG SOM SIDAN), och en ny sida tar samma markup (generatorns `NASTA_STEG`). Raderna under knapparna är
-sidans egna: bara startsidan har Betygsgaranti, för bara där finns remsan länken går till.
+sidans egna: bara startsidan har Betygsgaranti, för bara där finns remsan länken går till. På telefonen står de två knapparna bredvid varandra, lika stora och utan pilar (2026-10-29, Leo: "bredvid varandra").
 **Footern** står i `--ftr-bg` (#1F1915) i båda lägena (2026-10-08), aldrig i barken.
 Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
@@ -822,7 +825,7 @@ ett punktnät bakom Nästa steg, knappt synligt så att ytan läses som sidans p
 den nyansen"; React Bits Dot Grid, en 2d-duk), som lyser upp och viker undan bara kring musen eller fingret, aldrig av sig
 självt (Leo: "man själv när man rör då ska punkterna röra sig inte automatisk"). Båda ritar bara medan de syns, och en
 enda bild med reducerad rörelse. Etiketterna
-har ett ljus som glider (ShinyText, CSS). Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
+har ett ljus som glider (ShinyText, CSS, i `currentColor`; NexLäx etikett är genomskinlig för sin gradient och får ljuset över gradienten, annars syns den inte). Utan skriptet står allt som `nextrum-start.js` lämnar det. Rubrikerna, `.rv` och parallaxen är kvar i `nextrum-motion.js`.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.
 3. `scrollIntoView` i en rad som flyttas med transform rullar sidan; bandet är `overflow:clip`,
@@ -1260,7 +1263,7 @@ Detaljer: `minne/funktioner.md`.
 
 ## 8. Genererade filer — ändra aldrig för hand
 Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessidor.py`
-(`laxhjalp-*` med stadiesidorna, orterna, guiderna, navets kort och ortskatalog, affischens ortslista och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `bygg-logga.js` (för hand: favicons, mejlloggan, BIMI och profilbilden ur
+(`laxhjalp-*` med stadiesidorna, orterna, guiderna, navets kort och ortskatalog, affischens ortslista och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `bygg-llms.py` (`llms.txt` till AI-sökmotorerna, ur kartan och sidornas titel och beskrivning; fakta bara som sajten redan säger dem), `bygg-logga.js` (för hand: favicons, mejlloggan, BIMI och profilbilden ur
 `bilder/nextrum-logga.svg`),
 `bygg-banken.py` (för hand, och `--facit`; bladen och facit står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar),
 `bygg-delningsbilder.js` (för hand: en delningsbild per sida i kartan, `delning/`, med rubriken och
@@ -1355,7 +1358,8 @@ Detaljer: `minne/grunden.md`.
 - **Nyhetsbrevet** (2026-10-28, `nyhetsbrev` 20261028120000, Leo: "gör detta arbete simpelt") är inte i drift.
   Formuläret står bara i footern på varje öppen sida (startsidans Nästa steg hade ett till, borttaget 2026-10-29, Leo: "Ta bort denna"; `nextrum-nyhetsbrev.js`, laddat av
   `nextrum-samtycke.js`, så aldrig i vyerna eller på en sida med en nyckel i adressen); ingen popup, inget i
-  webbläsaren och ingen rabatt. Dubbel opt-in genom edge-funktionen `nyhetsbrev` (`verify_jwt` av, taket fem i timmen
+  webbläsaren och ingen rabatt. Det står i en egen ruta med loggans orange i rubriken och knappen (2026-10-29, Leo:
+  "Denna sektion måste synas bättre"; `.nb` i cinema). Dubbel opt-in genom edge-funktionen `nyhetsbrev` (`verify_jwt` av, taket fem i timmen
   per IP-hash och 300 totalt, samma svar om adressen finns), och `/nyhetsbrev` bekräftar (`?b=`) och avslutar (`?a=`)
   med en knapp. En avanmälan raderar raden, och en obekräftad raderas efter sju dagar. Tabellen är sanningen; Resends
   Audience (`RESEND_AUDIENCE_ID`) är en kopia att skicka från. Inget skickar nyhetsbrevet än: varje utskick ska ha

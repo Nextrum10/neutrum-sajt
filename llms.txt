@@ -1,0 +1,118 @@
+# Nextrum
+
+> Nextrum är läxhjälp i Stockholm och online för elever från lågstadiet till gymnasiet. Nextrum matchar varje elev med en studiehjälpare som själv nyligen läst samma kurser, och eleven får en studieplan och en rapport efter varje pass. Avtalspart är Nextrum AB (org.nr 559609-3269).
+
+## Fakta
+
+- Pris pass för pass: 399 kr i timmen, samma pris oavsett ämne och var i Stockholm, utan bindning. Det är priset, inte ett från-pris.
+- Planer: 4, 8 eller 12 timmar i månaden för 379 kr i timmen, en månad i taget. Timmarna betalas i förväg och gäller i 30 dagar. Den första planen en familj köper får en timme gratis.
+- Syskon på samma pass: 69 kr i timmen extra, lika mycket för ett som för två syskon.
+- Matchning, studieplan, bokning och rapport efter varje pass ingår i priset.
+- Betalning: ett pass betalas med kort eller Klarna när studiehjälparen har bekräftat tiden, eller med timmarna i en plan.
+- Avbokning: ett pass som avbokas mindre än 12 timmar före start räknas som hållet i halva tiden.
+- Betygsgaranti finns, med villkor: https://nextrum.se/anvandarvillkor#betygsgaranti
+- Studiehjälparna har minst börjat gymnasiet. På sajten heter de studiehjälpare, inte lärare.
+- Så börjar man: familjen skickar en intresseanmälan, Nextrum ringer upp och väljer studiehjälpare, och sedan bokas passen i familjens inloggade vy. Det finns ingen katalog att välja studiehjälpare ur.
+- Mellan passen övar eleven i NexLäx, uppgifter i familjens inloggade vy.
+- Kontakt: info@nextrum.se. Intresseanmälan: https://nextrum.se/intresseanmalan
+
+## Om Nextrum, pris och hur det går till
+
+- [Läxhjälp av unga, för unga i Stockholm](https://nextrum.se/): Läxhjälp i Stockholm för 399 kr i timmen, av unga som nyss läst samma kurser. Hemma hos er eller online, med en rapport efter varje pass.
+- [Så fungerar läxhjälpen, steg för steg](https://nextrum.se/sa-fungerar-nextrum): Från intresseanmälan till första passet: stegen, hur bokningen fungerar, och tryggheten som ligger i att allt går genom plattformen.
+- [Priser: läxhjälp för 399 kr i timmen, utan bindning](https://nextrum.se/priser): 399 kr i timmen utan bindning, oavsett ämne och var i Stockholm, och billigare med en plan. Matchning, studieplan och rapport ingår i priset.
+- [Vanliga frågor om läxhjälp](https://nextrum.se/faq): Svar på det ni brukar undra om Nextrum: matchning, priser, betygsgarantin, betalning, trygghet och hur det är att jobba som studiehjälpare.
+- [Läxhjälp för elever och föräldrar](https://nextrum.se/for-elever-och-foraldrar): Studievyn samlar studieplanen, kommande pass och rapporten efter varje pass, så att ni ser elevens utveckling också mellan passen.
+- [Vår idé: unga som hjälper unga](https://nextrum.se/var-ide): Varför Nextrum finns: studiehjälpare som nyligen läst samma kurser, ett fast timpris utan dolda avgifter, och ett urval vi gör själva.
+- [Om oss: därför finns Nextrum](https://nextrum.se/om-oss): Ibland behövs någon annan än mamma och pappa. Därför finns Nextrum: läxhjälp av någon som nyss gick kursen, med en rapport efter passet.
+- [Intresseanmälan för läxhjälp](https://nextrum.se/intresseanmalan): Berätta vad ni behöver hjälp med. Att skicka in är gratis och binder er inte vid något — vi hör av oss inom 24 timmar.
+- [Bli studiehjälpare i Stockholm, extrajobb](https://nextrum.se/bli-studiehjalpare): Extrajobb i Stockholm för dig som gått ut grundskolan: hjälp yngre elever med skolan, tjäna pengar och få erfarenhet att skriva på CV:t.
+- [Läxhjälp i Stockholm: stadsdelar och kranskommuner](https://nextrum.se/laxhjalp-stockholm): Läxhjälp i hela Stockholm för 399 kr i timmen, från innerstaden till kranskommunerna: hemma hos er, på biblioteket eller online. Välj ert område.
+- [Vad kostar läxhjälp? Timpris, avgifter och RUT](https://nextrum.se/vad-kostar-laxhjalp): Vad som gör läxhjälp dyr eller billig, vad ni ska fråga innan ni bokar, varför rutavdraget inte gäller och vad vi tar, rakt ut.
+
+## Läxhjälp per ämne
+
+- [Läxhjälp i engelska i Stockholm, 399 kr/tim](https://nextrum.se/laxhjalp-engelska): Läxhjälp i engelska för 399 kr i timmen: ordförråd, grammatik, uppsatser och att våga prata. Från mellanstadiet till gymnasiet, hemma eller online.
+- [Läxhjälp i matte i Stockholm, 399 kr/tim](https://nextrum.se/laxhjalp-matematik): Läxhjälp i matte för 399 kr i timmen, från mellanstadiet till gymnasiet, med en studiehjälpare som nyss läst kursen. Hemma eller online.
+- [Läxhjälp i spanska, tyska och franska, 399 kr/tim](https://nextrum.se/laxhjalp-moderna-sprak): Läxhjälp i spanska, tyska och franska för 399 kr i timmen: glosor, grammatik och att våga prata. Hemma hos er i Stockholm eller online.
+- [Läxhjälp i fysik, kemi och biologi, 399 kr/tim](https://nextrum.se/laxhjalp-no): Läxhjälp i NO för 399 kr i timmen: fysik, kemi och biologi, formler och labbrapporter. En studiehjälpare som nyss läst kursen, hemma eller online.
+- [Läxhjälp i SO i Stockholm, 399 kr/tim](https://nextrum.se/laxhjalp-so): Läxhjälp i SO för 399 kr i timmen: historia, samhällskunskap, geografi och religion med någon som nyss läst kursen. Hemma eller online.
+- [Läxhjälp i svenska i Stockholm, 399 kr/tim](https://nextrum.se/laxhjalp-svenska): Läxhjälp i svenska för 399 kr i timmen: läsförståelse, uppsatser och redovisningar, också i svenska som andraspråk. Hemma eller online.
+
+## Läxhjälp per stadium
+
+- [Läxhjälp för gymnasiet i Stockholm, 399 kr/tim](https://nextrum.se/laxhjalp-gymnasiet): Läxhjälp på gymnasiet för 399 kr i timmen: matte, fysik, kemi, svenska och engelska, med en studiehjälpare som läst samma ämne nyligen.
+- [Läxhjälp för högstadiet (åk 7–9), 399 kr/tim](https://nextrum.se/laxhjalp-hogstadiet): Läxhjälp i åk 7–9 för 399 kr i timmen, med en studiehjälpare som nyss gått ut nian själv. Matte, svenska, engelska och NO, hemma eller online.
+- [Läxhjälp för lågstadiet (åk 1–3), 399 kr/tim](https://nextrum.se/laxhjalp-lagstadiet): Läxhjälp i åk 1–3 för 399 kr i timmen: läsa, skriva och räkna i barnets egen takt. Hemma hos er i Stockholm, på biblioteket eller online.
+- [Läxhjälp för mellanstadiet (åk 4–6), 399 kr/tim](https://nextrum.se/laxhjalp-mellanstadiet): Läxhjälp i åk 4–6 för 399 kr i timmen: läsförståelse, tabellerna, bråk och engelska, och lugn inför proven i sexan. Hemma eller online.
+
+## Läxhjälp per område i Stockholms län
+
+- [Läxhjälp i Älvsjö: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-alvsjo): Läxhjälp i Älvsjö för 399 kr i timmen, från Herrängen och Långbro till Solberga: hemma hos er, på Älvsjö bibliotek eller online.
+- [Läxhjälp i Botkyrka: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-botkyrka): Läxhjälp i Botkyrka, från Fittja och Alby till Tumba och Tullinge, för 399 kr i timmen: hemma hos er, på biblioteket eller online.
+- [Läxhjälp i Bromma: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-bromma): Läxhjälp i Bromma för 399 kr i timmen, från Alvik till Nockeby: hemma hos er, på Brommaplans bibliotek eller online. Ingen bindningstid.
+- [Läxhjälp i Danderyd: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-danderyd): Läxhjälp i Danderyd för 399 kr i timmen, från Stocksund och Djursholm till Enebyberg: hemma hos er, på biblioteket eller online.
+- [Läxhjälp på Ekerö: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-ekero): Läxhjälp på Ekerö för 399 kr i timmen, från Tappström och Träkvista till Stenhamra på Färingsö: hemma hos er, på biblioteket eller online.
+- [Läxhjälp i Enskede, Årsta och Vantör, 399 kr/tim](https://nextrum.se/laxhjalp-enskede-arsta-vantor): Läxhjälp i Årsta, Enskede, Högdalen och Rågsved för 399 kr i timmen: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Farsta: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-farsta): Läxhjälp i Farsta, Hökarängen och Gubbängen för 399 kr i timmen: hemma hos er, på Farsta bibliotek eller online. Ingen bindningstid.
+- [Läxhjälp i Hägersten och Liljeholmen, 399 kr/tim](https://nextrum.se/laxhjalp-hagersten-liljeholmen): Läxhjälp i Hägersten och Liljeholmen för 399 kr i timmen, från Gröndal till Fruängen: hemma hos er, på biblioteket eller online.
+- [Läxhjälp i Hammarby Sjöstad, hemma eller online](https://nextrum.se/laxhjalp-hammarby-sjostad): Läxhjälp i Hammarby Sjöstad och Sickla för 399 kr i timmen: hemma hos er, på LUMA-biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Haninge: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-haninge): Läxhjälp i Haninge för 399 kr i timmen, i Handen, Vega, Jordbro, Västerhaninge och Brandbergen: hemma hos er, på biblioteket eller online.
+- [Läxhjälp i Huddinge: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-huddinge): Läxhjälp i Huddinge, Flemingsberg och Skogås för 399 kr i timmen: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Järfälla: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-jarfalla): Läxhjälp i Järfälla, från Barkarby och Jakobsberg till Kallhäll, för 399 kr i timmen: hemma hos er, på biblioteket eller online.
+- [Läxhjälp i Kista och Rinkeby, hemma eller online](https://nextrum.se/laxhjalp-kista-rinkeby): Läxhjälp i Kista, Husby, Akalla och Rinkeby för 399 kr i timmen: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp på Kungsholmen, hemma eller online](https://nextrum.se/laxhjalp-kungsholmen): Läxhjälp på Kungsholmen för 399 kr i timmen, från Stadshagen till Fridhemsplan och Essingen: hemma hos er, på biblioteket eller online.
+- [Läxhjälp på Lidingö: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-lidingo): Läxhjälp på Lidingö för 399 kr i timmen, från Torsvik och Larsberg till Gåshaga: hemma hos er, på stadsbiblioteket eller online.
+- [Läxhjälp i Nacka: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-nacka): Läxhjälp i Nacka för 399 kr i timmen, från Sickla till Orminge och Saltsjöbaden: hemma hos er, på biblioteket eller online.
+- [Läxhjälp på Östermalm: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-ostermalm): Läxhjälp på Östermalm för 399 kr i timmen, från Stureplan till Gärdet och Ropsten: hemma hos er, på biblioteket eller online.
+- [Läxhjälp i Salem: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-salem): Läxhjälp i Salem och Rönninge för 399 kr i timmen: hemma hos er, på Salems bibliotek eller online. Ingen bindningstid.
+- [Läxhjälp i Sigtuna: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-sigtuna): Läxhjälp i Sigtuna kommun för 399 kr i timmen, i Märsta, Valsta, Rosersberg och Sigtuna stad: hemma hos er, på biblioteket eller online.
+- [Läxhjälp i Skärholmen: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-skarholmen): Läxhjälp i Skärholmen, Bredäng, Sätra och Vårberg för 399 kr i timmen: hemma hos er, på biblioteket eller online.
+- [Läxhjälp i Skarpnäck: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-skarpnack): Läxhjälp i Skarpnäck, Bagarmossen och Björkhagen för 399 kr i timmen: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp på Södermalm, hemma eller online](https://nextrum.se/laxhjalp-sodermalm): Läxhjälp på Södermalm för 399 kr i timmen, från Hornstull till Skanstull: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Sollentuna: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-sollentuna): Läxhjälp i Sollentuna för 399 kr i timmen, från Helenelund till Rotebro: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Solna: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-solna): Läxhjälp i Solna, Råsunda och Bergshamra för 399 kr i timmen: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Spånga och Tensta, hemma eller online](https://nextrum.se/laxhjalp-spanga-tensta): Läxhjälp i Spånga och Tensta för 399 kr i timmen, från Bromsten till Hjulsta: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Sundbyberg: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-sundbyberg): Läxhjälp i Sundbyberg för 399 kr i timmen, från Duvbo och centrala Sundbyberg till Hallonbergen och Ursvik: hemma hos er eller online.
+- [Läxhjälp i Täby: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-taby): Läxhjälp i Täby för 399 kr i timmen, från Näsbypark till Täby kyrkby och Arninge: hemma hos er, på biblioteket eller online.
+- [Läxhjälp i Tyresö: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-tyreso): Läxhjälp i Tyresö för 399 kr i timmen, från Trollbäcken och Bollmora till Brevik: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Upplands-Bro, hemma eller online](https://nextrum.se/laxhjalp-upplands-bro): Läxhjälp i Upplands-Bro för 399 kr i timmen, i Kungsängen, Brunna och Bro: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Upplands Väsby, hemma eller online](https://nextrum.se/laxhjalp-upplands-vasby): Läxhjälp i Upplands Väsby för 399 kr i timmen, från Bollstanäs till Runby: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Vallentuna: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-vallentuna): Läxhjälp i Vallentuna för 399 kr i timmen, från Kragstalund till Kårsta: hemma hos er, på biblioteket eller online. Ingen bindningstid.
+- [Läxhjälp i Vällingby och Hässelby, hemma eller online](https://nextrum.se/laxhjalp-vallingby-hasselby): Läxhjälp i Vällingby och Hässelby för 399 kr i timmen, från Råcksta till Hässelby strand: hemma hos er, på biblioteket eller online.
+- [Läxhjälp på Värmdö: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-varmdo): Läxhjälp på Värmdö för 399 kr i timmen, i Gustavsberg, Hemmesta, Mölnvik och på Ingarö: hemma hos er, på biblioteket eller online.
+- [Läxhjälp i Vasastan: hemma eller online, 399 kr/tim](https://nextrum.se/laxhjalp-vasastan): Läxhjälp i Vasastan för 399 kr i timmen, från Odenplan och Sankt Eriksplan till Norrtull: hemma hos er eller online. Ingen bindningstid.
+
+## Guider för föräldrar
+
+- [Barnet vill inte göra läxorna? Så minskar ni bråket](https://nextrum.se/barnet-vill-inte-gora-laxorna): Blir läxan ett gräl varje kväll? Rutiner som tar bort förhandlingen, varför "jag vill inte" ofta betyder "jag förstår inte", och när ni behöver hjälp.
+- [Så hjälper du ditt barn med läsförståelsen](https://nextrum.se/hjalpa-barn-med-lasforstaelse): Läs högt också för den som kan läsa själv, prata om texten och förklara orden. Råd för föräldrar, och vad ni gör när läsningen går trögt.
+- [Så hjälper du ditt barn med matteläxan](https://nextrum.se/hjalpa-barn-med-matte): Konkreta råd för föräldrar: fråga innan du förklarar, låt barnet hålla pennan och gå tillbaka ett steg när det tar stopp. Och när det inte går hemma.
+- [Inför terminsbetyget: så använder ni veckorna kvar](https://nextrum.se/infor-terminsbetyget): Från sexan sätts betyg i slutet av varje termin. Vad betyget bygger på, vad som går att göra de sista veckorna och vad som inte går.
+- [Kom igång efter sommarlovet: läxor och rutiner](https://nextrum.se/laxhjalp-efter-sommarlovet): De första veckorna efter sommarlovet sätter rutinen för terminen. Så kommer ni igång med läxorna igen, och vad hösten har i sig.
+- [Läxhjälp eller privatlärare? Skillnaden förklarad](https://nextrum.se/laxhjalp-eller-privatlarare): Legitimerad lärare, student eller ung studiehjälpare: vad ni får för pengarna och när vilken passar bäst. En jämförelse där vi inte alltid vinner.
+- [Läxhjälp online med egen studiehjälpare, 399 kr/tim](https://nextrum.se/laxhjalp-online): Läxhjälp online för 399 kr i timmen med en studiehjälpare som nyss läst samma kurser: samma studieplan och rapport som när ni ses hemma.
+- [Nationella proven i åk 6: så förbereder ni er](https://nextrum.se/nationella-prov-ak-6): Sexan skriver nationella prov i svenska, engelska och matematik samma år som de första betygen. Vad proven prövar och hur ni förbereder er.
+- [Nationella proven i åk 9: så förbereder ni er](https://nextrum.se/nationella-prov-ak-9): Vilka prov nian skriver, när på året de kommer, vad de betyder för betyget och hur ni förbereder er. Med länkar till provgruppernas egna övningar.
+- [Plugga inför prov: så hjälper du ditt barn](https://nextrum.se/plugga-infor-prov): Testa i stället för att läsa om, sprid ut pluggandet och börja med det svåra. Råd för föräldrar vars barn har ett prov på gång.
+
+## In English
+
+- [Tutoring by young people, for young people](https://nextrum.se/en/): Personal tutoring in Stockholm, at home or online, matched to your child. And a first real job for young people. No minimum term.
+- [Terms of use](https://nextrum.se/en/anvandarvillkor): The terms for using Nextrum: booking, cancellation, price and payment, and what applies if you are a tutor.
+- [Become a tutor in Stockholm and earn on the side](https://nextrum.se/en/bli-studiehjalpare): A side job in Stockholm: earn money, help younger students and build real work experience. Apply to become a tutor at Nextrum.
+- [Frequently asked questions about tutoring](https://nextrum.se/en/faq): Answers to what people usually ask about Nextrum: matching, prices, the grade guarantee, payment, safety, and what it is like to work as a tutor.
+- [Tutoring for students and parents](https://nextrum.se/en/for-elever-och-foraldrar): The student view holds the study plan, upcoming sessions and the report after each one, so you can follow progress between sessions.
+- [Privacy policy](https://nextrum.se/en/integritetspolicy): What Nextrum stores about you and your child, who can see it, how long it is kept and what rights you have.
+- [Get started with tutoring](https://nextrum.se/en/intresseanmalan): Tell us what you need help with. Sending the form is free and commits you to nothing — we get back to you within 24 hours.
+- [Cookies and storage](https://nextrum.se/en/lagring): Nextrum sets no cookies without your yes. This page explains what is actually stored in your browser, and why.
+- [Pricing: tutoring for SEK 399 an hour, no commitment](https://nextrum.se/en/priser): SEK 399 an hour, no commitment, whatever the subject or part of Stockholm, and less with a plan. Matching, study plan and reports included.
+- [How the tutoring works, step by step](https://nextrum.se/en/sa-fungerar-nextrum): From enquiry to the first session: the steps, how booking works, and the safety that comes from everything going through the platform.
+- [Tutoring in Stockholm for international families](https://nextrum.se/en/tutoring-stockholm): Homework help for children in Swedish schools whose parents are new to Swedish. At home in Stockholm or online, SEK 399 an hour.
+- [Our idea: young people helping young people](https://nextrum.se/en/var-ide): Why Nextrum exists: young tutors who took the same courses recently, one fixed hourly price, no hidden fees, and tutors we choose ourselves.
+
+## Villkor och integritet
+
+- [Användarvillkor](https://nextrum.se/anvandarvillkor): Villkoren för att använda Nextrum: bokning, avbokning, pris och betalning, och vad som gäller för dig som är studiehjälpare.
+- [Integritetspolicy](https://nextrum.se/integritetspolicy): Vad Nextrum sparar om dig och ditt barn, vem som kan se det, hur länge det sparas och vilka rättigheter du har.
+- [Cookies och lagring](https://nextrum.se/lagring): Nextrum sätter inga cookies utan ditt ja. Här står vad som faktiskt lagras i din webbläsare och varför.

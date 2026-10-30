@@ -134,7 +134,8 @@ jobs:
           python3 verktyg/bygg-maskotsvar.py
           python3 verktyg/bygg-faq-schema.py
           python3 verktyg/bygg-sitemap.py
-          git diff --exit-code -- nextrum-maskot-svar.js faq.html en/faq.html sitemap.xml
+          python3 verktyg/bygg-llms.py
+          git diff --exit-code -- nextrum-maskot-svar.js faq.html en/faq.html bli-studiehjalpare.html en/bli-studiehjalpare.html en/tutoring-stockholm.html sitemap.xml llms.txt
 
       # jamfor-sprak.py rapporterar avvikelser som är avsiktliga, till
       # exempel språkväljaren (<b>SV</b> på svenska, <a> på engelska)

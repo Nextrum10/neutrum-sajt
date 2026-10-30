@@ -22,6 +22,11 @@ import io, json, re, sys
 SIDOR = {
     'faq.html':    'https://nextrum.se/faq',
     'en/faq.html': 'https://nextrum.se/en/faq',
+    # Frågorna på jobbsidan och sidan för utlandsfamiljer (2026-10-29): samma
+    # utfällbara frågor, och AI-sökmotorerna läser märkningen även där.
+    'bli-studiehjalpare.html':    'https://nextrum.se/bli-studiehjalpare',
+    'en/bli-studiehjalpare.html': 'https://nextrum.se/en/bli-studiehjalpare',
+    'en/tutoring-stockholm.html': 'https://nextrum.se/en/tutoring-stockholm',
 }
 
 FRAGA = re.compile(

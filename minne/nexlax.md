@@ -667,7 +667,9 @@ Reglerna:
   vi fixa resten av ämnena." Det stämmer med banken: de tre har flest
   nivåer och frågor, NO och SO ungefär hälften, och språken, juridiken och
   företagsekonomin två banor var. Under ämnesbrickorna står raden
-  `.nlx-bygger` (startsidan och För elever och föräldrar, båda språken),
+  `.nlx-bygger` (startsidan och För elever och föräldrar, båda språken; borta från
+  startsidan och sedan från För elever och föräldrar 2026-10-29, Leo, med NexLäx bildtext
+  och raden om stadierna, så nu står det bara i Välj ämne),
   och de tre brickorna har klassen `fokus`, i ämnets ton; raden säger det i
   ord, så att färgen aldrig bär beskedet ensam. I NexLäx (studievyn och
   barnets vy) står samma sak som fotnot sist i Välj ämne (`.nl-valj-not`

@@ -743,3 +743,11 @@ innan den går, och HTML kan inte säga något annat än den), underlaget, nyhet
 (`kontaktaRuta`) säger att signaturen läggs på av sig själv. Öppna i Gmail går genom Gmails egen signatur och får ingen i
 länken. Intervjumejlet har med flit ingen: texten är Leos och visas innan den går.
 
+
+**Nyhetsbrevets ruta i footern** (2026-10-29, Leo: "Denna sektion måste synas bättre ändra färg på
+rubriken och gör den bättre"): `.nb` är en platt ruta med en orange kant, utan sken eller skugga (samma kväll, Leo: "ingen skugga
+ta bort"),
+rubriken är större och i `--orange`, och knappen Skriv upp mig är orange med mörk text. Rubriken behöver
+`.ftr-brand .nb-rubrik`, annars vinner footerns `.ftr-brand p` (dämpad och 30ch bred). Fältet har en mindre
+bas (8rem), så att det och knappen står på samma rad i rutan på en telefon. Orange är här ingen
+betalknapp: regeln om orange gäller vyerna, och nyhetsbrevet laddas aldrig där.
