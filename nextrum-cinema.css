@@ -1012,6 +1012,9 @@ html[lang="en"] .nx-hero-rubrik{
      mindre"): smalare rad, lägre och mindre text, men aldrig under 44 px. */
   .nx-hero-knappar{
     width:100%;max-width:320px;margin-inline:auto;
+    /* Lite längre ner från ingressen (Leo samma dag: "Flytta ner kolumnerna
+       lite bara"); förut klampens golv, 30 px. */
+    margin-top:46px;
     display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
     gap:8px;align-items:stretch;
   }
