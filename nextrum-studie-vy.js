@@ -421,6 +421,9 @@
     const namn = $('#b-namn').value.trim();
     const fel = kolla([
       { fel: !namn, text: 'Fyll i barnets namn.', falt: $('#b-namn') },
+      // Årskurs och kön krävs sedan 2026-10-30 (profilen_ifylld, mitt_profillage).
+      { fel: !$('#b-ak').value, text: 'Välj barnets årskurs.', falt: $('#b-ak') },
+      { fel: S.konFinns && !bf.kon, text: 'Välj barnets kön.' },
       { fel: bf.läge === 'ändra' && !S.valtBarn, text: 'Välj ett barn först.' }
     ]);
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
@@ -1458,14 +1461,24 @@
     const msg = $('#k-msg');
     rensa(msg);
     const namn = $('#k-namn').value.trim();
-    const fel = kolla([{ fel: !namn, text: 'Vänligen fyll i ditt namn.', falt: $('#k-namn') }]);
+    const tel = $('#k-tel').value.trim();
+    const post = $('#k-post').value.replace(/\s/g, '');
+    // Samma regler som mitt_profillage och spara_postnummer (2026-10-30).
+    const fel = kolla([
+      { fel: !namn, text: 'Vänligen fyll i ditt namn.', falt: $('#k-namn') },
+      { fel: tel.replace(/\D/g, '').length < 7, text: 'Fyll i ett telefonnummer vi kan nå er på.', falt: $('#k-tel') },
+      { fel: !/^\d{5}$/.test(post), text: 'Ett postnummer är fem siffror, till exempel 123 45.', falt: $('#k-post') }
+    ]);
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
 
     await medan(e.submitter, 'Sparar…', async () => {
       const { error } = await supa.from('profiles')
-        .update({ full_name: namn, phone: $('#k-tel').value.trim() || null, bio: $('#k-bio').value.trim() || null })
+        .update({ full_name: namn, phone: tel, bio: $('#k-bio').value.trim() || null })
         .eq('id', S.user.id);
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+      const pn = await supa.rpc('spara_postnummer', { p_postnummer: post });
+      if (pn.error) { säg(msg, 'Kunde inte spara postnumret: ' + felText(pn.error), false); return; }
+      S.profil.phone = tel;
       S.profil.full_name = namn;
       ritaHeader();
       ritaKontoAvatar();
@@ -6321,6 +6334,9 @@
        Databasen kräver godkännandet för att ett pass ska bokas
        (NXStudie.villkorFörst). */
     await NXStudie.villkorFörst(supa, S.user, 'foralder');
+    /* Profilen (2026-10-30, profilen_ifylld): namn, telefon och postnummer,
+       och barnen med årskurs och kön, efter villkoren och före introduktionen. */
+    if (await NXStudie.profilFörst(supa, S.user)) S.profil = await NX.hämtaProfil(S.user.id);
     /* Före matchningen är vyn öppen (2026-10-07, Leo: "han kommer inte in
        på plattformen, det är låst. ta bort så att det inte är låst").
        Förut stannade en familj utan studiehjälpare i ett väntläge, och
@@ -6460,6 +6476,11 @@
     $('#k-namn').value = S.profil.full_name || '';
     $('#k-tel').value = S.profil.phone || '';
     $('#k-bio').value = S.profil.bio || '';
+    /* Postnumret står i en egen tabell (profilen_ifylld, 2026-10-30): den
+       matchade läser profiles, och postnumret ser bara personen och vi. */
+    supa.from('postnummer').select('postnummer').eq('profil_id', S.user.id).maybeSingle().then(r => {
+      if (r.data && !$('#k-post').value) $('#k-post').value = r.data.postnummer.slice(0, 3) + ' ' + r.data.postnummer.slice(3);
+    }, () => {});
     $('#k-epost').textContent = S.profil.email || S.user.email || '';
     ritaKontoAvatar();
     ritaHeader();
