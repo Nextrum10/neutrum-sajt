@@ -19,18 +19,15 @@ den gamla ingressen 2026-10-07. Kvar av den dagen är raden under knapparna
 (se Startsidan talar till föräldern nedan).
 
 **Ingressen till föräldern, igen** (2026-10-30). Granskningen av sajten
-fann att den första meningen under "Av unga, för unga." var en jobbannons
-("Vi skapar möjligheter för unga att ta sina första steg in i
-arbetslivet. Hos Nextrum får du chansen att arbeta …"), och att en
-förälder på telefon inte fick något konkret på första skärmen, för raden
-med priset syns inte där sedan 2026-10-29. Leo godkände ändringen med
-"Merga sen automatisk". Nu: "Personlig läxhjälp i Stockholm, hemma hos
-er, på biblioteket eller online. Studiehjälparna är unga som nyligen läst
-samma kurser själva, och hos oss tar de sina första steg in i
-arbetslivet." Skillnaden mot 2026-10-06: jobbet står kvar, i andra
-meningen, så att den unga som söker jobb känner igen sig, och etiketten
-och rubriken är orörda. Varje led stod redan på sidan (Hur hjälper vis
-första kort och studiehjälparnas). Samma i en/index.html.
+fann att den första meningen under "Av unga, för unga." var en jobbannons,
+och en ingress som började "Personlig läxhjälp i Stockholm, hemma hos er,
+på biblioteket eller online" låg ute en natt (PR #404). Leo tyckte att den
+fick läxhjälpen att låta billig för att studiehjälparna är unga, ratade
+sju förslag till (matchningen, kontrollen, ungdomen som fördel, rätt
+person) och sa sedan "Ta tillbaka den gamla". Den gamla ingressen står
+kvar, på båda språken; resten av granskningens ändring (Trustpilot,
+etiketterna, tryckytorna, filmen) står kvar. Föreslå inte en ny ingress
+utan att Leo ber om det.
 
 **Hero-filmen spelar också på telefon** (2026-09-29, Leo: "heron rullar
 ej automatisk på mobil vy"). `heroVideo()` i `nextrum-motion.js` avstod
