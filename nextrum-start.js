@@ -1163,32 +1163,61 @@ const NXStart = (function () {
   }
 
   /* ============================================================
-     BOKNINGEN PÅ SÅ FUNGERAR NEXTRUM (2026-10-27)
+     BOKNINGEN PÅ SÅ FUNGERAR NEXTRUM (2026-10-27, rörelsen 2026-10-30)
      Passet i scenen går igenom fyra lägen medan det syns: ni föreslår,
      studiehjälparen bekräftar, ni betalar, ni flyttar. Skriptet byter
-     bara data-steg; färgerna, tiderna och knappen följer i CSS
-     (nextrum-sidor.css avsnitt 5d). Högst tre varv, sedan står det på
-     betalt, som markupen. Pausat utanför bild och i en dold flik.
+     bara data-steg och sätter två klasser: .bk-gar när scenen syns första
+     gången (då börjar rörelsen, inte medan den står utanför bild) och
+     .bk-knappar när stegen blivit knappar. Allt som rör sig står i CSS
+     (nextrum-sidor.css avsnitt 5d), och TID är stegens längd där (bk-fyll).
+     Ett tryck på ett steg visar det och går vidare därifrån. Högst tre
+     varv, sedan står det på betalt, som markupen. Pausat utanför bild
+     och i en dold flik.
      ============================================================ */
   function bokscen() {
     const sc = $('[data-bokscen]');
     if (!sc || !rörelse) return;
-    const TID = [2600, 2900, 2300, 2700];
+    const TID = [3600, 4200, 3400, 3800];
     let i = 0, varv = 0, timer = null, synlig = false, klar = false;
-    sc.setAttribute('data-steg', '0');
+    function visa(k) {
+      i = k;
+      /* Samma steg igen: ta bort läget en bildruta, så att CSS spelar
+         stegets rörelse från början. */
+      if (sc.getAttribute('data-steg') === String(k)) {
+        sc.removeAttribute('data-steg');
+        void sc.offsetWidth;
+      }
+      sc.setAttribute('data-steg', String(k));
+    }
     function nästa() {
       clearTimeout(timer);
       if (klar || !synlig || document.hidden) return;
       timer = setTimeout(() => {
-        i = (i + 1) % TID.length;
-        if (i === 0 && ++varv >= 3) { klar = true; sc.setAttribute('data-steg', '2'); return; }
-        sc.setAttribute('data-steg', String(i));
+        const k = (i + 1) % TID.length;
+        if (k === 0 && ++varv >= 3) { klar = true; visa(2); return; }
+        visa(k);
         nästa();
       }, TID[i]);
     }
-    if (!('IntersectionObserver' in window)) { sc.setAttribute('data-steg', '2'); return; }
+    /* Stegen blir knappar; texten flyttas in i knappen, ingen skrivs. */
+    $$('.bk-steg li[data-bk]', sc).forEach(li => {
+      const k = Number(li.dataset.bk);
+      const kn = document.createElement('button');
+      kn.type = 'button';
+      while (li.firstChild) kn.appendChild(li.firstChild);
+      li.appendChild(kn);
+      kn.addEventListener('click', () => {
+        klar = false; varv = 0;
+        sc.classList.add('bk-gar');
+        visa(k);
+        nästa();
+      });
+    });
+    sc.classList.add('bk-knappar');
+    if (!('IntersectionObserver' in window)) return;
     new IntersectionObserver(p => {
       synlig = p.some(x => x.isIntersecting);
+      if (synlig && !sc.classList.contains('bk-gar')) { sc.classList.add('bk-gar'); visa(0); }
       if (synlig) nästa(); else clearTimeout(timer);
     }, { threshold: 0.4 }).observe(sc);
     document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(timer); else nästa(); });

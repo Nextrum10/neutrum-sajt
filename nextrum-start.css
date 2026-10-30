@@ -3704,38 +3704,6 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .hjs-gar{padding-block:clamp(8px,1.6vw,24px) clamp(36px,4.6vw,68px)}
 .hjs-gar .hj-gar{margin-top:0}
 
-/* Nästa steg på startsidan följer sidans läge (Leo: "Så den ska matcha
-   sidan på mörk och ljus vy"): ingen .nx-mork, alltså sidans papper och
-   bläck i båda lägena, och i stället för barken, skenet och norrskenets
-   fläckar ett nät av punkter som lyser upp kring pekaren (React Bits Dot
-   Grid, efter Leos video: "kör nåt sånt här där i bakrunden"), bara kring
-   musen eller fingret, aldrig av sig självt. Rubrikens ord står i accenten, som andra rubrikers
-   <em> på papperet, och raden under i brödtextens färg. Menysidornas Nästa
-   steg är mörka som förut (cinema, DE MÖRKA YTORNA). */
-.nx-final-ljus{position:relative;isolation:isolate;overflow:clip}
-.nx-final-ljus > *{position:relative;z-index:1}
-.nx-final-ljus > canvas.nx-punkter{position:absolute;inset:0;z-index:0;width:100%;height:100%;display:block;pointer-events:none}
-.nx-final-ljus > .nx-norrsken{display:none}
-.nx-final-ljus h2 em{color:var(--acc)}
-.nx-final-ljus .nx-hero-trust li{color:var(--bl-2)}
-.nx-final-ljus .nx-hero-trust li::before{background:var(--bl-3)}
-/* På telefonen står de två knapparna bredvid varandra, lika stora
-   (2026-10-29, Leo: "skicka intresse anmälan och bli studiehjälpare är
-   bredvid varandra"). Det får inte plats med pilarna, så de går, och en
-   lång text bryts hellre i knappen än att knappen blir för smal. */
-@media (max-width:560px){
-  .nx-final-ljus .nx-story-ctas{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:stretch}
-  .nx-final-ljus .nx-story-ctas > *{min-width:0}
-  .nx-final-ljus .nx-stjarnkant{display:flex}
-  .nx-final-ljus .nx-story-ctas .btn{
-    width:100%;min-height:56px;padding:12px 10px;
-    font-size:.92rem;line-height:1.2;text-align:center;white-space:normal;text-wrap:balance;
-  }
-  .nx-final-ljus .nx-story-ctas .btn svg{display:none}
-  /* Stjärnkanten lägger två pixlar runt den första; den andra får samma luft. */
-  .nx-final-ljus .nx-story-ctas > .btn{width:auto;margin:2px}
-}
-
 /* Raden under heroknapparna (priset, första timmen, 24 timmar och
    bindningstiden) syns bara på en större skärm (2026-10-29, Leo: "de på
    heron ska bara bort på mobilvyn"). Den står kvar osynlig och tar sin
@@ -3866,32 +3834,3 @@ html.nx-sr [data-ordfyll].nx-scrub .nx-ord{transition:none;will-change:opacity,f
    (avsnitt 8) står av, och GSAP:s värden står inline. */
 html.nx-sr .nx-sd.sd-scrub .sd-rum{transition:none;will-change:transform}
 
-/* ---------- stjärnkanten (StarBorder) ----------
-   Ett ljus som glider längs kanten på de två knappar som ska fånga ögat:
-   manifestets och Nästa stegs. Två mjuka fläckar under knappen, en uppe
-   och en nere, som glider åt var sitt håll med translate; knappen
-   täcker allt utom de två pixlarna runt den. Står still utan rörelse. */
-.nx-stjarnkant{
-  position:relative;isolation:isolate;
-  padding:2px;border-radius:100px;overflow:hidden;
-  background:color-mix(in srgb,var(--acc) 26%,transparent);
-}
-.nx-stjarnkant > .btn{z-index:1}
-.nx-stjarnkant::before,.nx-stjarnkant::after{
-  content:"";position:absolute;z-index:0;
-  width:300%;height:60%;border-radius:50%;
-  background:radial-gradient(circle,color-mix(in srgb,var(--acc) 55%,#fff),transparent 12%);
-  opacity:.85;pointer-events:none;
-}
-.nx-stjarnkant::before{bottom:-14px;right:-250%}
-.nx-stjarnkant::after{top:-14px;left:-250%}
-html[data-motion] .nx-stjarnkant::before{animation:nx-stjarna-ned 5.5s linear infinite alternate}
-html[data-motion] .nx-stjarnkant::after{animation:nx-stjarna-upp 5.5s linear infinite alternate}
-@keyframes nx-stjarna-ned{from{translate:0 0;opacity:1}to{translate:-100% 0;opacity:0}}
-@keyframes nx-stjarna-upp{from{translate:0 0;opacity:1}to{translate:100% 0;opacity:0}}
-html[data-motion="still"] .nx-stjarnkant::before,
-html[data-motion="still"] .nx-stjarnkant::after{animation:none;opacity:0}
-
-@media (prefers-reduced-motion:reduce){
-  .nx-stjarnkant::before,.nx-stjarnkant::after{animation:none;opacity:0}
-}

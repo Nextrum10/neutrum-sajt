@@ -228,7 +228,8 @@ sedan trådarna i Raden som glider).
   norrskenet (Aurora, som stod där några timmar) är bytt mot samma trådar, som går
   genom scenens fem färger, fyra sekunder var. Rubrikens ord i accenten, som andra
   rubrikers. Reglerna `#bli + .nx-mork` (Nästa steg som började i `#bli`:s svarta)
-  gick med, för inget matchade dem längre. Menysidornas Nästa steg är mörka som förut.
+  gick med, för inget matchade dem längre. Menysidornas Nästa steg var mörka till 2026-10-30
+  (nedan, Nästa steg på varje sida).
 - **Scenen** (tredje varvet samma kväll, borttagen med Raden). Leo om högen: "Jag sa
   ta inspiration av animationer osv på react bits, snygga rörliga bakgrunder, hur
   texter går osv du gjorde ingenting av det. De blir liksom 8 kolumner direkt du
@@ -2438,6 +2439,31 @@ försök kraschade i förhandsvisningen, som saknar rättningen; den säger nu s
 - **Så fungerar Nextrum**: bokningen är reglerna i tre rader och ett pass som bokas, betalas och
   flyttas med datumrutans färger (`bokscen()` i `nextrum-start.js`, avsnitt 5d). Regeln om 12 timmar
   och hälften står ordagrant.
+- **Bokningens rörelse** (2026-10-30, Leo med en bild av scenen: "Denna sektion måste ha mycket bättre
+  motion graphic"): fyra scener i stället för fyra tonade lägen. Veckan (mån 26 till sön 1) står ovanför
+  passet; ni trycker på torsdagen och passet faller ner med Väntar på svar och prickar som skriver;
+  studiehjälparen (en figur, inget namn) dyker upp med en bock, datumrutan vänder sig röd och Betala nu
+  glider fram och trycks; knappen blir en bock som gnistrar och rutan vänder sig grön; ni trycker på
+  tiden, den rullar till 18:00–19:00, rutan vänder sig gul och studiehjälparen pingar. Ett sken i
+  lägets färg står bakom passet, och pricken under torsdagen har samma färg. Stegens streck fylls i
+  takt med scenen (`bk-fyll`, samma tider som `TID`), och stegen blir knappar (skriptet flyttar in
+  texten, skriver ingen) som visar sitt steg. Allt som rör sig hänger på `.bk-gar`, som sätts när
+  scenen syns första gången, så rörelsen börjar inte utanför bild; utan skript eller med reducerad
+  rörelse står passet betalt och stegen som en lista, som förut. Ingen ny mening: veckodagarna och
+  tiderna är illustrationens, och figuren säger inget.
+- **Nästa steg på varje sida** (2026-10-30, Leo: "redo att ta nästa steg ska vara samma på alla landings
+  sidor som den nya som är på main sidan"): menysidorna, landningssidorna, guiderna och de engelska
+  sidorna har startsidans Nästa steg, alltså sidans läge i båda lägena (`.nx-final-ljus`, ingen
+  `.nx-mork`), punktnätet och stjärnkanten. Punktnätet flyttade ur `nextrum-start-scen.js` till
+  `nextrum-punktnat.js`, som varje sida med Nästa steg laddar (de genererade genom skalets footer i
+  `var-ide.html`, så också 404, där den inte hittar något), och formen och stjärnkanten ur
+  `nextrum-start.css` till cinema (NÄSTA STEG SOM SIDAN), för landningssidorna laddar inte
+  startsidans CSS. Raderna under knapparna är kvar per sida: Betygsgaranti står bara på startsidan,
+  där remsan finns. Cinemas regler för `.nx-mork.nx-final-cinema` (mörka lägets papper och
+  inträdet) matchar ingenting längre men står kvar om det mörka ska tillbaka.
+  Luften ovanför är mindre än den mörka sektionens (Leo samma dag: "De är för mycket mellanrum här", om
+  luckan under omdömena: 383 px på en dator, nu 131): Nästa steg har 28–52 px överst, och en sektion på
+  samma papper ovanför får 40–76 px under sig (`:has(+ .nx-final-ljus)`); en med egen yta behåller sin.
 - **Priser**: Varför priset ser ut så här är borttagen. Den sa att hjälpen "ofta" blir mer begriplig,
   vilket sidan inte kan visa, och "unga hjälper unga" står redan på Vår idé.
 

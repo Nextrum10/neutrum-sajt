@@ -53,9 +53,9 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=4870944c">
-<link rel="stylesheet" href="../nextrum-start.css?v=5cbe2e6a">
-<link rel="stylesheet" href="../nextrum-sidor.css?v=06d7a05c">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=05be2961">
+<link rel="stylesheet" href="../nextrum-start.css?v=069c241f">
+<link rel="stylesheet" href="../nextrum-sidor.css?v=3fe53a51">
 </head>
 <body>
 
@@ -131,11 +131,11 @@
   <span class="nx-et acc" data-stig style="margin-top:22px">How Nextrum works</span>
   <h1 class="nx-d1" data-avslöj>From enquiry to<br>the <em>first session.</em></h1>
   <p class="nx-lede" data-stig data-fördröj="1">You do not browse a catalogue. We go through the need with you and then choose the tutor who suits the student best.</p>
-  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#69513B">
-    <picture><source type="image/webp" srcset="../bilder/24-valkommen-hem-640.webp 640w, ../bilder/24-valkommen-hem-960.webp 960w, ../bilder/24-valkommen-hem-1280.webp 1280w, ../bilder/24-valkommen-hem-1600.webp 1600w, ../bilder/24-valkommen-hem-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="../bilder/24-valkommen-hem-1280.jpg"
-         srcset="../bilder/24-valkommen-hem-640.jpg 640w, ../bilder/24-valkommen-hem-960.jpg 960w, ../bilder/24-valkommen-hem-1280.jpg 1280w, ../bilder/24-valkommen-hem-1600.jpg 1600w, ../bilder/24-valkommen-hem-1920.jpg 1920w"
+  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#948979">
+    <picture><source type="image/webp" srcset="../bilder/10-forsta-motet-640.webp 640w, ../bilder/10-forsta-motet-960.webp 960w, ../bilder/10-forsta-motet-1280.webp 1280w, ../bilder/10-forsta-motet-1600.webp 1600w, ../bilder/10-forsta-motet-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="../bilder/10-forsta-motet-1280.jpg"
+         srcset="../bilder/10-forsta-motet-640.jpg 640w, ../bilder/10-forsta-motet-960.jpg 960w, ../bilder/10-forsta-motet-1280.jpg 1280w, ../bilder/10-forsta-motet-1600.jpg 1600w, ../bilder/10-forsta-motet-1920.jpg 1920w"
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
-         style="object-position:52% 40%" alt="A father at the kitchen counter looks up with a warm smile as a young tutor with a backpack walks in from the hallway."></picture>
+         style="object-position:50% 42%" alt="A student and a tutor sitting opposite each other at a table, introducing themselves."></picture>
     <ul class="sid-lappar" aria-hidden="true">
       <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>We get in touch within 24 hours</li>
       <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 016.8-1.2"/></svg></span>No minimum term</li>
@@ -253,10 +253,14 @@
      Förut två blad med text. Nu samma regler i tre rader, och bredvid
      dem ett pass som bokas: ni föreslår (gul dag), studiehjälparen
      bekräftar (röd: att betala), ni betalar (grön) och flyttar det (gul
-     igen), med samma färger som datumrutan i studievyn. Skriptet byter
-     data-steg medan scenen syns (bokscen() i nextrum-start.js), CSS rör
-     sig (nextrum-sidor.css avsnitt 5d), och utan skript eller rörelse
-     står passet betalt och stegen som en lista. Regeln om 12 timmar och
+     igen), med samma färger som datumrutan i studievyn. 2026-10-30, Leo:
+     "Denna sektion måste ha mycket bättre motion graphic": veckan ovanför
+     passet, ett tryck på dagen, passet som faller ner, studiehjälparen som
+     dyker upp, datumrutan som vänder sig, Betala nu som blir en bock och
+     tiden som rullar, och stegen fylls i takt och går att trycka på.
+     Skriptet byter data-steg medan scenen syns (bokscen() i
+     nextrum-start.js), CSS rör sig (nextrum-sidor.css avsnitt 5d), och
+     utan skript eller rörelse står passet betalt och stegen som en lista. Regeln om 12 timmar och
      hälften står ordagrant som förut (CLAUDE.md, Siffror). -->
 <section class="nx-wrap-bred nx-sek sid-boka" aria-labelledby="boka-t">
   <div class="bk-grid">
@@ -271,18 +275,21 @@
     </div>
     <figure class="bk-scen" data-bokscen data-steg="2" data-stig data-fördröj="2">
       <div class="bk-yta" role="img" aria-label="Illustration of a session being booked: you suggest a time, the tutor confirms it, you pay, and the session can be moved.">
+        <span class="bk-glod" aria-hidden="true"><i class="g-gul"></i><i class="g-rod"></i><i class="g-gron"></i></span>
+        <div class="bk-vecka" aria-hidden="true"><span><small>Mon</small><b>26</b></span><span><small>Tue</small><b>27</b></span><span><small>Wed</small><b>28</b></span><span class="vald"><small>Thu</small><b>29</b><i class="bk-tryck"></i></span><span><small>Fri</small><b>30</b></span><span><small>Sat</small><b>31</b></span><span><small>Sun</small><b>1</b></span></div>
         <div class="bk-pass" aria-hidden="true">
           <span class="bk-dag"><small>Thu</small><b>29</b><small>Oct</small></span>
           <span class="bk-info">
             <b>Maths</b>
-            <span class="bk-tid"><i class="t1">17:00–18:00</i><i class="t2">18:00–19:00</i></span>
+            <span class="bk-tid"><i class="t1">17:00–18:00</i><i class="t2">18:00–19:00</i></span><i class="bk-tryck"></i>
           </span>
           <span class="bk-lage">
             <i class="l0">Awaiting reply</i><i class="l1">To pay</i><i class="l2">Paid</i><i class="l3">New time proposed</i>
           </span>
-          <span class="bk-rad"><i class="r0">The tutor accepts or suggests a new time</i><i class="r2">The receipt is under Payment</i><i class="r3">The tutor sees the change straight away</i></span>
-          <span class="bk-betala">Pay now</span>
-          <span class="bk-finger"></span>
+          <span class="bk-rad"><i class="r0">The tutor accepts or suggests a new time<span class="bk-prickar"><i></i><i></i><i></i></span></i><i class="r2">The receipt is under Payment</i><i class="r3">The tutor sees the change straight away</i></span>
+          <span class="bk-betala">Pay now<i class="bk-tryck"></i></span>
+          <span class="bk-klar"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          <span class="bk-hjalpare"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.6"/><path d="M5.5 19.5c1.2-3.3 3.6-5 6.5-5s5.3 1.7 6.5 5"/></svg><i class="bk-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6.5 12.5l3.6 3.6 7.4-8"/></svg></i><i class="bk-ping"></i></span>
         </div>
       </div>
       <ol class="bk-steg">
@@ -325,7 +332,7 @@
   </div>
 </section>
 
-<section class="nx-mork nx-final-cinema">
+<section class="nx-final-cinema nx-final-ljus">
   <div class="nx-wrap-bred">
     <div class="nx-final-inner">
       <span class="nx-et" data-stig>Next step</span>
@@ -334,7 +341,7 @@
         For those who want to help others.</p>
 
       <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
-        <span class="nx-magnet">
+        <span class="nx-magnet nx-stjarnkant">
           <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">
             Get started
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
@@ -528,7 +535,8 @@
 <script src="../nextrum-app.js?v=9c8ce04d"></script>
 <script src="../nextrum-samtycke.js?v=3058f423"></script>
 <script src="../nextrum-motion.js?v=adb3b960"></script>
-<script src="../nextrum-start.js?v=e1d5a4da"></script>
+<script src="../nextrum-punktnat.js?v=d181339b" defer></script>
+<script src="../nextrum-start.js?v=239a8a10"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

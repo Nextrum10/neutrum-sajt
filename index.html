@@ -54,8 +54,8 @@
      sajtens. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=4870944c">
-<link rel="stylesheet" href="nextrum-start.css?v=5cbe2e6a">
+<link rel="stylesheet" href="nextrum-cinema.css?v=05be2961">
+<link rel="stylesheet" href="nextrum-start.css?v=069c241f">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -257,7 +257,7 @@
      steg är en lodrät lista; manifestet är ett eget ögonblick där orden blir
      skarpa medan man scrollar (ScrollReveal); studievyn tippar upp ur
      papperet, och Nästa steg följer sidans läge med ett punktnät som
-     lyser upp kring pekaren (Dot Grid, nextrum-start-scen.js).
+     lyser upp kring pekaren (Dot Grid, nextrum-punktnat.js).
      Trygg hjälp har ingen egen sektion längre. Ordningen i övrigt är Leos
      från 2026-10-08. -->
 <!-- ==========================================================
@@ -1353,8 +1353,9 @@
 <!-- Nästa steg följer sidans läge, ljust i ljust och mörkt i mörkt
      (2026-10-29, Leo: "Så den ska matcha sidan på mörk och ljus vy"):
      ingen .nx-mork här, och bakom ett nät av punkter som lyser upp kring
-     pekaren (React Bits Dot Grid efter Leos video, nextrum-start-scen.js)
-     i stället för barken och norrskenet. Formen: nextrum-start.css avsnitt 19. -->
+     pekaren (React Bits Dot Grid efter Leos video, nextrum-punktnat.js)
+     i stället för barken och norrskenet. Formen: cinema, NÄSTA STEG SOM SIDAN.
+     Sedan 2026-10-30 samma på varje sida med Nästa steg. -->
 <section class="nx-final-cinema nx-final-ljus">
   <div class="nx-wrap-bred">
     <div class="nx-final-inner">
@@ -1561,16 +1562,17 @@
 <script src="nextrum-app.js?v=9c8ce04d"></script>
 <script src="nextrum-samtycke.js?v=3058f423"></script>
 <script src="nextrum-motion.js?v=adb3b960"></script>
+<script src="nextrum-punktnat.js?v=d181339b" defer></script>
 <!-- Startsidans rörelse. Startar av sig självt, så att inget
      anrop här nere kan kasta om filen saknas. -->
-<script src="nextrum-start.js?v=e1d5a4da"></script>
+<script src="nextrum-start.js?v=239a8a10"></script>
 <!-- Scenerna som följer scrollen (2026-10-29): GSAP, vendorad som på
      landningssidorna och aldrig från en CDN. defer, så att de tre körs
      i ordning efter att sidan lästs och aldrig håller upp den. Laddar
      de inte står allt som nextrum-start.js lämnade det. -->
 <script src="bibliotek/gsap-3.13.0.min.js" defer></script>
 <script src="bibliotek/gsap-scrolltrigger-3.13.0.min.js" defer></script>
-<script src="nextrum-start-scen.js?v=85669aae" defer></script>
+<script src="nextrum-start-scen.js?v=46fb579a" defer></script>
 <script src="nextrum-socialt.js?v=7ba4ec99"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
