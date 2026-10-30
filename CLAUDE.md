@@ -737,7 +737,7 @@ ingress till föräldern låg ute en natt: "Ta tillbaka den gamla"; `minne/vyern
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06), som bara syns på en större skärm
 sedan 2026-10-29 (Leo: "de på heron ska bara bort på mobilvyn"; `.nx-hero-fakta`): under 760 px är den osynlig men tar sin
 plats, för där är heron så hög som innehållet (Leo: "Korta inte ner på videon"). Heron slutar som förut, utan
-toning i nederkanten (en toning prövades en natt och togs bort 2026-10-30, Leo: "Ta bort de du suddade till så de var innan"). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
+toning i nederkanten (en toning prövades en natt och togs bort 2026-10-30, Leo: "Ta bort de du suddade till så de var innan"). På telefonen står de två knapparna bredvid varandra, lika stora och utan pil, som i Nästa steg (2026-10-30, Leo skickade en bild). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdömena (`#rost`) och Nästa steg; För dig som

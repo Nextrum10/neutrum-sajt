@@ -861,11 +861,6 @@ body .mobile-menu{display:block}
 
 @media (max-width:640px){
   .nx-hero-film{min-height:min(88svh,700px)}
-  /* Magnet-spannet måste också gå ut i kanten, annars blir den ena
-     knappen smalare än den andra när de staplas. */
-  .nx-hero-knappar{width:100%}
-  .nx-hero-knappar .nx-magnet{width:100%}
-  .nx-hero-knappar .btn{width:100%;justify-content:center}
 }
 
 /* Rörelsen bort: videon fryser på sin poster. Budskapet är
@@ -1003,6 +998,21 @@ html[lang="en"] .nx-hero-rubrik{
 @media (max-width:640px){
   .nx-hero-film{min-height:auto;padding-block:clamp(104px,26vw,140px) clamp(56px,14vw,80px)}
   .nx-hero-video{object-position:52% 40%}
+  /* Bredvid varandra och lika stora, som i Nästa steg (2026-10-30, Leo
+     skickade en bild: "På våran hero gör kolumnerna såhär på mobilvy").
+     Pilen får inte plats, och en lång text bryts hellre i knappen än att
+     knappen blir för smal. */
+  .nx-hero-knappar{
+    width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:10px;align-items:stretch;
+  }
+  .nx-hero-knappar > *{min-width:0}
+  .nx-hero-knappar .nx-magnet{display:flex}
+  .nx-hero-knappar .btn{
+    width:100%;min-height:56px;padding:12px 10px;justify-content:center;
+    font-size:.92rem;line-height:1.2;text-align:center;white-space:normal;text-wrap:balance;
+  }
+  .nx-hero-knappar .btn svg{display:none}
 }
 
 /* Rörelse bortvald: videon står stilla på sin poster-bildruta.
