@@ -35,7 +35,11 @@ mobilvy"). Under 640 px står Intresseanmälan för läxhjälp och Bli
 studiehjälpare i två lika breda kolumner, utan pil, och den långa texten
 bryts i två rader i knappen, samma regel som Nästa steg (`.nx-final-ljus
 .nx-story-ctas`). Reglerna står i cinemas andra hero-block: det första
-skrivs över av det andra, som sätter `display:flex` igen.
+skrivs över av det andra, som sätter `display:flex` igen. Samma dag blev
+rubriken större och ingressen mindre på telefonen (Leo: "av unga för unga
+lite större och texten under lite mindre"): `clamp(3.6rem,18vw,4.4rem)`
+mot golvet 3rem förut, och ingressen .94rem. Engelskans rubrik har sin
+egen, tyngre regel och rörs inte.
 
 **Hero-filmen spelar också på telefon** (2026-09-29, Leo: "heron rullar
 ej automatisk på mobil vy"). `heroVideo()` i `nextrum-motion.js` avstod
