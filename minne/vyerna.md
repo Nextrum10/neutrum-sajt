@@ -18,15 +18,37 @@ som etikett och en ingress till föräldern; Leo tog tillbaka "Nextrum" och
 den gamla ingressen 2026-10-07. Kvar av den dagen är raden under knapparna
 (se Startsidan talar till föräldern nedan).
 
+**Ingressen till föräldern, igen** (2026-10-30). Granskningen av sajten
+fann att den första meningen under "Av unga, för unga." var en jobbannons
+("Vi skapar möjligheter för unga att ta sina första steg in i
+arbetslivet. Hos Nextrum får du chansen att arbeta …"), och att en
+förälder på telefon inte fick något konkret på första skärmen, för raden
+med priset syns inte där sedan 2026-10-29. Leo godkände ändringen med
+"Merga sen automatisk". Nu: "Personlig läxhjälp i Stockholm, hemma hos
+er, på biblioteket eller online. Studiehjälparna är unga som nyligen läst
+samma kurser själva, och hos oss tar de sina första steg in i
+arbetslivet." Skillnaden mot 2026-10-06: jobbet står kvar, i andra
+meningen, så att den unga som söker jobb känner igen sig, och etiketten
+och rubriken är orörda. Varje led stod redan på sidan (Hur hjälper vis
+första kort och studiehjälparnas). Samma i en/index.html.
+
 **Hero-filmen spelar också på telefon** (2026-09-29, Leo: "heron rullar
 ej automatisk på mobil vy"). `heroVideo()` i `nextrum-motion.js` avstod
 förut på skärmar under 641 px för att spara data, och heron stod då
 stilla på sin poster. Nu får telefonen en egen fil, `data-video-mobil`
-(`bilder/08-teamet-orbit-mobil.mp4`, 540 px hög, 255 kB mot 5 MB),
+(`bilder/08-teamet-orbit-mobil.mp4`, 540 px hög, 255 kB mot 5 MB; datorns
+fil är sedan 2026-10-30 850 kB, se nedan),
 och det som fortfarande avstår är rörelse bortvald, `saveData` och 2G.
 Filen är gjord ur originalet med `ffmpeg -an -vf scale=-2:540 -c:v libx264
 -profile:v main -crf 27 -preset slow -movflags +faststart`; byts
 originalet ska den göras om, annars visar telefonen ett annat klipp.
+Datorns fil (`08-teamet-orbit.mp4`, 1280×720) låg på 8 Mbit/s, 5 MB för
+fem sekunder bakom en mörk slöja, och gjorde startsidan 6,8 MB på en
+dator. 2026-10-30 gjordes den om med `ffmpeg -an -c:v libx264 -profile:v
+main -pix_fmt yuv420p -crf 22 -preset slow -movflags +faststart`: 850 kB,
+SSIM 0,98 mot den gamla, och ingen skillnad att se i en bildruta sida vid
+sida. Den gamla finns i git (före 2026-10-30); telefonens fil gjordes ur
+den, och ska den göras om tas den ur den gamla.
 iPhone i strömsparläge nekar autouppspelning också för en tyst film:
 då startar första trycket på sidan den (`nekad()`), och tills dess står
 posterbilden kvar. Playwrights Chromium har ingen H.264, så uppspelning
@@ -2428,6 +2450,10 @@ försök kraschade i förhandsvisningen, som saknar rättningen; den säger nu s
   `omdomen.json` och skrivs av från Trustpilot för hand (`nextrum-socialt.js` ritar dem); alla
   omdömen står med, de senaste först, och texten under bandet säger det. Adressen
   `se.trustpilot.com/review/nextrum.se` är antagen, inte kontrollerad (nätet nådde inte Trustpilot).
+  **Utan betyg** (2026-10-30, granskningen) döljs de fem tomma stjärnorna, "Inga omdömen än" och raden
+  under kortet (`.nx-tp:not(.har-betyg)`): kvar står märket, "Har ni använt oss? Skriv det första
+  omdömet." och knappen. Tomma stjärnor sa till en ny familj att ingen gillat oss. Rubriken och brevet
+  står kvar.
 - **Följ oss på Instagram** vid bildväggen: ett kort som poppar fram när väggen syns (i det övre högra
   hörnet från 1240 px, i flödet under), med ett av våra egna foton, inte ett ur flödet: en bild ur
   flödet läggs i `bilder/` och byts i markupen. Krysset gäller sidvisningen; inget sparas.

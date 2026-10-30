@@ -81,6 +81,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   två rapporter får samma Google-fråga, och `tutor_reviews` blir aldrig publik. **Trustpilot** (2026-10-27) står under
   brevet i `#rost` ur `omdomen.json`, avskriven för hand, alla omdömen med och de senaste först, och aldrig Trustpilots
   skript eller ram: de öppna sidorna laddar inget från andra domäner (`nextrum-socialt.js`, `minne/vyerna.md`, Fas 25).
+  Utan betyg visar kortet inga tomma stjärnor, bara frågan och Skriv ett omdöme (2026-10-30, `.nx-tp:not(.har-betyg)`).
 - **Om oss** (2026-10-22, `/om-oss`, Leo: "varje påstående måste gå att belägga i koden eller i befintlig sajttext"):
   det som inte går att visa står inte där. Inga antal, omdömen, procent, kronor, namn eller titlar, ingen garanti, inget
   "forskning visar" och inget om bakgrundskontroller; priset står på prissidan. `test/innehall-regler.py` vaktar i CI och
@@ -731,7 +732,9 @@ Detaljer: `minne/grunden.md`.
 ### Startsidan efter hero
 De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
 delar som de är; deras text följer inte med formen, och `.faq-item` är orörd (generatorerna läser den).
-Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
+Hero är orörd med flit: film, etiketten Nextrum och rubriken (Leo, igen 2026-10-07). **Ingressen talar till föräldern först**
+(2026-10-30, granskningen, Leo: "Merga sen automatisk"): läxhjälpen i Stockholm, var passen hålls och vilka studiehjälparna
+är, och jobbet i andra meningen, för Bli studiehjälpare är den andra knappen; varje led stod redan på sidan. Det enda nya är raden
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06), som bara syns på en större skärm
 sedan 2026-10-29 (Leo: "de på heron ska bara bort på mobilvyn"; `.nx-hero-fakta`): under 760 px är den osynlig men tar sin
 plats, för där är heron så hög som innehållet (Leo: "Korta inte ner på videon"). Heron slutar som förut, utan

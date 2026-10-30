@@ -1870,7 +1870,7 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
 }
 .hj-et{
   margin-top:clamp(16px,1.8vw,22px);
-  font-family:var(--f-mono);font-size:11px;font-weight:500;
+  font-family:var(--f-mono);font-size:12px;font-weight:500;
   letter-spacing:.15em;text-transform:uppercase;color:var(--f);
 }
 .hj-del h3{
@@ -2051,7 +2051,7 @@ html.nx-sr .hj-gar-steg.i-gang > li.fylld::after{transition-delay:calc(var(--d) 
   .hj-del::before{width:34px}
   .hj-ikon{width:32px;height:32px;border-radius:10px}
   .hj-ikon svg{width:16px;height:16px}
-  .hj-et{margin-top:12px;font-size:10px;letter-spacing:.12em}
+  .hj-et{margin-top:12px;font-size:11px;letter-spacing:.12em}
   .hj-del h3{margin-top:6px;font-size:1rem;line-height:1.16;letter-spacing:-.024em}
   .hj-del p{
     margin-top:7px;font-size:.875rem;line-height:1.48;
@@ -3378,6 +3378,13 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .nx-tp-knapp svg{width:14px;height:14px}
 .nx-tp-not{margin:0;font-size:.88rem;line-height:1.5;color:var(--bl-3);max-width:70ch}
 .nx-tp-not a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+/* Utan betyg (2026-10-30, granskningen): fem tomma stjärnor och "Inga
+   omdömen än" säger till en ny familj att ingen gillat oss. Kvar står
+   märket, frågan och knappen, så att den första kan skriva. har-betyg
+   sätts av nextrum-socialt.js, så utan skriptet är det här läget. */
+.nx-tp:not(.har-betyg) .nx-tp-stjarnor,
+.nx-tp:not(.har-betyg) [data-tp-betyg],
+.nx-tp:not(.har-betyg) .nx-tp-not{display:none}
 
 /* Bandet: kanterna tonas med gradienter, aldrig mask-image (Safari,
    CLAUDE.md avsnitt 3). Skriptet klonar korten tills raden räcker och
