@@ -3713,19 +3713,6 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 @media (max-width:760px){
   .nx-start .nx-hero-fakta{visibility:hidden}
 }
-/* Heron tonar mjukt över i Hur hjälper vis yta i nederkanten, så att
-   videon inte slutar i ett streck (Leo: "skugga lite så de ej blir ett
-   tydligt streck där"). Över filmen och slöjan, under texten. */
-.nx-start .nx-hero-film::after{
-  content:"";position:absolute;inset:auto 0 0;z-index:0;pointer-events:none;
-  height:clamp(56px,9vh,110px);
-  background:linear-gradient(180deg,
-    transparent 0,
-    color-mix(in srgb,var(--yta) 12%,transparent) 30%,
-    color-mix(in srgb,var(--yta) 45%,transparent) 62%,
-    color-mix(in srgb,var(--yta) 82%,transparent) 86%,
-    var(--yta) 100%);
-}
 
 /* ---------- texten som rör sig, på startsidan ----------
    (.nx-start på main, bara startsidan.) Rubrikernas ord (nextrum-motion.js

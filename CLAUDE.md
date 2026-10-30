@@ -734,8 +734,8 @@ delar som de är; deras text följer inte med formen, och `.faq-item` är orörd
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06), som bara syns på en större skärm
 sedan 2026-10-29 (Leo: "de på heron ska bara bort på mobilvyn"; `.nx-hero-fakta`): under 760 px är den osynlig men tar sin
-plats, för där är heron så hög som innehållet (Leo: "Korta inte ner på videon"). Heron tonar i nederkanten mjukt över i
-Hur hjälper vis yta (`.nx-start .nx-hero-film::after`, Leo: "skugga lite så de ej blir ett tydligt streck där"). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
+plats, för där är heron så hög som innehållet (Leo: "Korta inte ner på videon"). Heron slutar som förut, utan
+toning i nederkanten (en toning prövades en natt och togs bort 2026-10-30, Leo: "Ta bort de du suddade till så de var innan"). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdömena (`#rost`) och Nästa steg; För dig som
