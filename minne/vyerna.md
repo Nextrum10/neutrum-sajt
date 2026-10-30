@@ -2572,3 +2572,21 @@ studiehjälpare är bredvid varandra"): under 560 px står de i ett rutnät med 
 kolumner, utan pilar (de får inte plats), och en lång text bryts i knappen. Den andra knappen
 får två pixlar marginal, för stjärnkanten lägger två pixlar runt den första, och annars blir
 de olika höga. Bara startsidan (`.nx-final-ljus`); de andra sidornas Nästa steg är som förut.
+
+**Kartan över Stockholm** (2026-10-30, `#karta`, `nextrum-karta.js`, avsnitt 20 i nextrum-start.css):
+Leo skickade en skärmdump av en karta över innerstan, Solna, Sundbyberg och Nacka: "en karta som ska
+vara cool ta inspo av react bits, där vi har statisk på kartan där vi visar lite kort vart de finns
+aktvitet osv, de ska ej vara äkta info utan de ska vara säljande". Påhittade antal och live-händelser
+sades nej till (avsnitt 8 i kärnan, Om oss och marknadsföringslagen: falsk social proof, och
+bevisbördan är vår), och Leo svarade "inga fejkade statsik utan de ska vara typ aktivt där just nu och
+en prick", "Kartan ska också vara större", och om platsen "under rätt person kan göra stor skillnad".
+Kortet säger "Aktiva här", orten, tre delar, Hemma/Bibliotek/Online, ett bibliotek och länken till
+ortssidan, allt ur `bygg-omradessidor.py`; inget "just nu" och inga tal. Vattnet är läst ur Leos
+skärmdump (blått i bilden, 213 × 179 celler, en bit per cell, base64 i skriptet); bilden finns inte i
+repot, så en större karta kräver en ny bild och en ny mask med samma metod. Orterna står som en lista
+i markupen (`.ka-orter`, `data-ka-x`/`-y` i procent av bilden), som är kartans tillgängliga innehåll
+och reserv utan skript; prickarna och kortet är `aria-hidden`. Det som rör sig: vågen från orten i tur,
+ljuset längs en båge från förra orten, tindrande punkter och ljuset kring pekaren, bara medan kartan
+syns. Korten byts var 4,2 sekund, pekaren eller ett tryck tar över, och bara kortets länk tar emot
+pekaren (annars gömde kortet prickarna under sig). På telefonen går kartan kant i kant och kortet står
+som en remsa under den. Med reducerad rörelse står allt still.

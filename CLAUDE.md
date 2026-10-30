@@ -715,7 +715,7 @@ Detaljer: `minne/grunden.md`.
   sektionens början (`.nt-hal`) och låter en ruta med två meningar ploppa upp bredvid; inga skärmdumpar, och den
   körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
   för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
-  `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan, och `nextrum-start-scen.js` startsidans
+  `nextrum-karta.js` är kartan över Stockholm under Vår idé (2026-10-30, Leo: "Den ska vara aktiv röra sig live och vara reaktiv", och "inga fejkade statistik"): ett punktnät där land är punkter och vattnet ur Leos skärmdump är tomt, ingen karta från en annan domän, och korten säger bara det ortssidorna säger (orten, delarna, ett bibliotek), aldrig antal eller att något händer just nu; listan står i markupen och ändras med ortssidorna. `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan, och `nextrum-start-scen.js` startsidans
   scener (2026-10-29): trådarna och punktnätet, Hur hjälper vis rad,
   manifestets ord och studievyns tippning. `nextrum-landning.js` och `-css` är
   landningssidornas rörelse (stegen, linjen, ämnets färg i `data-lp-amne`), skrivna in av `bygg-omradessidor.py`;
@@ -739,7 +739,7 @@ sedan 2026-10-29 (Leo: "de på heron ska bara bort på mobilvyn"; `.nx-hero-fakt
 plats, för där är heron så hög som innehållet (Leo: "Korta inte ner på videon"). Heron slutar som förut, utan
 toning i nederkanten (en toning prövades en natt och togs bort 2026-10-30, Leo: "Ta bort de du suddade till så de var innan"). På telefonen står de två knapparna bredvid varandra, lika stora och utan pil, som i Nästa steg (2026-10-30, Leo skickade en bild), och där är rubriken större (15,5vw, 51–62 px; först 18vw, som var för stort) och ingressen mindre (.94rem), och knapparna smalare och lägre (högst 320 px, .84rem) samma dag. Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
-**Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
+**Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, kartan (`#karta`, 2026-10-30, Leo: "under rätt person kan göra stor skillnad"), studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, bildväggen, omdömena (`#rost`) och Nästa steg; För dig som
 vill jobba (`#bli`) gick 2026-10-29 (Leo: "För dig som vill jobba på main sidan ta bort den"), och kortet som ersatte den
 sist i Hur hjälper vis rad gick samma kväll ("ta bort för dig som vill jobba kolumnen"): Bli studiehjälpare nås från menyn

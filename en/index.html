@@ -52,7 +52,7 @@
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="../nextrum-cinema.css?v=832741c2">
-<link rel="stylesheet" href="../nextrum-start.css?v=54cce303">
+<link rel="stylesheet" href="../nextrum-start.css?v=f7ec7912">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -581,6 +581,70 @@
   </div>
 
 </section>
+
+<!-- ==========================================================
+     KARTAN — var vi finns (2026-10-30)
+     Leo: "en karta som ska vara cool ta inspo av react bits ... Den ska
+     vara aktiv röra sig live och vara reaktiv", under "Rätt person kan
+     göra stor skillnad". Punkterna, vågen, ljuset och korten ritar
+     nextrum-karta.js (formen i nextrum-start.css, avsnitt 20). Inga antal
+     och inget som påstår att något händer just nu (Leo: "inga fejkade
+     statistik"): ett kort säger bara det ortssidan säger, orten, delarna
+     och ett bibliotek ur bygg-omradessidor.py. Ändras en ortssida, eller
+     får en ort på kartan en sida, ändras listan med. Utan skriptet står
+     orterna som en lista med länkar.
+     ========================================================== -->
+<section class="nx-sek nx-karta" id="karta" aria-labelledby="karta-t" data-karta>
+  <div class="nx-wrap-bred">
+  <div class="nx-head split" data-stig>
+    <div>
+      <span class="nx-et acc">Where we are</span>
+      <h2 class="nx-d2" id="karta-t" style="margin-top:20px">We are where<br><em>you live.</em></h2>
+    </div>
+    <div class="nx-head-aside">
+      <p class="nx-lede">From Sundbyberg to Nacka and from Solna to Älvsjö: we help students all over Stockholm, at your home, at the library or online.</p>
+    </div>
+  </div>
+
+  <div class="ka-karta" role="img" aria-label="Map of Stockholm with the areas where we help"></div>
+  <nav class="ka-nav" aria-label="The areas on the map">
+    <ol class="ka-orter">
+      <li data-ka-x="56.2" data-ka-y="65.9"><a href="/laxhjalp-sodermalm"><b>Södermalm</b><span class="ka-delar">Mariatorget, Hornstull, Zinkensdamm</span><span class="ka-bibl">For example at Hornstulls bibliotek</span><span class="ka-lank">Tutoring in Södermalm (in Swedish)</span></a></li>
+      <li data-ka-x="33.2" data-ka-y="25.3"><a href="/laxhjalp-solna"><b>Solna</b><span class="ka-delar">Råsunda, Hagalund, Bergshamra</span><span class="ka-bibl">For example at Solna stadsbibliotek</span><span class="ka-lank">Tutoring in Solna (in Swedish)</span></a></li>
+      <li data-ka-x="87.0" data-ka-y="68.3"><a href="/laxhjalp-nacka"><b>Nacka</b><span class="ka-delar">Sickla, Finntorp, Järla</span><span class="ka-bibl">For example at Nacka Forum bibliotek</span><span class="ka-lank">Tutoring in Nacka (in Swedish)</span></a></li>
+      <li data-ka-x="46.2" data-ka-y="46.9"><a href="/laxhjalp-kungsholmen"><b>Kungsholmen</b><span class="ka-delar">Fridhemsplan, Stadshagen, Fredhäll</span><span class="ka-bibl">For example at Kungsholmens bibliotek vid S:t Eriksgatan</span><span class="ka-lank">Tutoring in Kungsholmen (in Swedish)</span></a></li>
+      <li data-ka-x="51.5" data-ka-y="80.2" data-ka-kort="Årsta"><a href="/laxhjalp-enskede-arsta-vantor"><b>Enskede, Årsta and Vantör</b><span class="ka-delar">Årsta, Östberga, Johanneshov</span><span class="ka-bibl">For example at Årsta bibliotek</span><span class="ka-lank">Tutoring in Enskede, Årsta and Vantör (in Swedish)</span></a></li>
+      <li data-ka-x="21.3" data-ka-y="23.8"><a href="/laxhjalp-sundbyberg"><b>Sundbyberg</b><span class="ka-delar">Central Sundbyberg, Duvbo, Lilla Alby</span><span class="ka-bibl">For example at Biblioteket i Signalfabriken</span><span class="ka-lank">Tutoring in Sundbyberg (in Swedish)</span></a></li>
+      <li data-ka-x="63.9" data-ka-y="43.3"><a href="/laxhjalp-ostermalm"><b>Östermalm</b><span class="ka-delar">Stureplan, Östermalmstorg, Karlaplan</span><span class="ka-bibl">For example at Östermalms bibliotek i Fältöversten</span><span class="ka-lank">Tutoring in Östermalm (in Swedish)</span></a></li>
+      <li data-ka-x="28.8" data-ka-y="70.7" data-ka-kort="Liljeholmen"><a href="/laxhjalp-hagersten-liljeholmen"><b>Hägersten and Liljeholmen</b><span class="ka-delar">Liljeholmen, Gröndal, Aspudden</span><span class="ka-bibl">For example at Aspuddens bibliotek</span><span class="ka-lank">Tutoring in Hägersten and Liljeholmen (in Swedish)</span></a></li>
+      <li data-ka-x="81.3" data-ka-y="23.8"><a href="/laxhjalp-lidingo"><b>Lidingö</b><span class="ka-delar">Lidingö centrum, Torsvik, Baggeby</span><span class="ka-bibl">For example at Lidingö stadsbibliotek i stadshuset</span><span class="ka-lank">Tutoring in Lidingö (in Swedish)</span></a></li>
+      <li data-ka-x="15.1" data-ka-y="48.5"><a href="/laxhjalp-bromma"><b>Bromma</b><span class="ka-delar">Alvik, Traneberg, Abrahamsberg</span><span class="ka-bibl">For example at Brommaplans bibliotek</span><span class="ka-lank">Tutoring in Bromma (in Swedish)</span></a></li>
+      <li data-ka-x="69.6" data-ka-y="73.5"><a href="/laxhjalp-hammarby-sjostad"><b>Hammarby Sjöstad</b><span class="ka-delar">Sickla Udde, Sickla Kaj, Henriksdal</span><span class="ka-bibl">For example at LUMA-biblioteket</span><span class="ka-lank">Tutoring in Hammarby Sjöstad (in Swedish)</span></a></li>
+      <li data-ka-x="50.5" data-ka-y="40.1"><a href="/laxhjalp-vasastan"><b>Vasastan</b><span class="ka-delar">Odenplan, Sankt Eriksplan, Birkastan</span><span class="ka-lank">Tutoring in Vasastan (in Swedish)</span></a></li>
+      <li data-ka-x="34.8" data-ka-y="93.3"><a href="/laxhjalp-alvsjo"><b>Älvsjö</b><span class="ka-delar">Älvsjö, Solberga, Långbro</span><span class="ka-bibl">For example at Älvsjö bibliotek vid stationen</span><span class="ka-lank">Tutoring in Älvsjö (in Swedish)</span></a></li>
+      <li data-ka-x="76.9" data-ka-y="92.9"><a href="/laxhjalp-skarpnack"><b>Skarpnäck</b><span class="ka-delar">Skarpnäcksfältet, Bagarmossen, Björkhagen</span><span class="ka-bibl">For example at Bagarmossens bibliotek</span><span class="ka-lank">Tutoring in Skarpnäck (in Swedish)</span></a></li>
+    </ol>
+  </nav>
+  <template class="ka-mall">
+    <div class="ka-kort">
+      <span class="ka-k-live"><span class="ka-k-puls"></span>Active here</span>
+      <b class="ka-k-namn"></b>
+      <span class="ka-k-delar"></span>
+      <span class="ka-k-satt"><span><svg viewBox="0 0 24 24"><path d="M4 11.2 12 4.5l8 6.7"/><path d="M6.2 9.6V19.5h11.6V9.6"/><path d="M10 19.5v-5h4v5"/></svg>At home</span><span><svg viewBox="0 0 24 24"><path d="M12 6.6c-1.8-1.3-4.3-2-7.5-2v13c3.2 0 5.7.7 7.5 2 1.8-1.3 4.3-2 7.5-2v-13c-3.2 0-5.7.7-7.5 2z"/><path d="M12 6.6v13"/></svg>Library</span><span><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="11" rx="1.8"/><path d="M2 19.5h20"/></svg>Online</span></span>
+      <span class="ka-k-bibl"></span>
+      <a class="ka-k-lank" href="/laxhjalp-stockholm"><span class="ka-k-lanktext"></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+    </div>
+  </template>
+  <div class="ka-fot">
+    <span class="ka-leg"><span class="ka-leg-prick" aria-hidden="true"></span>Areas where we help</span>
+    <span class="ka-leg">Not on the map? Sessions also run online.</span>
+    <a class="nx-lank" href="/laxhjalp-stockholm">All areas (in Swedish)
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </a>
+  </div>
+  </div>
+</section>
+
 
 
 
@@ -1514,6 +1578,7 @@
 <script src="../nextrum-samtycke.js?v=3058f423"></script>
 <script src="../nextrum-motion.js?v=adb3b960"></script>
 <script src="../nextrum-punktnat.js?v=d181339b" defer></script>
+<script src="../nextrum-karta.js?v=10457153" defer></script>
 <!-- Startsidans rörelse. Startar av sig självt, så att inget
      anrop här nere kan kasta om filen saknas. -->
 <script src="../nextrum-start.js?v=239a8a10"></script>

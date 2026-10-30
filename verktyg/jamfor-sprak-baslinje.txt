@@ -16,6 +16,19 @@
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 14 stycken:
+      Mariatorget, Hornstull, Zinkensdamm
+      Råsunda, Hagalund, Bergshamra
+      Sickla, Finntorp, Järla
+      Fridhemsplan, Stadshagen, Fredhäll
+      Årsta, Östberga, Johanneshov
+      Stureplan, Östermalmstorg, Karlaplan
+      Liljeholmen, Gröndal, Aspudden
+      Lidingö centrum, Torsvik, Baggeby
+      Alvik, Traneberg, Abrahamsberg
+      Hammarby Sjöstad
+      Sickla Udde, Sickla Kaj, Henriksdal
+      Odenplan, Sankt Eriksplan, Birkastan
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
