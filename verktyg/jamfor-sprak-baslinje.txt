@@ -6,7 +6,7 @@
   STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
 
 === bli-studiehjalpare.html  ->  en/bli-studiehjalpare.html
-  STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
+  STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
 
 === faq.html  ->  en/faq.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>

@@ -85,8 +85,9 @@
     { "@type": "AdministrativeArea", "name": "Stockholms län" },
     { "@type": "Country", "name": "Sweden" }
   ],
-  "offers": {
+  "offers": [{
     "@type": "Offer",
+    "name": "Session by session, no minimum term",
     "url": "https://nextrum.se/en/priser",
     "priceCurrency": "SEK",
     "price": "399",
@@ -102,7 +103,25 @@
         "unitCode": "HUR"
       }
     }
-  }
+  }, {
+    "@type": "Offer",
+    "name": "Plan with 4, 8 or 12 hours a month, one month at a time",
+    "url": "https://nextrum.se/en/priser",
+    "priceCurrency": "SEK",
+    "price": "379",
+    "availability": "https://schema.org/InStock",
+    "priceSpecification": {
+      "@type": "UnitPriceSpecification",
+      "priceCurrency": "SEK",
+      "price": "379",
+      "unitCode": "HUR",
+      "referenceQuantity": {
+        "@type": "QuantitativeValue",
+        "value": 1,
+        "unitCode": "HUR"
+      }
+    }
+  }]
 }
 </script>
 </head>
