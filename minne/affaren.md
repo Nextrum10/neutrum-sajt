@@ -280,7 +280,11 @@ kommer först också på en telefon. Inget `data-stig` på remsan och
 formuläret: det man kommer för ska synas direkt. Rubriken och
 ingressen är desamma som förut, så delningsbilden står kvar. Villkoren och
 integritetspolicyn sa att Nextrum AB var under bildande; sedan 2026-10-28
-står bolaget och organisationsnumret där (avsnitt 1 i `DATASKYDD.md`).
+står bolaget och organisationsnumret där (avsnitt 1 i `DATASKYDD.md`). Sedan 2026-10-30 står inga namn på
+sajten (Leo: "namnen alex och leo ska bort från hemsidan helt och hållet"): avtalen och uppgifterna före bolaget
+nämns som "bolagets grundare", i samma villkorsversion (2026-10-28, som ingen hade godkänt), och `#rost` är
+undertecknat Grundarna. Mejlen till den som söker jobb har kvar signaturen Leo och Alex (`intervju.ts`,
+`nextrum-admin-rekrytering.js`).
 
 ## Bokningen
 

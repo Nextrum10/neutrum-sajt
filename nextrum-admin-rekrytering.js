@@ -88,7 +88,7 @@
 
   function hållenKnapp(a, primär) {
     return '<button type="button" class="btn ' + (primär ? 'btn-primary' : 'btn-ghost') + ' btn-sm" data-ans-hallen="'
-      + esc(a.id) + '">Utbildning hållen</button>';
+      + esc(a.id) + '">Skapa konto och skicka inbjudan</button>';
   }
 
   /* Intervjumejlet, kort: när länken gick, eller att den inte gått. */
@@ -166,7 +166,7 @@
         titel: 'Skicka ' + (a.name || 'den sökande') + ' till utbildningen?',
         text: 'Intervjun markeras som hållen, och ' + (a.name || 'hen') + ' får ett mejl som tackar för '
           + 'mötet och säger att introduktionen är nästa steg. Steget går inte att ångra. När utbildningen '
-          + 'är hållen trycker du Utbildning hållen, som skapar kontot.',
+          + 'är hållen trycker du Skapa konto och skicka inbjudan.',
         knapp: 'Skicka till utbildningen',
         avbryt: 'Avbryt'
       });
@@ -557,7 +557,8 @@
     }
     if (st === 'utbildning') {
       return stegRuta('Utbildning', 'Intervjuad ' + kortDatum(a.intervju_at || a.utbildningsmote_at)
-        + '. Utbildning hållen skapar kontot och skickar inbjudan.', hållenKnapp(a, true), st);
+        + '. När utbildningen är hållen skapar du kontot här, och hen får länken där hen väljer sitt lösenord.',
+        hållenKnapp(a, true), st);
     }
     if (st === 'konto_skapat') {
       const konto = a.konto_id ? S.personer[a.konto_id] : null;
@@ -614,6 +615,11 @@
      studiehjälparkontot (använd befintlig inbjudningsmekanism via edge
      function, rollen larare) och inbjudan skickas. Idempotent, kan inte
      skapa två konton för samma ansökan."
+
+     Knappen heter Skapa konto och skicka inbjudan sedan 2026-10-30 (Leo:
+     "det går inte att skicka inbjudningslänk för att skapa konto
+     därifrån"): med namnet Utbildning hållen syntes det inte att det är
+     den som skickar länken. Steget och funktionen är desamma.
 
      Förut Ta in i poolen. Kontot skapas av bjud-in med adressen i
      ansökan och rollen tutor, och hen får länken där hen väljer
@@ -677,7 +683,7 @@
     ruta.className = 'nx-fraga';
     ruta.innerHTML =
       '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="uh-t">'
-      + '<h3 id="uh-t">Utbildning hållen för ' + esc(ans.name || 'den sökande') + '</h3>'
+      + '<h3 id="uh-t">Skapa konto åt ' + esc(ans.name || 'den sökande') + '</h3>'
       + '<p>' + (finns
         ? 'Kontot med adressen <b>' + esc(epost) + '</b> finns redan. Det kopplas till ansökan, och profilen '
           + 'blir godkänd och syns i matchningen direkt.'
@@ -749,7 +755,7 @@
             : (data && data.fel) || 'okänt svar';
           säg(msg, (skapat
             ? 'Kontot är skapat och inbjudan skickad, men ansökan kopplades inte: ' + fel
-              + '. Stäng rutan och tryck Utbildning hållen igen.'
+              + '. Stäng rutan och tryck Skapa konto och skicka inbjudan igen.'
             : 'Kunde inte spara: ' + fel), false);
           return;
         }

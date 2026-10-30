@@ -2,7 +2,9 @@
 Läxhjälpsförmedling i Stockholm: publik sajt på två språk och tre inloggade vyer, statiska filer
 mot Supabase, driftsatt på Vercel (`nextrum.se`). **Nextrum AB** (559609-3269) är avtalspart och
 personuppgiftsansvarigt sedan 2026-10-28 (Leo: "alex och leo ansvarar inte längre för datan"); organisationsnumret
-står sist i footern på varje sida, i villkoren och i policyn. F-skatt, moms och arbetsgivarregistrering väntar. Driften står i `START-HÄR.md` och
+står sist i footern på varje sida, i villkoren och i policyn. **Grundarnas namn står inte på sajten** (2026-10-30, Leo:
+"namnen alex och leo ska bort från hemsidan helt och hållet"): villkoren och policyn säger "bolagets grundare", och
+startsidans `#rost` är undertecknat Grundarna. F-skatt, moms och arbetsgivarregistrering väntar. Driften står i `START-HÄR.md` och
 `DEPLOY-*.md`. Det här är kärnan, som läses i varje session: reglerna och fällorna, kort.
 Varför, historien och proven står i `minne/`, som läses när arbetet rör området:
 - `minne/grunden.md`: stacken, hela filkartan, språket, arbetssättet
@@ -1516,7 +1518,7 @@ Detaljer: `minne/grunden.md`.
   detalj som inte står på sajten; skriver Leo en egen byts den. Organisationsnummer och postadress har inga sidor än:
   bolaget är under bildande. Sidan säger att en ny studiehjälpare inte ser några elever förrän provet är godkänt: det
   gäller först när Kräv provet står på och minst fem frågor är aktiva (avsnitt 11, Intervjumejlet och utbildningsprovet).
-  Startsidans `#rost` har fortfarande citatet från "Leo & Alex, grundare av Nextrum"; Om oss nämner inga namn.
+  Startsidans `#rost` är undertecknat Grundarna av Nextrum sedan 2026-10-30, utan namn, som Om oss.
 - **Syskontillägget fast** (2026-10-21, `syskontillagget_fast`, 20261021230000) är i drift sedan kvällen 2026-10-21 (Leo:
   "Tre barn kostar 468 i timmen", sedan "Merge oxh migrera"): tillägget är `extra_ore` gånger minuterna, lika mycket med
   ett som med två syskon, i databasen (`intern.tillaggets_belopp`, villkoret `tillagg_poster_belopp`), i
