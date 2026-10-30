@@ -2450,6 +2450,9 @@ försök kraschade i förhandsvisningen, som saknar rättningen; den säger nu s
   startsidans CSS. Raderna under knapparna är kvar per sida: Betygsgaranti står bara på startsidan,
   där remsan finns. Cinemas regler för `.nx-mork.nx-final-cinema` (mörka lägets papper och
   inträdet) matchar ingenting längre men står kvar om det mörka ska tillbaka.
+  Luften ovanför är mindre än den mörka sektionens (Leo samma dag: "De är för mycket mellanrum här", om
+  luckan under omdömena: 383 px på en dator, nu 131): Nästa steg har 28–52 px överst, och en sektion på
+  samma papper ovanför får 40–76 px under sig (`:has(+ .nx-final-ljus)`); en med egen yta behåller sin.
 - **Priser**: Varför priset ser ut så här är borttagen. Den sa att hjälpen "ofta" blir mer begriplig,
   vilket sidan inte kan visa, och "unga hjälper unga" står redan på Vår idé.
 

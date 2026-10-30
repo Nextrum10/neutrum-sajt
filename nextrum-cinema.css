@@ -2072,6 +2072,15 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    på papperet, och raden under i brödtextens färg. Står efter reglerna
    ovan, som väger lika mycket. */
 .nx-final-ljus{position:relative;isolation:isolate;overflow:clip}
+/* Utan en egen färg behöver Nästa steg inte barkens luft ovanför: sektionen
+   ovanför har redan sin, och 200 px till blev ett tomt hål på papperet
+   (2026-10-30, Leo: "De är för mycket mellanrum här"). Under står luften
+   kvar, ned mot footern. */
+.nx-final-cinema.nx-final-ljus{padding-block:clamp(28px,3.4vw,52px) clamp(88px,10vw,150px)}
+/* Står sektionen ovanför på samma papper (ingen .nx-yta eller mörk yta)
+   krymper också dess luft under, annars blir det två sektioners luft
+   utan något emellan. En sektion med egen färg behåller sin. */
+.nx-sek:not(.nx-yta):not(.nx-mork):has(+ .nx-final-ljus){padding-bottom:clamp(40px,5vw,76px)}
 .nx-final-ljus > *{position:relative;z-index:1}
 .nx-final-ljus > canvas.nx-punkter{position:absolute;inset:0;z-index:0;width:100%;height:100%;display:block;pointer-events:none}
 .nx-final-ljus > .nx-norrsken{display:none}
