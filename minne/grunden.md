@@ -154,6 +154,14 @@ Fyra saker att veta, alla dyrköpta:
   sidor. Navet `/laxhjalp-stockholm` är handskrivet, så dess bild byts i filen och inte i generatorn. Delningsbilden tar sitt
   foto ur `foto` i `delning/innehall.json`: byts en sidas bild ska det fältet med, och `bygg-delningsbilder.js` köras. 22
   visar stadens siluett och hör bara till Stockholm som helhet, aldrig en bestämd ort.
+- **De gamla bilderna tillbaka i de stora sektionerna** (2026-10-30, Leo om toppbilden på /priser: "alla dessa nya bilder
+  som är på de stora sektionerna där ska vi lägga de gamla bilderna, jag gillar mer de gamla. De nya får fylla ut mindre
+  sektioner där de blir dubletter"): toppbilden på de trettio sidor som tredje omgången bytte, och fotot under Vem kan söka
+  på Bli studiehjälpare, är de gamla igen (`bild` i generatorn, figurerna i de handskrivna sidorna, `foto` i
+  `delning/innehall.json` och delningsbilderna). En stor bild tar ett av de äldre fotona, och de nya står där samma gamla
+  foto annars hade upprepats i en mindre ruta: först korten i Så kan ett pass se ut på För elever och föräldrar (24
+  välkommen hem, 14 matematik, 29 pennan, i stället för 12, 06 och 11). De övriga nya står kvar i registret till nästa
+  mindre ruta; startsidans bildvägg är inte rörd.
 - **`.claude/skills/`, `.agents/`, `skills-lock.json`** är
   gitignorerade Higgsfield-verktyg. De försvinner när miljön återskapas.
 - **En Claude-artefaktlänk kan aldrig prata med Supabase.** Testa mot
