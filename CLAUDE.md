@@ -1169,7 +1169,10 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   till en studiehjälpares elever gör likadant. Provets läge står i `prov_studiehjalpare`, aldrig på
   `tutor_profiles` (`skydda_tutorfalt` släpper bara vitlistade kolumner), och admins spärras aldrig.
 - Rå servertext visas bara i de inloggade vyerna; en återvändsgränd bär `{oss}`. Anonyma
-  skrivningar har tak, och deras `created_at` sätts av databasen.
+  skrivningar har tak, och deras `created_at` sätts av databasen. **De tre öppna formulären**
+  (intresseanmälan, jobbansökan, kontakt; `formularen_far_tak`, 2026-10-31) nekar det som kommer
+  utifrån över fem i timmen per IP-nummer (en HMAC, aldrig numret), tre per adress och trettio totalt,
+  med ett besked som leder till info@ (`felSparr`); databasens egna vägar räknas inte.
 - Hinkarna är privata och sökvägen är ett uuid, aldrig ett namn. I `cv` ändras `CV_RAD` och
   `NX.kopplaAnsökan` tillsammans, liksom sökvägens form och policyn.
 - **Filen först, raden sedan, och läs svaret.** En fil öppnas i samma tryck

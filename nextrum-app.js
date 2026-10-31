@@ -162,6 +162,10 @@ const NX = (function () {
                       'The password must be at least 6 characters.'],
     felForManga:     ['För många försök. Vänta en stund och prova igen.',
                       'Too many attempts. Wait a moment and try again.'],
+    /* Formulärens tak i databasen (formularen_far_tak, 2026-10-31): ett nej
+       ska leda till mejlen, så att ingen familj försvinner. */
+    felSparr:        ['Vi tar emot väldigt många just nu. Mejla oss på {oss} så hör vi av oss.',
+                      'We are receiving a lot right now. Email us at {oss} and we will get back to you.'],
     felNatverk:      ['Vi nådde inte servern. Kontrollera uppkopplingen och försök igen, eller mejla oss på {oss}.',
                       'We could not reach the server. Check your connection and try again, or email us at {oss}.'],
     felOkant:        ['Något gick fel. Prova igen, eller mejla oss på {oss}.',
@@ -424,6 +428,7 @@ const NX = (function () {
     if (/Email not confirmed/i.test(m)) return t('felBekrafta');
     if (/User already registered/i.test(m)) return t('felFinns');
     if (/Password should be at least/i.test(m)) return t('felKortLosen');
+    if (/^För många inskick/.test(m)) return t('felSparr');
     if (/rate limit|too many/i.test(m)) return t('felForManga');
     if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return t('felNatverk');
     if (!m) return t('felOkant');

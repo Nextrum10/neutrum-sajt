@@ -61,7 +61,8 @@
 -- fakturan_tas_bort, anmalan_flyttas_till_familjen, intervjumejlet,
 -- utbildningsprovet_i_studiehjalparvyn, betalningsliggaren, planerna_per_manad,
 -- kortdragningen_forsoker_igen (2026-10-21), dokument_med_bilder,
--- kon_i_matchningen och papperskorgen (2026-10-26) är körda.
+-- kon_i_matchningen och papperskorgen (2026-10-26) är körda, och
+-- formularen_far_tak (2026-10-31) för avsnittet Formulären har tak.
 -- fakturans_tabeller_tas_bort (del 2, efter en backup) kan vara körd eller
 -- inte: avsnitt 38 provar det som gäller i båda lägena.
 --
@@ -6068,7 +6069,7 @@ begin
      fel is null and n_samma = 3 and tid = now(),
      coalesce(fel, format('%s rader, tidigast %s', n_samma, tid))),
     ('Taken: det fjärde från samma adress nekas med ett besked',
-     fjarde = 'P0001' and fjarde_text like 'För många meddelanden%',
+     fjarde = 'P0001' and fjarde_text like 'För många inskick%',
      coalesce(fjarde, 'inget') || ': ' || coalesce(fjarde_text, '')),
     ('Taken: över trettio meddelanden i timmen nekas',
      fel is null and trettiofirsta = 'P0001' and n_flod = 30 - b,
@@ -23163,6 +23164,159 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('FR Repetitionen i förhandsvisningen', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- Formulären har tak (formularen_far_tak, 2026-10-31)
+--
+-- Intresseanmälan, jobbansökan och kontaktformuläret nekar det som kommer
+-- utifrån över fem i timmen från samma IP-nummer, tre från samma adress och
+-- trettio totalt (kontaktformulärets två gamla tak gäller för alla). Numret
+-- sätts som PostgREST sätter det, i request.headers, och räknas som en HMAC
+-- i intern.rabattkod_forsok. Totaltaket räknar det driften redan fått den
+-- senaste timmen, så provet fyller upp till taket. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+create function pg_temp.form_lead(p_epost text, p_ip text) returns text
+language plpgsql as $$
+begin
+  perform set_config('request.headers',
+    case when p_ip is null then '' else json_build_object('cf-connecting-ip', p_ip)::text end, true);
+  perform pg_temp.bli(null);
+  begin
+    insert into public.leads (parent_name, email, child_name, grade, subject, tjanst, message)
+    values ('RLS Form', p_epost, 'Barn', 'Åk 5', 'Matte', 'laxhjalp', 'Hej');
+    reset role;
+    return 'ok';
+  exception when others then
+    reset role;
+    return sqlstate || ' ' || sqlerrm;
+  end;
+end $$;
+
+create function pg_temp.form_ansokan(p_epost text, p_ip text) returns text
+language plpgsql as $$
+begin
+  perform set_config('request.headers',
+    case when p_ip is null then '' else json_build_object('cf-connecting-ip', p_ip)::text end, true);
+  perform pg_temp.bli(null);
+  begin
+    insert into public.applications (name, email) values ('RLS Form', p_epost);
+    reset role;
+    return 'ok';
+  exception when others then
+    reset role;
+    return sqlstate || ' ' || sqlerrm;
+  end;
+end $$;
+
+create function pg_temp.form_kontakt(p_epost text, p_ip text) returns text
+language plpgsql as $$
+begin
+  perform set_config('request.headers',
+    case when p_ip is null then '' else json_build_object('cf-connecting-ip', p_ip)::text end, true);
+  perform pg_temp.bli(null);
+  begin
+    insert into public.contact_messages (name, email, message) values ('RLS Form', p_epost, 'Hej');
+    reset role;
+    return 'ok';
+  exception when others then
+    reset role;
+    return sqlstate || ' ' || sqlerrm;
+  end;
+end $$;
+
+do $$
+declare
+  ut jsonb := '[]'; fel text; t text; b bigint; i int; n int;
+  NEJ constant text := 'P0001 För många inskick just nu. Mejla oss på info@nextrum.se i stället.';
+begin
+  begin
+    -- Intresseanmälan: fem från samma nummer, sedan nej.
+    t := '';
+    for i in 1 .. 5 loop
+      t := t || pg_temp.form_lead('rls-form-ip-' || i || '@example.invalid', '203.0.113.7') || ';';
+    end loop;
+    ut := ut || jsonb_build_object('t', 'Formulären: fem anmälningar från samma IP-nummer går in',
+            'ok', t = 'ok;ok;ok;ok;ok;', 'd', t);
+    t := pg_temp.form_lead('rls-form-ip-6@example.invalid', '203.0.113.7');
+    ut := ut || jsonb_build_object('t', 'Formulären: den sjätte anmälan från samma IP-nummer nekas med ett besked som nämner info@',
+            'ok', t = NEJ, 'd', t);
+    t := pg_temp.form_lead('rls-form-annat@example.invalid', '198.51.100.9');
+    ut := ut || jsonb_build_object('t', 'Formulären: ett annat IP-nummer kommer fram när det första är stoppat',
+            'ok', t = 'ok', 'd', t);
+
+    -- Samma adress, som den levereras: tre går in från olika nummer, den fjärde nekas.
+    t := pg_temp.form_lead('rls-form-samma@example.invalid', '198.51.100.21') || ';'
+      || pg_temp.form_lead('RLS-Form-Samma+tva@example.invalid', '198.51.100.22') || ';'
+      || pg_temp.form_lead(' rls-form-samma@Example.invalid ', '198.51.100.23') || ';'
+      || pg_temp.form_lead('rls-form-samma+fyra@example.invalid', '198.51.100.24');
+    ut := ut || jsonb_build_object('t', 'Formulären: tre anmälningar från samma adress går in, den fjärde nekas',
+            'ok', t = 'ok;ok;ok;' || NEJ, 'd', t);
+
+    -- IP-numret står aldrig i klartext, och bara det som gick in räknas.
+    select count(*) into n from intern.rabattkod_forsok f
+     where f.nyckel like 'formular:anmalan:%' and f.tid > now() - interval '1 minute';
+    ut := ut || jsonb_build_object('t', 'Formulären: varje anmälan som gick in räknas en gång, som en HMAC av numret',
+            'ok', n = 9 and not exists (select 1 from intern.rabattkod_forsok f
+                                          where f.nyckel like 'formular:%' and f.nyckel like '%203.0.113%'),
+            'd', n || ' räknade');
+
+    -- Totaltaket: upp till trettio i timmen, sedan nej också från ett nytt nummer.
+    select count(*) into b from public.leads where created_at > now() - interval '1 hour';
+    t := '';
+    for i in 1 .. 30 - b loop
+      t := t || pg_temp.form_lead('rls-form-flod-' || i || '@example.invalid', '192.0.2.' || i);
+    end loop;
+    ut := ut || jsonb_build_object('t', 'Formulären: anmälningar upp till trettio i timmen går in',
+            'ok', replace(t, 'ok', '') = '', 'd', left(t, 200));
+    t := pg_temp.form_lead('rls-form-flod-sist@example.invalid', '192.0.2.200');
+    ut := ut || jsonb_build_object('t', 'Formulären: den trettioförsta anmälan i timmen nekas',
+            'ok', t = NEJ, 'd', t);
+    begin
+      insert into public.leads (parent_name, email, child_name, grade, subject, tjanst, message)
+      values ('RLS Form', 'rls-form-postgres@example.invalid', 'Barn', 'Åk 5', 'Matte', 'laxhjalp', 'Hej');
+      t := 'ok';
+    exception when others then t := sqlstate || ' ' || sqlerrm;
+    end;
+    ut := ut || jsonb_build_object('t', 'Formulären: databasens egna vägar går förbi taket', 'ok', t = 'ok', 'd', t);
+
+    -- Jobbansökan: samma tak, med en egen räkning.
+    t := '';
+    for i in 1 .. 5 loop
+      t := t || pg_temp.form_ansokan('rls-form-ans-' || i || '@example.invalid', '203.0.113.7') || ';';
+    end loop;
+    t := t || pg_temp.form_ansokan('rls-form-ans-6@example.invalid', '203.0.113.7');
+    ut := ut || jsonb_build_object('t', 'Formulären: fem ansökningar från samma IP-nummer går in, den sjätte nekas',
+            'ok', t = 'ok;ok;ok;ok;ok;' || NEJ, 'd', t);
+    t := pg_temp.form_ansokan('rls-form-ans-samma@example.invalid', null) || ';'
+      || pg_temp.form_ansokan('rls-form-ans-samma@example.invalid', null) || ';'
+      || pg_temp.form_ansokan('rls-form-ans-samma@example.invalid', null) || ';'
+      || pg_temp.form_ansokan('rls-form-ans-samma@example.invalid', null);
+    ut := ut || jsonb_build_object('t', 'Formulären: utan IP-nummer gäller adressens tak, tre ansökningar och sedan nej',
+            'ok', t = 'ok;ok;ok;' || NEJ, 'd', t);
+
+    -- Kontaktformuläret: IP-taket ovanpå de två gamla.
+    t := '';
+    for i in 1 .. 5 loop
+      t := t || pg_temp.form_kontakt('rls-form-k-' || i || '@example.invalid', '203.0.113.7') || ';';
+    end loop;
+    t := t || pg_temp.form_kontakt('rls-form-k-6@example.invalid', '203.0.113.7');
+    ut := ut || jsonb_build_object('t', 'Formulären: fem kontaktmeddelanden från samma IP-nummer går in, det sjätte nekas',
+            'ok', t = 'ok;ok;ok;ok;ok;' || NEJ, 'd', t);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform set_config('request.headers', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Formulären har tak', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
