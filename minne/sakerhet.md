@@ -197,6 +197,7 @@ att visa **rätt sida**, inte för att skydda data.
   går förbi, utom kontaktformulärets två gamla tak, som gäller alla som förut. Honungsfällan i
   `spamskydd()` står kvar; den stoppar bara robotar som fyller i sidan. Ändras talen ändras de i en ny
   migration, och här. DATASKYDD rad 28 och policyns stycke Om du skriver till oss säger att numret räknas.
+  I drift sedan kvällen 2026-10-31 (PR #416, 058a804; rls-test 2210 av 2224, de 14 röda äldre än ändringen).
 - **Tar du bort en fil: filen först, raden sedan, och LÄS SVARET.**
   Sökvägen finns bara i raden. Försvinner raden först blir filen omöjlig
   att hitta och omöjlig att städa. Det stod som en kommentar i
