@@ -41,7 +41,7 @@ STADIER = {'lagstadiet', 'mellanstadiet', 'hogstadiet', 'gymnasiet'}
 # Läxhjälpssidor som är guider och inte en ort.
 LAX_GUIDER = {'eller-privatlarare', 'efter-sommarlovet', 'online'}
 KARNA = ['/', '/sa-fungerar-nextrum', '/priser', '/faq', '/for-elever-och-foraldrar',
-         '/var-ide', '/om-oss', '/intresseanmalan', '/bli-studiehjalpare',
+         '/var-ide', '/om-oss', '/prova-nexlax', '/intresseanmalan', '/bli-studiehjalpare',
          '/laxhjalp-stockholm', '/vad-kostar-laxhjalp']
 JURIDIK = {'/anvandarvillkor', '/integritetspolicy', '/lagring'}
 
