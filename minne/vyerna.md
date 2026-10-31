@@ -2572,3 +2572,13 @@ studiehjälpare är bredvid varandra"): under 560 px står de i ett rutnät med 
 kolumner, utan pilar (de får inte plats), och en lång text bryts i knappen. Den andra knappen
 får två pixlar marginal, för stjärnkanten lägger två pixlar runt den första, och annars blir
 de olika höga. Bara startsidan (`.nx-final-ljus`); de andra sidornas Nästa steg är som förut.
+
+## Höstpaketet över Just nu (2026-10-31, borttaget samma kväll)
+Leo bad om ett höstigt, halloweenaktigt paket över Just nu-kortet som man måste klicka på för att se erbjudandet
+("kunden behöver klicka på erbjudandet för att se det"). Det byggdes (PR #417: omslagspapper, band, rosett, lappen
+Klicka för att se, fladdermöss kring Halloween; `nextrum-paket.js` och avsnitt 16b i `nextrum-start.css`) och mergades,
+och togs bort samma kväll med en revert (Leo: "ta bort det om du inte har en bättre ide"). Skälet: kortet bär
+startsidans starkaste argument (399 kr, inget från-pris, jämförelsen), och ett omslag gör det till något besökaren
+måste välja att se; många scrollar förbi en stor yta som ser ut som dekoration, och tonen är en kampanj till barn när
+det är föräldern som betalar. Vill vi ha säsong på startsidan: en liten detalj på ett kort som syns direkt, aldrig
+något som gömmer priset.

@@ -789,7 +789,7 @@ när remsan syns), och "Villkor gäller." med villkorslänken under; samma remsa
 hänger på `.i-gang`, aldrig bara på `html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under Hur hjälper vi: "för" timpriset pass för pass (`data-stat`) med den lilla tejpen "Det är priset, inte ett
 från-pris" (`.jn-fast`, 2026-10-09),
 paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till … med Xplanen" (`data-erb-spara`), och jämförelsen
-Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan och raden om att den bygger på priser för årskurs 9. Vårt
+Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan och raden om att den bygger på priser för årskurs 9. Ett höstpaket som täckte kortet tills man klickade (PR #417) låg ute 2026-10-31 och togs bort samma kväll (Leo: "ta bort det"): erbjudandet ska synas utan klick (`minne/vyerna.md`). Vårt
 pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4), figuren och tejpen döljs om planen inte har
 8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. **Prissidan har ingen
 garantisektion** (2026-10-08, Leo: "öndödigt stor"): där står bara raden "Betygsgaranti, utan extra kostnad (villkor
