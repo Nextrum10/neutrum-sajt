@@ -1344,6 +1344,13 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Formulären har tak** (2026-10-31, `formularen_far_tak` 20261031100000) är i drift sedan kvällen 2026-10-31 (Leo:
+  "merge", "och kör migrationen mot driften"): PR #416 mergades (058a804), och migrationen kördes hel i ett do-block ur
+  merge-commiten, prövad mot sin md5 (`87f3b626…`) och vakter (inga triggrar `leads_broms` eller `applications_broms`,
+  `kontakt_broms` den gamla), och registrerades med filens text. Hela `rls-test.sql` gick 2210 av 2224 mot driften före
+  och efter, tillbakarullat; de 14 röda är desamma som på main utan ändringen (`bonusarna_godkanns` är inte körd, och
+  anmälningarnas prov är äldre än `anmalningar_raderas_helt`), och de 11 nya är gröna. Ingen edge-funktion. Juristen har
+  inte läst policyns mening om IP-numret eller rad 28 i `DATASKYDD.md`.
 - **Profilen fylls i** (2026-10-30, `profilen_ifylld` 20261030100000) är inte i drift. Provad mot driften i en
   transaktion som rullades tillbaka (inget står kvar): postnumret sparas utan mellanslag, fyra siffror nekas, ingen
   skriver i tabellen direkt, studiehjälparen ser inte familjens rad, anon får inga regioner och läser inte tabellen,
