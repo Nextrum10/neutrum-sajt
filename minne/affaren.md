@@ -1514,3 +1514,31 @@ men i admin behöver vi godkänna de ifall de ska få de bonusarna".
   ett avtalsbrott: neka bara med något villkoren säger.
 - Ingen notis till familjen när timmen godkänns eller nekas: den syns i
   timbanken. Vill vi säga till är det ett eget mejl.
+
+## Profilen fylls i (2026-10-30, `profilen_ifylld`)
+
+Leo: "folk ska skriva in sitt postnummer när de skapar profil, alltså man ska fylla i sin profil och det är
+obligatoriskt, bild och namn och allt annat, adress behövs inte men postnummer behövs". Hans svar på frågorna samma dag:
+båda rollerna; bilden bara för studiehjälparen (invändningen: en tvingad bild på föräldern har inget syfte vi kan skriva
+i policyn, och folk laddar upp skräp för att komma förbi); namn, telefon, Om mig och barnens kön och årskurs; och
+postnumret till "matchning på avstånd samt för statistik som kommer visas på hemsidan, live statistik, inga exakta
+siffror eller adresser, bara områden vi har flest aktiva matchade studiehjälpare i".
+
+- **Rutan** (`NXStudie.profilFörst` i `nextrum-studie.js`) kommer efter villkoren och före introduktionen i studievyn
+  och studiehjälparvyn, och går inte att stänga; Logga ut står kvar. Den frågar `mitt_profillage()`, som svarar vad som
+  saknas (`namn`, `telefon`, `postnummer`, och `bild` och `om_mig` för en studiehjälpare, `barn` för en familj) och
+  null för ett barnkonto. Svarar den inte visas ingen ruta, som villkorsrutan. Visades rutan hämtar vyn profilen igen.
+- **Samma regler på tre ställen till**: rutan, Profil i båda vyerna (telefonen är inte längre valfri, och postnumret
+  står där) och barnformuläret (årskurs och kön krävs). Ändras en regel ändras `mitt_profillage()` och alla fyra.
+- **Postnumret** står i `postnummer` (en rad per profil), aldrig på `profiles`: den matchade läser den raden, och RLS
+  begränsar inga kolumner (samma skäl som `matchningsval`). Personen läser sin rad, admin och de med `anvandare_las`,
+  `anvandare_redigera` eller `matchning` alla; ingen skriver direkt, bara `spara_postnummer()`. Adminvyn visar det under
+  Kontakt och Profilen i panelen.
+- **Regionerna** (`omraden_med_studiehjalpare()`, öppen för anon): navets fem regioner, efter postnumrets tre första
+  siffror (100–119 Innerstaden, 120–129 Söderort, 130–159 Söder och öster, 160–168 Västerort, 169–199 Norr och
+  väster; annat ingen region). Det är en grov indelning: Ekerö (178) hamnar i Norr och väster, som i navet. Bara
+  godkända studiehjälpare med en matchad elev, utan adminkonton, flest först och utan antal, och en region visas bara
+  med minst tre (`intern.omraden_minsta_antal`). Med två studiehjälpare skulle "flest på Södermalm" säga var en
+  namngiven person bor. Ingen sida visar den än; när den gör det är tomt svar ingen sektion.
+- Prov: driften i en transaktion som rullades tillbaka (CLAUDE.md avsnitt 11), och rutan i Chromium mot en falsk
+  klient (fel postnummer och saknat kön stoppas, sedan profilen, postnumret och barnet i den ordningen).

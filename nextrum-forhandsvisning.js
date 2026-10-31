@@ -354,6 +354,9 @@ window.NXForhandsvisning = (function () {
       /* Studiehjälparens kön och val om eleverna (kon_i_matchningen,
          2026-10-26): tomt, Sara har inte valt något. */
       matchningsval: [],
+      /* Postnumret (profilen_ifylld, 2026-10-30): tomt, och profilen räknas
+         som ifylld (mitt_profillage nedan), så att rutan inte står i vägen. */
+      postnummer: [],
       notis_installning: [{ id: 1, paminnelser_timmar: 24, chatt_samla_minuter: 15 }],
       pass_moten: [],
       avatarer: [],
@@ -677,7 +680,8 @@ window.NXForhandsvisning = (function () {
   /* Tabellerna utan ett eget id. */
   var NYCKLAR = { rapport_bekraftelser: ['rapport_id'], student_notes: ['student_id'], notis_val: ['profil_id', 'typ', 'kanal'],
                   avatarer: ['profil_id'], study_plans: ['student_id', 'subject'], progress_items: ['id'],
-                  kortreservationer: ['booking_id'], sparade_kort: ['parent_id'], matchningsval: ['tutor_id'] };
+                  kortreservationer: ['booking_id'], sparade_kort: ['parent_id'], matchningsval: ['tutor_id'],
+                  postnummer: ['profil_id'] };
 
   function skriv(tabell, metod, sök, kropp, prefer, accept) {
     var rader = W[tabell];
@@ -849,6 +853,8 @@ window.NXForhandsvisning = (function () {
       return { version: '2026-10-12', godkant_at: tid(0, '08:00'), tidigare: null };
     },
     godkann_villkor: function () { return true; },
+    mitt_profillage: function () { return { roll: null, saknas: [], barn: [] }; },
+    spara_postnummer: function (a) { return String((a && a.p_postnummer) || '').replace(/\s/g, ''); },
     mina_handlingar: function () { return []; },
     min_handling_text: function () { return null; },
     // dokument_med_bilder (2026-10-26): inga delade dokument i världen.

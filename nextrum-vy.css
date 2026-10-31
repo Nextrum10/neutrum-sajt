@@ -674,6 +674,13 @@ body.betalar .hdr.bort{transform:none}
   font-weight:600;color:var(--acc-lugn);text-decoration:underline;text-underline-offset:3px;
 }
 .nx-fraga-box form[data-villkor]{margin-top:4px}
+/* Profilen fylls i (NXStudie.profilFörst, 2026-10-30). Samma ruta, något
+   bredare; ett barn är en grupp med namnet som rubrik, utan webbläsarens ram. */
+.nx-profilruta{max-width:min(480px, calc(100vw - 32px))}
+.nx-profilruta form[data-profil]{margin-top:14px}
+.nx-profil-barn{border:0;border-top:1px solid var(--ln);padding:14px 0 0;margin:6px 0 0;min-width:0}
+.nx-profil-barn legend{padding:0 8px 0 0;font-size:1rem;font-weight:600;color:var(--bl)}
+.nx-profil-bild{display:flex;align-items:center;gap:16px;margin-bottom:14px}
 /* Utbildningsprovet (NXProvet, 2026-10-21). Samma ruta, bredare, och
    frågorna som en lista med ett val per fråga. Varje alternativ är en
    tryckyta för tummen, och texten är 16 px så att en iPhone inte zoomar. */
