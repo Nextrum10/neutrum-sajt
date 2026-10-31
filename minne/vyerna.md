@@ -2573,15 +2573,12 @@ kolumner, utan pilar (de får inte plats), och en lång text bryts i knappen. De
 får två pixlar marginal, för stjärnkanten lägger två pixlar runt den första, och annars blir
 de olika höga. Bara startsidan (`.nx-final-ljus`); de andra sidornas Nästa steg är som förut.
 
-## Höstpaketet över Just nu (2026-10-31)
-Leo: "vårt erbjudande, jag vill att man ska klicka på det för att man ska se det ... täckt tex med något paket
-ovanför ... något höstigt och kanske halloweenaktigt", och "detta är bara main pagen, inte vyerna". Startsidans
-Just nu-kort (båda språken) har ett omslag (`<button class="jp" data-paket hidden>`) med pumpaorange papper med löv
-(en svg som data-URI, som `img-src data:` släpper in), ett mörkt band, en rosett och en lapp med en pumpa och
-"Klicka för att se". `nextrum-paket.js` visar det, gör kortets andra barn inerta och sätter `.jp-oppnar` vid klicket:
-rosetten flyger upp, lappen faller och halvorna glider isär ut ur kortet (`overflow:hidden` medan `.ar-paketerat` eller
-`.ar-oppnas` står), och sedan tas knappen bort; med tangent flyttas fokus till rubriken. Kortets tejper och staplar
-väntar under papperet och kommer när det öppnas. Reducerad rörelse tonar bara ut. Inget sparas i webbläsaren, så
-paketet är inslaget vid varje besök, och fladdermössen (`data-halloween`) visas bara 20 oktober till 2 november.
-Priset är inte gömt för den som läser sidan: det står i heron på en större skärm och på prissidan, och markupen
-bakom står kvar. Ska bort när hösten är slut: markupen, skriptet och avsnitt 16b i `nextrum-start.css`.
+## Höstpaketet över Just nu (2026-10-31, borttaget samma kväll)
+Leo bad om ett höstigt, halloweenaktigt paket över Just nu-kortet som man måste klicka på för att se erbjudandet
+("kunden behöver klicka på erbjudandet för att se det"). Det byggdes (PR #417: omslagspapper, band, rosett, lappen
+Klicka för att se, fladdermöss kring Halloween; `nextrum-paket.js` och avsnitt 16b i `nextrum-start.css`) och mergades,
+och togs bort samma kväll med en revert (Leo: "ta bort det om du inte har en bättre ide"). Skälet: kortet bär
+startsidans starkaste argument (399 kr, inget från-pris, jämförelsen), och ett omslag gör det till något besökaren
+måste välja att se; många scrollar förbi en stor yta som ser ut som dekoration, och tonen är en kampanj till barn när
+det är föräldern som betalar. Vill vi ha säsong på startsidan: en liten detalj på ett kort som syns direkt, aldrig
+något som gömmer priset.
