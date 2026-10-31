@@ -3822,6 +3822,201 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
+     PROFILEN FYLLS I (2026-10-30, profilen_ifylld)
+
+     Leo: "man ska fylla i sin profil och det är obligatoriskt, bild och
+     namn och allt annat, adress behövs inte men postnummer behövs". Efter
+     villkoren och före introduktionen: namn, telefon och postnummer för
+     alla, bild och Om mig för studiehjälparen, och barnen med årskurs och
+     kön för familjen. Databasen säger vad som saknas (mitt_profillage);
+     svarar den inte, eller saknas funktionen, visas ingen ruta, som
+     villkorsrutan. Rutan går inte att stänga, men Logga ut står kvar.
+     ============================================================ */
+  /* Svarar true när rutan visades, så att vyn hämtar profilen igen. */
+  async function profilFörst(supa, user) {
+    if (!supa || !user) return false;
+    var läge = await profillage(supa);
+    if (!läge || !läge.saknas || !läge.saknas.length) return false;
+    return profilruta(supa, user, läge);
+  }
+
+  async function profillage(supa) {
+    try {
+      var svar = await supa.rpc('mitt_profillage');
+      return svar.error ? null : svar.data;
+    } catch (e) { return null; }
+  }
+
+  function profilruta(supa, user, läge) {
+    return new Promise(function (klar) {
+      var tutor = läge.roll === 'studiehjalpare';
+      var harBild = läge.saknas.indexOf('bild') < 0;
+      var ny = !läge.barn || !läge.barn.length;
+      function val(lista, valt, tomt) {
+        return '<option value="">' + esc(tomt) + '</option>' + lista.map(function (x) {
+          return '<option value="' + esc(x.kod) + '"' + (x.kod === valt ? ' selected' : '') + '>' + esc(x.text) + '</option>';
+        }).join('');
+      }
+      function barnRad(b, i) {
+        return '<fieldset class="nx-profil-barn" data-barn="' + esc(b.id || '') + '" data-namn="' + esc(b.namn || '') + '">'
+          + '<legend>' + esc(b.namn || 'Ert barn') + '</legend>'
+          + (b.id ? '' : '<div class="fgroup"><label for="pf-bn-' + i + '">Barnets namn</label>'
+            + '<input class="inp" id="pf-bn-' + i + '" data-f="namn" autocomplete="off"></div>')
+          + '<div class="fgroup"><label for="pf-ak-' + i + '">Årskurs</label><select class="sel" id="pf-ak-' + i + '" data-f="arskurs">'
+          + val(NX.ARSKURSER, b.arskurs, 'Välj årskurs') + '</select></div>'
+          + '<div class="fgroup"><label for="pf-kon-' + i + '">Kön</label><select class="sel" id="pf-kon-' + i + '" data-f="kon">'
+          + val(NX.KON_ELEV, b.kon, 'Välj') + '</select></div>'
+          + '</fieldset>';
+      }
+
+      var ruta = document.createElement('div');
+      ruta.className = 'nx-fraga';
+      ruta.innerHTML =
+        '<div class="nx-fraga-box nx-profilruta" role="dialog" aria-modal="true" aria-labelledby="pf-t" aria-describedby="pf-d">'
+        + '<h3 id="pf-t">Fyll i din profil</h3>'
+        + '<p id="pf-d">' + (tutor
+          ? 'Innan du börjar: familjerna ser ditt namn, din bild och det du skriver om dig. Postnumret ser bara vi, '
+            + 'när vi matchar dig med familjer nära dig.'
+          : 'Innan ni börjar: vi behöver veta hur vi når er, och årskurs och kön på barnen för att hitta rätt studiehjälpare. '
+            + 'Postnumret ser bara vi, när vi matchar er med en studiehjälpare nära er.') + '</p>'
+        + '<form data-profil novalidate>'
+        + (tutor ? '<div class="nx-profil-bild"><span data-pf-bild></span>'
+          + '<label class="btn btn-ghost btn-sm" for="pf-fil">' + (harBild ? 'Byt bild' : 'Välj en bild') + '</label>'
+          + '<input type="file" id="pf-fil" accept="image/jpeg,image/png,image/webp" hidden></div>' : '')
+        + '<div class="fgroup"><label for="pf-namn">Namn</label><input class="inp" id="pf-namn" autocomplete="name" value="'
+        + esc(läge.namn || '') + '"></div>'
+        + '<div class="fgroup"><label for="pf-tel">Telefon</label><input class="inp" id="pf-tel" type="tel" autocomplete="tel" value="'
+        + esc(läge.telefon || '') + '"></div>'
+        + '<div class="fgroup"><label for="pf-post">Postnummer</label><input class="inp" id="pf-post" inputmode="numeric" '
+        + 'autocomplete="postal-code" maxlength="6" placeholder="123 45" value="' + esc(läge.postnummer || '') + '"></div>'
+        + (tutor ? '<div class="fgroup"><label for="pf-om">Om mig</label><textarea class="inp" id="pf-om" rows="4" '
+          + 'placeholder="Vad du pluggar, vilka ämnen du är bra på och hur du gillar att hjälpa.">' + esc(läge.om_mig || '')
+          + '</textarea></div>'
+          : (ny ? barnRad({}, 0) : läge.barn.map(barnRad).join('')))
+        + '<p class="ok-msg" id="pf-msg" role="alert"></p>'
+        + '<div class="nx-fraga-knappar">'
+        + '<button type="button" class="btn btn-ghost" data-pf-ut>Logga ut</button>'
+        + '<button type="submit" class="btn btn-primary">Spara och fortsätt</button>'
+        + '</div></form></div>';
+
+      var form = ruta.querySelector('form'), msg = ruta.querySelector('#pf-msg');
+      var bildHost = ruta.querySelector('[data-pf-bild]');
+      function ritaBild(url) {
+        if (bildHost && window.NXMedia) bildHost.innerHTML = NXMedia.avatar(form.querySelector('#pf-namn').value || läge.namn, url, { stor: true });
+      }
+      if (bildHost && window.NXMedia) {
+        ritaBild(null);
+        if (harBild) supa.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle().then(function (r) {
+          if (r.data && r.data.avatar_url) NXMedia.signera('avatarer', r.data.avatar_url).then(ritaBild);
+        });
+      }
+
+      var fil = ruta.querySelector('#pf-fil');
+      if (fil) fil.addEventListener('change', async function () {
+        var f = fil.files && fil.files[0];
+        fil.value = '';
+        if (!f) return;
+        NX.rensa(msg);
+        var fel = NXMedia.granska(f);
+        if (fel) { NX.säg(msg, fel, false); return; }
+        var blob = await NXMedia.beskär(f);
+        if (!blob) return;
+        NX.säg(msg, 'Laddar upp…', true);
+        var res = await NXMedia.sparaAvatar(user.id, blob);
+        if (res.fel) { NX.säg(msg, 'Bilden kunde inte sparas: ' + res.fel, false); return; }
+        harBild = true;
+        ruta.querySelector('label[for="pf-fil"]').textContent = 'Byt bild';
+        ritaBild(res.url);
+        NX.rensa(msg);
+      });
+
+      var sistaFokus = document.activeElement;
+      function stäng() {
+        ruta.remove();
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', tangent);
+        if (sistaFokus && sistaFokus.focus) sistaFokus.focus();
+        klar(true);
+      }
+      /* Escape stänger inte: profilen ska vara ifylld. */
+      function tangent(e) {
+        if (e.key !== 'Tab') return;
+        var kan = ruta.querySelectorAll('input:not([hidden]), select, textarea, button, label[for="pf-fil"]');
+        var f = kan[0], s = kan[kan.length - 1];
+        if (e.shiftKey && document.activeElement === f) { e.preventDefault(); s.focus(); }
+        else if (!e.shiftKey && document.activeElement === s) { e.preventDefault(); f.focus(); }
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        NX.rensa(msg);
+        var namn = form.querySelector('#pf-namn').value.trim();
+        var tel = form.querySelector('#pf-tel').value.trim();
+        var post = form.querySelector('#pf-post').value.replace(/\s/g, '');
+        var om = tutor ? form.querySelector('#pf-om').value.trim() : null;
+        var barn = Array.prototype.map.call(form.querySelectorAll('[data-barn]'), function (fs) {
+          var namnFält = fs.querySelector('[data-f="namn"]');
+          return { id: fs.dataset.barn || null, namn: namnFält ? namnFält.value.trim() : fs.dataset.namn || null,
+                   arskurs: fs.querySelector('[data-f="arskurs"]').value || null,
+                   kon: fs.querySelector('[data-f="kon"]').value || null, fs: fs };
+        });
+        // Samma regler som mitt_profillage och spara_postnummer.
+        var fel = !namn ? ['Fyll i ditt namn.', '#pf-namn']
+          : tel.replace(/\D/g, '').length < 7 ? ['Fyll i ett telefonnummer vi kan nå dig på.', '#pf-tel']
+          : !/^\d{5}$/.test(post) ? ['Ett postnummer är fem siffror, till exempel 123 45.', '#pf-post']
+          : tutor && !harBild ? ['Välj en profilbild. Familjerna vill se vem som hjälper deras barn.', null]
+          : tutor && !om ? ['Skriv några rader om dig.', '#pf-om']
+          : null;
+        if (!fel) barn.some(function (b) {
+          if (!b.id && !b.namn) fel = ['Fyll i barnets namn.', b.fs.querySelector('[data-f="namn"]')];
+          else if (!b.arskurs) fel = ['Välj årskurs för ' + (b.namn || 'barnet') + '.', b.fs.querySelector('[data-f="arskurs"]')];
+          else if (!b.kon) fel = ['Välj kön för ' + (b.namn || 'barnet') + '.', b.fs.querySelector('[data-f="kon"]')];
+          return !!fel;
+        });
+        if (fel) {
+          NX.säg(msg, fel[0], false);
+          var fält = typeof fel[1] === 'string' ? form.querySelector(fel[1]) : fel[1];
+          if (fält) fält.focus();
+          return;
+        }
+
+        await medan(form.querySelector('[type="submit"]'), 'Sparar…', async function () {
+          var svar = await supa.from('profiles').update({ full_name: namn, phone: tel }).eq('id', user.id);
+          if (!svar.error) svar = await supa.rpc('spara_postnummer', { p_postnummer: post });
+          if (!svar.error && tutor) svar = await supa.from('tutor_profiles').update({ bio: om }).eq('id', user.id);
+          for (var i = 0; !svar.error && i < barn.length; i++) {
+            var b = barn[i];
+            svar = b.id
+              ? await supa.from('students').update({ grade: b.arskurs, kon: b.kon }).eq('id', b.id)
+              : await supa.from('students').insert({ parent_id: user.id, name: b.namn, grade: b.arskurs, kon: b.kon })
+                  .select('id').single();
+            // Ett nytt barn är sparat: ett nytt försök efter ett fel längre ned ändrar det i stället för att lägga till ett till.
+            if (!svar.error && !b.id) b.fs.dataset.barn = svar.data.id;
+          }
+          if (svar.error) { NX.säg(msg, NX.felText(svar.error), false); return; }
+          var efter = await profillage(supa);
+          if (efter && efter.saknas && efter.saknas.length) {
+            NX.säg(msg, 'Något saknas fortfarande. Ladda om sidan och prova igen.', false);
+            return;
+          }
+          stäng();
+        });
+      });
+      ruta.addEventListener('click', function (e) {
+        if (e.target.closest('[data-pf-ut]')) loggaUt(supa);
+      });
+      document.addEventListener('keydown', tangent);
+
+      document.body.appendChild(ruta);
+      document.body.style.overflow = 'hidden';
+      void ruta.offsetWidth;
+      ruta.classList.add('open');
+      var första = ruta.querySelector('input:not([hidden]):not([value]), #pf-namn');
+      if (första) första.focus();
+    });
+  }
+
+  /* ============================================================
      INLOGGNINGEN SOM FÖRSVINNER (2026-09-29)
 
      Leo: "kontroller i admins inställning i automationer går inte att
@@ -4662,7 +4857,7 @@ window.NXStudie = (function () {
     inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
     glömtLänkar: glömtLänkar, elevLänk: elevLänk, länkenGickInte: länkenGickInte, glömtSkicka: glömtSkicka, nyttLösenord: nyttLösenord,
     välkomstläge: välkomstläge, lösenordFörst: lösenordFörst, introduktion: introduktion,
-    villkorFörst: villkorFörst,
+    villkorFörst: villkorFörst, profilFörst: profilFörst,
     loggaIn: loggaIn, loggaInHär: loggaInHär,
     adminroll: adminroll,
     flyttaRuta: flyttaRuta, notiser: notiser, notisruta: notisruta, sidomeny: sidomeny, schema: schema, passRuta: passRuta,

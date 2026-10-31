@@ -30,7 +30,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=832741c2">
-<link rel="stylesheet" href="nextrum-vy.css?v=989895b0">
+<link rel="stylesheet" href="nextrum-vy.css?v=2f1e2d82">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=fb8716f5">
@@ -784,8 +784,9 @@
                   <form id="konto-form">
                     <div class="vy-form-rad">
                       <div class="fgroup"><label for="k-namn">Namn</label><input class="inp" id="k-namn" autocomplete="name"></div>
-                      <div class="fgroup"><label for="k-tel">Telefon <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><input class="inp" id="k-tel" type="tel" autocomplete="tel"></div>
+                      <div class="fgroup"><label for="k-tel">Telefon</label><input class="inp" id="k-tel" type="tel" autocomplete="tel"></div>
                     </div>
+                    <div class="fgroup"><label for="k-post">Postnummer <span style="font-weight:400;color:var(--muted-2)">(bara vi ser det)</span></label><input class="inp" id="k-post" inputmode="numeric" autocomplete="postal-code" maxlength="6" placeholder="123 45"></div>
                     <div class="fgroup"><label for="k-bio">Kort om er <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><textarea class="inp" id="k-bio" style="min-height:80px" placeholder="t.ex. Vi bor i Hammarby Sjöstad och passen funkar bäst på eftermiddagar."></textarea></div>
                     <button class="btn btn-primary btn-sm btn-block" type="submit">Spara uppgifterna</button>
                     <p class="ok-msg" id="k-msg"></p>
@@ -885,12 +886,12 @@
                 <div class="fgroup"><label for="b-ak">Årskurs</label><select class="sel" id="b-ak"></select></div>
                 <div class="fgroup"><label for="b-skola">Skola <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><input class="inp" id="b-skola" maxlength="120"></div>
               </div>
-              <!-- Barnets kön (kon_i_matchningen, 2026-10-26): valfritt, och
-                   bara för matchningen. Vyn döljer det tills kolumnen finns. -->
+              <!-- Barnets kön (kon_i_matchningen, 2026-10-26): bara för matchningen,
+                   och krävs sedan 2026-10-30 (profilen_ifylld). Vyn döljer det tills kolumnen finns. -->
               <div class="fgroup" id="b-kon-grupp" style="margin-top:14px" hidden>
-                <label>Barnets kön <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
+                <label>Barnets kön</label>
                 <div class="vy-val" id="b-kon-val" role="group" aria-label="Barnets kön"></div>
-                <p class="xsmall" style="margin-top:7px;color:var(--bl-3);line-height:1.5">Vi använder det bara när vi väljer studiehjälpare: en del vill bara hjälpa elever av samma kön som de själva. Ni kan låta bli att svara.</p>
+                <p class="xsmall" style="margin-top:7px;color:var(--bl-3);line-height:1.5">Vi använder det bara när vi väljer studiehjälpare: en del vill bara hjälpa elever av samma kön som de själva.</p>
               </div>
               <div class="fgroup" style="margin-top:14px">
                 <label>Vilka ämnen gäller det?</label>
@@ -1116,11 +1117,11 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=085fa9d6"></script>
 <script src="nextrum-fel.js?v=c6a9a13f"></script>
-<script src="nextrum-forhandsvisning.js?v=04b99cb4"></script>
+<script src="nextrum-forhandsvisning.js?v=f24e0d5a"></script>
 <script src="nextrum-app.js?v=e6930912"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=8423ea85"></script>
-<script src="nextrum-studie.js?v=bf583708"></script>
+<script src="nextrum-studie.js?v=c09b8ca2"></script>
 <script src="nextrum-images.js?v=7864d95b"></script>
 <script src="nextrum-arbetsyta.js?v=977105ae"></script>
 <script src="nextrum-media.js?v=eb6a8952"></script>
@@ -1130,6 +1131,6 @@
 <script src="nextrum-introduktion.js?v=8a40bb60"></script>
 <script src="nextrum-hemskarm.js?v=e239d6b2"></script>
 <script src="nextrum-modulvakt.js?v=544e71de"></script>
-<script src="nextrum-studie-vy.js?v=4050f93a"></script>
+<script src="nextrum-studie-vy.js?v=1a4e1f73"></script>
 </body>
 </html>

@@ -54,8 +54,22 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   annat eller utan angivet kön (`matchningsforslag_rader`), utom elevens nuvarande; adminvyn visar dem ändå som Kan inte
   ta emot, utan Matcha-knapp och med ett filter (`krockarMedValet`, samma regel), och databasen nekar en ny sådan matchning för alla (`students_vakt_kon`, som går sist av
   BEFORE-triggrarna); en matchning som redan står rivs aldrig utan blir en uppgift (`kon_krock:<elev>:<studiehjälpare>`).
-  **Förälderns kön sparas inte** (Leo skrev "alla profiler"; matchningen behöver det inte). Det är en särbehandling på
+  **Förälderns kön sparas inte** (Leo skrev "alla profiler"; matchningen behöver det inte). Barnets kön krävs sedan 2026-10-30
+  (Profilen fylls i, nedan); studiehjälparens får stå tomt. Det är en särbehandling på
   grund av kön i en tjänst till allmänheten, och juristen har inte läst den (avsnitt 11).
+- **Profilen fylls i** (2026-10-30, `profilen_ifylld`, Leo: "man ska fylla i sin profil och det är obligatoriskt, bild och
+  namn och allt annat, adress behövs inte men postnummer behövs"): efter villkoren och före introduktionen står en ruta
+  som inte går att stänga (`NXStudie.profilFörst`, Logga ut står kvar) tills namn, telefon (minst sju siffror) och
+  postnummer finns, för studiehjälparen också profilbild och Om mig (`tutor_profiles.bio`), och för familjen minst ett
+  barn och varje barn med årskurs och kön. **Bilden krävs inte av föräldern** (Leos val: ingen tvingad bild utan ett
+  syfte i policyn), och barnkonton fyller inget i. Databasen säger vad som saknas (`mitt_profillage()`), och vyernas
+  formulär (rutan, Profil, barnformuläret) prövar samma regler; inget i databasen spärrar en halvfylld profil. **Postnumret
+  står i `postnummer`, aldrig på `profiles`**, som den matchade läser: bara personen och vi ser det, och det skrivs bara
+  genom `spara_postnummer()`. Det är till matchningen och till **regionerna på den öppna sidan**
+  (`omraden_med_studiehjalpare()`, anon): navets fem regioner efter postnumrets tre första siffror
+  (`intern.postnummer_region`, `REGIONER` i `bygg-omradessidor.py`), där flest aktiva, matchade studiehjälpare bor,
+  utan antal, och en region bara med minst tre (`intern.omraden_minsta_antal`): med färre pekar den ut en person. Ingen
+  sida visar den än. Postnumret går med kontot och tas bort när det avidentifieras (`profiles_postnummer_bort`).
 - **Uppstartsrutan**: `data-uppstart` och banans vecka byts tillsammans, på båda sidorna; när
   passen börjat går rutan och `nextrum-uppstart.css` bort. Den är en låg remsa ovanför formuläret, och
   intresseanmälan har inget sidhuvud: formuläret står överst med rubriken i sin yta (`.nx-anm`, 2026-10-08,
@@ -775,7 +789,7 @@ när remsan syns), och "Villkor gäller." med villkorslänken under; samma remsa
 hänger på `.i-gang`, aldrig bara på `html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under Hur hjälper vi: "för" timpriset pass för pass (`data-stat`) med den lilla tejpen "Det är priset, inte ett
 från-pris" (`.jn-fast`, 2026-10-09),
 paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till … med Xplanen" (`data-erb-spara`), och jämförelsen
-Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan och raden om att den bygger på priser för årskurs 9. Vårt
+Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan och raden om att den bygger på priser för årskurs 9. **Kortet är inslaget som ett höstpaket** (2026-10-31, Leo: "kunden behöver klicka på erbjudandet för att se det"; `.jp`, `nextrum-paket.js`, avsnitt 16b): papperet, bandet, rosetten och lappen Klicka för att se täcker kortet tills man klickar, och kortet bakom är inert så länge; utan skriptet står det dolt och erbjudandet syns. Inget sparas, och fladdermössen syns bara 20 oktober till 2 november. Paketet tas bort när hösten är slut (markupen i båda `index.html`, skriptet och avsnitt 16b). Vårt
 pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4), figuren och tejpen döljs om planen inte har
 8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. **Prissidan har ingen
 garantisektion** (2026-10-08, Leo: "öndödigt stor"): där står bara raden "Betygsgaranti, utan extra kostnad (villkor
@@ -1330,6 +1344,14 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Profilen fylls i** (2026-10-30, `profilen_ifylld` 20261030100000) är inte i drift. Provad mot driften i en
+  transaktion som rullades tillbaka (inget står kvar): postnumret sparas utan mellanslag, fyra siffror nekas, ingen
+  skriver i tabellen direkt, studiehjälparen ser inte familjens rad, anon får inga regioner och läser inte tabellen,
+  och raden försvinner vid avidentifieringen. `rls-test.sql` är inte körd och har inga prov för den (Docker Hub 429).
+  Efter merge: migrationen (inget `drop`, ett `delete` i triggerfunktionen). Alla konton i driften får rutan vid nästa
+  inloggning, för ingen har ett postnummer. Regionerna visas inte på någon sida: det finns färre än tre matchade
+  studiehjälpare, och platsen på startsidan är inte vald. Juristen har inte läst rad 41 i `DATASKYDD.md` eller policyns
+  meningar om postnumret och om att barnets kön och studiehjälparens bild krävs.
 - **Anmälningarna raderas helt** (2026-10-29, `anmalningar_raderas_helt` 20261029100000) är i drift sedan kvällen
   2026-10-29 (Leo: "merge och kör", sedan "3"): PR #397 mergades (47b69af), och Vercel lade ut vyerna och policyn.
   Avsnitt 0, 2 och 3 (vakterna, papperskorgen och `radera_person`) gick som två `execute_sql`; nattjobbet fastnade två

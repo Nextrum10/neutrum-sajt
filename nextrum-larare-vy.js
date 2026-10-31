@@ -3220,8 +3220,14 @@
     const msg = $('#pr-msg');
     rensa(msg);
     const namn = $('#k-namn').value.trim();
+    const tel = $('#k-tel').value.trim();
+    const post = $('#k-post').value.replace(/\s/g, '');
     const fel = kolla([
       { fel: !namn, text: 'Fyll i ditt namn.', falt: $('#k-namn') },
+      // Samma regler som mitt_profillage och spara_postnummer (2026-10-30).
+      { fel: tel.replace(/\D/g, '').length < 7, text: 'Fyll i ett telefonnummer vi kan nå dig på.', falt: $('#k-tel') },
+      { fel: !/^\d{5}$/.test(post), text: 'Ett postnummer är fem siffror, till exempel 123 45.', falt: $('#k-post') },
+      { fel: !$('#pr-bio').value.trim(), text: 'Skriv några rader om dig. Familjerna läser dem.', falt: $('#pr-bio') },
       /* Samma regel som matchningsval_samma_kon_kraver_kon. */
       { fel: S.matchningsvalFinns && prSamma && !prKon,
         text: 'Välj ditt kön. Annars vet vi inte vilka elever som är av samma kön som du.' }
@@ -3230,9 +3236,12 @@
 
     await medan(e.submitter, 'Sparar…', async () => {
       const person = await supa.from('profiles')
-        .update({ full_name: namn, phone: $('#k-tel').value.trim() || null })
+        .update({ full_name: namn, phone: tel })
         .eq('id', S.user.id);
       if (person.error) { säg(msg, 'Kunde inte spara namnet: ' + felText(person.error), false); return; }
+      const pn = await supa.rpc('spara_postnummer', { p_postnummer: post });
+      if (pn.error) { säg(msg, 'Kunde inte spara postnumret: ' + felText(pn.error), false); return; }
+      S.profil.phone = tel;
       S.profil.full_name = namn;
       ritaHeader();
       ritaKontoAvatar();
@@ -4450,6 +4459,13 @@
        introduktionen. Databasen kräver godkännandet för att ett pass ska
        föreslås eller bekräftas (NXStudie.villkorFörst). */
     await NXStudie.villkorFörst(supa, S.user, 'studiehjalpare');
+    /* Profilen (2026-10-30, profilen_ifylld): namn, telefon och postnummer,
+       och bilden och Om mig, efter villkoren och före introduktionen. */
+    if (await NXStudie.profilFörst(supa, S.user)) {
+      S.profil = await NX.hämtaProfil(S.user.id);
+      const om = await supa.from('tutor_profiles').select('bio').eq('id', S.user.id).maybeSingle();
+      if (om.data && S.tutorProfil) S.tutorProfil.bio = om.data.bio;
+    }
 
     if (S.tutorProfil.status !== 'approved') {
       visa('view-pending');
@@ -4572,6 +4588,11 @@
 
     $('#k-namn').value = S.profil.full_name || '';
     $('#k-tel').value = S.profil.phone || '';
+    /* Postnumret står i en egen tabell (profilen_ifylld, 2026-10-30): den
+       matchade läser profiles, och postnumret ser bara personen och vi. */
+    supa.from('postnummer').select('postnummer').eq('profil_id', S.user.id).maybeSingle().then(r => {
+      if (r.data && !$('#k-post').value) $('#k-post').value = r.data.postnummer.slice(0, 3) + ' ' + r.data.postnummer.slice(3);
+    }, () => {});
     $('#k-epost').textContent = S.profil.email || S.user.email || '';
     /* Den egna bilden ritas när den kommit, inte före allt annat. */
     if (S.profil.avatar_url) {

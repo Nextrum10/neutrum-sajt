@@ -190,6 +190,9 @@
         .select('parent_id, created_at').eq('tutor_id', id)
         .order('created_at', { ascending: false }).limit(TRAD_MAX));
       läggVillkor(id);
+      /* Postnumret (profilen_ifylld, 2026-10-30), i en egen tabell som
+         bara personen och den av oss som läser användarna ser. */
+      lägg('postnummer', supa.from('postnummer').select('postnummer').eq('profil_id', id));
       /* Utbildningsprovet i vyn (2026-10-21): läget, försöken och om
          spärren gäller. Policyerna ger superadmin och den som får
          godkänna studiehjälpare raderna. */
@@ -226,6 +229,9 @@
         .select('tutor_id, created_at').eq('parent_id', id)
         .order('created_at', { ascending: false }).limit(TRAD_MAX));
       läggVillkor(id);
+      /* Postnumret (profilen_ifylld, 2026-10-30), i en egen tabell som
+         bara personen och den av oss som läser användarna ser. */
+      lägg('postnummer', supa.from('postnummer').select('postnummer').eq('profil_id', id));
       /* Insatta timmar (timmar_med_orsak, 2026-10-21): varje insättning med
          månaden och orsaken. Bara en superadmin får raderna. Raden Första
          timmen gratis och dess fråga togs bort samma dag (Leo). */
@@ -362,6 +368,11 @@
   function dpMejl(adress) {
     if (!adress) return null;
     return gmailAdress(adress);
+  }
+
+  function dpPostnummer(d) {
+    const pn = ((d && d.postnummer) || [])[0];
+    return pn ? esc(pn.postnummer.slice(0, 3) + ' ' + pn.postnummer.slice(3)) : null;
   }
 
   function dpTelefon(nummer) {
@@ -1383,6 +1394,7 @@
     + dpFakta([
       ['E-post', dpMejl(p.email)],
       ['Telefon', dpTelefon(p.phone)],
+      ['Postnummer', dpPostnummer(d)],
       ['Konto skapat', p.created_at ? esc(kortDatum(p.created_at)) : null],
       ...dpIntagen(p),
       ['Senast inloggad', dpSenast(p)],
@@ -1759,6 +1771,7 @@
     + dpFakta([
       ['E-post', dpMejl(p.email)],
       ['Telefon', dpTelefon(p.phone)],
+      ['Postnummer', dpPostnummer(d)],
       ['Ålder', tp.age ? esc(String(tp.age) + ' år') : null],
       ['Skola', tp.school ? esc(tp.school) : null],
       ['Ort', tp.city ? esc(tp.city) : null],

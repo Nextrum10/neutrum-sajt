@@ -2572,3 +2572,16 @@ studiehjälpare är bredvid varandra"): under 560 px står de i ett rutnät med 
 kolumner, utan pilar (de får inte plats), och en lång text bryts i knappen. Den andra knappen
 får två pixlar marginal, för stjärnkanten lägger två pixlar runt den första, och annars blir
 de olika höga. Bara startsidan (`.nx-final-ljus`); de andra sidornas Nästa steg är som förut.
+
+## Höstpaketet över Just nu (2026-10-31)
+Leo: "vårt erbjudande, jag vill att man ska klicka på det för att man ska se det ... täckt tex med något paket
+ovanför ... något höstigt och kanske halloweenaktigt", och "detta är bara main pagen, inte vyerna". Startsidans
+Just nu-kort (båda språken) har ett omslag (`<button class="jp" data-paket hidden>`) med pumpaorange papper med löv
+(en svg som data-URI, som `img-src data:` släpper in), ett mörkt band, en rosett och en lapp med en pumpa och
+"Klicka för att se". `nextrum-paket.js` visar det, gör kortets andra barn inerta och sätter `.jp-oppnar` vid klicket:
+rosetten flyger upp, lappen faller och halvorna glider isär ut ur kortet (`overflow:hidden` medan `.ar-paketerat` eller
+`.ar-oppnas` står), och sedan tas knappen bort; med tangent flyttas fokus till rubriken. Kortets tejper och staplar
+väntar under papperet och kommer när det öppnas. Reducerad rörelse tonar bara ut. Inget sparas i webbläsaren, så
+paketet är inslaget vid varje besök, och fladdermössen (`data-halloween`) visas bara 20 oktober till 2 november.
+Priset är inte gömt för den som läser sidan: det står i heron på en större skärm och på prissidan, och markupen
+bakom står kvar. Ska bort när hösten är slut: markupen, skriptet och avsnitt 16b i `nextrum-start.css`.
