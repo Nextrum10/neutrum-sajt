@@ -168,10 +168,11 @@ att visa **rätt sida**, inte för att skydda data.
   `contact_messages` har längder på fälten (formulärets `maxlength`
   följer dem) och nekar över trettio meddelanden i timmen eller tre
   från samma adress (`intern.kontakt_broms()`). Båda sätter
-  `created_at` själva, som `leads` och `applications`. Bromsens egen
-  text når inte besökaren: en publik sida visar aldrig serverns text
-  (`NX.felText`), så formuläret säger "Något gick fel. Prova igen,
-  eller mejla oss på …".
+  `created_at` själva, som `leads` och `applications`. En publik sida
+  visar aldrig serverns text (`NX.felText`); till 2026-10-31 sa
+  formuläret därför "Något gick fel. Prova igen, …" vid bromsen, och
+  sedan `formularen_far_tak` känns beskedet igen och blir `felSparr`
+  (nedan).
   Taken här, länken i biblioteket (avsnitt 5) och CV-hinkens tak ovan
   kom i migrationen `anonyma_skrivningar_far_tak`. Den mergades med
   PR #122 men kördes i driften först samma förmiddag, efter schemats,
@@ -180,6 +181,22 @@ att visa **rätt sida**, inte för att skydda data.
   gällde. `rls-test.sql` har avsnittet Det anonyma har tak: 809 av 811
   med migrationen inläst före körningen och lika efter, där de två är
   Fas 23.1:s prov, och utan migrationen föll elva av avsnittets femton.
+- **Formulären har tak** (2026-10-31, `formularen_far_tak`, Leo: "främst intresseanmälan knappen fråge
+  knappen och bli studiehjälpare knappen"). Före den nekade bara kontaktformuläret något: `leads` och
+  `applications` tog emot hur många rader som helst (policyn `with check (true)`), och bara kvittona och
+  direktmejlet om en ansökan bromsades, så en robot fyllde listorna och, för anmälan, info@ (`lead-notis`
+  mejlar varje rad). Nu nekar `intern.leads_broms()`, `intern.applications_broms()` och
+  `intern.kontakt_broms()` ett inskick över **fem i timmen från samma IP-nummer, tre från samma adress
+  och trettio totalt**, med beskedet "För många inskick just nu. Mejla oss på info@nextrum.se i stället."
+  (P0001), som `NX.felText` visar som `felSparr` med adressen. Numret läses ur `request.headers`
+  (`cf-connecting-ip`, annars första `x-forwarded-for`, som `prova_jobbkod`) och räknas som en HMAC med
+  `notis_konfig.barn_nyckel` i `intern.rabattkod_forsok` (nyckeln `formular:<sort>:`), gallrad efter ett
+  dygn, och bara ett inskick som gick in räknas. Utan nummer prövas bara adressen och totalen. Bara
+  rollerna `anon` och `authenticated` räknas (`intern.formular_utifran()`, rollen ur inställningen, för
+  `current_user` är ägaren i en SECURITY DEFINER-funktion): databasens vägar och `rls-test.sql`:s fixturer
+  går förbi, utom kontaktformulärets två gamla tak, som gäller alla som förut. Honungsfällan i
+  `spamskydd()` står kvar; den stoppar bara robotar som fyller i sidan. Ändras talen ändras de i en ny
+  migration, och här. DATASKYDD rad 28 och policyns stycke Om du skriver till oss säger att numret räknas.
 - **Tar du bort en fil: filen först, raden sedan, och LÄS SVARET.**
   Sökvägen finns bara i raden. Försvinner raden först blir filen omöjlig
   att hitta och omöjlig att städa. Det stod som en kommentar i
