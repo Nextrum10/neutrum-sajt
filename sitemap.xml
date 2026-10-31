@@ -80,16 +80,16 @@
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/for-elever-och-foraldrar"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/for-elever-och-foraldrar"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/for-elever-och-foraldrar"/>
-    <lastmod>2026-10-29</lastmod>
-    <!-- summa ef64a8a7a926 -->
+    <lastmod>2026-10-31</lastmod>
+    <!-- summa 59fd0423daa1 -->
   </url>
   <url>
     <loc>https://nextrum.se/en/for-elever-och-foraldrar</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/for-elever-och-foraldrar"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/for-elever-och-foraldrar"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/for-elever-och-foraldrar"/>
-    <lastmod>2026-10-29</lastmod>
-    <!-- summa a0a593051046 -->
+    <lastmod>2026-10-31</lastmod>
+    <!-- summa 68202f5da858 -->
   </url>
   <url>
     <loc>https://nextrum.se/hjalpa-barn-med-lasforstaelse</loc>
@@ -539,6 +539,13 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/priser"/>
     <lastmod>2026-10-27</lastmod>
     <!-- summa 49351262c648 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/prova-nexlax</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/prova-nexlax"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/prova-nexlax"/>
+    <lastmod>2026-10-31</lastmod>
+    <!-- summa 0739c8da6d16 -->
   </url>
   <url>
     <loc>https://nextrum.se/sa-fungerar-nextrum</loc>

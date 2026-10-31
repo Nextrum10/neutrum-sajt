@@ -1,0 +1,115 @@
+/* ============================================================
+   NEXTRUM — Prova NexLäx (2026-10-31), sidan /prova-nexlax
+
+   Laddas sist, efter nextrum-sidor.css. Inga hexkoder: allt är
+   cinemas tokens, och ämnets färg kommer i --f från banan, så sidan
+   följer mörkt läge av sig själv. Utan skript (ingen .pn-igang) står
+   alla tre banorna som listor med Visa svaret, och spelaren är dold.
+   Tryck rör sig med scale, aldrig transform.
+   ============================================================ */
+
+.pn{overflow-x:clip}
+.pn-sek{padding-block:clamp(40px,6vw,88px)}
+/* Spelet ska synas utan att man rullar: heron är lägre än menysidornas,
+   och sektionen med spelet börjar direkt under den. */
+.nx-page-hero.pn-hero{padding-top:clamp(104px,10vw,140px);padding-bottom:0}
+.pn-hero h1{font-size:clamp(2.5rem,5.4vw,4.4rem)}
+.pn-sek-spel{padding-top:clamp(26px,3vw,40px)}
+.pn-sek-spel .pn-h2{font-size:clamp(1.2rem,1.8vw,1.45rem);letter-spacing:-.02em}
+.pn-h2{
+  margin:14px 0 0;font-size:clamp(1.7rem,3.4vw,2.6rem);line-height:1.05;
+  letter-spacing:-.035em;font-weight:750;color:var(--bl);text-wrap:balance;
+}
+
+/* ---------- ämnesvalet ---------- */
+.pn-val{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.pn-valj{
+  display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px;
+  border:1.5px solid var(--line);border-radius:999px;background:var(--yta);
+  color:var(--bl);font:inherit;font-weight:650;cursor:pointer;
+  transition:scale .18s ease,border-color .18s ease,background-color .18s ease;
+}
+.pn-valj i{width:10px;height:10px;border-radius:50%;background:var(--f);flex:none}
+.pn-valj:active{scale:.97}
+.pn-valj[aria-pressed="true"]{border-color:var(--f);background:color-mix(in srgb,var(--f) 12%,var(--yta))}
+/* Utan skript gör valet ingenting, så det visas inte. */
+.pn-spel:not(.pn-igang) .pn-val{display:none}
+
+/* ---------- banorna utan skript ---------- */
+.pn-bana{margin-top:34px}
+.pn-bana-t{margin:0 0 14px;font-size:1.25rem;letter-spacing:-.02em;color:var(--f)}
+.pn-fragor{margin:0;padding-left:1.4em;display:grid;gap:18px}
+.pn-fraga{color:var(--bl)}
+.pn-q{margin:0;font-weight:650;line-height:1.45}
+.pn-alt{margin:8px 0 0;padding-left:1.2em;color:var(--bl-2);line-height:1.6}
+.pn-svar{margin-top:8px;color:var(--bl-2)}
+.pn-svar summary{cursor:pointer;color:var(--acc-text);font-weight:600;min-height:32px}
+.pn-svar p{margin:6px 0 0;line-height:1.55}
+/* Med skriptet spelas banorna i spelaren, och listorna göms. */
+.pn-igang .pn-bana{display:none}
+
+/* ---------- spelaren ---------- */
+.pn-spelare,.pn-resultat{
+  margin-top:26px;max-width:680px;padding:clamp(20px,3.4vw,34px);
+  border:1.5px solid color-mix(in srgb,var(--f) 34%,var(--line));
+  border-radius:22px;background:var(--yta);box-shadow:var(--sk-1);
+}
+.pn-spelare[hidden],.pn-resultat[hidden]{display:none}
+.pn-topp{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.pn-steg{font-size:.9rem;font-weight:650;color:var(--muted)}
+.pn-prickar{display:flex;gap:8px;margin:0;padding:0;list-style:none}
+.pn-prick{
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid color-mix(in srgb,var(--f) 45%,var(--line));background:transparent;
+}
+.pn-prick.nu{border-color:var(--f);box-shadow:0 0 0 3px color-mix(in srgb,var(--f) 22%,transparent)}
+.pn-prick.ratt{background:var(--f);border-color:var(--f)}
+.pn-prick.fel{background:var(--muted-2);border-color:var(--muted-2)}
+
+.pn-kort{margin-top:18px}
+.pn-kort-q{margin:0;font-size:clamp(1.15rem,2.2vw,1.4rem);font-weight:700;line-height:1.35;color:var(--bl);text-wrap:pretty}
+.pn-kort-alt{display:grid;gap:10px;margin-top:18px}
+@media (min-width:560px){.pn-kort-alt{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.pn-alt-knapp{
+  min-height:52px;padding:12px 16px;text-align:left;
+  border:1.5px solid var(--line);border-radius:14px;background:var(--pap);
+  color:var(--bl);font:inherit;font-weight:600;cursor:pointer;
+  transition:scale .16s ease,border-color .16s ease,background-color .16s ease;
+}
+.pn-alt-knapp:not(:disabled):hover{border-color:var(--f)}
+.pn-alt-knapp:active{scale:.98}
+.pn-alt-knapp:disabled{cursor:default}
+.pn-alt-knapp.ratt,.pn-kort-skriv .inp.ratt{border-color:var(--mossa);background:var(--mossa-soft);color:var(--mossa-text)}
+.pn-alt-knapp.fel,.pn-kort-skriv .inp.fel{border-color:var(--acc);background:var(--acc-soft)}
+
+.pn-kort-skriv{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.pn-kort-skriv .inp{flex:1 1 180px;min-height:52px;font-size:1rem}
+.pn-kort-skriv .btn{min-height:52px}
+
+.pn-besked{margin-top:18px;padding:14px 16px;border-radius:14px;line-height:1.5}
+.pn-besked.ratt{background:var(--mossa-soft);color:var(--mossa-text)}
+.pn-besked.fel{background:var(--pap-2);color:var(--bl)}
+.pn-besked b{display:block;font-size:1.05rem}
+.pn-besked p{margin:4px 0 0}
+.pn-besked p b{display:inline;font-size:inherit}
+.pn-vidare{margin-top:16px}
+
+/* ---------- resultatet ---------- */
+.pn-resultat:focus{outline:none}
+.pn-res-tal{margin:14px 0 0;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:750;letter-spacing:-.03em;color:var(--bl)}
+.pn-res-tal b{color:var(--f)}
+.pn-res-text{margin:12px 0 0;max-width:52ch;line-height:1.55;color:var(--bl-2)}
+.pn-res-knappar{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+
+.pn-not{margin:22px 0 0;max-width:60ch;font-size:.9rem;line-height:1.5;color:var(--muted)}
+
+/* ---------- om NexLäx ---------- */
+.pn-om{border-top:1px solid var(--line)}
+.pn-om-in{display:grid;gap:22px 56px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){.pn-om-in{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}}
+.pn-om .nx-lede-s + .nx-lede-s{margin-top:12px}
+.pn-om-cta{margin-top:24px}
+
+@media (prefers-reduced-motion:reduce){
+  .pn-valj,.pn-alt-knapp{transition:none}
+}

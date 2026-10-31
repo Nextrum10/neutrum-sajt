@@ -602,6 +602,42 @@ Byggs något liknande igen gäller samma sak: egna frågor, aldrig bankens
 skriptet. Rutor med `display:grid` behöver en egen `[hidden]`-regel,
 annars syns det dolda.
 
+## Prova NexLäx, en egen sida (2026-10-31)
+
+Leo bad om "nexläx grejen" efter en brainstorm om att NexLäx kunde vara
+en väg in: en öppen sida där en förälder eller elev spelar en kort nivå
+utan konto och sedan får knappen till intresseanmälan. Det blev
+`/prova-nexlax` (`prova-nexlax.html`, `nextrum-prova-nexlax.js` och
+`-css`), en egen sida och inte en ruta på startsidan, som togs bort
+2026-10-07.
+
+Reglerna, som för rutan 2026-10-06:
+- **Egna frågor, aldrig bankens.** Sex per ämne i matematik, svenska och
+  engelska för årskurs 9, skrivna för sidan och grep:ade mot
+  `verktyg/uppgiftsbanken` och `supabase/migrations` (inga hela frågor
+  delas). Facit står i markupen (`data-ratt` och svaret under Visa
+  svaret), och skriptet rättar i webbläsaren. Bankens frågor går ut utan
+  facit och rättas i databasen: de kommer aldrig hit.
+- **Ingenting sparas och ingenting skickas**: sidan når inte databasen,
+  och inga XP, stjärnor, rank eller märken räknas.
+- **Ingen text i skriptet**: knapparnas ord och beskeden står i `data-t-*`
+  på `[data-pn]`, och resultatrutan står i markupen.
+- **Utan skript** står de tre banorna som listor med Visa svaret, och det
+  är också vad en sökmotor läser. Spelaren och ämnesvalet är dolda då.
+- **Bara på svenska**, som Om oss (i `jamfor-sprak-baslinje.txt`). Den
+  engelska För elever och föräldrar länkar dit som "Try NexLäx (in
+  Swedish)".
+- Knappen till intresseanmälan bär `utm_source=nextrum&utm_medium=prova-nexlax`,
+  så att anmälningarna därifrån syns i källorna.
+- Texten om NexLäx säger bara det koden gör: NexLäx finns i vyn utan
+  extra kostnad, och kontot skapar vi efter intresseanmälan och samtalet.
+- Sidan länkas från NexLäx-avsnittets knapprad på För elever och
+  föräldrar (båda språken), står i kartan, i `llms.txt` (`KARNA`) och har
+  en egen delningsbild utan pris (`radFör`). Inte i footern och inte på
+  startsidan.
+- Ändras en fråga ändras dess `data-ratt` och svaret samtidigt, och en ny
+  fråga grep:as mot banken först.
+
 ## NexLäx på startsidan (2026-10-07)
 
 Leo: "Under heron ska vi nu sälja in Nexläx gör en cool genomgång av

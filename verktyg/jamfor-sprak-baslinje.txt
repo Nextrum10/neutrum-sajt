@@ -52,7 +52,7 @@
 
 13 av 13 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 64
+=== svenska sidor utan engelsk tvilling: 65
   404.html
   admin.html
   affisch.html
@@ -116,4 +116,5 @@
   nationella-prov-ak-9.html
   om-oss.html
   plugga-infor-prov.html
+  prova-nexlax.html
   vad-kostar-laxhjalp.html

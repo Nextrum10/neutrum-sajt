@@ -73,7 +73,7 @@ const namnPå = fil => fil.replace(/^en\//, 'en-').replace(/\.html$/, '');
 function radFör(fil, html, en) {
   const sida = fil.replace(/^en\//, '').replace(/\.html$/, '');
   if (sida === 'bli-studiehjalpare') return en ? 'Work as a tutor · Nextrum' : 'Jobba som studiehjälpare · Nextrum';
-  if (['anvandarvillkor', 'integritetspolicy', 'lagring', 'om-oss'].includes(sida)) {
+  if (['anvandarvillkor', 'integritetspolicy', 'lagring', 'om-oss', 'prova-nexlax'].includes(sida)) {
     return en ? 'Nextrum · tutoring in Stockholm' : 'Nextrum · läxhjälp i Stockholm';
   }
   if (html.includes('>Guide för föräldrar</span>')) return 'Guide för föräldrar · Nextrum';

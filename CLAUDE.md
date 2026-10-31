@@ -221,7 +221,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   `nexlax_lage().fripass`; låset självt är fortfarande vyns spelregel. En låst del i en öppen nivå tar inget fripass. Startsidan visar NexLäx bara som en
   illustration (2026-10-07): exempelfrågan finns inte i banken; XP och uppdrag i den följer
   `intern.nexlax_*`, rank och märke `RANGER` och `MÄRKEN` i `nextrum-uppgifter.js`, och den ändras med dem. Belöningar är märken, inte pengar, och serien påminns aldrig om: båda är
-  beslut. `.nl-hopp` går med flit inte att trycka på. **Uppdragen** (Fas 23.4) räknas av
+  beslut. **Prova NexLäx** (2026-10-31, `/prova-nexlax`) är en egen öppen sida med sex egna frågor per ämne
+  (matematik, svenska, engelska åk 9), rättade i webbläsaren mot facit i markupen, aldrig bankens, och ingenting sparas;
+  den slutar med knappen till intresseanmälan (`minne/nexlax.md`). `.nl-hopp` går med flit inte att trycka på. **Uppdragen** (Fas 23.4) räknas av
   `intern.nexlax_uppdrag`, sparas aldrig, ger inga XP och påminns aldrig om; katalogen är
   historik, så ett nytt uppdrag får ett nytt id och ett `fran`. **NP-spåret** är `nivaer.spar`,
   satt av verktyget ur områdets namn, och där är varje nivå öppen. Gamla nationella prov

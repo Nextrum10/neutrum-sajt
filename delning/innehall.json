@@ -445,6 +445,12 @@
       "rad": "Tutoring in Stockholm · SEK 399 an hour",
       "foto": "02-personlig-anpassning"
     },
+    "prova-nexlax.html": {
+      "bild": "delning/prova-nexlax.jpg",
+      "rubrik": "Prova NexLäx, utan konto.",
+      "rad": "Nextrum · läxhjälp i Stockholm",
+      "foto": "hero-nextrum"
+    },
     "sa-fungerar-nextrum.html": {
       "bild": "delning/sa-fungerar-nextrum.jpg",
       "rubrik": "Från intresseanmälan till första passet.",
