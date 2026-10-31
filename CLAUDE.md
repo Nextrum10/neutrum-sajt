@@ -1113,7 +1113,15 @@ Detaljer: `minne/grunden.md`.
   "Vänliga hälsningar" (`signaturHtml(false)`; den som skriver har sin egen), och rutan säger det. Det som öppnas i Gmail
   (Öppna i Gmail, `gmailLänk()`) får Gmails egen signatur: länkens `body` är bara text, och Gmail lägger sin signatur på
   av sig själv, så koden lägger ingen dit (den skulle dubblas). Den läggs in i Gmails inställningar, för varje konto
-  som skickar, från `signatur.html` (HTML med kopieringsknapp; ligger inte i repot).
+  som skickar, från `signatur.html` (HTML med kopieringsknapp; ligger inte i repot). **I drift sedan 2026-10-29** (Leo:
+  "kör själv"): PR #398 mergades (aa24e2e), Vercel lade ut adminvyns text, och `ansokan-mejl` v2 lades ut från merge-commiten
+  utan hjälpagent, i ett anrop med alla elva filer. Hämtad tillbaka: nio av elva filer är byte för byte lika main, inklusive
+  `ansokan_mejl.ts` och `rendera.ts`. **Två filer skiljer, med mina egna skrivfel i anropet**: `_delad/erbjudanden.ts` har ett
+  ord flyttat över en radbrytning i en kommentar, och `_delad/notiser/mallar.ts` har `\\u005cu00a0` i `kronor()` (22 916 byte i
+  stället för 22 898), samma escape-fälla som i avsnitt 7. Ingen av dem påverkar funktionen: `kronor()` anropas aldrig i
+  `ansokan-mejl` (inget mejl där går genom `MALLAR`), och en kommentar gör ingenting. Filerna blir lika main nästa gång
+  funktionen läggs ut; lägg inte ut den bara för det. Att 11 filer på ~96 kB skrivs för hand i ett anrop går att göra men ger
+  fel av det här slaget: kolla alltid med en jämförelse efteråt.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot och vårdnadshavarens mejl styrs av en INSERT, med samma broms;
